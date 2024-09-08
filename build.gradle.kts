@@ -14,25 +14,7 @@
  * limitations under the License.
  */
 
-plugins {
-    kotlin("jvm") version "2.0.20"
-}
-
-group = "cn.codethink"
-version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    testImplementation(kotlin("test"))
-}
-
-tasks.test {
-    useJUnitPlatform()
-}
-
-kotlin {
-    jvmToolchain(8)
+allprojects {
+    group = "cn.codethink"
+    version = "0.1.0-SNAPSHOT"
 }

@@ -14,18 +14,23 @@
  * limitations under the License.
  */
 
-pluginManagement {
-    repositories {
-        mavenCentral()
-        gradlePluginPortal()
-    }
-}
-
 plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.5.0"
+    kotlin("jvm") version "2.0.20"
 }
 
-rootProject.name = "xiaoming-kotlin-sdk"
-include("xiaoming-kotlin-sdk-api")
-include("xiaoming-kotlin-sdk-core-local")
-include("xiaoming-kotlin-sdk-core-remote")
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    val kotlinLoggingVersion: String by rootProject
+    implementation("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
+
+    val junitVersion: String by rootProject
+    testImplementation(platform("org.junit:junit-bom:$junitVersion"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
