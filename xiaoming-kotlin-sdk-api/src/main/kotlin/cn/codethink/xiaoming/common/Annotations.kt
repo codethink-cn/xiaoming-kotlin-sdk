@@ -34,3 +34,17 @@ import java.lang.annotation.Inherited
 @MustBeDocumented
 @Retention(AnnotationRetention.SOURCE)
 annotation class InternalApi
+
+/**
+ * Mark the API is Java-friendly, which means that the API is designed
+ * to be used in Java.
+ *
+ * If the marked API is an open class, interface or open function,
+ * it means all its implementations are Java-friendly.
+ *
+ * @author Chuanwise
+ */
+@Inherited
+@MustBeDocumented
+@Retention(AnnotationRetention.SOURCE)
+annotation class JavaFriendlyApi
