@@ -26,6 +26,14 @@ dependencies {
     val kotlinLoggingVersion: String by rootProject
     implementation("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
 
+    val jacksonVersion: String by rootProject
+    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+
+    val apacheCommonTextVersion: String by rootProject
+    implementation("org.apache.commons:commons-text:$apacheCommonTextVersion")
+
     val junitVersion: String by rootProject
     testImplementation(platform("org.junit:junit-bom:$junitVersion"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -33,4 +41,14 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.processResources {
+    expand(
+        mapOf(
+            "group" to group,
+            "name" to name,
+            "version" to version
+        )
+    )
 }
