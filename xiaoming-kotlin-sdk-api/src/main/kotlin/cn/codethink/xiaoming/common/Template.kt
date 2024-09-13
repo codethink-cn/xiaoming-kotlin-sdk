@@ -18,10 +18,14 @@
 
 package cn.codethink.xiaoming.common
 
-import cn.codethink.xiaoming.io.data.MapRaw
-import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.getValue
-import cn.codethink.xiaoming.io.data.set
+import com.fasterxml.jackson.core.JsonGenerator
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.SerializerProvider
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer
+import com.fasterxml.jackson.databind.ser.std.StdSerializer
 import org.apache.commons.text.StringSubstitutor
 
 /**
@@ -29,22 +33,28 @@ import org.apache.commons.text.StringSubstitutor
  *
  * @author Chuanwise
  */
-class Template(
-    raw: Raw
-) : AbstractData(raw) {
-    val key: String by raw
-    val value: String by raw
+@JvmInline
+@JsonSerialize(using = TemplateSerializer::class)
+@JsonDeserialize(using = TemplateDeserializer::class)
+value class Template(
+    private val format: String
+) {
+    fun format(substitutor: StringSubstitutor): String = substitutor.replace(format)
+    fun format(arguments: Map<String, Any?>): String = format(StringSubstitutor(arguments))
 
-    @JvmOverloads
-    constructor(
-        key: String,
-        value: String,
-        raw: Raw = MapRaw()
-    ) : this(raw) {
-        raw[MESSAGE_FIELD_KEY] = key
-        raw[MESSAGE_FIELD_VALUE] = value
+    override fun toString(): String = format
+}
+
+object TemplateSerializer : StdSerializer<Template>(Template::class.java) {
+    private fun readResolve(): Any = TemplateSerializer
+    override fun serialize(template: Template, generator: JsonGenerator, provider: SerializerProvider) {
+        generator.writeString(template.toString())
     }
 }
 
-fun Template.format(substitutor: StringSubstitutor): String = substitutor.replace(value)
-fun Template.format(arguments: Map<String, String>): String = format(StringSubstitutor(arguments))
+object TemplateDeserializer : StdDeserializer<Template>(Template::class.java) {
+    private fun readResolve(): Any = TemplateDeserializer
+    override fun deserialize(parser: JsonParser, context: DeserializationContext): Template {
+        return Template(parser.text)
+    }
+}
