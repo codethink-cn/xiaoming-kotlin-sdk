@@ -56,12 +56,14 @@ class ProtocolSubject(
     val version: Version by raw
 }
 
+const val XIAOMING_PROTOCOL_PROPERTIES_FILE_PATH = "xiaoming/protocol.properties"
+
 /**
  * The current protocol subject.
  */
 val CurrentProtocolSubject: ProtocolSubject = ProtocolSubject(MapRaw().apply {
     val properties = Properties().apply {
-        load(ProtocolSubject::class.java.classLoader.getResourceAsStream("xiaoming.properties"))
+        load(ProtocolSubject::class.java.classLoader.getResourceAsStream(XIAOMING_PROTOCOL_PROPERTIES_FILE_PATH))
     }
 
     this[SUBJECT_FIELD_TYPE] = SUBJECT_TYPE_PROTOCOL
