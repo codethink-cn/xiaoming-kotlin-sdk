@@ -77,17 +77,17 @@ class RequestPacket(
     val mode: String by raw
     val argument: Any? by raw
     val subject: Subject? by raw
-    val timeout: Long? by raw
+    val timeout: Long by raw
 
     @JvmOverloads
     constructor(
         id: String,
         action: String,
         mode: String,
+        timeout: Long,
         argument: Any? = null,
         subject: Subject? = null,
         time: Long = currentTimeSeconds,
-        timeout: Long? = null,
         cause: Cause? = null,
         raw: Raw = MapRaw()
     ) : this(raw) {
@@ -97,9 +97,9 @@ class RequestPacket(
         raw[CAUSE_FIELD_CAUSE] = cause
         raw[REQUEST_PACKET_FIELD_ACTION] = action
         raw[REQUEST_PACKET_FIELD_MODE] = mode
+        raw[REQUEST_PACKET_FIELD_TIMEOUT] = timeout
         raw[REQUEST_PACKET_FIELD_ARGUMENT] = argument
         raw[REQUEST_PACKET_FIELD_SUBJECT] = subject
-        raw[REQUEST_PACKET_FIELD_TIMEOUT] = timeout
     }
 }
 
