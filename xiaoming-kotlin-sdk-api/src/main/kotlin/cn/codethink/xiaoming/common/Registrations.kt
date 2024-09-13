@@ -56,6 +56,9 @@ interface Registrations<T> {
  */
 class MapRegistrations<K, T, R : Registration<T>> : Registrations<T> {
     val map: MutableMap<K, R> = ConcurrentHashMap()
+    val keys: Set<K>
+        get() = map.keys
+
     operator fun get(key: K): R? {
         return map[key]
     }
