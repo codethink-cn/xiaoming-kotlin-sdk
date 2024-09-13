@@ -135,30 +135,31 @@ class PacketDataCause(
 
 
 /**
- * Compared to the traditional [TextCause], this class provides [key] and [arguments]
+ * Compared to the traditional [TextCause], this class provides [error] and [context]
  * that are easier for programs to recognize, so that relevant solutions can be provided
  * based on them. At the same time, it also provides [message] that is easy for humans
  * to read.
  *
  * @author Chuanwise
  */
-class TemplateCause(
+class ErrorMessageCause(
     raw: Raw
 ) : Cause(raw) {
-    val key: String by raw
+    val error: String by raw
     val message: String by raw
-    val arguments: Map<String, String> by raw
+    val context: Map<String, Any?> by raw
 
     @JvmOverloads
     constructor(
-        key: String,
-        value: String,
-        arguments: Map<String, String>,
+        error: String,
+        message: String,
+        context: Map<String, Any?>,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[CAUSE_FIELD_TYPE] = CAUSE_TYPE_TEMPLATE
-        raw[TEMPLATE_CAUSE_FIELD_KEY] = key
-        raw[TEMPLATE_CAUSE_FIELD_MESSAGE] = message
-        raw[TEMPLATE_CAUSE_FIELD_ARGUMENTS] = arguments
+        raw[CAUSE_FIELD_TYPE] = CAUSE_TYPE_ERROR_TEXT
+        raw[ERROR_TEXT_CAUSE_FIELD_ERROR] = error
+        raw[ERROR_TEXT_CAUSE_FIELD_MESSAGE] = message
+        raw[ERROR_TEXT_CAUSE_FIELD_CONTEXT] = context
     }
 }
+
