@@ -44,11 +44,13 @@ tasks.test {
 }
 
 tasks.processResources {
-    expand(
-        mapOf(
-            "group" to group,
-            "name" to name,
-            "version" to version
+    filesMatching("xiaoming/protocol.properties") {
+        expand(
+            mapOf(
+                "group" to group,
+                "name" to name,
+                "version" to version
+            )
         )
-    )
+    }
 }
