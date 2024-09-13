@@ -37,6 +37,16 @@ dependencies {
     val kotlinCoroutineVersion: String by rootProject
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutineVersion")
 
+    val apacheCommonCollectionVersion: String by rootProject
+    implementation("org.apache.commons:commons-collections4:$apacheCommonCollectionVersion")
+
+    val ktorVersion: String by rootProject
+    implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-websockets:$ktorVersion")
+    implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
+
     val junitVersion: String by rootProject
     testImplementation(platform("org.junit:junit-bom:$junitVersion"))
     testImplementation("org.junit.jupiter:junit-jupiter")

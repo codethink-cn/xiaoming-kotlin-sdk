@@ -14,17 +14,24 @@
  * limitations under the License.
  */
 
-@file:JvmName("Times")
-
-package cn.codethink.xiaoming.common
+package cn.codethink.xiaoming.io.connection
 
 /**
- * Get the current time in seconds.
+ * A connection that deals with frames.
  *
  * @author Chuanwise
  */
-val currentTimeSeconds: Long
-    get() = System.currentTimeMillis() / 1000
+interface FrameConnection : Connection {
+    /**
+     * Send a string to the other side.
+     */
+    suspend fun send(string: String)
 
-val currentTimeMillis: Long
-    get() = System.currentTimeMillis()
+    /**
+     * Receive a string from the other side.
+     */
+    suspend fun receive(string: String)
+
+    val isClosed: Boolean
+    val isConnected: Boolean
+}

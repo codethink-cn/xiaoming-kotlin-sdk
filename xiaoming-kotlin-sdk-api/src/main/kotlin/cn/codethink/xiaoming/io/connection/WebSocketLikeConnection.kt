@@ -14,17 +14,7 @@
  * limitations under the License.
  */
 
-@file:JvmName("Times")
+package cn.codethink.xiaoming.io.connection
 
-package cn.codethink.xiaoming.common
-
-/**
- * Get the current time in seconds.
- *
- * @author Chuanwise
- */
-val currentTimeSeconds: Long
-    get() = System.currentTimeMillis() / 1000
-
-val currentTimeMillis: Long
-    get() = System.currentTimeMillis()
+interface WebSocketLikeConnection : FrameConnection {
+}
