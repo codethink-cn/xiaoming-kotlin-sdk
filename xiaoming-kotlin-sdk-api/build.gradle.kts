@@ -34,6 +34,9 @@ dependencies {
     val apacheCommonTextVersion: String by rootProject
     implementation("org.apache.commons:commons-text:$apacheCommonTextVersion")
 
+    val kotlinCoroutineVersion: String by rootProject
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutineVersion")
+
     val junitVersion: String by rootProject
     testImplementation(platform("org.junit:junit-bom:$junitVersion"))
     testImplementation("org.junit.jupiter:junit-jupiter")
