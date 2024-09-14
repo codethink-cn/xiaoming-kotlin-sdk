@@ -17,6 +17,8 @@
 package cn.codethink.xiaoming.io.data
 
 import cn.codethink.xiaoming.common.Tristate
+import cn.codethink.xiaoming.common.defaultNullable
+import cn.codethink.xiaoming.common.defaultOptional
 import cn.codethink.xiaoming.common.upgrade
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.type.TypeReference
@@ -31,7 +33,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 import kotlin.reflect.KProperty
-import kotlin.reflect.typeOf
 
 val DEFAULT_FIELD_VALUE = null
 
@@ -71,9 +72,6 @@ annotation class RawValue(
      */
     val optional: Tristate = Tristate.NULL
 )
-
-inline fun <reified T> defaultNullable(): Boolean = typeOf<T>().isMarkedNullable
-inline fun <reified T> defaultOptional(): Boolean = defaultNullable<T>()
 
 fun RawValue?.nameOrDefault(defaultValue: String): String = this?.name ?: defaultValue
 inline fun <reified T> RawValue?.nullableOrDefault(): Boolean = this?.nullable?.value ?: defaultNullable<T>()
