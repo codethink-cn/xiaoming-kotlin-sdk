@@ -24,16 +24,12 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
 
 const val SEGMENT_SEPARATOR = "."
-const val SEGMENT_REGEXP_STRING = "[\\w-]+"
-
-val SEGMENT_REGEXP = SEGMENT_REGEXP_STRING.toRegex()
-
-const val SEGMENT_ID_REGEXP_STRING = "[\\w-]+(\\.[\\w-]+)*"
-val SEGMENT_ID_REGEXP = SEGMENT_ID_REGEXP_STRING.toRegex()
+val SEGMENT_REGEX = "[\\w-]+".toRegex()
+val SEGMENT_ID_REGEX = "[\\w-]+(\\.[\\w-]+)*".toRegex()
 
 /**
  * A segment id is a string that contains several segments (not empty),
- * separated by a dot. Each segment should match the [SEGMENT_REGEXP_STRING].
+ * separated by a dot. Each segment should match the [SEGMENT_REGEX].
  *
  * For example, `a.b.c` is a valid segment id, while `a..b` is not.
  *
@@ -46,7 +42,7 @@ data class SegmentId(
 ) : Id, List<String> by segments {
     init {
         assert(segments.isNotEmpty()) { "Segments should not be empty." }
-        assert(segments.all { it.matches(SEGMENT_REGEXP) }) { "Segments should match the regexp: $SEGMENT_REGEXP_STRING." }
+        assert(segments.all { it.matches(SEGMENT_REGEX) }) { "Segments should match the regexp: $SEGMENT_REGEX." }
     }
 
     companion object {

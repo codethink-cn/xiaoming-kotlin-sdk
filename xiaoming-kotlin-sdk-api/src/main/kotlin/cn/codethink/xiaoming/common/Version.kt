@@ -139,13 +139,11 @@ data class Version(
  *
  * Element index: 0: major, 1: minor, 2: patch, 3: pre-release, 4: build
  */
-const val VERSION_STRING_REGEX_STRING: String = "(0|[1-9]\\d*)\\" +
+val VERSION_STRING_REGEX: Regex = ("(0|[1-9]\\d*)\\" +
         ".(0|[1-9]\\d*)\\" +
         ".(0|[1-9]\\d*)" +
         "(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?" +
-        "(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?"
-
-val VERSION_STRING_REGEX: Regex = VERSION_STRING_REGEX_STRING.toRegex()
+        "(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?").toRegex()
 
 /**
  * Parse a version from a string.
@@ -160,7 +158,7 @@ fun versionOf(version: String): Version = VERSION_STRING_REGEX.find(version)?.le
     )
 } ?: throw IllegalArgumentException(
     "Invalid version string: $version, " +
-            "make sure it matches the regex from the semantic versioning 2.0.0: $VERSION_STRING_REGEX_STRING."
+            "make sure it matches the regex from the semantic versioning 2.0.0: $VERSION_STRING_REGEX."
 )
 
 fun String.toVersion(): Version = versionOf(this)
