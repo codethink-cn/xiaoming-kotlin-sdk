@@ -1,0 +1,14 @@
+{
+  "data": {
+    "type": "database",
+    "source": {
+      "type": "mysql",
+      "url": "jdbc:mysql://localhost:3306/xiaoming?user=$user",
+      "password": "$password"
+    },
+    "tables": {
+      "prefix": "",
+      "permission_subject": "permission_subject"
+    }
+  }
+}

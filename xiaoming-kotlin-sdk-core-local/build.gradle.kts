@@ -34,6 +34,12 @@ dependencies {
     val kotlinLoggingVersion: String by rootProject
     implementation("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
 
+    val ktormVersion: String by rootProject
+    implementation("org.ktorm:ktorm-core:$ktormVersion")
+
+    val mysqlConnectorVersion: String by rootProject
+    implementation("com.mysql:mysql-connector-j:$mysqlConnectorVersion")
+
     val junitVersion: String by rootProject
     testImplementation(platform("org.junit:junit-bom:$junitVersion"))
     testImplementation("org.junit.jupiter:junit-jupiter")
