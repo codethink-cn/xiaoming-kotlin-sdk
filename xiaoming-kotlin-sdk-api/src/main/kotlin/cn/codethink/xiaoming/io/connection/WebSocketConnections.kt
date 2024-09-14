@@ -17,8 +17,9 @@
 package cn.codethink.xiaoming.io.connection
 
 import cn.codethink.xiaoming.common.Subject
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KLogger
+import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.ApplicationCallPipeline
 import io.ktor.server.application.install
 import io.ktor.server.engine.ApplicationEngineFactory
@@ -29,6 +30,10 @@ import io.ktor.server.websocket.WebSocketServerSession
 import io.ktor.server.websocket.WebSockets
 import io.ktor.server.websocket.webSocket
 import io.ktor.util.pipeline.PipelineContext
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
+import kotlin.concurrent.write
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,10 +41,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.runBlocking
-import java.util.concurrent.locks.ReentrantReadWriteLock
-import kotlin.concurrent.read
-import kotlin.concurrent.write
-import kotlin.coroutines.CoroutineContext
 
 interface WebSocketConnectionsConfiguration {
     val port: Int
@@ -52,7 +53,6 @@ val WebSocketConnectionsConfiguration.address: String
 
 abstract class WebSocketConnections(
     private val configuration: WebSocketConnectionsConfiguration,
-    private val mapper: ObjectMapper,
     private val logger: KLogger,
     override val subject: Subject,
     applicationEngineFactory: ApplicationEngineFactory<*, *> = Netty,
@@ -85,10 +85,14 @@ abstract class WebSocketConnections(
         port = configuration.port,
         host = configuration.host ?: "0.0.0.0"
     ) {
+        module(dispatcher)
+    }.start()
+
+    private fun Application.module(dispatcher: CoroutineDispatcher) {
         lock.write {
             stateNoLock = when (stateNoLock) {
                 State.INITIALIZED -> State.STARTED
-                State.CLOSING -> return@embeddedServer
+                State.CLOSING -> return
                 else -> throw IllegalStateException(
                     "Server internal error: unexpected state after started: $stateNoLock."
                 )
@@ -104,7 +108,7 @@ abstract class WebSocketConnections(
                 onConnected(supervisorJob, dispatcher)
             }
         }
-    }.start()
+    }
 
     override fun close(): Unit = runBlocking {
         lock.write {
@@ -121,7 +125,7 @@ abstract class WebSocketConnections(
         }
     }
 
-    abstract suspend fun PipelineContext<*, *>.onConnect()
+    abstract suspend fun PipelineContext<Unit, ApplicationCall>.onConnect()
 
     abstract suspend fun WebSocketServerSession.onConnected(parentJob: Job, dispatcher: CoroutineDispatcher)
 }
