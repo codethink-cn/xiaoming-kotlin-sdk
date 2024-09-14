@@ -16,16 +16,20 @@
 
 package cn.codethink.xiaoming.permission.data
 
-import cn.codethink.xiaoming.permission.LocalPermissionService
-import javax.xml.crypto.Data
+import cn.codethink.xiaoming.common.Matcher
+import cn.codethink.xiaoming.common.Subject
 
 /**
- * Operations to access and modify the data of the [LocalPermissionService].
- *
- * @author Chuanwise
+ * Represent a [PermissionProfile] has or has not a permission
  */
-interface LocalPlatformData : Data {
-    val type: String
-    val permissionProfiles: PermissionProfiles
-    val permissionRecords: PermissionRecords
+interface PermissionRecord {
+    val profile: PermissionProfile
+    val subject: Subject
+    val node: Matcher<List<String>>
+    val context: Map<String, Any?>
+    val value: Boolean
+}
+
+interface PermissionRecords {
+    fun getRecords(profile: PermissionProfile): List<PermissionRecord>
 }

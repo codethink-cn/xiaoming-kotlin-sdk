@@ -20,8 +20,10 @@ import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_FIELD_SOURCE
 import cn.codethink.xiaoming.common.DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_FIELD_TABLES
 import cn.codethink.xiaoming.common.DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PERMISSION_PROFILE
+import cn.codethink.xiaoming.common.DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PERMISSION_RECORD
 import cn.codethink.xiaoming.common.DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PREFIX
 import cn.codethink.xiaoming.common.DEFAULT_PERMISSION_PROFILE_TABLE_NAME
+import cn.codethink.xiaoming.common.DEFAULT_PERMISSION_RECORD_TABLE_NAME
 import cn.codethink.xiaoming.common.LOCAL_PERMISSION_SERVICE_CONFIGURATION_FIELD_TYPE
 import cn.codethink.xiaoming.common.LOCAL_PERMISSION_SERVICE_CONFIGURATION_TYPE_DATABASE
 import cn.codethink.xiaoming.io.data.DatabaseDataSource
@@ -56,22 +58,29 @@ class DatabaseLocalPlatformData(
         @RawValue(DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PERMISSION_PROFILE)
         val permissionProfile: String by raw
 
+        @RawValue(DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PERMISSION_RECORD)
+        val permissionRecord: String by raw
+
         @JvmOverloads
         constructor(
             prefix: String = "",
             permissionProfile: String = DEFAULT_PERMISSION_PROFILE_TABLE_NAME,
+            permissionRecord: String = DEFAULT_PERMISSION_RECORD_TABLE_NAME,
             raw: Raw = MapRaw()
         ) : this(raw) {
             raw[DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PREFIX] = prefix
-            raw[
-                DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PERMISSION_PROFILE
-            ] = permissionProfile
+            raw[DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PERMISSION_PROFILE] =
+                permissionProfile
+            raw[DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PERMISSION_RECORD] = permissionRecord
         }
     }
     val tables: Tables by raw
 
     override val permissionProfiles by lazy {
         DatabasePermissionProfiles(tables.prefix + tables.permissionProfile, mapper!!, database)
+    }
+    override val permissionRecords: PermissionRecords by lazy {
+        DatabasePermissionRecords(tables.prefix + tables.permissionRecord, mapper!!, database)
     }
 
     @JvmOverloads
