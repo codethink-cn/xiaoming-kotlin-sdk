@@ -18,6 +18,7 @@ package cn.codethink.xiaoming.io.packet
 
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.CurrentProtocolSubject
+import cn.codethink.xiaoming.common.DefaultRegistration
 import cn.codethink.xiaoming.common.ErrorMessageCause
 import cn.codethink.xiaoming.common.MapRegistrations
 import cn.codethink.xiaoming.common.PACKET_FIELD_CAUSE
@@ -32,7 +33,6 @@ import cn.codethink.xiaoming.common.REQUEST_MODE_ASYNC_RESULT
 import cn.codethink.xiaoming.common.REQUEST_MODE_SYNC
 import cn.codethink.xiaoming.common.REQUEST_PACKET_FIELD_ARGUMENT
 import cn.codethink.xiaoming.common.Registration
-import cn.codethink.xiaoming.common.SimpleRegistration
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.currentTimeMillis
 import cn.codethink.xiaoming.common.currentTimeSeconds
@@ -107,12 +107,12 @@ class RequestPacketHandler : PacketHandler {
         }
     }
 
-    val requestModeHandlers = MapRegistrations<String, PacketHandler, SimpleRegistration<PacketHandler>>().apply {
-        register(REQUEST_MODE_SYNC, SimpleRegistration(SyncRequestPacketHandler(), CurrentProtocolSubject))
-        register(REQUEST_MODE_ASYNC, SimpleRegistration(AsyncRequestPacketHandler(), CurrentProtocolSubject))
+    val requestModeHandlers = MapRegistrations<String, PacketHandler, DefaultRegistration<PacketHandler>>().apply {
+        register(REQUEST_MODE_SYNC, DefaultRegistration(SyncRequestPacketHandler(), CurrentProtocolSubject))
+        register(REQUEST_MODE_ASYNC, DefaultRegistration(AsyncRequestPacketHandler(), CurrentProtocolSubject))
         register(
             REQUEST_MODE_ASYNC_RESULT,
-            SimpleRegistration(AsyncResultRequestPacketHandler(), CurrentProtocolSubject)
+            DefaultRegistration(AsyncResultRequestPacketHandler(), CurrentProtocolSubject)
         )
     }
 

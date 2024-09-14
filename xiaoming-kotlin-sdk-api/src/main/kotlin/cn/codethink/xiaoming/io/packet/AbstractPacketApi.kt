@@ -17,11 +17,11 @@
 package cn.codethink.xiaoming.io.packet
 
 import cn.codethink.xiaoming.common.CurrentProtocolSubject
+import cn.codethink.xiaoming.common.DefaultRegistration
 import cn.codethink.xiaoming.common.ErrorMessageCause
-import cn.codethink.xiaoming.common.MapRegistrations
 import cn.codethink.xiaoming.common.PACKET_TYPE_REQUEST
 import cn.codethink.xiaoming.common.RECEIPT_STATE_FAILED
-import cn.codethink.xiaoming.common.SimpleRegistration
+import cn.codethink.xiaoming.common.StringMapDefaultRegistrations
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.io.UNSUPPORTED_PACKET_TYPE
 import cn.codethink.xiaoming.io.data.Packet
@@ -60,7 +60,7 @@ abstract class AbstractPacketApi(
         registerPacketHandler(PACKET_TYPE_REQUEST, CurrentProtocolSubject, this)
     }
 
-    private val handlers = MapRegistrations<String, PacketHandler, SimpleRegistration<PacketHandler>>()
+    private val handlers = StringMapDefaultRegistrations<PacketHandler>()
 
     override suspend fun receive(packet: Packet) {
         val context = PacketContext(this, packet)
@@ -92,7 +92,7 @@ abstract class AbstractPacketApi(
     }
 
     fun registerPacketHandler(type: String, subject: Subject, handler: PacketHandler) {
-        handlers.register(type, SimpleRegistration(handler, subject))
+        handlers.register(type, DefaultRegistration(handler, subject))
     }
 
     fun unregisterPacketHandler(subject: Subject) {

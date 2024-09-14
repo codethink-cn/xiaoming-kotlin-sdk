@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap
  * Container of a registrable object.
  *
  * @author Chuanwise
- * @see SimpleRegistration
+ * @see DefaultRegistration
  */
 interface Registration<T> {
     val value: T
@@ -30,11 +30,11 @@ interface Registration<T> {
 }
 
 /**
- * Simple implementation of [Registration].
+ * Default implementation of [Registration].
  *
  * @author Chuanwise
  */
-class SimpleRegistration<T>(
+class DefaultRegistration<T>(
     override val value: T,
     override val subject: Subject
 ) : Registration<T>
@@ -67,3 +67,5 @@ class MapRegistrations<K, T, R : Registration<T>> : Registrations<T> {
     fun unregisterByKey(key: K): R? = map.remove(key)
     override fun unregisterBySubject(subject: Subject): Boolean = map.values.removeIf { it.subject == subject }
 }
+
+inline fun <reified T> StringMapDefaultRegistrations() = MapRegistrations<String, T, DefaultRegistration<T>>()
