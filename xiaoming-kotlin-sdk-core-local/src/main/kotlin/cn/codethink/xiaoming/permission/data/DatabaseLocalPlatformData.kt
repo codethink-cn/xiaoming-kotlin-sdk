@@ -19,51 +19,59 @@ package cn.codethink.xiaoming.permission.data
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_FIELD_SOURCE
 import cn.codethink.xiaoming.common.DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_FIELD_TABLES
-import cn.codethink.xiaoming.common.DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PERMISSION_SUBJECT
+import cn.codethink.xiaoming.common.DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PERMISSION_PROFILE
 import cn.codethink.xiaoming.common.DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PREFIX
-import cn.codethink.xiaoming.common.DEFAULT_PERMISSION_SUBJECT_TABLE_NAME
+import cn.codethink.xiaoming.common.DEFAULT_PERMISSION_PROFILE_TABLE_NAME
 import cn.codethink.xiaoming.common.LOCAL_PERMISSION_SERVICE_CONFIGURATION_FIELD_TYPE
 import cn.codethink.xiaoming.common.LOCAL_PERMISSION_SERVICE_CONFIGURATION_TYPE_DATABASE
 import cn.codethink.xiaoming.io.data.DatabaseDataSource
 import cn.codethink.xiaoming.io.data.MapRaw
+import cn.codethink.xiaoming.io.data.NodeRaw
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.RawValue
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.ktorm.database.Database
 
-class DatabaseLocalPermissionServiceData(
+class DatabaseLocalPlatformData(
     raw: Raw
-) : AbstractData(raw), LocalPermissionServiceData {
+) : AbstractData(raw), LocalPlatformData {
     override val type: String = "database"
     val source: DatabaseDataSource by raw
     val database: Database by lazy { Database.connect(source.toDataSource()) }
 
-    class Tables(
-        raw: Raw
-    ) : AbstractData(raw) {
+    var mapper: ObjectMapper? = null
+
+    init {
+        if (raw is NodeRaw) {
+            mapper = raw.mapper
+        }
+    }
+
+    class Tables(raw: Raw) : AbstractData(raw) {
         @RawValue(DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PREFIX)
         val prefix: String by raw
 
-        @RawValue(DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PERMISSION_SUBJECT)
-        val permissionSubject: String by raw
+        @RawValue(DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PERMISSION_PROFILE)
+        val permissionProfile: String by raw
 
         @JvmOverloads
         constructor(
             prefix: String = "",
-            permissionSubject: String = DEFAULT_PERMISSION_SUBJECT_TABLE_NAME,
+            permissionProfile: String = DEFAULT_PERMISSION_PROFILE_TABLE_NAME,
             raw: Raw = MapRaw()
         ) : this(raw) {
             raw[DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PREFIX] = prefix
-            raw[DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PERMISSION_SUBJECT] =
-                permissionSubject
+            raw[
+                DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PERMISSION_PROFILE
+            ] = permissionProfile
         }
     }
-
     val tables: Tables by raw
 
-    override val permissionSubjects by lazy {
-        DatabasePermissionSubjects(tables.prefix + tables.permissionSubject, database)
+    override val permissionProfiles by lazy {
+        DatabasePermissionProfiles(tables.prefix + tables.permissionProfile, mapper!!, database)
     }
 
     @JvmOverloads

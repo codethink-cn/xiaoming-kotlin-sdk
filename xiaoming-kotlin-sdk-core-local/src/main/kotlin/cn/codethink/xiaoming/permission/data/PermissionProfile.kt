@@ -16,15 +16,19 @@
 
 package cn.codethink.xiaoming.permission.data
 
-import cn.codethink.xiaoming.permission.LocalPermissionService
-import javax.xml.crypto.Data
+import cn.codethink.xiaoming.common.Subject
 
-/**
- * Operations to access and modify the data of the [LocalPermissionService].
- *
- * @author Chuanwise
- */
-interface LocalPermissionServiceData : Data {
-    val type: String
-    val permissionSubjects: PermissionSubjects
+interface PermissionProfile {
+    val id: Long
+    val subject: Subject
+}
+
+interface PermissionProfiles {
+    fun getProfileById(id: Long): PermissionProfile?
+    fun insertAndGetProfileId(subject: Subject): Long
+}
+
+fun PermissionProfiles.insertAndGetProfile(subject: Subject): PermissionProfile? {
+    val id = insertAndGetProfileId(subject)
+    return getProfileById(id)
 }

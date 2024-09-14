@@ -18,10 +18,10 @@ package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.common.Matcher
 import cn.codethink.xiaoming.common.Subject
-import cn.codethink.xiaoming.permission.data.LocalPermissionServiceConfiguration
+import cn.codethink.xiaoming.permission.data.LocalPlatformConfiguration
 
 class LocalPermissionService(
-    val configuration: LocalPermissionServiceConfiguration
+    val configuration: LocalPlatformConfiguration
 ) : PermissionService {
     override suspend fun hasPermission(subject: Subject, permissionMatcher: Matcher<Permission>): Boolean? {
         TODO("Not yet implemented")

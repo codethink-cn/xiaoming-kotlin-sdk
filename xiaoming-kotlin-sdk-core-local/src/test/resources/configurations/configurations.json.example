@@ -8,7 +8,7 @@
     },
     "tables": {
       "prefix": "",
-      "permission_subject": "permission_subject"
+      "permission_profile": "permission_profile"
     }
   }
 }

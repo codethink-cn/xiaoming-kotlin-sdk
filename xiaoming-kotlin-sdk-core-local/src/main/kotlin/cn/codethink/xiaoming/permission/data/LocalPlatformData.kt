@@ -16,24 +16,15 @@
 
 package cn.codethink.xiaoming.permission.data
 
-import cn.codethink.xiaoming.common.AbstractData
-import cn.codethink.xiaoming.common.LOCAL_PERMISSION_SERVICE_CONFIGURATION_FIELD_DATA
-import cn.codethink.xiaoming.io.data.MapRaw
-import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.getValue
-import cn.codethink.xiaoming.io.data.set
+import cn.codethink.xiaoming.permission.LocalPermissionService
+import javax.xml.crypto.Data
 
-class LocalPermissionServiceConfiguration(
-    raw: Raw
-) : AbstractData(raw) {
-
-    val data: LocalPermissionServiceData by raw
-
-    @JvmOverloads
-    constructor(
-        data: LocalPermissionServiceData,
-        raw: Raw = MapRaw()
-    ) : this(raw) {
-        raw[LOCAL_PERMISSION_SERVICE_CONFIGURATION_FIELD_DATA] = data
-    }
+/**
+ * Operations to access and modify the data of the [LocalPermissionService].
+ *
+ * @author Chuanwise
+ */
+interface LocalPlatformData : Data {
+    val type: String
+    val permissionProfiles: PermissionProfiles
 }

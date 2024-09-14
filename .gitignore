@@ -40,4 +40,4 @@ bin/
 .DS_Store
 
 ### Project ###
-permission-service.json
+configurations.json

@@ -16,11 +16,13 @@
 
 package cn.codethink.xiaoming.permission
 
+import cn.codethink.xiaoming.common.CurrentProtocolSubject
 import cn.codethink.xiaoming.io.LocalPlatformModule
 import cn.codethink.xiaoming.io.data.PlatformAnnotationIntrospector
 import cn.codethink.xiaoming.io.data.PlatformModule
-import cn.codethink.xiaoming.permission.data.DatabaseLocalPermissionServiceData
-import cn.codethink.xiaoming.permission.data.LocalPermissionServiceConfiguration
+import cn.codethink.xiaoming.permission.data.DatabaseLocalPlatformData
+import cn.codethink.xiaoming.permission.data.LocalPlatformConfiguration
+import cn.codethink.xiaoming.permission.data.insertAndGetProfile
 import com.fasterxml.jackson.databind.AnnotationIntrospector
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -45,16 +47,16 @@ class LocalPermissionServiceTest {
             )
         }
 
-        lateinit var configuration: LocalPermissionServiceConfiguration
+        lateinit var configuration: LocalPlatformConfiguration
 
         @JvmStatic
         @BeforeAll
         fun beforeAll() {
-            configuration = getResourceFileAsStream("configurations/permission-service.json").use {
+            configuration = getResourceFileAsStream("configurations/configurations.json").use {
                 mapper.readValue(it)
             }
-            if (configuration.data is DatabaseLocalPermissionServiceData) {
-                val dataSource = (configuration.data as DatabaseLocalPermissionServiceData).source.toDataSource()
+            if (configuration.data is DatabaseLocalPlatformData) {
+                val dataSource = (configuration.data as DatabaseLocalPlatformData).source.toDataSource()
                 Database.Companion.connect(dataSource)
             }
         }
@@ -75,6 +77,7 @@ class LocalPermissionServiceTest {
 
     @Test
     fun testGetPermissionSubject() {
-        val permissionSubject = configuration.data.permissionSubjects.getPermissionSubjectById(114514)
+        val profile = configuration.data.permissionProfiles.insertAndGetProfile(CurrentProtocolSubject)
+        println(profile)
     }
 }

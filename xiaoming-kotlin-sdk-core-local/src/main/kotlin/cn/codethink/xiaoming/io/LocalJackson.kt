@@ -23,16 +23,16 @@ import cn.codethink.xiaoming.io.data.DatabaseDataSource
 import cn.codethink.xiaoming.io.data.MySqlDatabaseDataSource
 import cn.codethink.xiaoming.io.data.polymorphic
 import cn.codethink.xiaoming.io.data.subType
-import cn.codethink.xiaoming.permission.data.DatabaseLocalPermissionServiceData
-import cn.codethink.xiaoming.permission.data.LocalPermissionServiceData
+import cn.codethink.xiaoming.permission.data.DatabaseLocalPlatformData
+import cn.codethink.xiaoming.permission.data.LocalPlatformData
 import com.fasterxml.jackson.databind.module.SimpleModule
 
 class LocalPlatformModule : SimpleModule(
     "LocalPlatformModule", CurrentJacksonModuleVersion
 ) {
     inner class Deserializers {
-        val permissionServiceData = polymorphic<LocalPermissionServiceData> {
-            subType<DatabaseLocalPermissionServiceData>(LOCAL_PERMISSION_SERVICE_CONFIGURATION_TYPE_DATABASE)
+        val permissionServiceData = polymorphic<LocalPlatformData> {
+            subType<DatabaseLocalPlatformData>(LOCAL_PERMISSION_SERVICE_CONFIGURATION_TYPE_DATABASE)
         }
         val databaseDataSource = polymorphic<DatabaseDataSource> {
             subType<MySqlDatabaseDataSource>(DATABASE_DATA_SOURCE_TYPE_MYSQL)
