@@ -16,14 +16,14 @@
 
 package cn.codethink.xiaoming.io.common
 
+import cn.codethink.xiaoming.common.AnyMatcher
 import cn.codethink.xiaoming.common.DefaultStringListMatcher
 import cn.codethink.xiaoming.common.LiteralStringMatcher
-import cn.codethink.xiaoming.common.MajorityOptionalGreedilyWildcardStringMatcher
-import cn.codethink.xiaoming.common.MajorityRequiredGreedilyWildcardStringMatcher
-import cn.codethink.xiaoming.common.MinorityOptionalGreedilyWildcardStringMatcher
-import cn.codethink.xiaoming.common.MinorityRequiredGreedilyWildcardStringMatcher
+import cn.codethink.xiaoming.common.MajorityOptionalWildcardStringMatcher
+import cn.codethink.xiaoming.common.MajorityRequiredWildcardStringMatcher
+import cn.codethink.xiaoming.common.MinorityOptionalWildcardStringMatcher
+import cn.codethink.xiaoming.common.MinorityRequiredWildcardStringMatcher
 import cn.codethink.xiaoming.common.RegexStringMatcher
-import cn.codethink.xiaoming.common.WildcardStringMatcher
 import cn.codethink.xiaoming.common.segmentIdOf
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -47,7 +47,7 @@ class SegmentIdTest {
             DefaultStringListMatcher(
                 listOf(
                     LiteralStringMatcher("114514"),
-                    MinorityOptionalGreedilyWildcardStringMatcher,
+                    MinorityOptionalWildcardStringMatcher,
                     LiteralStringMatcher("1919810")
                 )
             ).isMatched(segmentIdOf("114514.1919810"))
@@ -56,7 +56,7 @@ class SegmentIdTest {
             DefaultStringListMatcher(
                 listOf(
                     LiteralStringMatcher("114514"),
-                    MinorityRequiredGreedilyWildcardStringMatcher,
+                    MinorityRequiredWildcardStringMatcher,
                     LiteralStringMatcher("1919810")
                 )
             ).isMatched(segmentIdOf("114514.1919810"))
@@ -66,7 +66,7 @@ class SegmentIdTest {
             DefaultStringListMatcher(
                 listOf(
                     RegexStringMatcher("18\\d+".toRegex()),
-                    MajorityRequiredGreedilyWildcardStringMatcher
+                    MajorityRequiredWildcardStringMatcher
                 )
             ).isMatched(segmentIdOf("1893.12.26"))
         )
@@ -74,7 +74,7 @@ class SegmentIdTest {
             DefaultStringListMatcher(
                 listOf(
                     RegexStringMatcher("18\\d+".toRegex()),
-                    MajorityOptionalGreedilyWildcardStringMatcher
+                    MajorityOptionalWildcardStringMatcher
                 )
             ).isMatched(segmentIdOf("1893.12.26"))
         )
@@ -83,8 +83,8 @@ class SegmentIdTest {
             DefaultStringListMatcher(
                 listOf(
                     LiteralStringMatcher("18"),
-                    WildcardStringMatcher,
-                    WildcardStringMatcher
+                    AnyMatcher<String>(),
+                    AnyMatcher<String>()
                 )
             ).isMatched(segmentIdOf("1893.12.26"))
         )
@@ -93,8 +93,8 @@ class SegmentIdTest {
             DefaultStringListMatcher(
                 listOf(
                     LiteralStringMatcher("1893"),
-                    MajorityRequiredGreedilyWildcardStringMatcher,
-                    WildcardStringMatcher
+                    MajorityRequiredWildcardStringMatcher,
+                    AnyMatcher<String>()
                 )
             ).isMatched(segmentIdOf("1893.12.26"))
         }

@@ -14,22 +14,17 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.permission.data
+package cn.codethink.xiaoming.permission
 
-import cn.codethink.xiaoming.common.Matcher
 import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.permission.data.PermissionProfile
 
-/**
- * Represent a [PermissionProfile] has or has not a permission
- */
-interface PermissionRecord {
-    val profile: PermissionProfile
-    val subject: Subject
-    val node: Matcher<List<String>>
-    val context: Map<String, Matcher<*>>
-    val value: Boolean
-}
+interface PermissionProfileService {
+    suspend fun getPermissionProfile(
+        api: LocalPermissionServiceApi, subject: Subject
+    ): PermissionProfile?
 
-interface PermissionRecords {
-    fun getRecords(profile: PermissionProfile): List<PermissionRecord>
+    suspend fun hasPermission(
+        api: LocalPermissionServiceApi, subject: Subject, permission: Permission
+    ): Boolean?
 }

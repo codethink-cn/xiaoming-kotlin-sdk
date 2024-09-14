@@ -25,6 +25,7 @@ import cn.codethink.xiaoming.common.LITERAL_PERMISSION_MATCHER_FIELD_PERMISSION
 import cn.codethink.xiaoming.common.LiteralMatcher
 import cn.codethink.xiaoming.common.MATCHER_FIELD_TYPE
 import cn.codethink.xiaoming.common.Matcher
+import cn.codethink.xiaoming.common.PERMISSION_CONTEXT_META_FIELD_DEFAULT_MATCHER
 import cn.codethink.xiaoming.common.PERMISSION_CONTEXT_META_FIELD_DEFAULT_VALUE
 import cn.codethink.xiaoming.common.PERMISSION_CONTEXT_META_FIELD_DESCRIPTION
 import cn.codethink.xiaoming.common.PERMISSION_CONTEXT_META_FIELD_NULLABLE
@@ -36,9 +37,9 @@ import cn.codethink.xiaoming.common.PERMISSION_MATCHER_TYPE_LITERAL
 import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_CONTEXT
 import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_DESCRIPTION
 import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_DESCRIPTOR
-import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_ID
+import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_NODE
 import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_SUBJECT
-import cn.codethink.xiaoming.common.PERMISSION_SUBJECT_FIELD_ID
+import cn.codethink.xiaoming.common.PERMISSION_SUBJECT_FIELD_NODE
 import cn.codethink.xiaoming.common.PERMISSION_SUBJECT_FIELD_SUBJECT
 import cn.codethink.xiaoming.common.SegmentId
 import cn.codethink.xiaoming.common.Subject
@@ -58,16 +59,16 @@ import cn.codethink.xiaoming.io.data.set
 class PermissionDescriptor(
     raw: Raw
 ) : AbstractData(raw) {
-    val id: SegmentId by raw
+    val node: SegmentId by raw
     val subject: Subject by raw
 
     @JvmOverloads
     constructor(
-        id: SegmentId,
+        node: SegmentId,
         subject: Subject,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[PERMISSION_SUBJECT_FIELD_ID] = id
+        raw[PERMISSION_SUBJECT_FIELD_NODE] = node
         raw[PERMISSION_SUBJECT_FIELD_SUBJECT] = subject
     }
 }
@@ -87,18 +88,33 @@ class PermissionContextMeta(
     val optional: Boolean by raw
     val nullable: Boolean by raw
 
+    val defaultMatcher: Matcher<*>? by raw
+
     @JvmOverloads
     constructor(
         defaultValue: Any?,
         description: String?,
         optional: Boolean,
         nullable: Boolean,
+        defaultMatcher: Matcher<*>?,
         raw: Raw = MapRaw()
     ) : this(raw) {
         raw[PERMISSION_CONTEXT_META_FIELD_DEFAULT_VALUE] = defaultValue
         raw[PERMISSION_CONTEXT_META_FIELD_DESCRIPTION] = description
         raw[PERMISSION_CONTEXT_META_FIELD_OPTIONAL] = optional
         raw[PERMISSION_CONTEXT_META_FIELD_NULLABLE] = nullable
+        raw[PERMISSION_CONTEXT_META_FIELD_DEFAULT_MATCHER] = defaultMatcher
+
+        if (optional && !nullable && defaultValue == null) {
+            throw IllegalArgumentException(
+                "If a context is optional, it must be nullable or have a non-null default value."
+            )
+        }
+        if (optional && defaultMatcher == null) {
+            throw IllegalArgumentException(
+                "If a context is optional, it must have a default matcher."
+            )
+        }
     }
 }
 
@@ -107,8 +123,9 @@ inline fun <reified T> PermissionContextMeta(
     description: String? = null,
     optional: Boolean = defaultOptional<T>(),
     nullable: Boolean = defaultNullable<T>(),
+    defaultMatcher: Matcher<*>? = null,
     raw: Raw = MapRaw()
-) = PermissionContextMeta(defaultValue, description, optional, nullable, raw)
+) = PermissionContextMeta(defaultValue, description, optional, nullable, defaultMatcher, raw)
 
 /**
  * Describe a permission.
@@ -118,7 +135,7 @@ inline fun <reified T> PermissionContextMeta(
 class PermissionMeta(
     raw: Raw
 ) : AbstractData(raw) {
-    val id: SegmentId by raw
+    val node: SegmentId by raw
     val subject: Subject by raw
     val context: Map<String, PermissionContextMeta> by raw
     val description: String? by raw
@@ -126,14 +143,14 @@ class PermissionMeta(
 
     @JvmOverloads
     constructor(
-        id: SegmentId,
+        node: SegmentId,
         subject: Subject,
         context: Map<String, PermissionContextMeta> = emptyMap(),
         description: String? = null,
-        descriptor: PermissionDescriptor = PermissionDescriptor(id, subject),
+        descriptor: PermissionDescriptor = PermissionDescriptor(node, subject),
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[PERMISSION_META_FIELD_ID] = id
+        raw[PERMISSION_META_FIELD_NODE] = node
         raw[PERMISSION_META_FIELD_SUBJECT] = subject
         raw[PERMISSION_META_FIELD_DESCRIPTION] = description
         raw[PERMISSION_META_FIELD_CONTEXT] = context
@@ -167,6 +184,9 @@ class LiteralPermissionMatcher(
     raw: Raw
 ) : AbstractData(raw), LiteralMatcher<Permission> {
     override val type: String by raw
+    override val targetType: Class<Permission>
+        get() = Permission::class.java
+
     override val value: Permission by raw
 
     @JvmOverloads
@@ -185,6 +205,8 @@ class DefaultPermissionMatcher(
     raw: Raw
 ) : AbstractData(raw), Matcher<Permission> {
     override val type: String by raw
+    override val targetType: Class<Permission>
+        get() = Permission::class.java
 
     val node: Matcher<SegmentId> by raw
     val context: Map<String, Matcher<*>> by raw
@@ -202,7 +224,7 @@ class DefaultPermissionMatcher(
 
     @Suppress("UNCHECKED_CAST")
     override fun isMatched(target: Permission): Boolean {
-        if (!node.isMatched(target.descriptor.id)) {
+        if (!node.isMatched(target.descriptor.node)) {
             return false
         }
 

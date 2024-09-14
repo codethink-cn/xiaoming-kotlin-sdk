@@ -21,13 +21,12 @@ import cn.codethink.xiaoming.common.DATABASE_DATA_SOURCE_TYPE_MYSQL
 import cn.codethink.xiaoming.common.MYSQL_DATABASE_DATA_SOURCE_FIELD_PASSWORD
 import cn.codethink.xiaoming.common.MYSQL_DATABASE_DATA_SOURCE_FIELD_URL
 import cn.codethink.xiaoming.common.Password
-import cn.codethink.xiaoming.io.data.set
 import com.mysql.cj.jdbc.MysqlDataSource
 import javax.sql.DataSource
 
 class MySqlDatabaseDataSource(
     raw: Raw
-) : AbstractData(raw), DatabaseDataSource {
+) : AbstractData(raw), SqlDataSource {
     override val type: String = DATABASE_DATA_SOURCE_TYPE_MYSQL
 
     val url: String by raw

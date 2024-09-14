@@ -16,12 +16,12 @@
 
 package cn.codethink.xiaoming.permission
 
-import cn.codethink.xiaoming.common.CurrentProtocolSubject
+import cn.codethink.xiaoming.common.CurrentSdkSubject
 import cn.codethink.xiaoming.io.LocalPlatformModule
 import cn.codethink.xiaoming.io.data.PlatformAnnotationIntrospector
 import cn.codethink.xiaoming.io.data.PlatformModule
-import cn.codethink.xiaoming.permission.data.DatabaseLocalPlatformData
 import cn.codethink.xiaoming.permission.data.LocalPlatformConfiguration
+import cn.codethink.xiaoming.permission.data.SqlLocalPlatformData
 import cn.codethink.xiaoming.permission.data.insertAndGetProfile
 import com.fasterxml.jackson.databind.AnnotationIntrospector
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector
@@ -55,8 +55,8 @@ class LocalPermissionServiceTest {
             configuration = getResourceFileAsStream("configurations/configurations.json").use {
                 mapper.readValue(it)
             }
-            if (configuration.data is DatabaseLocalPlatformData) {
-                val dataSource = (configuration.data as DatabaseLocalPlatformData).source.toDataSource()
+            if (configuration.data is SqlLocalPlatformData) {
+                val dataSource = (configuration.data as SqlLocalPlatformData).source.toDataSource()
                 Database.Companion.connect(dataSource)
             }
         }
@@ -77,7 +77,7 @@ class LocalPermissionServiceTest {
 
     @Test
     fun testGetPermissionSubject() {
-        val profile = configuration.data.permissionProfiles.insertAndGetProfile(CurrentProtocolSubject)
+        val profile = configuration.data.permissionProfiles.insertAndGetProfile(CurrentSdkSubject)
         println(profile)
     }
 }

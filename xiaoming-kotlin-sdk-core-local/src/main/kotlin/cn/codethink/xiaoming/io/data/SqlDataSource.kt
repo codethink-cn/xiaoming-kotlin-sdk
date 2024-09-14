@@ -23,7 +23,7 @@ import javax.sql.DataSource
  *
  * @author Chuanwise
  */
-interface DatabaseDataSource {
+interface SqlDataSource {
     val type: String
     fun toDataSource(): DataSource
 }

@@ -129,8 +129,8 @@ interface DefaultStringListMatcherConstructingCallbackSupport : Matcher<String> 
  * [DefaultStringListMatcherConstructingCallbackSupport] in [matchers]).
  *
  * @author Chuanwise
+ * @see AnyMatcher
  * @see WildcardStringMatcher
- * @see GreedilyWildcardStringMatcher
  */
 class DefaultStringListMatcher(
     val matchers: List<Matcher<String>>
@@ -156,6 +156,10 @@ class DefaultStringListMatcher(
     }
 
     override val type: String = SEGMENT_ID_MATCHER_TYPE_DEFAULT
+
+    @Suppress("UNCHECKED_CAST")
+    override val targetType: Class<List<String>>
+        get() = List::class.java as Class<List<String>>
 
     override fun isMatched(target: List<String>): Boolean {
         val context = DefaultStringListMatchingContext(this, target, matchers)

@@ -16,11 +16,10 @@
 
 package cn.codethink.xiaoming.permission.data
 
-import cn.codethink.xiaoming.permission.LocalPermissionService
 import javax.xml.crypto.Data
 
 /**
- * Operations to access and modify the data of the [LocalPermissionService].
+ * Operations to access and modify the data of local platform.
  *
  * @author Chuanwise
  */

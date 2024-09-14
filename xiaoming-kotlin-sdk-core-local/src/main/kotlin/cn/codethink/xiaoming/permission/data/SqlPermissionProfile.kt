@@ -16,43 +16,39 @@
 
 package cn.codethink.xiaoming.permission.data
 
+import cn.codethink.xiaoming.common.Subject
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.ktorm.database.Database
 import org.ktorm.dsl.eq
+import org.ktorm.dsl.insertAndGenerateKey
 import org.ktorm.entity.Entity
-import org.ktorm.entity.filter
+import org.ktorm.entity.firstOrNull
 import org.ktorm.entity.sequenceOf
-import org.ktorm.entity.toList
 import org.ktorm.schema.Table
-import org.ktorm.schema.boolean
 import org.ktorm.schema.long
 import org.ktorm.schema.text
 
-interface DatabasePermissionRecord : Entity<DatabasePermissionRecord>, PermissionRecord {
-    val id: Long
-}
+interface SqlPermissionProfile : Entity<SqlPermissionProfile>, PermissionProfile
 
-class DatabasePermissionRecordTable(
+class SqlPermissionSubjectTable(
     tableName: String, mapper: ObjectMapper
-) : Table<DatabasePermissionRecord>(tableName) {
+) : Table<SqlPermissionProfile>(tableName) {
     val id = long("id").primaryKey().bindTo { it.id }
-    val profileId = long("profile_id").bindTo { it.profile.id }
-    val subjectId = text("subject").bindTo { mapper.writeValueAsString(it.subject) }
-    val node = text("node").bindTo { mapper.writeValueAsString(it.node) }
-    val context = text("context").bindTo { mapper.writeValueAsString(it.context) }
-    val value = boolean("value").bindTo { it.value }
+    val subject = text("subject").bindTo { mapper.writeValueAsString(it.subject) }
 }
 
-class DatabasePermissionRecords(
+class SqlPermissionProfiles(
     tableName: String,
     val mapper: ObjectMapper,
     val database: Database
-) : PermissionRecords {
-    val table = DatabasePermissionRecordTable(tableName, mapper)
+) : PermissionProfiles {
+    val table = SqlPermissionSubjectTable(tableName, mapper)
 
-    override fun getRecords(profile: PermissionProfile): List<PermissionRecord> {
-        return database.sequenceOf(table).filter {
-            it.profileId eq profile.id
-        }.toList()
+    override fun getProfileById(id: Long): PermissionProfile? {
+        return database.sequenceOf(table).firstOrNull { it.id eq id }
     }
+
+    override fun insertAndGetProfileId(subject: Subject): Long = database.insertAndGenerateKey(table) {
+        set(it.subject, mapper.writeValueAsString(subject))
+    } as Long
 }

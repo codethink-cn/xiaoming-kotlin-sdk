@@ -17,6 +17,7 @@
 package cn.codethink.xiaoming.common
 
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * Container of a registrable object.
@@ -55,17 +56,32 @@ interface Registrations<T> {
  * @author Chuanwise
  */
 class MapRegistrations<K, T, R : Registration<T>> : Registrations<T> {
-    val map: MutableMap<K, R> = ConcurrentHashMap()
-    val keys: Set<K>
-        get() = map.keys
+    private val mutableMap: MutableMap<K, R> = ConcurrentHashMap()
+    private val map: Map<K, R> = mutableMap.toMap()
+
+    fun toMap(): Map<K, R> = map
 
     operator fun get(key: K): R? {
-        return map[key]
+        return mutableMap[key]
     }
 
-    fun register(key: K, registration: R): R? = map.put(key, registration)
-    fun unregisterByKey(key: K): R? = map.remove(key)
-    override fun unregisterBySubject(subject: Subject): Boolean = map.values.removeIf { it.subject == subject }
+    fun register(key: K, registration: R): R? = mutableMap.put(key, registration)
+    fun unregisterByKey(key: K): R? = mutableMap.remove(key)
+    override fun unregisterBySubject(subject: Subject): Boolean = mutableMap.values.removeIf { it.subject == subject }
 }
 
-inline fun <reified T> StringMapDefaultRegistrations() = MapRegistrations<String, T, DefaultRegistration<T>>()
+inline fun <reified K, reified T> DefaultMapRegistrations() = MapRegistrations<K, T, DefaultRegistration<T>>()
+inline fun <reified T> DefaultStringMapRegistrations() = DefaultMapRegistrations<String, T>()
+
+class ListRegistrations<T, R : Registration<T>> : Registrations<T> {
+    private val mutableList = CopyOnWriteArrayList<R>()
+    private val list: List<R> = mutableList.toList()
+
+    fun toList(): List<R> = list
+
+    fun register(registration: R) = mutableList.add(registration)
+    fun unregister(registration: R) = mutableList.remove(registration)
+    override fun unregisterBySubject(subject: Subject): Boolean = mutableList.removeIf { it.subject == subject }
+}
+
+inline fun <reified T> DefaultListRegistrations() = ListRegistrations<T, DefaultRegistration<T>>()

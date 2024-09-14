@@ -17,7 +17,7 @@
 @file:JvmName("PermissionServices")
 package cn.codethink.xiaoming.permission
 
-import cn.codethink.xiaoming.common.Matcher
+import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.Subject
 
 /**
@@ -26,14 +26,10 @@ import cn.codethink.xiaoming.common.Subject
  * @author Chuanwise
  */
 interface PermissionService {
-    /**
-     * Test if the subject has the permission.
-     *
-     * @return `null` if the permission is not found.
-     */
-    suspend fun hasPermission(subject: Subject, permissionMatcher: Matcher<Permission>): Boolean?
-}
-
-suspend fun PermissionService.hasPermission(subject: Subject, permission: Permission): Boolean? {
-    return hasPermission(subject, permission.toLiteralMatcher())
+    suspend fun hasPermission(
+        subject: Subject,
+        permission: Permission,
+        caller: Subject? = null,
+        cause: Cause? = null
+    ): Boolean?
 }

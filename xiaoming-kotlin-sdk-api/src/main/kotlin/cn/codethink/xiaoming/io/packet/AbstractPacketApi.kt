@@ -18,10 +18,10 @@ package cn.codethink.xiaoming.io.packet
 
 import cn.codethink.xiaoming.common.CurrentProtocolSubject
 import cn.codethink.xiaoming.common.DefaultRegistration
+import cn.codethink.xiaoming.common.DefaultStringMapRegistrations
 import cn.codethink.xiaoming.common.ErrorMessageCause
 import cn.codethink.xiaoming.common.PACKET_TYPE_REQUEST
 import cn.codethink.xiaoming.common.RECEIPT_STATE_FAILED
-import cn.codethink.xiaoming.common.StringMapDefaultRegistrations
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.io.UNSUPPORTED_PACKET_TYPE
 import cn.codethink.xiaoming.io.data.Packet
@@ -60,14 +60,14 @@ abstract class AbstractPacketApi(
         registerPacketHandler(PACKET_TYPE_REQUEST, CurrentProtocolSubject, this)
     }
 
-    private val handlers = StringMapDefaultRegistrations<PacketHandler>()
+    private val handlers = DefaultStringMapRegistrations<PacketHandler>()
 
     override suspend fun receive(packet: Packet) {
         val context = PacketContext(this, packet)
 
         val packetHandlerRegistration = handlers[packet.type]
         if (packetHandlerRegistration == null) {
-            val arguments = buildUnsupportedPacketTypeArguments(packet.type, handlers.keys)
+            val arguments = buildUnsupportedPacketTypeArguments(packet.type, handlers.toMap().keys)
             val message = configuration.message.unsupportedPacketType.format(arguments)
 
             context.api.send(
@@ -83,7 +83,7 @@ abstract class AbstractPacketApi(
                 )
             )
             logger.warn {
-                "Packet type ${packet.type} is not supported by the protocol, acceptable types are: ${handlers.keys}."
+                "Packet type ${packet.type} is not supported by the protocol, acceptable types are: ${handlers.toMap().keys}."
             }
             return
         }

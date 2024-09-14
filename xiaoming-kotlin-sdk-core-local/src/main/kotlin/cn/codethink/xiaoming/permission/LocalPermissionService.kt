@@ -16,14 +16,21 @@
 
 package cn.codethink.xiaoming.permission
 
-import cn.codethink.xiaoming.common.Matcher
+import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.Subject
-import cn.codethink.xiaoming.permission.data.LocalPlatformConfiguration
 
 class LocalPermissionService(
-    val configuration: LocalPlatformConfiguration
+    val api: LocalPermissionServiceApi
 ) : PermissionService {
-    override suspend fun hasPermission(subject: Subject, permissionMatcher: Matcher<Permission>): Boolean? {
-        TODO("Not yet implemented")
+    override suspend fun hasPermission(
+        subject: Subject,
+        permission: Permission,
+        caller: Subject?,
+        cause: Cause?
+    ): Boolean? {
+        val permissionProfileServiceRegistration = api.permissionProfileServices[subject.type]
+            ?: throw NoSuchElementException("No permission profile service found for subject type: ${subject.type}.")
+
+        return permissionProfileServiceRegistration.value.hasPermission(api, subject, permission)
     }
 }

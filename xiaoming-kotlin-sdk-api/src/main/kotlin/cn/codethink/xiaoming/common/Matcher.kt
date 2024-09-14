@@ -23,7 +23,14 @@ package cn.codethink.xiaoming.common
  */
 interface Matcher<T> {
     val type: String
+    val targetType: Class<T>
     fun isMatched(target: T): Boolean
+}
+
+fun <T> Matcher<T>.isMatchedOrNull(target: Any?): Boolean? = if (targetType.isInstance(target)) {
+    isMatched(targetType.cast(target))
+} else {
+    null
 }
 
 interface LiteralMatcher<T> : Matcher<T> {
@@ -31,63 +38,78 @@ interface LiteralMatcher<T> : Matcher<T> {
     override fun isMatched(target: T): Boolean = value == target
 }
 
+@Suppress("UNCHECKED_CAST")
+object AnyMatcher : Matcher<Any?> {
+    override val type: String = MATCHER_TYPE_ANY
+    override val targetType: Class<Any?>
+        get() = Any::class.java as Class<Any?>
+
+    override fun isMatched(target: Any?): Boolean = true
+}
+
+@Suppress("UNCHECKED_CAST")
+inline fun <reified T : Any?> AnyMatcher(): Matcher<T> = AnyMatcher as Matcher<T>
+
 /**
  * Match any amount of texts.
  *
  * Notice that:
  *
  * 1. It can not appear continuously.
- * 2. The next matcher can not be [GreedilyWildcardStringMatcher] or [WildcardStringMatcher].
+ * 2. The next matcher can not be [WildcardStringMatcher] or [AnyMatcher].
  *
  * If [optional] is true, the matched texts can be empty. If [majority] is true,
  *
  * @author Chuanwise
  */
-class GreedilyWildcardStringMatcher private constructor(
+class WildcardStringMatcher private constructor(
     val majority: Boolean,
     val optional: Boolean
 ) : Matcher<String>, DefaultStringListMatcherConstructingCallbackSupport,
     DefaultStringListMatcherMatchingCallbackSupport {
     companion object {
         @JvmStatic
-        val MAJORITY_OPTIONAL = GreedilyWildcardStringMatcher(true, true)
+        val MAJORITY_OPTIONAL = WildcardStringMatcher(true, true)
 
         @JvmStatic
-        val MINORITY_OPTIONAL = GreedilyWildcardStringMatcher(false, true)
+        val MINORITY_OPTIONAL = WildcardStringMatcher(false, true)
 
         @JvmStatic
-        val MAJORITY_REQUIRED = GreedilyWildcardStringMatcher(true, false)
+        val MAJORITY_REQUIRED = WildcardStringMatcher(true, false)
 
         @JvmStatic
-        val MINORITY_REQUIRED = GreedilyWildcardStringMatcher(false, false)
+        val MINORITY_REQUIRED = WildcardStringMatcher(false, false)
 
         @JvmStatic
-        fun of(majority: Boolean, optional: Boolean): GreedilyWildcardStringMatcher = if (majority) {
+        fun of(majority: Boolean, optional: Boolean): WildcardStringMatcher = if (majority) {
             if (optional) MAJORITY_OPTIONAL else MAJORITY_REQUIRED
         } else {
             if (optional) MINORITY_OPTIONAL else MINORITY_REQUIRED
         }
     }
 
-    override val type: String = TEXT_MATCHER_TYPE_GREEDILY_WILDCARD
+    override val type: String = TEXT_MATCHER_TYPE_WILDCARD
     override fun isMatched(target: String): Boolean = true
+
+    override val targetType: Class<String>
+        get() = String::class.java
 
     override fun onDefaultStringListMatcherConstructing(context: DefaultStringListMatcherConstructingContext) {
         if (context.matcherIndex > 0) {
-            // If it is not the first one, check if previous one is `GreedilyWildcardStringMatcher`.
+            // If it is not the first one, check if previous one is `WildcardStringMatcher`.
             val previous = context.matchers[context.matcherIndex - 1]
-            if (previous is GreedilyWildcardStringMatcher) {
+            if (previous == AnyMatcher<String>()) {
                 throw IllegalArgumentException(
-                    "OmittedSegmentMatcher next to GreedilyOmittedSegmentMatcher near index ${context.matcherIndex}!"
+                    "AnyMatcher<String> next to WildcardStringMatcher near index ${context.matcherIndex}!"
                 )
             }
         }
         if (context.matcherIndex < context.matchers.size - 1) {
-            // If it is not the last one, check if next one is `GreedilyWildcardStringMatcher` or `WildcardStringMatcher`.
+            // If it is not the last one, check if next one is `WildcardStringMatcher` or `AnyMatcher<String>`.
             val next = context.matchers[context.matcherIndex + 1]
-            if (next is GreedilyWildcardStringMatcher || next is WildcardStringMatcher) {
+            if (next is WildcardStringMatcher || next !== AnyMatcher<String>()) {
                 throw IllegalArgumentException(
-                    "GreedilyOmittedSegmentMatcher appear continuously near index ${context.matcherIndex}!"
+                    "WildcardStringMatcher appear continuously near index ${context.matcherIndex}!"
                 )
             }
         }
@@ -103,11 +125,11 @@ class GreedilyWildcardStringMatcher private constructor(
         context.matcherIndex++
         val nextMatcher = context.matchers[context.matcherIndex]
 
-        // The matcher after GreedilyOmittedSegmentMatcher must be functional.
-        if (nextMatcher is GreedilyWildcardStringMatcher || nextMatcher is WildcardStringMatcher) {
+        // The matcher after WildcardStringMatcher must be functional.
+        if (nextMatcher is WildcardStringMatcher || nextMatcher == AnyMatcher<String>()) {
             throw IllegalArgumentException(
-                "GreedilyOmittedSegmentMatcher can not followed " +
-                        "by another GreedilyWildcardTextMatcher or WildcardTextMatcher."
+                "WildcardStringMatcher can not followed " +
+                        "by another WildcardStringMatcher or AnyMatcher<String>()."
             )
         }
 
@@ -149,27 +171,25 @@ class GreedilyWildcardStringMatcher private constructor(
     }
 }
 
-val MajorityOptionalGreedilyWildcardStringMatcher: GreedilyWildcardStringMatcher
-    get() = GreedilyWildcardStringMatcher.MAJORITY_OPTIONAL
+val MajorityOptionalWildcardStringMatcher: WildcardStringMatcher
+    get() = WildcardStringMatcher.MAJORITY_OPTIONAL
 
-val MajorityRequiredGreedilyWildcardStringMatcher: GreedilyWildcardStringMatcher
-    get() = GreedilyWildcardStringMatcher.MAJORITY_REQUIRED
+val MajorityRequiredWildcardStringMatcher: WildcardStringMatcher
+    get() = WildcardStringMatcher.MAJORITY_REQUIRED
 
-val MinorityOptionalGreedilyWildcardStringMatcher: GreedilyWildcardStringMatcher
-    get() = GreedilyWildcardStringMatcher.MINORITY_OPTIONAL
+val MinorityOptionalWildcardStringMatcher: WildcardStringMatcher
+    get() = WildcardStringMatcher.MINORITY_OPTIONAL
 
-val MinorityRequiredGreedilyWildcardStringMatcher: GreedilyWildcardStringMatcher
-    get() = GreedilyWildcardStringMatcher.MINORITY_REQUIRED
-
-data object WildcardStringMatcher : Matcher<String> {
-    override val type: String = TEXT_MATCHER_TYPE_WILDCARD
-    override fun isMatched(target: String): Boolean = true
-}
+val MinorityRequiredWildcardStringMatcher: WildcardStringMatcher
+    get() = WildcardStringMatcher.MINORITY_REQUIRED
 
 data class RegexStringMatcher(
     val regex: Regex
 ) : Matcher<String> {
     override val type: String = TEXT_MATCHER_TYPE_REGEX
+    override val targetType: Class<String>
+        get() = String::class.java
+
     override fun isMatched(target: String): Boolean = regex.matches(target)
 }
 
@@ -177,4 +197,6 @@ data class LiteralStringMatcher(
     override val value: String
 ) : LiteralMatcher<String> {
     override val type: String = TEXT_MATCHER_TYPE_LITERAL
+    override val targetType: Class<String>
+        get() = String::class.java
 }

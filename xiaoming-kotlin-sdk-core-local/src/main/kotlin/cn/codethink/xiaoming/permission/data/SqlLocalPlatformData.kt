@@ -26,24 +26,27 @@ import cn.codethink.xiaoming.common.DEFAULT_PERMISSION_PROFILE_TABLE_NAME
 import cn.codethink.xiaoming.common.DEFAULT_PERMISSION_RECORD_TABLE_NAME
 import cn.codethink.xiaoming.common.LOCAL_PERMISSION_SERVICE_CONFIGURATION_FIELD_TYPE
 import cn.codethink.xiaoming.common.LOCAL_PERMISSION_SERVICE_CONFIGURATION_TYPE_DATABASE
-import cn.codethink.xiaoming.io.data.DatabaseDataSource
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.NodeRaw
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.RawValue
+import cn.codethink.xiaoming.io.data.SqlDataSource
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.ktorm.database.Database
 
-class DatabaseLocalPlatformData(
+class SqlLocalPlatformData(
     raw: Raw
 ) : AbstractData(raw), LocalPlatformData {
     override val type: String = "database"
-    val source: DatabaseDataSource by raw
+    val source: SqlDataSource by raw
     val database: Database by lazy { Database.connect(source.toDataSource()) }
 
     var mapper: ObjectMapper? = null
+
+    val mapperOrFail
+        get() = mapper ?: throw IllegalStateException("Mapper not set yet.")
 
     init {
         if (raw is NodeRaw) {
@@ -77,16 +80,16 @@ class DatabaseLocalPlatformData(
     val tables: Tables by raw
 
     override val permissionProfiles by lazy {
-        DatabasePermissionProfiles(tables.prefix + tables.permissionProfile, mapper!!, database)
+        SqlPermissionProfiles(tables.prefix + tables.permissionProfile, mapper!!, database)
     }
     override val permissionRecords: PermissionRecords by lazy {
-        DatabasePermissionRecords(tables.prefix + tables.permissionRecord, mapper!!, database)
+        SqlPermissionRecords(tables.prefix + tables.permissionRecord, mapper!!, database)
     }
 
     @JvmOverloads
     constructor(
         tables: Tables,
-        source: DatabaseDataSource,
+        source: SqlDataSource,
         raw: Raw = MapRaw()
     ) : this(raw) {
         raw[LOCAL_PERMISSION_SERVICE_CONFIGURATION_FIELD_TYPE] = LOCAL_PERMISSION_SERVICE_CONFIGURATION_TYPE_DATABASE

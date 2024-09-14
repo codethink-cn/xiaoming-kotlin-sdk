@@ -142,7 +142,7 @@ class RequestPacketHandler : PacketHandler {
 
         val requestModeHandlerRegistration = requestModeHandlers[packet.mode]
         if (requestModeHandlerRegistration == null) {
-            val arguments = buildUnsupportedRequestModeArguments(packet.mode, requestModeHandlers.keys)
+            val arguments = buildUnsupportedRequestModeArguments(packet.mode, requestModeHandlers.toMap().keys)
             val message = context.configuration.message.unsupportedRequestMode.format(arguments)
 
             context.api.send(
