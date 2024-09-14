@@ -24,3 +24,11 @@ package cn.codethink.xiaoming.common
  * @author Chuanwise
  */
 fun String?.prependOrNull(prefix: String) = this?.let { "$prefix$it" }
+
+/**
+ * Return the string with the given suffix or null if the string is null.
+ *
+ * @author Chuanwise
+ */
+fun String?.appendOrNull(suffix: String) = this?.let { "$it$suffix" }
+
