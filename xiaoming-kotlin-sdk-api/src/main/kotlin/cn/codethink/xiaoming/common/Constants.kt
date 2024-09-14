@@ -106,6 +106,9 @@ const val PERMISSION_MATCHER_TYPE_DEFAULT = "permission.default"
 const val DEFAULT_PERMISSION_MATCHER_FIELD_NODE = "node"
 const val DEFAULT_PERMISSION_MATCHER_FIELD_CONTEXT = "context"
 
+const val PERMISSION_MATCHER_TYPE_LITERAL = "permission.literal"
+const val LITERAL_PERMISSION_MATCHER_FIELD_PERMISSION = "permission"
+
 const val TEXT_MATCHER_TYPE_GREEDILY_WILDCARD = "text.wildcard.greedily"
 const val TEXT_MATCHER_TYPE_WILDCARD = "text.wildcard"
 const val TEXT_MATCHER_TYPE_REGEX = "text.regex"

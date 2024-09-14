@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
+@file:JvmName("Permissions")
+
 package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.DEFAULT_PERMISSION_MATCHER_FIELD_CONTEXT
 import cn.codethink.xiaoming.common.DEFAULT_PERMISSION_MATCHER_FIELD_NODE
+import cn.codethink.xiaoming.common.LITERAL_PERMISSION_MATCHER_FIELD_PERMISSION
 import cn.codethink.xiaoming.common.MATCHER_FIELD_TYPE
 import cn.codethink.xiaoming.common.Matcher
 import cn.codethink.xiaoming.common.PERMISSION_CONTEXT_META_FIELD_DEFAULT_VALUE
@@ -28,6 +31,7 @@ import cn.codethink.xiaoming.common.PERMISSION_CONTEXT_META_FIELD_OPTIONAL
 import cn.codethink.xiaoming.common.PERMISSION_FIELD_CONTEXT
 import cn.codethink.xiaoming.common.PERMISSION_FIELD_DESCRIPTOR
 import cn.codethink.xiaoming.common.PERMISSION_MATCHER_TYPE_DEFAULT
+import cn.codethink.xiaoming.common.PERMISSION_MATCHER_TYPE_LITERAL
 import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_CONTEXT
 import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_DESCRIPTION
 import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_DESCRIPTOR
@@ -157,6 +161,26 @@ class Permission(
         raw[PERMISSION_FIELD_CONTEXT] = context
     }
 }
+
+class LiteralPermissionMatcher(
+    raw: Raw
+) : AbstractData(raw), Matcher<Permission> {
+    override val type: String by raw
+    val permission: Permission by raw
+
+    @JvmOverloads
+    constructor(
+        permission: Permission,
+        raw: Raw = MapRaw()
+    ) : this(raw) {
+        raw[MATCHER_FIELD_TYPE] = PERMISSION_MATCHER_TYPE_LITERAL
+        raw[LITERAL_PERMISSION_MATCHER_FIELD_PERMISSION] = permission
+    }
+
+    override fun isMatched(target: Permission): Boolean = permission == target
+}
+
+fun Permission.toLiteralMatcher(): LiteralPermissionMatcher = LiteralPermissionMatcher(this)
 
 class DefaultPermissionMatcher(
     raw: Raw
