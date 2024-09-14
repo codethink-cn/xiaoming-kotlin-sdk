@@ -69,7 +69,7 @@ const val CAUSE_TYPE_PACKET_ID = "packet_id"
 const val PACKET_DATA_CAUSE_FIELD_PACKET = "packet"
 const val PACKET_CAUSE_FIELD_ID = "id"
 
-const val PUBLISH_EVENT_REQUEST_ACTION = "publish-event"
+const val PUBLISH_EVENT_REQUEST_ACTION = "publish_event"
 const val PUBLISH_EVENT_REQUEST_PARA_TYPE = "type"
 const val PUBLISH_EVENT_REQUEST_PARA_EVENT = "event"
 const val PUBLISH_EVENT_REQUEST_PARA_MUTABLE = "mutable"
@@ -82,6 +82,36 @@ const val PUBLISH_EVENT_RECEIPT_DATA_SNAPSHOTS = "snapshots"
 
 const val LISTENER_DESCRIPTOR_FIELD_ID = "id"
 const val LISTENER_DESCRIPTOR_FIELD_SUBJECT = "subject"
+
+const val PERMISSION_SUBJECT_FIELD_ID = "id"
+const val PERMISSION_SUBJECT_FIELD_SUBJECT = "subject"
+
+const val PERMISSION_CONTEXT_META_FIELD_OPTIONAL = "optional"
+const val PERMISSION_CONTEXT_META_FIELD_NULLABLE = "nullable"
+const val PERMISSION_CONTEXT_META_FIELD_DEFAULT_VALUE = "default_value"
+const val PERMISSION_CONTEXT_META_FIELD_DESCRIPTION = "description"
+
+const val PERMISSION_META_FIELD_ID = "id"
+const val PERMISSION_META_FIELD_SUBJECT = "subject"
+const val PERMISSION_META_FIELD_CONTEXT = "context"
+const val PERMISSION_META_FIELD_DESCRIPTION = "description"
+const val PERMISSION_META_FIELD_DESCRIPTOR = "descriptor"
+
+const val PERMISSION_FIELD_DESCRIPTOR = "descriptor"
+const val PERMISSION_FIELD_CONTEXT = "context"
+
+const val MATCHER_FIELD_TYPE = TYPE_FIELD_NAME
+
+const val PERMISSION_MATCHER_TYPE_DEFAULT = "permission.default"
+const val DEFAULT_PERMISSION_MATCHER_FIELD_NODE = "node"
+const val DEFAULT_PERMISSION_MATCHER_FIELD_CONTEXT = "context"
+
+const val TEXT_MATCHER_TYPE_GREEDILY_WILDCARD = "text.wildcard.greedily"
+const val TEXT_MATCHER_TYPE_WILDCARD = "text.wildcard"
+const val TEXT_MATCHER_TYPE_REGEX = "text.regex"
+const val TEXT_MATCHER_TYPE_LITERAL = "text.literal"
+
+const val SEGMENT_ID_MATCHER_TYPE_DEFAULT = "segment_id.default"
 
 const val HEADER_KEY_AUTHORIZATION = "Authorization"
 const val HEADER_VALUE_AUTHORIZATION_BEARER_WITH_SPACE = "Bearer "
