@@ -19,27 +19,32 @@
 package cn.codethink.xiaoming.io.data
 
 import cn.codethink.xiaoming.common.CurrentProtocolSubject
+import cn.codethink.xiaoming.common.Data
+import cn.codethink.xiaoming.common.DefaultDataDeserializer
 import cn.codethink.xiaoming.common.MapRegistrations
-import cn.codethink.xiaoming.common.PACKET_FIELD_TYPE
 import cn.codethink.xiaoming.common.PACKET_TYPE_RECEIPT
 import cn.codethink.xiaoming.common.PACKET_TYPE_REQUEST
 import cn.codethink.xiaoming.common.PluginSubject
 import cn.codethink.xiaoming.common.PolymorphicDeserializingException
 import cn.codethink.xiaoming.common.ProtocolSubject
-import cn.codethink.xiaoming.common.ReflectDataDeserializer
 import cn.codethink.xiaoming.common.Registration
-import cn.codethink.xiaoming.common.SUBJECT_FIELD_TYPE
 import cn.codethink.xiaoming.common.SUBJECT_TYPE_PLUGIN
 import cn.codethink.xiaoming.common.SUBJECT_TYPE_PROTOCOL
 import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.TYPE_FIELD_NAME
 import cn.codethink.xiaoming.common.prependOrNull
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.Version
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
+import com.fasterxml.jackson.databind.introspect.Annotated
+import com.fasterxml.jackson.databind.introspect.NopAnnotationIntrospector
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.node.ObjectNode
+import java.lang.reflect.Modifier
+
+const val DEFAULT_TYPE_NAME_VISIBLE = true
 
 /**
  * A deserializer that can deserialize different types of objects based
@@ -51,10 +56,6 @@ class PolymorphicDeserializerManager<T>(
     private val type: Class<T>,
     private val typeNameField: String
 ) : StdDeserializer<T>(type) {
-    companion object {
-        const val DEFAULT_TYPE_NAME_VISIBLE = true
-    }
-
     inner class DeserializerRegistration(
         val typeName: String,
         val typeNameVisible: Boolean = DEFAULT_TYPE_NAME_VISIBLE,
@@ -87,7 +88,7 @@ class PolymorphicDeserializerManager<T>(
         typeName: String,
         deserializer: JsonDeserializer<out T>,
         subject: Subject,
-        typeNameVisible: Boolean = DEFAULT_TYPE_NAME_VISIBLE
+        typeNameVisible: Boolean
     ): DeserializerRegistration? {
         val registration = DeserializerRegistration(typeName, typeNameVisible, deserializer, subject)
         return registrations.register(typeName, registration)
@@ -99,38 +100,73 @@ class PolymorphicDeserializerManager<T>(
     fun unregisterDeserializerBySubject(subject: Subject): Boolean = registrations.unregisterBySubject(subject)
 }
 
+inline fun <reified T : Data> PolymorphicDeserializerManager<in T>.subType(
+    typeName: String,
+    deserializer: JsonDeserializer<out T> = DefaultDataDeserializer<T>(),
+    subject: Subject = CurrentProtocolSubject,
+    typeNameVisible: Boolean = DEFAULT_TYPE_NAME_VISIBLE
+) = registerDeserializer(typeName, deserializer, subject, typeNameVisible)
+
+inline fun <reified T> SimpleModule.polymorphic(
+    typeNameField: String = TYPE_FIELD_NAME,
+    block: PolymorphicDeserializerManager<T>.() -> Unit
+) = PolymorphicDeserializerManager(T::class.java, typeNameField)
+    .apply(block)
+    .apply { addDeserializer(T::class.java, this@apply) }
+
+val CurrentJacksonModuleVersion = CurrentProtocolSubject.let {
+    val version = it.version
+    val snapshotInfo = version.preRelease.prependOrNull("-").orEmpty() + version.build.prependOrNull("-").orEmpty()
+    Version(version.major, version.minor, version.patch, snapshotInfo, it.group, it.name)
+}
+
+/**
+ * A Jackson annotation introspector that can create deserializer of [Data] objects.
+ *
+ * Usage:
+ *
+ * ```kt
+ * val mapper = jacksonObjectMapper().apply {
+ *     setAnnotationIntrospector(AnnotationIntrospector.pair(
+ *         JacksonAnnotationIntrospector(),
+ *         PlatformAnnotationIntrospector()
+ *     ))
+ * }
+ * ```
+ *
+ * @author Chuanwise
+ */
+class PlatformAnnotationIntrospector : NopAnnotationIntrospector() {
+    @Suppress("UNCHECKED_CAST")
+    override fun findDeserializer(annotated: Annotated): Any? {
+        if (Data::class.java.isAssignableFrom(annotated.rawType)) {
+            val modifiers = annotated.rawType.modifiers
+            if (!(Modifier.isInterface(modifiers) || Modifier.isAbstract(modifiers))) {
+                val rawClass: Class<out Data> = annotated.rawType as Class<out Data>
+                return DefaultDataDeserializer(rawClass)
+            }
+        }
+        return null
+    }
+}
+
 /**
  * A Jackson module that contains all settings of remote-core need.
  *
  * @author Chuanwise
  */
 class PlatformModule : SimpleModule(
-    "PlatformModule",
-    CurrentProtocolSubject.let {
-        val version = it.version
-        val snapshotInfo = version.preRelease.prependOrNull("-").orEmpty() + version.build.prependOrNull("-").orEmpty()
-        Version(version.major, version.minor, version.patch, snapshotInfo, it.group, it.name)
-    }
+    "PlatformModule", CurrentJacksonModuleVersion
 ) {
     inner class Deserializers {
-        val packet = registerPolymorphicDeserializerManager<Packet>(PACKET_FIELD_TYPE).apply {
-            registerDeserializer(PACKET_TYPE_REQUEST, ReflectDataDeserializer<RequestPacket>(), CurrentProtocolSubject)
-            registerDeserializer(PACKET_TYPE_RECEIPT, ReflectDataDeserializer<ReceiptPacket>(), CurrentProtocolSubject)
+        val packet = polymorphic<Packet> {
+            subType<RequestPacket>(PACKET_TYPE_REQUEST)
+            subType<ReceiptPacket>(PACKET_TYPE_RECEIPT)
         }
-        val subject = registerPolymorphicDeserializerManager<Subject>(SUBJECT_FIELD_TYPE).apply {
-            registerDeserializer(
-                SUBJECT_TYPE_PROTOCOL,
-                ReflectDataDeserializer<ProtocolSubject>(),
-                CurrentProtocolSubject
-            )
-            registerDeserializer(SUBJECT_TYPE_PLUGIN, ReflectDataDeserializer<PluginSubject>(), CurrentProtocolSubject)
+        val subject = polymorphic<Subject> {
+            subType<ProtocolSubject>(SUBJECT_TYPE_PROTOCOL)
+            subType<PluginSubject>(SUBJECT_TYPE_PLUGIN)
         }
-
-        private inline fun <reified T> registerPolymorphicDeserializerManager(typeNameField: String) =
-            PolymorphicDeserializerManager(
-                T::class.java, typeNameField
-            ).apply { addDeserializer(T::class.java, this@apply) }
     }
-
     val deserializers = Deserializers()
 }

@@ -95,24 +95,20 @@ abstract class AbstractDataDeserializer<T : Data>(
  *
  * @author Chuanwise
  */
-class ReflectDataDeserializer<T : Data>(
+class DefaultDataDeserializer<T : Data>(
     private val type: Class<T>
 ) : AbstractDataDeserializer<T>(type) {
     companion object {
         @JvmStatic
-        private val EMPTY_RAW_CLASS_ARRAY: Array<Class<Raw>> = arrayOf(Raw::class.java)
+        private val parameterTypes: Array<Class<*>> = arrayOf(Raw::class.java)
     }
 
     override fun newInstance(raw: Raw): T {
-        val constructor = type.getDeclaredConstructor(*EMPTY_RAW_CLASS_ARRAY)
-            ?: throw IllegalArgumentException("No constructor found for $type with parameter Raw.")
-        constructor.trySetAccessible()
-
-        return constructor.newInstance(raw)
+        return getOrConstruct(type, parameterTypes, arrayOf(raw))
     }
 }
 
 /**
- * Kotlin-friendly version of constructor of [ReflectDataDeserializer].
+ * Kotlin-friendly version of constructor of [DefaultDataDeserializer].
  */
-inline fun <reified T : Data> ReflectDataDeserializer() = ReflectDataDeserializer(T::class.java)
+inline fun <reified T : Data> DefaultDataDeserializer() = DefaultDataDeserializer(T::class.java)
