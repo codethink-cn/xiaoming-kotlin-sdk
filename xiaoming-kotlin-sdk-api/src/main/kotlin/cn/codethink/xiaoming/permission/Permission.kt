@@ -22,6 +22,7 @@ import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.DEFAULT_PERMISSION_MATCHER_FIELD_CONTEXT
 import cn.codethink.xiaoming.common.DEFAULT_PERMISSION_MATCHER_FIELD_NODE
 import cn.codethink.xiaoming.common.LITERAL_PERMISSION_MATCHER_FIELD_PERMISSION
+import cn.codethink.xiaoming.common.LiteralMatcher
 import cn.codethink.xiaoming.common.MATCHER_FIELD_TYPE
 import cn.codethink.xiaoming.common.Matcher
 import cn.codethink.xiaoming.common.PERMISSION_CONTEXT_META_FIELD_DEFAULT_VALUE
@@ -164,9 +165,9 @@ class Permission(
 
 class LiteralPermissionMatcher(
     raw: Raw
-) : AbstractData(raw), Matcher<Permission> {
+) : AbstractData(raw), LiteralMatcher<Permission> {
     override val type: String by raw
-    val permission: Permission by raw
+    override val value: Permission by raw
 
     @JvmOverloads
     constructor(
@@ -176,8 +177,6 @@ class LiteralPermissionMatcher(
         raw[MATCHER_FIELD_TYPE] = PERMISSION_MATCHER_TYPE_LITERAL
         raw[LITERAL_PERMISSION_MATCHER_FIELD_PERMISSION] = permission
     }
-
-    override fun isMatched(target: Permission): Boolean = permission == target
 }
 
 fun Permission.toLiteralMatcher(): LiteralPermissionMatcher = LiteralPermissionMatcher(this)

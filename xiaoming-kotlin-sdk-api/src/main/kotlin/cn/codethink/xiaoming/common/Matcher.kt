@@ -26,6 +26,11 @@ interface Matcher<T> {
     fun isMatched(target: T): Boolean
 }
 
+interface LiteralMatcher<T> : Matcher<T> {
+    val value: T
+    override fun isMatched(target: T): Boolean = value == target
+}
+
 /**
  * Match any amount of texts.
  *
@@ -169,8 +174,7 @@ data class RegexStringMatcher(
 }
 
 data class LiteralStringMatcher(
-    val text: String
-) : Matcher<String> {
+    override val value: String
+) : LiteralMatcher<String> {
     override val type: String = TEXT_MATCHER_TYPE_LITERAL
-    override fun isMatched(target: String): Boolean = this.text == target
 }
