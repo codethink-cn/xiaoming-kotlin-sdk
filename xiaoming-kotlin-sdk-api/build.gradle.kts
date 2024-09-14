@@ -57,12 +57,14 @@ tasks.test {
 }
 
 tasks.processResources {
-    filesMatching("xiaoming/protocol.properties") {
+    filesMatching("xiaoming/sdk.properties") {
+        val protocol: String by rootProject
         expand(
             mapOf(
                 "group" to group,
                 "name" to name,
-                "version" to version
+                "version" to version,
+                "protocol" to protocol,
             )
         )
     }

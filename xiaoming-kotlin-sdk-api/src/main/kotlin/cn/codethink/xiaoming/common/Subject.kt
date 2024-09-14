@@ -22,7 +22,6 @@ import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
-import java.util.Properties
 
 /**
  * Represent a subject can register listeners, send packets, and so on.
@@ -44,38 +43,64 @@ abstract class Subject(
 }
 
 /**
- * Represent a subject that is a xiaoming protocol.
+ * Represent a subject that is a xiaoming sdk.
  *
  * @author Chuanwise
  */
-class ProtocolSubject(
+class SdkSubject(
     raw: Raw
-) : Subject(SUBJECT_TYPE_PROTOCOL) {
+) : Subject(raw) {
     val group: String by raw
     val name: String by raw
     val version: Version by raw
+    val protocol: Version by raw
+
+    @JvmOverloads
+    constructor(
+        group: String,
+        name: String,
+        version: Version,
+        protocol: Version,
+        raw: Raw = MapRaw()
+    ) : this(raw) {
+        raw[SUBJECT_FIELD_TYPE] = SUBJECT_TYPE_SDK
+        raw[SDK_SUBJECT_FIELD_GROUP] = group
+        raw[SDK_SUBJECT_FIELD_NAME] = name
+        raw[SDK_SUBJECT_FIELD_VERSION] = version
+        raw[SDK_SUBJECT_FIELD_PROTOCOL] = protocol
+    }
 }
 
-const val XIAOMING_PROTOCOL_PROPERTIES_FILE_PATH = "xiaoming/protocol.properties"
+/**
+ * The current SDK subject.
+ */
+val CurrentSdkSubject: SdkSubject = SdkSubject(MapRaw().apply {
+    this[SUBJECT_FIELD_TYPE] = SUBJECT_TYPE_SDK
+    this[SDK_SUBJECT_FIELD_GROUP] = SdkGroup
+    this[SDK_SUBJECT_FIELD_NAME] = SdkName
+    this[SDK_SUBJECT_FIELD_VERSION] = SdkVersionString.toVersion()
+    this[SDK_SUBJECT_FIELD_PROTOCOL] = SdkProtocolString.toVersion()
+})
+
+class ProtocolSubject(
+    raw: Raw
+) : Subject(raw) {
+    val version: Version by raw
+
+    @JvmOverloads
+    constructor(
+        version: Version,
+        raw: Raw = MapRaw()
+    ) : this(raw) {
+        raw[SUBJECT_FIELD_TYPE] = SUBJECT_TYPE_PROTOCOL
+        raw[PROTOCOL_SUBJECT_FIELD_VERSION] = version
+    }
+}
 
 /**
  * The current protocol subject.
  */
-val CurrentProtocolSubject: ProtocolSubject = ProtocolSubject(MapRaw().apply {
-    val properties = Properties().apply {
-        load(ProtocolSubject::class.java.classLoader.getResourceAsStream(XIAOMING_PROTOCOL_PROPERTIES_FILE_PATH))
-    }
-
-    this[SUBJECT_FIELD_TYPE] = SUBJECT_TYPE_PROTOCOL
-
-    val group: String by properties
-    val name: String by properties
-    val version: String by properties
-
-    this[PROTOCOL_SUBJECT_GROUP] = group
-    this[PROTOCOL_SUBJECT_NAME] = name
-    this[PROTOCOL_SUBJECT_FIELD_VERSION] = versionOf(version)
-})
+val CurrentProtocolSubject: ProtocolSubject = ProtocolSubject(CurrentSdkSubject.protocol)
 
 /**
  * Represent a subject that is a plugin.

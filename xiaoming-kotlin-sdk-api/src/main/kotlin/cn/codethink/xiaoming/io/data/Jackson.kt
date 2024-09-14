@@ -19,6 +19,7 @@
 package cn.codethink.xiaoming.io.data
 
 import cn.codethink.xiaoming.common.CurrentProtocolSubject
+import cn.codethink.xiaoming.common.CurrentSdkSubject
 import cn.codethink.xiaoming.common.Data
 import cn.codethink.xiaoming.common.DefaultDataDeserializer
 import cn.codethink.xiaoming.common.MapRegistrations
@@ -26,10 +27,10 @@ import cn.codethink.xiaoming.common.PACKET_TYPE_RECEIPT
 import cn.codethink.xiaoming.common.PACKET_TYPE_REQUEST
 import cn.codethink.xiaoming.common.PluginSubject
 import cn.codethink.xiaoming.common.PolymorphicDeserializingException
-import cn.codethink.xiaoming.common.ProtocolSubject
 import cn.codethink.xiaoming.common.Registration
 import cn.codethink.xiaoming.common.SUBJECT_TYPE_PLUGIN
 import cn.codethink.xiaoming.common.SUBJECT_TYPE_PROTOCOL
+import cn.codethink.xiaoming.common.SdkSubject
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.TYPE_FIELD_NAME
 import cn.codethink.xiaoming.common.prependOrNull
@@ -114,7 +115,7 @@ inline fun <reified T> SimpleModule.polymorphic(
     .apply(block)
     .apply { addDeserializer(T::class.java, this@apply) }
 
-val CurrentJacksonModuleVersion = CurrentProtocolSubject.let {
+val CurrentJacksonModuleVersion = CurrentSdkSubject.let {
     val version = it.version
     val snapshotInfo = version.preRelease.prependOrNull("-").orEmpty() + version.build.prependOrNull("-").orEmpty()
     Version(version.major, version.minor, version.patch, snapshotInfo, it.group, it.name)
@@ -164,7 +165,7 @@ class PlatformModule : SimpleModule(
             subType<ReceiptPacket>(PACKET_TYPE_RECEIPT)
         }
         val subject = polymorphic<Subject> {
-            subType<ProtocolSubject>(SUBJECT_TYPE_PROTOCOL)
+            subType<SdkSubject>(SUBJECT_TYPE_PROTOCOL)
             subType<PluginSubject>(SUBJECT_TYPE_PLUGIN)
         }
     }

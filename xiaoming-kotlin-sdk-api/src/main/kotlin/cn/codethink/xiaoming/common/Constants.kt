@@ -49,10 +49,14 @@ const val RECEIPT_STATE_INTERRUPTED = "interrupted"
 const val SUBJECT_FIELD_TYPE = TYPE_FIELD_NAME
 const val SUBJECT_TYPE_PLUGIN = "plugin"
 
+const val SUBJECT_TYPE_SDK = "sdk"
+const val SDK_SUBJECT_FIELD_VERSION = "version"
+const val SDK_SUBJECT_FIELD_GROUP = "group"
+const val SDK_SUBJECT_FIELD_NAME = "name"
+const val SDK_SUBJECT_FIELD_PROTOCOL = "protocol"
+
 const val SUBJECT_TYPE_PROTOCOL = "protocol"
 const val PROTOCOL_SUBJECT_FIELD_VERSION = "version"
-const val PROTOCOL_SUBJECT_GROUP = "group"
-const val PROTOCOL_SUBJECT_NAME = "name"
 
 const val CAUSE_FIELD_TYPE = TYPE_FIELD_NAME
 const val CAUSE_FIELD_CAUSE = "cause"
