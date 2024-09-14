@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+@file:JvmName("PermissionServices")
 package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.common.Matcher
@@ -30,9 +31,9 @@ interface PermissionService {
      *
      * @return `null` if the permission is not found.
      */
-    fun hasPermission(subject: Subject, permissionMatcher: Matcher<Permission>): Boolean?
+    suspend fun hasPermission(subject: Subject, permissionMatcher: Matcher<Permission>): Boolean?
 }
 
-fun PermissionService.hasPermission(subject: Subject, permission: Permission): Boolean? {
+suspend fun PermissionService.hasPermission(subject: Subject, permission: Permission): Boolean? {
     return hasPermission(subject, permission.toLiteralMatcher())
 }
