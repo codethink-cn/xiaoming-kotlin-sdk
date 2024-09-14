@@ -30,10 +30,6 @@ import io.ktor.server.websocket.WebSocketServerSession
 import io.ktor.server.websocket.WebSockets
 import io.ktor.server.websocket.webSocket
 import io.ktor.util.pipeline.PipelineContext
-import java.util.concurrent.locks.ReentrantReadWriteLock
-import kotlin.concurrent.read
-import kotlin.concurrent.write
-import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -41,6 +37,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
+import kotlin.concurrent.write
+import kotlin.coroutines.CoroutineContext
 
 interface WebSocketConnectionsConfiguration {
     val port: Int
@@ -56,8 +56,8 @@ abstract class WebSocketConnections(
     private val logger: KLogger,
     override val subject: Subject,
     applicationEngineFactory: ApplicationEngineFactory<*, *> = Netty,
-    parentJob: Job? = null,
-    dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    protected val parentJob: Job? = null,
+    protected val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : Connections {
     private val supervisorJob = SupervisorJob(parentJob)
     private val scope: CoroutineScope = CoroutineScope(dispatcher + supervisorJob)
@@ -105,7 +105,7 @@ abstract class WebSocketConnections(
         }
         routing {
             webSocket(configuration.path) {
-                onConnected(supervisorJob, dispatcher)
+                onConnected()
             }
         }
     }
@@ -127,5 +127,5 @@ abstract class WebSocketConnections(
 
     abstract suspend fun PipelineContext<Unit, ApplicationCall>.onConnect()
 
-    abstract suspend fun WebSocketServerSession.onConnected(parentJob: Job, dispatcher: CoroutineDispatcher)
+    abstract suspend fun WebSocketServerSession.onConnected()
 }
