@@ -47,6 +47,7 @@ const val RECEIPT_STATE_CANCELLED = "cancelled"
 const val RECEIPT_STATE_INTERRUPTED = "interrupted"
 
 const val SUBJECT_FIELD_TYPE = TYPE_FIELD_NAME
+
 const val SUBJECT_TYPE_PLUGIN = "plugin"
 
 const val SUBJECT_TYPE_SDK = "sdk"
@@ -54,6 +55,11 @@ const val SDK_SUBJECT_FIELD_VERSION = "version"
 const val SDK_SUBJECT_FIELD_GROUP = "group"
 const val SDK_SUBJECT_FIELD_NAME = "name"
 const val SDK_SUBJECT_FIELD_PROTOCOL = "protocol"
+
+const val SUBJECT_TYPE_MODULE = "module"
+const val MODULE_SUBJECT_FIELD_VERSION = "version"
+const val MODULE_SUBJECT_FIELD_GROUP = "group"
+const val MODULE_SUBJECT_FIELD_NAME = "name"
 
 const val SUBJECT_TYPE_PROTOCOL = "protocol"
 const val PROTOCOL_SUBJECT_FIELD_VERSION = "version"

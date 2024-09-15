@@ -43,7 +43,7 @@ abstract class Subject(
 }
 
 /**
- * Represent a subject that is a xiaoming sdk.
+ * Represent a subject that is a xiaoming SDK.
  *
  * @author Chuanwise
  */
@@ -94,6 +94,32 @@ class ProtocolSubject(
     ) : this(raw) {
         raw[SUBJECT_FIELD_TYPE] = SUBJECT_TYPE_PROTOCOL
         raw[PROTOCOL_SUBJECT_FIELD_VERSION] = version
+    }
+}
+
+/**
+ * Represent a subject that is a module.
+ *
+ * @author Chuanwise
+ */
+class ModuleSubject(
+    raw: Raw
+) : Subject(raw) {
+    val group: String by raw
+    val name: String by raw
+    val version: Version by raw
+
+    @JvmOverloads
+    constructor(
+        group: String,
+        name: String,
+        version: Version,
+        raw: Raw = MapRaw()
+    ) : this(raw) {
+        raw[SUBJECT_FIELD_TYPE] = SUBJECT_TYPE_MODULE
+        raw[MODULE_SUBJECT_FIELD_GROUP] = group
+        raw[MODULE_SUBJECT_FIELD_NAME] = name
+        raw[MODULE_SUBJECT_FIELD_VERSION] = version
     }
 }
 
