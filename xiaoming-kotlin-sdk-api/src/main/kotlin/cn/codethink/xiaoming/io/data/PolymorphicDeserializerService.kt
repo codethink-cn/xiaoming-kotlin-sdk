@@ -18,6 +18,8 @@
 
 package cn.codethink.xiaoming.io.data
 
+import cn.codethink.xiaoming.common.Data
+import cn.codethink.xiaoming.common.DefaultDataDeserializer
 import cn.codethink.xiaoming.common.Subject
 import com.fasterxml.jackson.databind.JsonDeserializer
 import java.util.ServiceLoader
@@ -39,7 +41,21 @@ interface PolymorphicDeserializerService<T> {
     val deserializer: JsonDeserializer<T>
     val subject: Subject
     val typeNameVisible: Boolean
+        get() = DEFAULT_TYPE_NAME_VISIBLE
 }
+
+/**
+ * @see Data
+ * @see DefaultDataDeserializer
+ * @see PolymorphicDeserializerService
+ */
+abstract class DefaultDataPolymorphicDeserializerService<T : Data>(
+    override val type: Class<T>,
+    override val typeName: String,
+    override val subject: Subject,
+    override val deserializer: JsonDeserializer<T> = DefaultDataDeserializer(type),
+    override val typeNameVisible: Boolean = DEFAULT_TYPE_NAME_VISIBLE
+) : PolymorphicDeserializerService<T>
 
 /**
  * Load all polymorphic deserializers of the given type by [ServiceLoader].
