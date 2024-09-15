@@ -49,9 +49,12 @@ const val DEFAULT_TYPE_NAME_VISIBLE = true
 
 /**
  * A deserializer that can deserialize different types of objects based
- * on the value of a single field called [typeNameField].
+ * on the value of a single field called [typeNameField]. In the most situations,
+ * it's [TYPE_FIELD_NAME].
  *
  * @author Chuanwise
+ * @see polymorphic
+ * @see subType
  */
 class PolymorphicDeserializerManager<T>(
     private val type: Class<T>,
@@ -101,19 +104,55 @@ class PolymorphicDeserializerManager<T>(
     fun unregisterDeserializerBySubject(subject: Subject): Boolean = registrations.unregisterBySubject(subject)
 }
 
+/**
+ * Create and register an [PolymorphicDeserializerManager] to a Jackson [SimpleModule]
+ * in Kotlin DSL style.
+ *
+ * Usage:
+ *
+ * ```kt
+ * class SomeModule: SimpleModule() {
+ *     val animalDeserializers = polymorphic<Animal> {
+ *         // `this` is the PolymorphicDeserializerManager.
+ *     }
+ * }
+ * ```
+ *
+ * @param T the type of object to be deserialized.
+ * @param typeNameField the field name to the type name, default to [TYPE_FIELD_NAME].
+ * @param loadServices load all related [PolymorphicDeserializerService] and register them,
+ * default to `true`.
+ * @param block the block to configure the [PolymorphicDeserializerManager].
+ *
+ * @see subType
+ */
+inline fun <reified T> SimpleModule.polymorphic(
+    typeNameField: String = TYPE_FIELD_NAME,
+    loadServices: Boolean = true,
+    block: PolymorphicDeserializerManager<T>.() -> Unit
+) = PolymorphicDeserializerManager(T::class.java, typeNameField)
+    .apply(block)
+    .apply {
+        if (loadServices) {
+            filterPolymorphicDeserializerServices(T::class.java).forEach {
+                registerDeserializer(it.typeName, it.deserializer, it.subject, it.typeNameVisible)
+            }
+        }
+    }
+    .apply { addDeserializer(T::class.java, this@apply) }
+
+/**
+ * Register a subtype deserializer to a [PolymorphicDeserializerManager]
+ * USING [CurrentProtocolSubject].
+ *
+ * @see polymorphic
+ */
 inline fun <reified T : Data> PolymorphicDeserializerManager<in T>.subType(
     typeName: String,
     deserializer: JsonDeserializer<out T> = DefaultDataDeserializer<T>(),
     subject: Subject = CurrentProtocolSubject,
     typeNameVisible: Boolean = DEFAULT_TYPE_NAME_VISIBLE
 ) = registerDeserializer(typeName, deserializer, subject, typeNameVisible)
-
-inline fun <reified T> SimpleModule.polymorphic(
-    typeNameField: String = TYPE_FIELD_NAME,
-    block: PolymorphicDeserializerManager<T>.() -> Unit
-) = PolymorphicDeserializerManager(T::class.java, typeNameField)
-    .apply(block)
-    .apply { addDeserializer(T::class.java, this@apply) }
 
 val CurrentJacksonModuleVersion = CurrentSdkSubject.let {
     val version = it.version
@@ -122,12 +161,13 @@ val CurrentJacksonModuleVersion = CurrentSdkSubject.let {
 }
 
 /**
- * A Jackson annotation introspector that can create deserializer of [Data] objects.
+ * A Jackson annotation introspector that can create deserializer of [Data] objects
+ * automatically.
  *
  * Usage:
  *
  * ```kt
- * val mapper = jacksonObjectMapper().apply {
+ * val mapper: ObjectMapper = jacksonObjectMapper().apply {
  *     setAnnotationIntrospector(AnnotationIntrospector.pair(
  *         JacksonAnnotationIntrospector(),
  *         PlatformAnnotationIntrospector()
