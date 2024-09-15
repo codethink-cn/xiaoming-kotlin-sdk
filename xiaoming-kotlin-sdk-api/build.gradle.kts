@@ -61,9 +61,9 @@ tasks.processResources {
         val protocol: String by rootProject
         expand(
             mapOf(
-                "group" to group,
-                "name" to name,
-                "version" to version,
+                "group" to project.group,
+                "name" to project.name,
+                "version" to project.version,
                 "protocol" to protocol,
             )
         )
