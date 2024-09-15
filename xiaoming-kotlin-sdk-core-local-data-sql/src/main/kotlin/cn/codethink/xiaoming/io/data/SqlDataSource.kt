@@ -19,7 +19,8 @@ package cn.codethink.xiaoming.io.data
 import javax.sql.DataSource
 
 /**
- * Used to represent a database data source, such sa MySQL.
+ * Used to represent a relational database data source,
+ * such as MySQL, Sql Server, etc.
  *
  * @author Chuanwise
  */

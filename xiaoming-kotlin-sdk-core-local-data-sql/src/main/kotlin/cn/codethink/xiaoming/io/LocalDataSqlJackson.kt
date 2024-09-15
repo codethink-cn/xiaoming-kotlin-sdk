@@ -16,16 +16,21 @@
 
 package cn.codethink.xiaoming.io
 
+import cn.codethink.xiaoming.common.SQL_DATA_SOURCE_TYPE_HIKARI_CP
 import cn.codethink.xiaoming.io.data.CurrentJacksonModuleVersion
+import cn.codethink.xiaoming.io.data.HikariCpSqlDataSource
+import cn.codethink.xiaoming.io.data.SqlDataSource
 import cn.codethink.xiaoming.io.data.polymorphic
-import cn.codethink.xiaoming.permission.data.LocalPlatformData
+import cn.codethink.xiaoming.io.data.subType
 import com.fasterxml.jackson.databind.module.SimpleModule
 
-class LocalPlatformModule : SimpleModule(
-    "LocalPlatformModule", CurrentJacksonModuleVersion
+class LocalPlatformDataSqlModule : SimpleModule(
+    "LocalPlatformDataSqlModule", CurrentJacksonModuleVersion
 ) {
     inner class Deserializers {
-        val platformData = polymorphic<LocalPlatformData>()
+        val sqlDataSource = polymorphic<SqlDataSource> {
+            subType<HikariCpSqlDataSource>(SQL_DATA_SOURCE_TYPE_HIKARI_CP)
+        }
     }
 
     val deserializers: Deserializers = Deserializers()

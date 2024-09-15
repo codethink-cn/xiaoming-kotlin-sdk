@@ -17,15 +17,18 @@
 package cn.codethink.xiaoming.permission.data
 
 import cn.codethink.xiaoming.common.AbstractData
-import cn.codethink.xiaoming.common.DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_FIELD_SOURCE
-import cn.codethink.xiaoming.common.DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_FIELD_TABLES
-import cn.codethink.xiaoming.common.DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PERMISSION_PROFILE
-import cn.codethink.xiaoming.common.DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PERMISSION_RECORD
-import cn.codethink.xiaoming.common.DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PREFIX
 import cn.codethink.xiaoming.common.DEFAULT_PERMISSION_PROFILE_TABLE_NAME
 import cn.codethink.xiaoming.common.DEFAULT_PERMISSION_RECORD_TABLE_NAME
-import cn.codethink.xiaoming.common.LOCAL_PERMISSION_SERVICE_CONFIGURATION_FIELD_TYPE
-import cn.codethink.xiaoming.common.LOCAL_PERMISSION_SERVICE_CONFIGURATION_TYPE_DATABASE
+import cn.codethink.xiaoming.common.DEFAULT_TABLE_NAME_PREFIX
+import cn.codethink.xiaoming.common.LOCAL_PLATFORM_CONFIGURATION_FIELD_TYPE
+import cn.codethink.xiaoming.common.LOCAL_PLATFORM_DATA_TYPE_SQL
+import cn.codethink.xiaoming.common.LocalDataSqlModuleSubject
+import cn.codethink.xiaoming.common.SQL_LOCAL_PLATFORM_DATA_FIELD_SOURCE
+import cn.codethink.xiaoming.common.SQL_LOCAL_PLATFORM_DATA_FIELD_TABLES
+import cn.codethink.xiaoming.common.SQL_LOCAL_PLATFORM_DATA_TABLES_NAME_FIELD_PERMISSION_PROFILE
+import cn.codethink.xiaoming.common.SQL_LOCAL_PLATFORM_DATA_TABLES_NAME_FIELD_PERMISSION_RECORD
+import cn.codethink.xiaoming.common.SQL_LOCAL_PLATFORM_DATA_TABLES_NAME_FIELD_PREFIX
+import cn.codethink.xiaoming.io.data.DefaultDataPolymorphicDeserializerService
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.NodeRaw
 import cn.codethink.xiaoming.io.data.Raw
@@ -39,7 +42,8 @@ import org.ktorm.database.Database
 class SqlLocalPlatformData(
     raw: Raw
 ) : AbstractData(raw), LocalPlatformData {
-    override val type: String = "database"
+    override val type: String by raw
+    
     val source: SqlDataSource by raw
     val database: Database by lazy { Database.connect(source.toDataSource()) }
 
@@ -55,26 +59,25 @@ class SqlLocalPlatformData(
     }
 
     class Tables(raw: Raw) : AbstractData(raw) {
-        @RawValue(DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PREFIX)
         val prefix: String by raw
 
-        @RawValue(DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PERMISSION_PROFILE)
+        @RawValue(SQL_LOCAL_PLATFORM_DATA_TABLES_NAME_FIELD_PERMISSION_PROFILE)
         val permissionProfile: String by raw
 
-        @RawValue(DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PERMISSION_RECORD)
+        @RawValue(SQL_LOCAL_PLATFORM_DATA_TABLES_NAME_FIELD_PERMISSION_RECORD)
         val permissionRecord: String by raw
 
         @JvmOverloads
         constructor(
-            prefix: String = "",
+            prefix: String = DEFAULT_TABLE_NAME_PREFIX,
             permissionProfile: String = DEFAULT_PERMISSION_PROFILE_TABLE_NAME,
             permissionRecord: String = DEFAULT_PERMISSION_RECORD_TABLE_NAME,
             raw: Raw = MapRaw()
         ) : this(raw) {
-            raw[DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PREFIX] = prefix
-            raw[DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PERMISSION_PROFILE] =
+            raw[SQL_LOCAL_PLATFORM_DATA_TABLES_NAME_FIELD_PREFIX] = prefix
+            raw[SQL_LOCAL_PLATFORM_DATA_TABLES_NAME_FIELD_PERMISSION_PROFILE] =
                 permissionProfile
-            raw[DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_TABLES_NAME_FIELD_PERMISSION_RECORD] = permissionRecord
+            raw[SQL_LOCAL_PLATFORM_DATA_TABLES_NAME_FIELD_PERMISSION_RECORD] = permissionRecord
         }
     }
     val tables: Tables by raw
@@ -92,8 +95,15 @@ class SqlLocalPlatformData(
         source: SqlDataSource,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[LOCAL_PERMISSION_SERVICE_CONFIGURATION_FIELD_TYPE] = LOCAL_PERMISSION_SERVICE_CONFIGURATION_TYPE_DATABASE
-        raw[DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_FIELD_SOURCE] = source
-        raw[DATABASE_LOCAL_PERMISSION_SERVICE_CONFIGURATION_FIELD_TABLES] = tables
+        raw[LOCAL_PLATFORM_CONFIGURATION_FIELD_TYPE] = LOCAL_PLATFORM_DATA_TYPE_SQL
+        raw[SQL_LOCAL_PLATFORM_DATA_FIELD_SOURCE] = source
+        raw[SQL_LOCAL_PLATFORM_DATA_FIELD_TABLES] = tables
     }
 }
+
+/**
+ * @see DefaultDataPolymorphicDeserializerService
+ */
+class SqlLocalPlatformPolymorphicDeserializerService : DefaultDataPolymorphicDeserializerService<SqlLocalPlatformData>(
+    SqlLocalPlatformData::class.java, LOCAL_PLATFORM_DATA_TYPE_SQL, LocalDataSqlModuleSubject
+)

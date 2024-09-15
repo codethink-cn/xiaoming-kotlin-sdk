@@ -17,7 +17,7 @@
 package cn.codethink.xiaoming.permission.data
 
 import cn.codethink.xiaoming.common.AbstractData
-import cn.codethink.xiaoming.common.LOCAL_PERMISSION_SERVICE_CONFIGURATION_FIELD_DATA
+import cn.codethink.xiaoming.common.LOCAL_PLATFORM_CONFIGURATION_FIELD_DATA
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
@@ -34,6 +34,6 @@ class LocalPlatformConfiguration(
         data: LocalPlatformData,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[LOCAL_PERMISSION_SERVICE_CONFIGURATION_FIELD_DATA] = data
+        raw[LOCAL_PLATFORM_CONFIGURATION_FIELD_DATA] = data
     }
 }

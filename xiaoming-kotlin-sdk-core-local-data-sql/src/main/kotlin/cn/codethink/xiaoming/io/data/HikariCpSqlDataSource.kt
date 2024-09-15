@@ -17,35 +17,37 @@
 package cn.codethink.xiaoming.io.data
 
 import cn.codethink.xiaoming.common.AbstractData
-import cn.codethink.xiaoming.common.DATABASE_DATA_SOURCE_TYPE_MYSQL
-import cn.codethink.xiaoming.common.MYSQL_DATABASE_DATA_SOURCE_FIELD_PASSWORD
-import cn.codethink.xiaoming.common.MYSQL_DATABASE_DATA_SOURCE_FIELD_URL
-import cn.codethink.xiaoming.common.Password
-import com.mysql.cj.jdbc.MysqlDataSource
+import cn.codethink.xiaoming.common.MYSQL_DATABASE_DATA_SOURCE_FIELD_PROPERTIES
+import cn.codethink.xiaoming.common.SQL_DATA_SOURCE_FIELD_TYPE
+import cn.codethink.xiaoming.common.SQL_DATA_SOURCE_TYPE_HIKARI_CP
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
+import java.util.Properties
 import javax.sql.DataSource
 
-class MySqlDatabaseDataSource(
+/**
+ * SQL data source that use HikariCP to manage connections.
+ *
+ * @author Chuanwise
+ * @see SqlDataSource
+ */
+class HikariCpSqlDataSource(
     raw: Raw
 ) : AbstractData(raw), SqlDataSource {
-    override val type: String = DATABASE_DATA_SOURCE_TYPE_MYSQL
+    override val type: String by raw
 
-    val url: String by raw
-    val password: Password? by raw
+    val properties: Properties by raw
 
     @JvmOverloads
     constructor(
-        url: String = "",
+        properties: Properties,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[MYSQL_DATABASE_DATA_SOURCE_FIELD_URL] = url
-        raw[MYSQL_DATABASE_DATA_SOURCE_FIELD_PASSWORD] = password
+        raw[SQL_DATA_SOURCE_FIELD_TYPE] = SQL_DATA_SOURCE_TYPE_HIKARI_CP
+        raw[MYSQL_DATABASE_DATA_SOURCE_FIELD_PROPERTIES] = properties
     }
 
-    override fun toDataSource(): DataSource = MysqlDataSource().let {
-        it.setURL(url)
-        if (password != null) {
-            it.password = password!!.toStringUnsafe()
-        }
-        it
-    }
+    override fun toDataSource(): DataSource = HikariDataSource(
+        HikariConfig(properties)
+    )
 }

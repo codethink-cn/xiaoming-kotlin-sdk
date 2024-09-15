@@ -1,13 +1,16 @@
 {
   "data": {
-    "type": "database",
+    "type": "sql",
     "source": {
-      "type": "mysql",
-      "url": "jdbc:mysql://localhost:3306/xiaoming?user=$user",
-      "password": "$password"
+      "type": "hikari_cp",
+      "properties": {
+        "jdbcUrl": "Your JDBC url here, don't forget to add testRuntimeOnly dependencies.",
+        "username": "${username}",
+        "password": "${password}"
+      }
     },
     "tables": {
-      "prefix": "",
+      "prefix": "demo_",
       "permission_profile": "permission_profile"
     }
   }

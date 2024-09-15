@@ -17,11 +17,8 @@
 package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.common.CurrentSdkSubject
-import cn.codethink.xiaoming.io.LocalPlatformModule
 import cn.codethink.xiaoming.io.data.PlatformAnnotationIntrospector
-import cn.codethink.xiaoming.io.data.PlatformModule
 import cn.codethink.xiaoming.permission.data.LocalPlatformConfiguration
-import cn.codethink.xiaoming.permission.data.SqlLocalPlatformData
 import cn.codethink.xiaoming.permission.data.insertAndGetProfile
 import com.fasterxml.jackson.databind.AnnotationIntrospector
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector
@@ -29,7 +26,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.ktorm.database.Database
 import java.io.InputStream
 
 class LocalPermissionServiceTest {
@@ -41,10 +37,7 @@ class LocalPermissionServiceTest {
                     JacksonAnnotationIntrospector()
                 )
             )
-            registerModules(
-                PlatformModule(),
-                LocalPlatformModule()
-            )
+            findAndRegisterModules()
         }
 
         lateinit var configuration: LocalPlatformConfiguration
@@ -54,10 +47,6 @@ class LocalPermissionServiceTest {
         fun beforeAll() {
             configuration = getResourceFileAsStream("configurations/configurations.json").use {
                 mapper.readValue(it)
-            }
-            if (configuration.data is SqlLocalPlatformData) {
-                val dataSource = (configuration.data as SqlLocalPlatformData).source.toDataSource()
-                Database.Companion.connect(dataSource)
             }
         }
 

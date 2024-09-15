@@ -23,26 +23,21 @@ repositories {
 }
 
 dependencies {
-    api(project(":xiaoming-kotlin-sdk-api"))
-    api(project(":xiaoming-kotlin-sdk-core-remote"))
+    compileOnly(project(":xiaoming-kotlin-sdk-core-local"))
 
     val jacksonVersion: String by rootProject
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
 
-    val log4jVersion: String by rootProject
     val kotlinLoggingVersion: String by rootProject
-    val slf4jVersion: String by rootProject
     implementation("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
-    testImplementation("org.slf4j:slf4j-api:$slf4jVersion")
-    testImplementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
-    testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:$log4jVersion")
-    testRuntimeOnly("org.apache.logging.log4j:log4j-core:$log4jVersion")
 
-    val mysqlConnectorVersion: String by rootProject
-    testRuntimeOnly("com.mysql:mysql-connector-j:$mysqlConnectorVersion")
-    testRuntimeOnly(project(":xiaoming-kotlin-sdk-core-local-data-sql"))
+    val ktormVersion: String by rootProject
+    implementation("org.ktorm:ktorm-core:$ktormVersion")
+
+    val hikariCpVersion: String by rootProject
+    implementation("com.zaxxer:HikariCP:$hikariCpVersion")
 
     val junitVersion: String by rootProject
     testImplementation(platform("org.junit:junit-bom:$junitVersion"))

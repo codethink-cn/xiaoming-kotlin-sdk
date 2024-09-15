@@ -29,3 +29,4 @@ rootProject.name = "xiaoming-kotlin-sdk"
 include("xiaoming-kotlin-sdk-api")
 include("xiaoming-kotlin-sdk-core-local")
 include("xiaoming-kotlin-sdk-core-remote")
+include("xiaoming-kotlin-sdk-core-local-data-sql")
