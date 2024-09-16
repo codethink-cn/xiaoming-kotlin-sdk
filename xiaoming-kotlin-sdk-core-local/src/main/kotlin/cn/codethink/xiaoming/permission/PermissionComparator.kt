@@ -17,6 +17,7 @@
 package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.common.Cause
+import cn.codethink.xiaoming.common.DefaultSegmentIdMatcher
 import cn.codethink.xiaoming.common.Matcher
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.isMatchable
@@ -48,13 +49,14 @@ interface PermissionComparingCheckingCallbackSupport<T> : Matcher<T> {
  *
  * The comparator will first check if given permission node is matched with the
  * record node. For example, record node `a.b.*` matches given `a.b.c`, but record
- * node `a.*` doesn't match `a.b.c` by default. Details see [DefaultPermissionMatcher].
+ * node `a.*` doesn't match `a.b.c` by default. Details see [DefaultSegmentIdMatcher].
  *
  * Then, the comparator will check if the permission context is matched with the
  * record context. If the permission meta is registered, the context will be checked
  * according it. Otherwise, the context will be checked in the most strict way.
  *
  * @author Chuanwise
+ * @see DefaultSegmentIdMatcher
  * @see PermissionComparator
  * @see DefaultPermissionMatcher
  * @see PermissionMeta
