@@ -22,12 +22,12 @@ import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
+import cn.codethink.xiaoming.io.data.setValue
 
 class LocalPlatformConfiguration(
     raw: Raw
 ) : AbstractData(raw) {
-
-    val data: LocalPlatformData by raw
+    var data: LocalPlatformData by raw
 
     @JvmOverloads
     constructor(

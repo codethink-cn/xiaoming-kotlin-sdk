@@ -20,6 +20,7 @@ package cn.codethink.xiaoming.common
 
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
+import cn.codethink.xiaoming.io.data.RawValue
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
 
@@ -74,7 +75,7 @@ class SdkSubject(
 /**
  * The current SDK subject.
  */
-val CurrentSdkSubject: SdkSubject = SdkSubject(MapRaw().apply {
+val XiaomingSdkSubject: SdkSubject = SdkSubject(MapRaw().apply {
     this[SUBJECT_FIELD_TYPE] = SUBJECT_TYPE_SDK
     this[SDK_SUBJECT_FIELD_GROUP] = SdkGroup
     this[SDK_SUBJECT_FIELD_NAME] = SdkName
@@ -98,7 +99,7 @@ class ProtocolSubject(
 }
 
 /**
- * Represent a subject that is a module.
+ * Represent a subject that is a module. Type is [SUBJECT_TYPE_MODULE].
  *
  * @author Chuanwise
  */
@@ -126,24 +127,61 @@ class ModuleSubject(
 /**
  * The current protocol subject.
  */
-val CurrentProtocolSubject: ProtocolSubject = ProtocolSubject(CurrentSdkSubject.protocol)
+val XiaomingProtocolSubject: ProtocolSubject = ProtocolSubject(XiaomingSdkSubject.protocol)
 
 /**
- * Represent a subject that is a plugin.
+ * Represent a subject that is a plugin. Type is [SUBJECT_TYPE_PLUGIN].
  *
  * @author Chuanwise
  */
 class PluginSubject(
     raw: Raw
 ) : Subject(raw) {
-    val id: String by raw
+    val id: SegmentId by raw
 
     @JvmOverloads
     constructor(
-        id: String,
+        id: SegmentId,
         raw: Raw = MapRaw()
     ) : this(raw) {
         raw[TYPE_FIELD_NAME] = SUBJECT_TYPE_PLUGIN
-        raw[PACKET_FIELD_ID] = id
+        raw[PLUGIN_SUBJECT_FIELD_ID] = id
     }
 }
+
+/**
+ * Used to match plugin subject from [Subject]. Type is
+ * [DEFAULT_PLUGIN_SUBJECT_MATCHER_FIELD_ID_MATCHER].
+ *
+ * @author Chuanwise
+ */
+class DefaultPluginSubjectMatcher(
+    raw: Raw
+) : AbstractData(raw), Matcher<Subject> {
+    override val type: String by raw
+    override val targetType: Class<Subject>
+        get() = Subject::class.java
+
+    @RawValue(DEFAULT_PLUGIN_SUBJECT_MATCHER_FIELD_ID_MATCHER)
+    val idMatcher: Matcher<SegmentId> by raw
+
+    @JvmOverloads
+    constructor(
+        idMatcher: Matcher<SegmentId>,
+        raw: Raw = MapRaw()
+    ) : this(raw) {
+        raw[MATCHER_FIELD_TYPE] = SUBJECT_MATCHER_TYPE_DEFAULT_PLUGIN
+        raw[DEFAULT_PLUGIN_SUBJECT_MATCHER_FIELD_ID_MATCHER] = idMatcher
+    }
+
+    override fun isMatched(target: Subject): Boolean {
+        if (target.type != SUBJECT_TYPE_PLUGIN) {
+            return false
+        }
+        val pluginSubject = target as PluginSubject
+
+        return idMatcher.isMatched(pluginSubject.id)
+    }
+}
+
+fun PluginSubject.toLiteralMatcher() = DefaultPluginSubjectMatcher(id.toLiteralMatcher())

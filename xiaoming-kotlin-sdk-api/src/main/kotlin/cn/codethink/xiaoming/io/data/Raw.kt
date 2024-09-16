@@ -100,6 +100,10 @@ interface Raw {
     )
 
     operator fun contains(key: String): Boolean
+    val keys: Iterable<String>
+    val isEmpty: Boolean
+
+    fun contentEquals(raw: Raw): Boolean
 }
 
 inline operator fun <reified T : Any?> Raw.get(name: String): T = get(
@@ -129,6 +133,11 @@ inline operator fun <reified T : Any?> Raw.setValue(thisRef: Any?, property: KPr
     )
 }
 
+private fun Iterable<String>.asSetEquals(keys: Iterable<String>): Boolean {
+    val set = toSet()
+    return set == keys.toSet()
+}
+
 /**
  * A [Raw] implementation that stores data in a [ObjectNode] used in deserializers.
  *
@@ -154,6 +163,12 @@ class NodeRaw(
 
     // Key: field name, Value: null (if value is set to null) or a map of type to value.
     private val cache: MutableMap<String, MutableMap<Type, Any?>?> = mutableMapOf()
+
+    override val keys: Iterable<String>
+        get() = node.fieldNames().asSequence().toList()
+
+    override val isEmpty: Boolean
+        get() = node.isEmpty
 
     constructor(
         mapper: ObjectMapper
@@ -265,6 +280,21 @@ class NodeRaw(
         return true
     }
 
+    override fun contentEquals(raw: Raw): Boolean {
+        if (raw is NodeRaw) {
+            return node == raw.node
+        } else if (keys.asSetEquals(raw.keys)) {
+            for (key in keys) {
+                if (get<Any>(key) != raw.get<Any>(key)) {
+                    return false
+                }
+            }
+            return true
+        } else {
+            return false
+        }
+    }
+
     override fun hashCode(): Int = node.hashCode()
 }
 
@@ -293,6 +323,12 @@ object NodeRawSerializer : StdSerializer<NodeRaw>(NodeRaw::class.java) {
 class MapRaw(
     val map: MutableMap<String, Any?> = HashMap()
 ) : Raw {
+    override val keys: Iterable<String>
+        get() = map.keys
+
+    override val isEmpty: Boolean
+        get() = map.isEmpty()
+
     override fun get(
         name: String,
         type: Type,
@@ -349,6 +385,21 @@ class MapRaw(
         return true
     }
 
+    override fun contentEquals(raw: Raw): Boolean {
+        if (raw is MapRaw) {
+            return map == raw.map
+        } else if (keys.asSetEquals(raw.keys)) {
+            for (key in keys) {
+                if (get<Any>(key) != raw.get<Any>(key)) {
+                    return false
+                }
+            }
+            return true
+        } else {
+            return false
+        }
+    }
+
     override fun hashCode(): Int = map.hashCode()
 
     override fun toString(): String = "MapRaw(${map.entries.joinToString(", ")})"
@@ -363,4 +414,43 @@ object MapRawSerializer : StdSerializer<MapRaw>(MapRaw::class.java) {
             generator.writeObject(value.map)
         }
     }
+}
+
+/**
+ * A [Raw] implementation that stores no data.
+ *
+ * @author Chuanwise
+ */
+object EmptyRaw : Raw {
+    override fun get(
+        name: String,
+        type: Type,
+        optional: Boolean,
+        nullable: Boolean,
+        defaultValue: Any?
+    ): Any? {
+        if (optional) {
+            if (defaultValue != null || nullable) {
+                return defaultValue
+            } else {
+                throw NoSuchElementException("Field $name is optional, but not found in $this.")
+            }
+        } else {
+            throw IllegalArgumentException("Field $name is required, but not found in $this.")
+        }
+    }
+
+    override fun set(name: String, value: Any?, optional: Boolean, nullable: Boolean) {
+        throw UnsupportedOperationException("Cannot set value to EmptyRaw.")
+    }
+
+    override fun contains(key: String): Boolean = false
+
+    override val keys: Iterable<String>
+        get() = emptyList()
+
+    override fun contentEquals(raw: Raw): Boolean = raw.isEmpty
+
+    override val isEmpty: Boolean
+        get() = true
 }

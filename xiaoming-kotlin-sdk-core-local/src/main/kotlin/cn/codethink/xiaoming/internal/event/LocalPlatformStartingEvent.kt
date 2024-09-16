@@ -14,19 +14,23 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.io
+package cn.codethink.xiaoming.internal.event
 
-import cn.codethink.xiaoming.io.data.XiaomingJacksonModuleVersion
-import cn.codethink.xiaoming.io.data.polymorphic
-import cn.codethink.xiaoming.permission.data.LocalPlatformData
-import com.fasterxml.jackson.databind.module.SimpleModule
+import cn.codethink.xiaoming.common.Cause
+import cn.codethink.xiaoming.common.InternalEvent
+import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.event.Event
+import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 
-class LocalPlatformModule : SimpleModule(
-    "LocalPlatformModule", XiaomingJacksonModuleVersion
-) {
-    inner class Deserializers {
-        val platformData = polymorphic<LocalPlatformData>()
-    }
-
-    val deserializers: Deserializers = Deserializers()
-}
+/**
+ * Create and passed by the platform when it is starting, to notify all
+ * modules that the platform is starting.
+ *
+ * @author Chuanwise
+ */
+@InternalEvent
+data class LocalPlatformStartingEvent(
+    val internalApi: LocalPlatformInternalApi,
+    val cause: Cause,
+    val subject: Subject
+) : Event()

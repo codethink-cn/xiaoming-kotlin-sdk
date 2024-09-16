@@ -16,21 +16,31 @@
 
 package cn.codethink.xiaoming.permission
 
+import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.Matcher
+import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.isMatchable
 import cn.codethink.xiaoming.common.isMatchedOrNull
 import cn.codethink.xiaoming.permission.data.PermissionProfile
 import cn.codethink.xiaoming.permission.data.PermissionRecord
 
 data class PermissionComparingContext(
+    val api: LocalPermissionServiceApi,
     val profile: PermissionProfile,
     val permission: Permission,
     val record: PermissionRecord,
-    val api: LocalPermissionServiceApi
+    val context: Map<String, Any?> = emptyMap(),
+    val caller: Subject? = null,
+    val cause: Cause? = null
 )
 
 
 interface PermissionComparator {
     fun compare(context: PermissionComparingContext): Boolean
+}
+
+interface PermissionComparingCheckingCallbackSupport<T> : Matcher<T> {
+    fun onPermissionComparingChecking(context: PermissionComparingContext, value: T): Boolean
 }
 
 /**
@@ -48,26 +58,31 @@ interface PermissionComparator {
  * @see PermissionComparator
  * @see DefaultPermissionMatcher
  * @see PermissionMeta
- * @see PermissionContextMeta
+ * @see PermissionParameterMeta
  */
+@Suppress("UNCHECKED_CAST")
 object DefaultPermissionComparator : PermissionComparator {
-    @Suppress("UNCHECKED_CAST")
     override fun compare(context: PermissionComparingContext): Boolean {
-        val matched = context.record.node.isMatched(context.permission.descriptor.node)
+        val matched = context.record.nodeMatcher.isMatched(context.permission.descriptor.node)
         if (!matched) {
             return false
         }
 
-        val meta = context.api.permissionMetas[context.permission.descriptor.node]?.value
+        // Find permission meta that registered by subject of given permission.
+        val meta = context.api.permissionMetas[
+            context.permission.descriptor.node, context.permission.descriptor.subject
+        ]?.value
+
+        // Match arguments.
         if (meta == null) {
-            // Given permission context keys must equals to record context keys.
-            if (context.record.context.keys != context.permission.context.keys) {
+            // Given permission argument keys must equals to record argument matcher keys.
+            if (context.record.argumentMatchers.keys != context.permission.arguments.keys) {
                 return false
             }
 
             // Check if the context values are all matched.
-            context.permission.context.forEach { (key, value) ->
-                val matcher = context.record.context[key] as Matcher<Any?>?
+            context.permission.arguments.forEach { (key, value) ->
+                val matcher = context.record.argumentMatchers[key] as Matcher<Any?>?
                     ?: throw IllegalStateException("No matcher found for key: $key.")
 
                 val result = matcher.isMatchedOrNull(value)
@@ -76,24 +91,17 @@ object DefaultPermissionComparator : PermissionComparator {
                 }
             }
         } else {
-            // Given permission context keys contained in meta context.
-            if (!meta.context.keys.containsAll(context.permission.context.keys)) {
+            // Given permission argument keys contained in meta context.
+            if (!meta.parameters.keys.containsAll(context.permission.arguments.keys)) {
                 return false
-            }
-            if (!meta.context.keys.containsAll(context.record.context.keys)) {
-                context.api.logger.warn {
-                    "Redundant context keys: keys ${context.record.context.keys} are not all contained " +
-                            "in meta context keys ${meta.context.keys} " +
-                            "in comparing ${context.permission} and ${context.record}."
-                }
             }
 
             // Check if the context values are all matched.
-            meta.context.forEach { (key, contextMeta) ->
-                val matcher = context.record.context[key] as Matcher<Any?>?
-                val given = context.permission.context[key]
+            meta.parameters.forEach { (key, contextMeta) ->
+                val matcher = context.record.argumentMatchers[key] as Matcher<Any?>?
+                val given = context.permission.arguments[key]
 
-                if (given == null && context.permission.context.containsKey(key)) {
+                if (given == null && context.permission.arguments.containsKey(key)) {
                     // If given is null, check `nullable`.
                     if (!contextMeta.nullable) {
                         return false
@@ -138,6 +146,36 @@ object DefaultPermissionComparator : PermissionComparator {
             }
         }
 
+        // Check context.
+        if (!context.context.isContextMatched(context) || !context.record.context.isContextMatched(context)) {
+            return false
+        }
+
+        return true
+    }
+
+    private fun Map<String, Any?>.isContextMatched(context: PermissionComparingContext): Boolean {
+        forEach { (key, value) ->
+            val matcher = context.api.permissionContextMatchers[key]?.value as Matcher<Any?>?
+            if (matcher == null) {
+                context.api.logger.warn { "No permission context checker found for key: $key." }
+                return false
+            }
+
+            if (!matcher.isMatchable(value)) {
+                context.api.logger.warn { "Context value $key is not matchable: $value." }
+                return false
+            }
+
+            val result = if (matcher is PermissionComparingCheckingCallbackSupport) {
+                matcher.onPermissionComparingChecking(context, value)
+            } else {
+                matcher.isMatched(value)
+            }
+            if (!result) {
+                return false
+            }
+        }
         return true
     }
 }

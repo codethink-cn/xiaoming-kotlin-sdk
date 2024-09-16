@@ -16,14 +16,12 @@
 
 package cn.codethink.xiaoming.permission.data
 
-import javax.xml.crypto.Data
-
 /**
  * Operations to access and modify the data of local platform.
  *
  * @author Chuanwise
  */
-interface LocalPlatformData : Data {
+interface LocalPlatformData {
     val type: String
     val permissionProfiles: PermissionProfiles
     val permissionRecords: PermissionRecords

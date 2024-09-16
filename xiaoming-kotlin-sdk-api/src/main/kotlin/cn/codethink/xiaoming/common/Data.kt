@@ -37,12 +37,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode
  * @see Raw
  * @see AbstractData
  */
-@JsonSerialize(using = DataSerializer::class)
+@JsonSerialize(using = DefaultDataSerializer::class)
 interface Data {
     val raw: Raw
 }
 
-object DataSerializer : JsonSerializer<Data>() {
+object DefaultDataSerializer : JsonSerializer<Data>() {
     override fun serialize(data: Data, generator: JsonGenerator, provider: SerializerProvider) {
         generator.writeObject(data.raw)
     }
@@ -67,9 +67,7 @@ abstract class AbstractData(
 
         other as AbstractData
 
-        if (raw != other.raw) return false
-
-        return true
+        return raw.contentEquals(other.raw)
     }
 
     override fun hashCode(): Int {
@@ -108,7 +106,19 @@ class DefaultDataDeserializer<T : Data>(
     }
 }
 
-/**
- * Kotlin-friendly version of constructor of [DefaultDataDeserializer].
- */
 inline fun <reified T : Data> DefaultDataDeserializer() = DefaultDataDeserializer(T::class.java)
+
+/**
+ * Use Jackson default deserializer to deserialize objects.
+ *
+ * @author Chuanwise
+ */
+class DefaultDeserializer<T>(
+    private val type: Class<T>
+) : StdDeserializer<T>(type) {
+    override fun deserialize(parser: JsonParser, context: DeserializationContext): T {
+        return parser.readValueAs(type)
+    }
+}
+
+inline fun <reified T> DefaultDeserializer() = DefaultDeserializer(T::class.java)

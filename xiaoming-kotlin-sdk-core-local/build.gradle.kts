@@ -27,9 +27,10 @@ dependencies {
     api(project(":xiaoming-kotlin-sdk-core-remote"))
 
     val jacksonVersion: String by rootProject
-    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+    api("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    api("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
+    api("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+    api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
 
     val log4jVersion: String by rootProject
     val kotlinLoggingVersion: String by rootProject
@@ -39,6 +40,9 @@ dependencies {
     testImplementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
     testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:$log4jVersion")
     testRuntimeOnly("org.apache.logging.log4j:log4j-core:$log4jVersion")
+
+    val kotlinCoroutineVersion: String by rootProject
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutineVersion")
 
     val mysqlConnectorVersion: String by rootProject
     testRuntimeOnly("com.mysql:mysql-connector-j:$mysqlConnectorVersion")

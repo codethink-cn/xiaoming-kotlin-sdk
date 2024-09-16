@@ -17,23 +17,30 @@
 package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.common.Cause
+import cn.codethink.xiaoming.common.Matcher
+import cn.codethink.xiaoming.common.SegmentId
 import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.permission.data.PermissionProfile
+
+
+data class PermissionSettingContext(
+    val api: LocalPermissionServiceApi,
+    val profile: PermissionProfile,
+    val subjectMatcher: Matcher<Subject>,
+    val nodeMatcher: Matcher<SegmentId>,
+    val value: Boolean?,
+    val argumentMatchers: Map<String, Matcher<*>> = emptyMap(),
+    val context: Map<String, Any?> = emptyMap(),
+    val caller: Subject? = null,
+    val cause: Cause? = null
+)
 
 /**
- * Provides permission related operations by forwarding calling to
- * [LocalPermissionServiceApi].
+ * Call when setting a permission.
  *
  * @author Chuanwise
- * @see LocalPermissionServiceApi
+ * @see LocalPermissionServiceApi.setPermission
  */
-class LocalPermissionService(
-    val api: LocalPermissionServiceApi
-) : PermissionService {
-    override suspend fun hasPermission(
-        subject: Subject,
-        permission: Permission,
-        context: Map<String, Any?>,
-        caller: Subject?,
-        cause: Cause?
-    ): Boolean? = api.hasPermission(subject, permission, context, caller, cause)
+interface PermissionSettingChecker {
+    fun check(context: PermissionSettingContext)
 }

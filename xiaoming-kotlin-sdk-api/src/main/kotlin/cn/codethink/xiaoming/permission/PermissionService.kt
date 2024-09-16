@@ -29,6 +29,7 @@ interface PermissionService {
     suspend fun hasPermission(
         subject: Subject,
         permission: Permission,
+        context: Map<String, Any?> = emptyMap(),
         caller: Subject? = null,
         cause: Cause? = null
     ): Boolean?

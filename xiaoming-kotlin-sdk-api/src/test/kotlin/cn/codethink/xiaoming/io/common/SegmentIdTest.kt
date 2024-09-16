@@ -17,7 +17,7 @@
 package cn.codethink.xiaoming.io.common
 
 import cn.codethink.xiaoming.common.AnyMatcher
-import cn.codethink.xiaoming.common.DefaultStringListMatcher
+import cn.codethink.xiaoming.common.DefaultSegmentIdMatcher
 import cn.codethink.xiaoming.common.LiteralStringMatcher
 import cn.codethink.xiaoming.common.MajorityOptionalWildcardStringMatcher
 import cn.codethink.xiaoming.common.MajorityRequiredWildcardStringMatcher
@@ -41,10 +41,10 @@ class SegmentIdTest {
     @Test
     fun testDefaultStringListMatcher() {
         // Empty list.
-        assertThrows<IllegalArgumentException> { DefaultStringListMatcher(emptyList()) }
+        assertThrows<IllegalArgumentException> { DefaultSegmentIdMatcher(emptyList()) }
 
         assertTrue(
-            DefaultStringListMatcher(
+            DefaultSegmentIdMatcher(
                 listOf(
                     LiteralStringMatcher("114514"),
                     MinorityOptionalWildcardStringMatcher,
@@ -53,7 +53,7 @@ class SegmentIdTest {
             ).isMatched(segmentIdOf("114514.1919810"))
         )
         assertFalse(
-            DefaultStringListMatcher(
+            DefaultSegmentIdMatcher(
                 listOf(
                     LiteralStringMatcher("114514"),
                     MinorityRequiredWildcardStringMatcher,
@@ -63,7 +63,7 @@ class SegmentIdTest {
         )
 
         assertTrue(
-            DefaultStringListMatcher(
+            DefaultSegmentIdMatcher(
                 listOf(
                     RegexStringMatcher("18\\d+".toRegex()),
                     MajorityRequiredWildcardStringMatcher
@@ -71,7 +71,7 @@ class SegmentIdTest {
             ).isMatched(segmentIdOf("1893.12.26"))
         )
         assertTrue(
-            DefaultStringListMatcher(
+            DefaultSegmentIdMatcher(
                 listOf(
                     RegexStringMatcher("18\\d+".toRegex()),
                     MajorityOptionalWildcardStringMatcher
@@ -80,7 +80,7 @@ class SegmentIdTest {
         )
 
         assertFalse(
-            DefaultStringListMatcher(
+            DefaultSegmentIdMatcher(
                 listOf(
                     LiteralStringMatcher("18"),
                     AnyMatcher<String>(),
@@ -90,7 +90,7 @@ class SegmentIdTest {
         )
 
         assertThrows<IllegalArgumentException> {
-            DefaultStringListMatcher(
+            DefaultSegmentIdMatcher(
                 listOf(
                     LiteralStringMatcher("1893"),
                     MajorityRequiredWildcardStringMatcher,

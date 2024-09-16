@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.io
+package cn.codethink.xiaoming.common
 
-import cn.codethink.xiaoming.io.data.XiaomingJacksonModuleVersion
-import cn.codethink.xiaoming.io.data.polymorphic
-import cn.codethink.xiaoming.permission.data.LocalPlatformData
-import com.fasterxml.jackson.databind.module.SimpleModule
-
-class LocalPlatformModule : SimpleModule(
-    "LocalPlatformModule", XiaomingJacksonModuleVersion
-) {
-    inner class Deserializers {
-        val platformData = polymorphic<LocalPlatformData>()
-    }
-
-    val deserializers: Deserializers = Deserializers()
-}
+/**
+ * Internal event, will not be pushed to the event bus because
+ * no listeners can be registered at that time.
+ *
+ * @author Chuanwise
+ */
+@MustBeDocumented
+@Retention(AnnotationRetention.SOURCE)
+annotation class InternalEvent

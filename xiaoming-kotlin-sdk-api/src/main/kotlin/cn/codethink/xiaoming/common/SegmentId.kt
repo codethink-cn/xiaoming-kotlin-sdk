@@ -16,6 +16,7 @@
 
 package cn.codethink.xiaoming.common
 
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
@@ -34,7 +35,7 @@ val SEGMENT_ID_REGEX = "[\\w-]+(\\.[\\w-]+)*".toRegex()
  * For example, `a.b.c` is a valid segment id, while `a..b` is not.
  *
  * @author Chuanwise
- * @see DefaultStringListMatcher
+ * @see DefaultSegmentIdMatcher
  */
 @JsonSerialize(using = SegmentIdStringSerializer::class)
 @JsonDeserialize(using = SegmentIdStringDeserializer::class)
@@ -63,6 +64,7 @@ data class SegmentId(
 
 fun segmentIdOf(string: String): SegmentId = SegmentId(string.split("."))
 fun String.toSegmentId(): SegmentId = segmentIdOf(this)
+fun List<String>.toSegmentId(): SegmentId = SegmentId(this)
 
 object SegmentIdStringSerializer : StdSerializer<SegmentId>(SegmentId::class.java) {
     private fun readResolve(): Any = SegmentIdStringSerializer
@@ -77,13 +79,13 @@ object SegmentIdStringDeserializer : StdDeserializer<SegmentId>(SegmentId::class
         parser: com.fasterxml.jackson.core.JsonParser,
         context: com.fasterxml.jackson.databind.DeserializationContext
     ): SegmentId {
-        return segmentIdOf(parser.text)
+        return segmentIdOf(parser.nextTextValue())
     }
 }
 
 data class DefaultStringListMatchingContext(
-    val matcher: DefaultStringListMatcher,
-    val target: List<String>,
+    val matcher: DefaultSegmentIdMatcher,
+    val target: SegmentId,
     val matchers: List<Matcher<String>>,
     var matcherIndex: Int = 0,
     var targetIndex: Int = 0,
@@ -103,7 +105,7 @@ interface DefaultStringListMatcherMatchingCallbackSupport : Matcher<String> {
 }
 
 data class DefaultStringListMatcherConstructingContext(
-    val matcher: DefaultStringListMatcher,
+    val matcher: DefaultSegmentIdMatcher,
     val matchers: List<Matcher<String>>,
     var matcherIndex: Int
 )
@@ -132,9 +134,9 @@ interface DefaultStringListMatcherConstructingCallbackSupport : Matcher<String> 
  * @see AnyMatcher
  * @see WildcardStringMatcher
  */
-class DefaultStringListMatcher(
+data class DefaultSegmentIdMatcher(
     val matchers: List<Matcher<String>>
-) : Matcher<List<String>> {
+) : Matcher<SegmentId> {
     init {
         if (matchers.isEmpty()) {
             throw IllegalArgumentException("Segment matchers should not be empty.")
@@ -155,13 +157,13 @@ class DefaultStringListMatcher(
         }
     }
 
-    override val type: String = SEGMENT_ID_MATCHER_TYPE_DEFAULT
+    override val type: String
+        get() = SEGMENT_ID_MATCHER_TYPE_DEFAULT
 
-    @Suppress("UNCHECKED_CAST")
-    override val targetType: Class<List<String>>
-        get() = List::class.java as Class<List<String>>
+    override val targetType: Class<SegmentId>
+        get() = SegmentId::class.java
 
-    override fun isMatched(target: List<String>): Boolean {
+    override fun isMatched(target: SegmentId): Boolean {
         val context = DefaultStringListMatchingContext(this, target, matchers)
         while (context.matcherIndex < matchers.size && context.targetIndex < target.size) {
             when (val matcher = matchers[context.matcherIndex]) {
@@ -191,6 +193,24 @@ class DefaultStringListMatcher(
                 "type=$SEGMENT_ID_MATCHER_TYPE_DEFAULT," +
                 "segmentMatchers=$matchers)"
     }
-
-    override fun toString(): String = toStringCache
 }
+
+data class LiteralSegmentIdMatcher @JsonCreator constructor(
+    val id: SegmentId
+) : Matcher<SegmentId> {
+    override val type: String
+        get() = SEGMENT_ID_MATCHER_TYPE_LITERAL
+
+    override val targetType: Class<SegmentId>
+        get() = SegmentId::class.java
+
+    override fun isMatched(target: SegmentId): Boolean = target == id
+
+    private val toStringCache: String by lazy {
+        "LiteralStringListMatcher(" +
+                "type=$SEGMENT_ID_MATCHER_TYPE_LITERAL," +
+                "list=$id)"
+    }
+}
+
+fun SegmentId.toLiteralMatcher() = LiteralSegmentIdMatcher(this)

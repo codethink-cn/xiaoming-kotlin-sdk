@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.common
+package cn.codethink.xiaoming.common.data
 
-import cn.codethink.xiaoming.io.data.PolymorphicDeserializerManager
-import com.fasterxml.jackson.databind.JsonNode
+import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.permission.data.sql.SqlLocalPlatformData
 
 /**
- * Throw when failed to deserialize a polymorphic object by a deserializer registered
- * by a subject.
+ * Service for platform using [SqlLocalPlatformData] to save and load service.
  *
  * @author Chuanwise
+ * @see SqlLocalPlatformData
  */
-class PolymorphicDeserializingException(
-    val node: JsonNode,
-    val registration: PolymorphicDeserializerManager<*>.DeserializerRegistration,
-    message: String = "Failed to deserialize $node to ${registration.typeName}.",
-    cause: Throwable? = null
-) : RuntimeException(message, cause)
+interface SubjectService<T : Subject> {
+    fun getSubjectId(subject: T): Long?
+    fun getOrCreateSubjectId(subject: T): Long
+}
+
+fun <T : Subject> SubjectService<T>.getSubjectIdOrFail(subject: T): Long = getSubjectId(subject)
+    ?: throw NoSuchElementException("No subject id found for $subject.")

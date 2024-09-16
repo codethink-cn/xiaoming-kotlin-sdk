@@ -16,6 +16,9 @@
 
 package cn.codethink.xiaoming.common
 
+import cn.codethink.xiaoming.event.Event
+import cn.codethink.xiaoming.io.data.DefaultSerialization
+import cn.codethink.xiaoming.io.data.EmptyRaw
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Packet
 import cn.codethink.xiaoming.io.data.Raw
@@ -163,3 +166,15 @@ class ErrorMessageCause(
     }
 }
 
+/**
+ * Represent a cause that is an event.
+ *
+ * In the most cases, developers should use [PacketCause].
+ *
+ * @author Chuanwise
+ */
+@DefaultSerialization
+class EventCause(
+    val event: Event,
+    override val cause: Cause? = null
+) : Cause(EmptyRaw)

@@ -46,7 +46,7 @@ class DefaultRegistration<T>(
  *
  * @author Chuanwise
  */
-interface Registrations<T> {
+interface Registrations {
     fun unregisterBySubject(subject: Subject): Boolean
 }
 
@@ -55,9 +55,10 @@ interface Registrations<T> {
  *
  * @author Chuanwise
  */
-class MapRegistrations<K, T, R : Registration<T>> : Registrations<T> {
+class MapRegistrations<K, T, R : Registration<T>> : Registrations {
     private val mutableMap: MutableMap<K, R> = ConcurrentHashMap()
-    private val map: Map<K, R> = mutableMap.toMap()
+    private val map: Map<K, R>
+        get() = mutableMap.toMap()
 
     fun toMap(): Map<K, R> = map
 
@@ -65,7 +66,9 @@ class MapRegistrations<K, T, R : Registration<T>> : Registrations<T> {
         return mutableMap[key]
     }
 
-    fun register(key: K, registration: R): R? = mutableMap.put(key, registration)
+    fun register(key: K, registration: R) {
+        mutableMap[key] = registration
+    }
     fun unregisterByKey(key: K): R? = mutableMap.remove(key)
     override fun unregisterBySubject(subject: Subject): Boolean = mutableMap.values.removeIf { it.subject == subject }
 }
@@ -73,14 +76,23 @@ class MapRegistrations<K, T, R : Registration<T>> : Registrations<T> {
 inline fun <reified K, reified T> DefaultMapRegistrations() = MapRegistrations<K, T, DefaultRegistration<T>>()
 inline fun <reified T> DefaultStringMapRegistrations() = DefaultMapRegistrations<String, T>()
 
-class ListRegistrations<T, R : Registration<T>> : Registrations<T> {
+/**
+ * Registrations in this class are saved in a list.
+ *
+ * @author Chuanwise
+ */
+class ListRegistrations<T, R : Registration<T>> : Registrations {
     private val mutableList = CopyOnWriteArrayList<R>()
-    private val list: List<R> = mutableList.toList()
+    private val list: List<R>
+        get() = mutableList.toList()
 
     fun toList(): List<R> = list
 
-    fun register(registration: R) = mutableList.add(registration)
-    fun unregister(registration: R) = mutableList.remove(registration)
+    fun register(registration: R) {
+        mutableList.add(registration)
+    }
+
+    fun unregisterByValue(value: T) = mutableList.removeIf { it.value == value }
     override fun unregisterBySubject(subject: Subject): Boolean = mutableList.removeIf { it.subject == subject }
 }
 

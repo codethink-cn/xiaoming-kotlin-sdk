@@ -16,20 +16,26 @@
 
 package cn.codethink.xiaoming.permission
 
-import cn.codethink.xiaoming.common.CurrentSdkSubject
+import cn.codethink.xiaoming.common.PluginSubject
+import cn.codethink.xiaoming.common.TextCause
+import cn.codethink.xiaoming.common.XiaomingSdkSubject
+import cn.codethink.xiaoming.common.segmentIdOf
+import cn.codethink.xiaoming.common.toLiteralMatcher
+import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
+import cn.codethink.xiaoming.internal.configuration.LocalPlatformInternalConfiguration
 import cn.codethink.xiaoming.io.data.PlatformAnnotationIntrospector
-import cn.codethink.xiaoming.permission.data.LocalPlatformConfiguration
 import cn.codethink.xiaoming.permission.data.insertAndGetProfile
 import com.fasterxml.jackson.databind.AnnotationIntrospector
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import org.junit.jupiter.api.BeforeAll
+import io.github.oshai.kotlinlogging.KotlinLogging
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import java.io.InputStream
+import java.io.File
 
 class LocalPermissionServiceTest {
     companion object {
+        val logger = KotlinLogging.logger { }
         val mapper = jacksonObjectMapper().apply {
             setAnnotationIntrospector(
                 AnnotationIntrospector.pair(
@@ -40,33 +46,65 @@ class LocalPermissionServiceTest {
             findAndRegisterModules()
         }
 
-        lateinit var configuration: LocalPlatformConfiguration
-
-        @JvmStatic
-        @BeforeAll
-        fun beforeAll() {
-            configuration = getResourceFileAsStream("configurations/configurations.json").use {
-                mapper.readValue(it)
-            }
+        val internalConfiguration = LocalPlatformInternalConfiguration(
+            workingDirectoryFile = File("platform")
+        )
+        val api = LocalPlatformInternalApi(internalConfiguration, logger).apply {
+            start(TextCause("Run test programs"), XiaomingSdkSubject)
         }
 
-        fun getResourceFileAsStream(path: String): InputStream {
-            val classLoader = ClassLoader.getSystemClassLoader()
-            val stream = classLoader.getResourceAsStream(path)
-                ?: if (classLoader.getResourceAsStream(path + ".example") == null) {
-                    throw IllegalArgumentException("Resource not found: $path.")
-                } else {
-                    throw IllegalArgumentException(
-                        "Resource not found: $path. Check, modify and rename it from template `$path.example`."
-                    )
-                }
-            return stream
-        }
+        val subject = PluginSubject(segmentIdOf("cn.codethink.xiaoming.demo"))
+        val subjectMatcher = subject.toLiteralMatcher()
+
+        val profile = api.data.permissionProfiles.insertAndGetProfile(subject)
     }
 
     @Test
     fun testGetPermissionSubject() {
-        val profile = configuration.data.permissionProfiles.insertAndGetProfile(CurrentSdkSubject)
-        println(profile)
+        val permission = Permission(
+            descriptor = PermissionDescriptor(
+                subject = subject,
+                node = segmentIdOf("a.b.c.d")
+            )
+        )
+
+        // First the permission is unset.
+        assertEquals(null, api.permissionServiceApi.hasPermission(profile, permission))
+
+        // Set the permission to false and check.
+        api.permissionServiceApi.setPermission(
+            profile = profile,
+            subjectMatcher = subjectMatcher,
+            nodeMatcher = segmentIdOf("a.b.c").toLiteralMatcher(),
+            false
+        )
+        assertEquals(null, api.permissionServiceApi.hasPermission(profile, permission))
+
+        // Set the permission to false and check.
+        api.permissionServiceApi.setPermission(
+            profile = profile,
+            subjectMatcher = subjectMatcher,
+            nodeMatcher = segmentIdOf("a.b.c.d").toLiteralMatcher(),
+            false
+        )
+        assertEquals(false, api.permissionServiceApi.hasPermission(profile, permission))
+
+        // Set to true and check.
+        api.permissionServiceApi.setPermission(
+            profile = profile,
+            subjectMatcher = subjectMatcher,
+            nodeMatcher = segmentIdOf("a.b.c.d").toLiteralMatcher(),
+            true
+        )
+        assertEquals(true, api.permissionServiceApi.hasPermission(profile, permission))
+
+        // Unset and check
+        api.permissionServiceApi.setPermission(
+            profile = profile,
+            subjectMatcher = subjectMatcher,
+            nodeMatcher = segmentIdOf("a.b.c.d").toLiteralMatcher(),
+            null
+        )
+        assertEquals(null, api.permissionServiceApi.hasPermission(profile, permission))
     }
 }

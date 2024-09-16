@@ -40,4 +40,4 @@ bin/
 .DS_Store
 
 ### Project ###
-configurations.json
+platform.yml

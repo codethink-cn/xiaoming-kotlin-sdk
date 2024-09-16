@@ -19,23 +19,15 @@ package cn.codethink.xiaoming.common
 /**
  * The subject of the local data sql module.
  */
-val LocalDataSqlModuleSubject = ModuleSubject(
-    CurrentSdkSubject.group,
-    "xiaoming-kotlin-sdk-core-local",
-    CurrentSdkSubject.version
+val SqlLocalDataModuleSubject = ModuleSubject(
+    XiaomingSdkSubject.group,
+    "xiaoming-kotlin-sdk-core-local-data-sql",
+    XiaomingSdkSubject.version
 )
 
 const val LOCAL_PLATFORM_DATA_TYPE_SQL = "sql"
-const val SQL_LOCAL_PLATFORM_DATA_FIELD_SOURCE = "source"
-const val SQL_LOCAL_PLATFORM_DATA_FIELD_TABLES = "tables"
-const val SQL_LOCAL_PLATFORM_DATA_TABLES_NAME_FIELD_PREFIX = "prefix"
-const val SQL_LOCAL_PLATFORM_DATA_TABLES_NAME_FIELD_PERMISSION_PROFILE = "permission_profile"
-const val SQL_LOCAL_PLATFORM_DATA_TABLES_NAME_FIELD_PERMISSION_RECORD = "permission_record"
-
-const val DEFAULT_TABLE_NAME_PREFIX = ""
-const val DEFAULT_PERMISSION_PROFILE_TABLE_NAME = "permission_profile"
-const val DEFAULT_PERMISSION_RECORD_TABLE_NAME = "permission_record"
-
+const val SQL_LOCAL_PLATFORM_DATA_FIELD_VERSION = "version"
+const val SQL_LOCAL_PLATFORM_DATA_VERSION_1 = "1"
 
 const val SQL_DATA_SOURCE_FIELD_TYPE = "type"
 

@@ -28,7 +28,7 @@ interface PermissionProfiles {
     fun insertAndGetProfileId(subject: Subject): Long
 }
 
-fun PermissionProfiles.insertAndGetProfile(subject: Subject): PermissionProfile? {
+fun PermissionProfiles.insertAndGetProfile(subject: Subject): PermissionProfile {
     val id = insertAndGetProfileId(subject)
-    return getProfileById(id)
+    return getProfileById(id)!!
 }

@@ -49,6 +49,7 @@ const val RECEIPT_STATE_INTERRUPTED = "interrupted"
 const val SUBJECT_FIELD_TYPE = TYPE_FIELD_NAME
 
 const val SUBJECT_TYPE_PLUGIN = "plugin"
+const val PLUGIN_SUBJECT_FIELD_ID = "id"
 
 const val SUBJECT_TYPE_SDK = "sdk"
 const val SDK_SUBJECT_FIELD_VERSION = "version"
@@ -74,6 +75,9 @@ const val ERROR_TEXT_CAUSE_FIELD_ERROR = "error"
 const val ERROR_TEXT_CAUSE_FIELD_MESSAGE = "message"
 const val ERROR_TEXT_CAUSE_FIELD_CONTEXT = "context"
 
+const val CAUSE_TYPE_EVENT = "event"
+const val EVENT_CAUSE_FIELD_EVENT = "event"
+
 const val CAUSE_TYPE_PACKET_DATA = "packet_data"
 const val CAUSE_TYPE_PACKET_ID = "packet_id"
 const val PACKET_DATA_CAUSE_FIELD_PACKET = "packet"
@@ -96,36 +100,40 @@ const val LISTENER_DESCRIPTOR_FIELD_SUBJECT = "subject"
 const val PERMISSION_SUBJECT_FIELD_NODE = "node"
 const val PERMISSION_SUBJECT_FIELD_SUBJECT = "subject"
 
-const val PERMISSION_CONTEXT_META_FIELD_OPTIONAL = "optional"
-const val PERMISSION_CONTEXT_META_FIELD_NULLABLE = "nullable"
-const val PERMISSION_CONTEXT_META_FIELD_DEFAULT_VALUE = "default_value"
-const val PERMISSION_CONTEXT_META_FIELD_DEFAULT_MATCHER = "default_matcher"
-const val PERMISSION_CONTEXT_META_FIELD_DESCRIPTION = "description"
+const val PERMISSION_VARIABLE_META_FIELD_OPTIONAL = "optional"
+const val PERMISSION_VARIABLE_META_FIELD_NULLABLE = "nullable"
+const val PERMISSION_VARIABLE_META_FIELD_DEFAULT_VALUE = "default_value"
+const val PERMISSION_VARIABLE_META_FIELD_DEFAULT_MATCHER = "default_matcher"
+const val PERMISSION_VARIABLE_META_FIELD_DESCRIPTION = "description"
 
 const val PERMISSION_META_FIELD_NODE = "node"
 const val PERMISSION_META_FIELD_SUBJECT = "subject"
-const val PERMISSION_META_FIELD_CONTEXT = "context"
+const val PERMISSION_META_FIELD_PARAMETERS = "parameters"
 const val PERMISSION_META_FIELD_DESCRIPTION = "description"
 const val PERMISSION_META_FIELD_DESCRIPTOR = "descriptor"
 
 const val PERMISSION_FIELD_DESCRIPTOR = "descriptor"
-const val PERMISSION_FIELD_CONTEXT = "context"
+const val PERMISSION_FIELD_ARGUMENTS = "arguments"
 
 const val MATCHER_FIELD_TYPE = TYPE_FIELD_NAME
 const val MATCHER_TYPE_ANY = "any"
 
+const val SUBJECT_MATCHER_TYPE_DEFAULT_PLUGIN = "subject.plugin.default"
+const val DEFAULT_PLUGIN_SUBJECT_MATCHER_FIELD_ID_MATCHER = "id_matcher"
+
 const val PERMISSION_MATCHER_TYPE_DEFAULT = "permission.default"
-const val DEFAULT_PERMISSION_MATCHER_FIELD_NODE = "node"
-const val DEFAULT_PERMISSION_MATCHER_FIELD_CONTEXT = "context"
+const val DEFAULT_PERMISSION_MATCHER_FIELD_NODE_MATCHER = "node_matcher"
+const val DEFAULT_PERMISSION_MATCHER_FIELD_ARGUMENT_MATCHERS = "context_matchers"
 
 const val PERMISSION_MATCHER_TYPE_LITERAL = "permission.literal"
 const val LITERAL_PERMISSION_MATCHER_FIELD_PERMISSION = "permission"
 
-const val TEXT_MATCHER_TYPE_WILDCARD = "text.wildcard"
-const val TEXT_MATCHER_TYPE_REGEX = "text.regex"
-const val TEXT_MATCHER_TYPE_LITERAL = "text.literal"
+const val STRING_MATCHER_TYPE_WILDCARD = "string.wildcard"
+const val STRING_MATCHER_TYPE_REGEX = "string.regex"
+const val STRING_MATCHER_TYPE_LITERAL = "string.literal"
 
 const val SEGMENT_ID_MATCHER_TYPE_DEFAULT = "segment_id.default"
+const val SEGMENT_ID_MATCHER_TYPE_LITERAL = "segment_id.literal"
 
 const val HEADER_KEY_AUTHORIZATION = "Authorization"
 const val HEADER_VALUE_AUTHORIZATION_BEARER_WITH_SPACE = "Bearer "

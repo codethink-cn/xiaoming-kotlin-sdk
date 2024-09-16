@@ -14,17 +14,27 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.event
+package cn.codethink.xiaoming.permission
 
-import cn.codethink.xiaoming.common.AbstractData
-import cn.codethink.xiaoming.io.data.MapRaw
-import cn.codethink.xiaoming.io.data.Raw
+import cn.codethink.xiaoming.common.Cause
+import cn.codethink.xiaoming.common.Subject
+
+data class PermissionCalculatingContext<T : Subject>(
+    val api: LocalPermissionServiceApi,
+    val subject: T,
+    val permission: Permission,
+    val context: Map<String, Any?> = emptyMap(),
+    val caller: Subject? = null,
+    val cause: Cause? = null
+)
 
 /**
- * Represent an event that can be listened by listeners and published by subjects.
+ * Calculating whether the given subject has the given permission.
+ *
+ * Developers can add default permission profile logic here.
  *
  * @author Chuanwise
  */
-abstract class Event(
-    raw: Raw = MapRaw()
-) : AbstractData(raw)
+interface PermissionCalculator<T : Subject> {
+    suspend fun hasPermission(context: PermissionCalculatingContext<T>): Boolean?
+}

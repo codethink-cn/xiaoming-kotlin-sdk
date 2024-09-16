@@ -17,19 +17,32 @@
 package cn.codethink.xiaoming.permission.data
 
 import cn.codethink.xiaoming.common.Matcher
+import cn.codethink.xiaoming.common.SegmentId
 import cn.codethink.xiaoming.common.Subject
 
 /**
- * Represent a [PermissionProfile] has or has not a permission
+ * Represent a [PermissionProfile] has or has not a permission.
+ *
+ * @author Chuanwise
  */
 interface PermissionRecord {
     val profile: PermissionProfile
-    val subject: Subject
-    val node: Matcher<List<String>>
-    val context: Map<String, Matcher<*>>
-    val value: Boolean
+    val subjectMatcher: Matcher<Subject>
+    val nodeMatcher: Matcher<SegmentId>
+    var value: Boolean?
+    val argumentMatchers: Map<String, Matcher<*>>
+    val context: Map<String, Any?>
 }
 
 interface PermissionRecords {
-    fun getRecords(profile: PermissionProfile): List<PermissionRecord>
+    fun getRecords(profile: PermissionProfile, reverse: Boolean = true): List<PermissionRecord>
+
+    fun addRecord(
+        profile: PermissionProfile,
+        subjectMatcher: Matcher<Subject>,
+        nodeMatcher: Matcher<SegmentId>,
+        value: Boolean?,
+        argumentMatchers: Map<String, Matcher<*>> = emptyMap(),
+        context: Map<String, Any?> = emptyMap()
+    )
 }

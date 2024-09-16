@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.io
+package cn.codethink.xiaoming.internal
 
-import cn.codethink.xiaoming.io.data.XiaomingJacksonModuleVersion
-import cn.codethink.xiaoming.io.data.polymorphic
-import cn.codethink.xiaoming.permission.data.LocalPlatformData
-import com.fasterxml.jackson.databind.module.SimpleModule
-
-class LocalPlatformModule : SimpleModule(
-    "LocalPlatformModule", XiaomingJacksonModuleVersion
-) {
-    inner class Deserializers {
-        val platformData = polymorphic<LocalPlatformData>()
-    }
-
-    val deserializers: Deserializers = Deserializers()
+/**
+ * The internal state of the local platform.
+ *
+ * @author Chuanwise
+ */
+enum class LocalPlatformInternalState {
+    INITIALIZED,
+    STARTING,
+    STARTING_ERROR,
+    STARTED,
+    STOPPING,
+    STOPPING_ERROR,
+    STOPPED
 }

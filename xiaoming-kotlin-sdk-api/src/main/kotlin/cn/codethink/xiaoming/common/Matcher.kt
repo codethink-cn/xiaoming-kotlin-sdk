@@ -16,21 +16,38 @@
 
 package cn.codethink.xiaoming.common
 
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonIgnore
+
 /**
- * Used to match a target.
+ * Serializable tools to match objects.
  *
  * @author Chuanwise
  */
 interface Matcher<T> {
     val type: String
+
+    @get:JsonIgnore
     val targetType: Class<T>
+
+    @get:JsonIgnore
+    val targetNullable: Boolean
+        get() = false
+
     fun isMatched(target: T): Boolean
 }
 
-fun <T> Matcher<T>.isMatchedOrNull(target: Any?): Boolean? = if (targetType.isInstance(target)) {
-    isMatched(targetType.cast(target))
-} else {
-    null
+fun <T> Matcher<T>.isMatchable(target: Any?): Boolean {
+    return targetType.isInstance(target) || (target == null && targetNullable)
+}
+
+@Suppress("UNCHECKED_CAST")
+fun <T> Matcher<T>.isMatchedOrNull(target: Any?): Boolean? {
+    return if (isMatchable(target)) {
+        (this as Matcher<Any?>).isMatched(target)
+    } else {
+        null
+    }
 }
 
 interface LiteralMatcher<T> : Matcher<T> {
@@ -69,18 +86,19 @@ class WildcardStringMatcher private constructor(
     DefaultStringListMatcherMatchingCallbackSupport {
     companion object {
         @JvmStatic
-        val MAJORITY_OPTIONAL = WildcardStringMatcher(true, true)
+        val MAJORITY_OPTIONAL = WildcardStringMatcher(majority = true, optional = true)
 
         @JvmStatic
-        val MINORITY_OPTIONAL = WildcardStringMatcher(false, true)
+        val MINORITY_OPTIONAL = WildcardStringMatcher(majority = false, optional = true)
 
         @JvmStatic
-        val MAJORITY_REQUIRED = WildcardStringMatcher(true, false)
+        val MAJORITY_REQUIRED = WildcardStringMatcher(majority = true, optional = false)
 
         @JvmStatic
-        val MINORITY_REQUIRED = WildcardStringMatcher(false, false)
+        val MINORITY_REQUIRED = WildcardStringMatcher(majority = false, optional = false)
 
         @JvmStatic
+        @JsonCreator
         fun of(majority: Boolean, optional: Boolean): WildcardStringMatcher = if (majority) {
             if (optional) MAJORITY_OPTIONAL else MAJORITY_REQUIRED
         } else {
@@ -88,7 +106,8 @@ class WildcardStringMatcher private constructor(
         }
     }
 
-    override val type: String = TEXT_MATCHER_TYPE_WILDCARD
+    override val type: String
+        get() = STRING_MATCHER_TYPE_WILDCARD
     override fun isMatched(target: String): Boolean = true
 
     override val targetType: Class<String>
@@ -186,7 +205,7 @@ val MinorityRequiredWildcardStringMatcher: WildcardStringMatcher
 data class RegexStringMatcher(
     val regex: Regex
 ) : Matcher<String> {
-    override val type: String = TEXT_MATCHER_TYPE_REGEX
+    override val type: String = STRING_MATCHER_TYPE_REGEX
     override val targetType: Class<String>
         get() = String::class.java
 
@@ -196,7 +215,7 @@ data class RegexStringMatcher(
 data class LiteralStringMatcher(
     override val value: String
 ) : LiteralMatcher<String> {
-    override val type: String = TEXT_MATCHER_TYPE_LITERAL
+    override val type: String = STRING_MATCHER_TYPE_LITERAL
     override val targetType: Class<String>
         get() = String::class.java
 }

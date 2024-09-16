@@ -19,28 +19,28 @@
 package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.common.AbstractData
-import cn.codethink.xiaoming.common.DEFAULT_PERMISSION_MATCHER_FIELD_CONTEXT
-import cn.codethink.xiaoming.common.DEFAULT_PERMISSION_MATCHER_FIELD_NODE
+import cn.codethink.xiaoming.common.DEFAULT_PERMISSION_MATCHER_FIELD_ARGUMENT_MATCHERS
+import cn.codethink.xiaoming.common.DEFAULT_PERMISSION_MATCHER_FIELD_NODE_MATCHER
 import cn.codethink.xiaoming.common.LITERAL_PERMISSION_MATCHER_FIELD_PERMISSION
 import cn.codethink.xiaoming.common.LiteralMatcher
 import cn.codethink.xiaoming.common.MATCHER_FIELD_TYPE
 import cn.codethink.xiaoming.common.Matcher
-import cn.codethink.xiaoming.common.PERMISSION_CONTEXT_META_FIELD_DEFAULT_MATCHER
-import cn.codethink.xiaoming.common.PERMISSION_CONTEXT_META_FIELD_DEFAULT_VALUE
-import cn.codethink.xiaoming.common.PERMISSION_CONTEXT_META_FIELD_DESCRIPTION
-import cn.codethink.xiaoming.common.PERMISSION_CONTEXT_META_FIELD_NULLABLE
-import cn.codethink.xiaoming.common.PERMISSION_CONTEXT_META_FIELD_OPTIONAL
-import cn.codethink.xiaoming.common.PERMISSION_FIELD_CONTEXT
+import cn.codethink.xiaoming.common.PERMISSION_FIELD_ARGUMENTS
 import cn.codethink.xiaoming.common.PERMISSION_FIELD_DESCRIPTOR
 import cn.codethink.xiaoming.common.PERMISSION_MATCHER_TYPE_DEFAULT
 import cn.codethink.xiaoming.common.PERMISSION_MATCHER_TYPE_LITERAL
-import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_CONTEXT
 import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_DESCRIPTION
 import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_DESCRIPTOR
 import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_NODE
+import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_PARAMETERS
 import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_SUBJECT
 import cn.codethink.xiaoming.common.PERMISSION_SUBJECT_FIELD_NODE
 import cn.codethink.xiaoming.common.PERMISSION_SUBJECT_FIELD_SUBJECT
+import cn.codethink.xiaoming.common.PERMISSION_VARIABLE_META_FIELD_DEFAULT_MATCHER
+import cn.codethink.xiaoming.common.PERMISSION_VARIABLE_META_FIELD_DEFAULT_VALUE
+import cn.codethink.xiaoming.common.PERMISSION_VARIABLE_META_FIELD_DESCRIPTION
+import cn.codethink.xiaoming.common.PERMISSION_VARIABLE_META_FIELD_NULLABLE
+import cn.codethink.xiaoming.common.PERMISSION_VARIABLE_META_FIELD_OPTIONAL
 import cn.codethink.xiaoming.common.SegmentId
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.defaultNullable
@@ -78,10 +78,10 @@ class PermissionDescriptor(
  *
  * @author Chuanwise
  */
-class PermissionContextMeta(
+class PermissionParameterMeta(
     raw: Raw
 ) : AbstractData(raw) {
-    @RawValue(PERMISSION_CONTEXT_META_FIELD_DEFAULT_VALUE)
+    @RawValue(PERMISSION_VARIABLE_META_FIELD_DEFAULT_VALUE)
     val defaultValue: Any? by raw
     val description: String? by raw
 
@@ -99,33 +99,33 @@ class PermissionContextMeta(
         defaultMatcher: Matcher<*>?,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[PERMISSION_CONTEXT_META_FIELD_DEFAULT_VALUE] = defaultValue
-        raw[PERMISSION_CONTEXT_META_FIELD_DESCRIPTION] = description
-        raw[PERMISSION_CONTEXT_META_FIELD_OPTIONAL] = optional
-        raw[PERMISSION_CONTEXT_META_FIELD_NULLABLE] = nullable
-        raw[PERMISSION_CONTEXT_META_FIELD_DEFAULT_MATCHER] = defaultMatcher
+        raw[PERMISSION_VARIABLE_META_FIELD_DEFAULT_VALUE] = defaultValue
+        raw[PERMISSION_VARIABLE_META_FIELD_DESCRIPTION] = description
+        raw[PERMISSION_VARIABLE_META_FIELD_OPTIONAL] = optional
+        raw[PERMISSION_VARIABLE_META_FIELD_NULLABLE] = nullable
+        raw[PERMISSION_VARIABLE_META_FIELD_DEFAULT_MATCHER] = defaultMatcher
 
         if (optional && !nullable && defaultValue == null) {
             throw IllegalArgumentException(
-                "If a context is optional, it must be nullable or have a non-null default value."
+                "If a permission parameter is optional, it must be nullable or have a non-null default value."
             )
         }
         if (optional && defaultMatcher == null) {
             throw IllegalArgumentException(
-                "If a context is optional, it must have a default matcher."
+                "If a permission parameter is optional, it must have a default matcher."
             )
         }
     }
 }
 
-inline fun <reified T> PermissionContextMeta(
+inline fun <reified T> PermissionParameterMeta(
     defaultValue: T? = null,
     description: String? = null,
     optional: Boolean = defaultOptional<T>(),
     nullable: Boolean = defaultNullable<T>(),
     defaultMatcher: Matcher<*>? = null,
     raw: Raw = MapRaw()
-) = PermissionContextMeta(defaultValue, description, optional, nullable, defaultMatcher, raw)
+) = PermissionParameterMeta(defaultValue, description, optional, nullable, defaultMatcher, raw)
 
 /**
  * Describe a permission.
@@ -137,7 +137,7 @@ class PermissionMeta(
 ) : AbstractData(raw) {
     val node: SegmentId by raw
     val subject: Subject by raw
-    val context: Map<String, PermissionContextMeta> by raw
+    val parameters: Map<String, PermissionParameterMeta> by raw
     val description: String? by raw
     val descriptor: PermissionDescriptor by raw
 
@@ -145,7 +145,7 @@ class PermissionMeta(
     constructor(
         node: SegmentId,
         subject: Subject,
-        context: Map<String, PermissionContextMeta> = emptyMap(),
+        parameters: Map<String, PermissionParameterMeta> = emptyMap(),
         description: String? = null,
         descriptor: PermissionDescriptor = PermissionDescriptor(node, subject),
         raw: Raw = MapRaw()
@@ -153,7 +153,7 @@ class PermissionMeta(
         raw[PERMISSION_META_FIELD_NODE] = node
         raw[PERMISSION_META_FIELD_SUBJECT] = subject
         raw[PERMISSION_META_FIELD_DESCRIPTION] = description
-        raw[PERMISSION_META_FIELD_CONTEXT] = context
+        raw[PERMISSION_META_FIELD_PARAMETERS] = parameters
         raw[PERMISSION_META_FIELD_DESCRIPTOR] = descriptor
     }
 }
@@ -167,16 +167,16 @@ class Permission(
     raw: Raw
 ) : AbstractData(raw) {
     val descriptor: PermissionDescriptor by raw
-    val context: Map<String, Any?> by raw
+    val arguments: Map<String, Any?> by raw
 
     @JvmOverloads
     constructor(
         descriptor: PermissionDescriptor,
-        context: Map<String, Any?> = emptyMap(),
+        arguments: Map<String, Any?> = emptyMap(),
         raw: Raw = MapRaw()
     ) : this(raw) {
         raw[PERMISSION_FIELD_DESCRIPTOR] = descriptor
-        raw[PERMISSION_FIELD_CONTEXT] = context
+        raw[PERMISSION_FIELD_ARGUMENTS] = arguments
     }
 }
 
@@ -208,28 +208,31 @@ class DefaultPermissionMatcher(
     override val targetType: Class<Permission>
         get() = Permission::class.java
 
-    val node: Matcher<SegmentId> by raw
-    val context: Map<String, Matcher<*>> by raw
+    @RawValue(DEFAULT_PERMISSION_MATCHER_FIELD_NODE_MATCHER)
+    val nodeMatcher: Matcher<SegmentId> by raw
+
+    @RawValue(DEFAULT_PERMISSION_MATCHER_FIELD_ARGUMENT_MATCHERS)
+    val argumentMatchers: Map<String, Matcher<*>> by raw
 
     @JvmOverloads
     constructor(
-        node: Matcher<SegmentId>,
-        context: Map<String, Matcher<*>> = emptyMap(),
+        nodeMatcher: Matcher<SegmentId>,
+        contextMatchers: Map<String, Matcher<*>> = emptyMap(),
         raw: Raw = MapRaw()
     ) : this(raw) {
         raw[MATCHER_FIELD_TYPE] = PERMISSION_MATCHER_TYPE_DEFAULT
-        raw[DEFAULT_PERMISSION_MATCHER_FIELD_NODE] = node
-        raw[DEFAULT_PERMISSION_MATCHER_FIELD_CONTEXT] = context
+        raw[DEFAULT_PERMISSION_MATCHER_FIELD_NODE_MATCHER] = nodeMatcher
+        raw[DEFAULT_PERMISSION_MATCHER_FIELD_ARGUMENT_MATCHERS] = contextMatchers
     }
 
     @Suppress("UNCHECKED_CAST")
     override fun isMatched(target: Permission): Boolean {
-        if (!node.isMatched(target.descriptor.node)) {
+        if (!nodeMatcher.isMatched(target.descriptor.node)) {
             return false
         }
 
-        for ((key, matcher) in context) {
-            val value = target.context[key] ?: return false
+        for ((key, matcher) in argumentMatchers) {
+            val value = target.arguments[key] ?: return false
             if (!(matcher as Matcher<Any?>).isMatched(value)) {
                 return false
             }

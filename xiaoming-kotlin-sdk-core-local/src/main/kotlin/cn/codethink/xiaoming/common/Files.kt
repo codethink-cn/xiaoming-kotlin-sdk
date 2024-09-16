@@ -14,17 +14,22 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.permission
+@file:JvmName("Files")
 
-import cn.codethink.xiaoming.common.Subject
-import cn.codethink.xiaoming.permission.data.PermissionProfile
+package cn.codethink.xiaoming.common
 
-interface PermissionProfileService {
-    suspend fun getPermissionProfile(
-        api: LocalPermissionServiceApi, subject: Subject
-    ): PermissionProfile?
+import java.io.File
 
-    suspend fun hasPermission(
-        api: LocalPermissionServiceApi, subject: Subject, permission: Permission
-    ): Boolean?
+/**
+ * Make sure a directory exists.
+ *
+ * @throws IllegalStateException if the directory does not exist and failed to create it.
+ */
+@JvmOverloads
+fun File.ensureExistedDirectory(
+    block: () -> String = { "Failed to create directory ${absolutePath}." }
+) {
+    if (!isDirectory && !mkdirs()) {
+        throw IllegalStateException(block())
+    }
 }

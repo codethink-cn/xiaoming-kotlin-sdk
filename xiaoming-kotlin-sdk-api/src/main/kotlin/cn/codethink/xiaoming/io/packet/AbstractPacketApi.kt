@@ -16,13 +16,13 @@
 
 package cn.codethink.xiaoming.io.packet
 
-import cn.codethink.xiaoming.common.CurrentProtocolSubject
 import cn.codethink.xiaoming.common.DefaultRegistration
 import cn.codethink.xiaoming.common.DefaultStringMapRegistrations
 import cn.codethink.xiaoming.common.ErrorMessageCause
 import cn.codethink.xiaoming.common.PACKET_TYPE_REQUEST
 import cn.codethink.xiaoming.common.RECEIPT_STATE_FAILED
 import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.XiaomingProtocolSubject
 import cn.codethink.xiaoming.io.UNSUPPORTED_PACKET_TYPE
 import cn.codethink.xiaoming.io.data.Packet
 import cn.codethink.xiaoming.io.data.ReceiptPacket
@@ -57,7 +57,7 @@ abstract class AbstractPacketApi(
     override val configuration: PacketApiConfiguration
 ) : PacketApi {
     val requestPacketHandler = RequestPacketHandler().apply {
-        registerPacketHandler(PACKET_TYPE_REQUEST, CurrentProtocolSubject, this)
+        registerPacketHandler(PACKET_TYPE_REQUEST, XiaomingProtocolSubject, this)
     }
 
     private val handlers = DefaultStringMapRegistrations<PacketHandler>()
