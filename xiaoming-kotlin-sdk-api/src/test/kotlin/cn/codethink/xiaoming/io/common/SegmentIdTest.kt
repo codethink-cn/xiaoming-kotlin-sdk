@@ -191,5 +191,41 @@ class SegmentIdTest {
             assertTrue(isMatched("a".toSegmentId()))
             assertFalse(isMatched("a.B.C".toSegmentId()))
         }
+
+        compileSegmentIdMatcher("a.+").apply {
+            assertTrue(isMatched("a.b".toSegmentId()))
+            assertTrue(isMatched("a.c".toSegmentId()))
+            assertFalse(isMatched("a".toSegmentId()))
+            assertFalse(isMatched("a.B.C".toSegmentId()))
+        }
+
+        compileSegmentIdMatcher("a.{\\\\d}").apply {
+            assertFalse(isMatched("a.b".toSegmentId()))
+            assertTrue(isMatched("a.5".toSegmentId()))
+            assertFalse(isMatched("a".toSegmentId()))
+            assertFalse(isMatched("a.B.C".toSegmentId()))
+        }
+
+        compileSegmentIdMatcher("a.++").apply {
+            assertTrue(isMatched("a.b".toSegmentId()))
+            assertTrue(isMatched("a.5".toSegmentId()))
+            assertFalse(isMatched("a".toSegmentId()))
+            assertTrue(isMatched("a.B.C".toSegmentId()))
+        }
+
+        compileSegmentIdMatcher("a.??").apply {
+            assertTrue(isMatched("a.b".toSegmentId()))
+            assertTrue(isMatched("a.5".toSegmentId()))
+            assertTrue(isMatched("a".toSegmentId()))
+            assertTrue(isMatched("a.B.C".toSegmentId()))
+        }
+
+        compileSegmentIdMatcher("a.??.b").apply {
+            assertTrue(isMatched("a.b".toSegmentId()))
+            assertTrue(isMatched("a.5.b".toSegmentId()))
+            assertTrue(isMatched("a.AA.BB.b".toSegmentId()))
+            assertFalse(isMatched("a.B.C".toSegmentId()))
+            assertTrue(isMatched("a.B.b".toSegmentId()))
+        }
     }
 }

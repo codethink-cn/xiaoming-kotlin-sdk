@@ -224,9 +224,9 @@ class WildcardStringMatcher private constructor(
                 context.result = true
                 return true
             } else {
-                context.result = majority
+                context.result = count == null
                 context.targetIndex++
-                return majority
+                return count == null
             }
         }
 
