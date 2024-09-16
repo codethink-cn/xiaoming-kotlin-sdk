@@ -126,7 +126,7 @@ const val DEFAULT_PERMISSION_MATCHER_FIELD_NODE_MATCHER = "node_matcher"
 const val DEFAULT_PERMISSION_MATCHER_FIELD_ARGUMENT_MATCHERS = "context_matchers"
 
 const val PERMISSION_MATCHER_TYPE_LITERAL = "permission.literal"
-const val LITERAL_PERMISSION_MATCHER_FIELD_PERMISSION = "permission"
+const val LITERAL_PERMISSION_MATCHER_FIELD_VALUE = "value"
 
 const val STRING_MATCHER_TYPE_WILDCARD = "string.wildcard"
 const val STRING_MATCHER_TYPE_REGEX = "string.regex"

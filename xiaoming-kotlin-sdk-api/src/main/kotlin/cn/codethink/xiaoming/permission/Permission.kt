@@ -21,7 +21,7 @@ package cn.codethink.xiaoming.permission
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.DEFAULT_PERMISSION_MATCHER_FIELD_ARGUMENT_MATCHERS
 import cn.codethink.xiaoming.common.DEFAULT_PERMISSION_MATCHER_FIELD_NODE_MATCHER
-import cn.codethink.xiaoming.common.LITERAL_PERMISSION_MATCHER_FIELD_PERMISSION
+import cn.codethink.xiaoming.common.LITERAL_PERMISSION_MATCHER_FIELD_VALUE
 import cn.codethink.xiaoming.common.LiteralMatcher
 import cn.codethink.xiaoming.common.MATCHER_FIELD_TYPE
 import cn.codethink.xiaoming.common.Matcher
@@ -180,6 +180,11 @@ class Permission(
     }
 }
 
+/**
+ * Matches if given permission is exactly the same as the [value].
+ *
+ * @author Chuanwise
+ */
 class LiteralPermissionMatcher(
     raw: Raw
 ) : AbstractData(raw), LiteralMatcher<Permission> {
@@ -191,11 +196,11 @@ class LiteralPermissionMatcher(
 
     @JvmOverloads
     constructor(
-        permission: Permission,
+        value: Permission,
         raw: Raw = MapRaw()
     ) : this(raw) {
         raw[MATCHER_FIELD_TYPE] = PERMISSION_MATCHER_TYPE_LITERAL
-        raw[LITERAL_PERMISSION_MATCHER_FIELD_PERMISSION] = permission
+        raw[LITERAL_PERMISSION_MATCHER_FIELD_VALUE] = value
     }
 }
 
