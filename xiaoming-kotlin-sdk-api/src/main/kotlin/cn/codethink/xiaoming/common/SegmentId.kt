@@ -245,46 +245,46 @@ class WildcardStringMatcher private constructor(
         }
 
         // Or get the next matcher and find matched segment.
-        var nextSegmentId: Int
+        var nextTargetIndex: Int
         if (majority) {
             // Majority.
-            nextSegmentId = context.targetIndex
-            while (nextSegmentId < context.target.size) {
-                val nextSegment = context.target[nextSegmentId]
+            nextTargetIndex = context.target.size - 1
+            while (nextTargetIndex >= context.targetIndex) {
+                val nextSegment = context.target[nextTargetIndex]
                 if (nextMatcher.isMatched(nextSegment)) {
                     break
                 }
-                nextSegmentId++
+                nextTargetIndex--
             }
-            if (nextSegmentId == context.targetIndex && !optional) {
-                context.result = false
-                return false
-            }
-        } else {
-            // Minority.
-            nextSegmentId = context.target.size - 1
-            var count = count ?: Int.MAX_VALUE
-            while (nextSegmentId >= context.targetIndex) {
-                val nextSegment = context.target[nextSegmentId]
-                if (nextMatcher.isMatched(nextSegment)) {
-                    count--
-                    if (count == 0) {
-                        break
-                    }
-                    break
-                }
-                nextSegmentId--
-            }
-            if ((nextSegmentId < context.targetIndex && optional) ||
-                (nextSegmentId <= context.targetIndex && !optional)
+            if ((nextTargetIndex < context.targetIndex && optional) ||
+                (nextTargetIndex <= context.targetIndex && !optional)
             ) {
                 context.result = false
                 return false
             }
+            context.targetIndex = nextTargetIndex + 1
+            context.matcherIndex++
+        } else {
+            // Minority.
+            nextTargetIndex = context.targetIndex
+            var count = count ?: 0
+            while (nextTargetIndex < context.target.size) {
+                val nextSegment = context.target[nextTargetIndex]
+                if (nextMatcher.isMatched(nextSegment)) {
+                    count--
+                    if (count < 0) {
+                        break
+                    }
+                }
+                nextTargetIndex++
+            }
+            if (nextTargetIndex == context.targetIndex && !optional) {
+                context.result = false
+                return false
+            }
+            context.targetIndex = nextTargetIndex
         }
 
-        context.matcherIndex++
-        context.targetIndex = nextSegmentId + 1
         return true
     }
 
