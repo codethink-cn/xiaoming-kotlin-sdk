@@ -22,9 +22,13 @@ import cn.codethink.xiaoming.common.LiteralStringMatcher
 import cn.codethink.xiaoming.common.MajorityOptionalWildcardStringMatcher
 import cn.codethink.xiaoming.common.MajorityRequiredWildcardStringMatcher
 import cn.codethink.xiaoming.common.MinorityOptionalWildcardStringMatcher
+import cn.codethink.xiaoming.common.MinorityRequiredOnceWildcardStringMatcher
 import cn.codethink.xiaoming.common.MinorityRequiredWildcardStringMatcher
 import cn.codethink.xiaoming.common.RegexStringMatcher
+import cn.codethink.xiaoming.common.WildcardStringMatcher
+import cn.codethink.xiaoming.common.compileSegmentIdMatcher
 import cn.codethink.xiaoming.common.segmentIdOf
+import cn.codethink.xiaoming.common.toSegmentId
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -39,7 +43,7 @@ class SegmentIdTest {
     }
 
     @Test
-    fun testDefaultStringListMatcher() {
+    fun testDefaultSegmentIdMatcher() {
         // Empty list.
         assertThrows<IllegalArgumentException> { DefaultSegmentIdMatcher(emptyList()) }
 
@@ -97,6 +101,95 @@ class SegmentIdTest {
                     AnyMatcher<String>()
                 )
             ).isMatched(segmentIdOf("1893.12.26"))
+        }
+    }
+
+    @Test
+    fun testCompileSegmentIdMatcher() {
+        assertEquals(
+            DefaultSegmentIdMatcher(
+                listOf(
+                    LiteralStringMatcher("cn"),
+                    LiteralStringMatcher("codethink"),
+                    LiteralStringMatcher("xiaoming")
+                )
+            ), compileSegmentIdMatcher("cn.codethink.xiaoming")
+        )
+
+        assertEquals(
+            DefaultSegmentIdMatcher(
+                listOf(
+                    LiteralStringMatcher("cn"),
+                    RegexStringMatcher("codethink".toRegex()),
+                    LiteralStringMatcher("xiaoming")
+                )
+            ), compileSegmentIdMatcher("cn.{codethink}.xiaoming")
+        )
+
+        assertEquals(
+            DefaultSegmentIdMatcher(
+                listOf(
+                    LiteralStringMatcher("cn"),
+                    MinorityRequiredOnceWildcardStringMatcher,
+                    LiteralStringMatcher("xiaoming")
+                )
+            ), compileSegmentIdMatcher("cn.+.xiaoming")
+        )
+
+        assertEquals(
+            DefaultSegmentIdMatcher(
+                listOf(
+                    LiteralStringMatcher("cn"),
+                    MinorityRequiredWildcardStringMatcher,
+                    LiteralStringMatcher("xiaoming")
+                )
+            ), compileSegmentIdMatcher("cn.++.xiaoming")
+        )
+
+        assertEquals(
+            DefaultSegmentIdMatcher(
+                listOf(
+                    LiteralStringMatcher("cn"),
+                    WildcardStringMatcher.of(majority = false, optional = false, count = 5),
+                    LiteralStringMatcher("xiaoming")
+                )
+            ), compileSegmentIdMatcher("cn.5++.xiaoming")
+        )
+
+        assertEquals(
+            DefaultSegmentIdMatcher(
+                listOf(
+                    LiteralStringMatcher("cn"),
+                    MajorityRequiredWildcardStringMatcher,
+                    LiteralStringMatcher("xiaoming")
+                )
+            ), compileSegmentIdMatcher("cn.+++.xiaoming")
+        )
+
+        assertThrows<IllegalArgumentException> {
+            compileSegmentIdMatcher("cn..xiaoming")
+        }
+
+        assertThrows<IllegalArgumentException> {
+            compileSegmentIdMatcher("cn.xiaoming.")
+        }
+    }
+
+    @Test
+    fun testDefaultSegmentIdIsMatched() {
+        compileSegmentIdMatcher("a.b.*").apply {
+            assertTrue(isMatched("a.b.c".toSegmentId()))
+            assertTrue(isMatched("a.b".toSegmentId()))
+            assertTrue(isMatched("a.b.AAA".toSegmentId()))
+            assertTrue(isMatched("a.b.AAA.BBB".toSegmentId()))
+            assertFalse(isMatched("a".toSegmentId()))
+        }
+
+        compileSegmentIdMatcher("a.?").apply {
+            assertTrue(isMatched("a.b".toSegmentId()))
+            assertTrue(isMatched("a.c".toSegmentId()))
+            assertTrue(isMatched("a".toSegmentId()))
+            assertFalse(isMatched("a.B.C".toSegmentId()))
         }
     }
 }

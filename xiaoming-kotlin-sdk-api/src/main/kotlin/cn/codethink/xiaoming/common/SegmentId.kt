@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
+import org.apache.commons.text.StringEscapeUtils
 
 const val SEGMENT_SEPARATOR = "."
 val SEGMENT_REGEX = "[\\w-]+".toRegex()
@@ -102,6 +103,8 @@ data class DefaultStringListMatchingContext(
  */
 interface DefaultStringListMatcherMatchingCallbackSupport : Matcher<String> {
     fun onDefaultStringListMatcherMatching(context: DefaultStringListMatchingContext): Boolean
+    fun onDefaultStringListMatcherMatchingRemaining(context: DefaultStringListMatchingContext): Boolean = false
+    fun onDefaultStringListMatcherMatchingEmpty(context: DefaultStringListMatchingContext): Boolean = false
 }
 
 data class DefaultStringListMatcherConstructingContext(
@@ -122,6 +125,223 @@ data class DefaultStringListMatcherConstructingContext(
 interface DefaultStringListMatcherConstructingCallbackSupport : Matcher<String> {
     fun onDefaultStringListMatcherConstructing(context: DefaultStringListMatcherConstructingContext)
 }
+
+/**
+ * Match any amount of texts.
+ *
+ * Notice that:
+ *
+ * 1. It can not appear continuously.
+ * 2. The next matcher can not be [WildcardStringMatcher] or [AnyMatcher].
+ *
+ * If [optional] is true, the matched texts can be empty. If [policy] is true,
+ *
+ * @author Chuanwise
+ */
+class WildcardStringMatcher private constructor(
+    val majority: Boolean,
+    val optional: Boolean,
+    val count: Int? = null
+) : Matcher<String>, DefaultStringListMatcherConstructingCallbackSupport,
+    DefaultStringListMatcherMatchingCallbackSupport {
+    companion object {
+        @JvmStatic
+        val MAJORITY_OPTIONAL = WildcardStringMatcher(majority = true, optional = true)
+
+        @JvmStatic
+        val MINORITY_OPTIONAL = WildcardStringMatcher(majority = false, optional = true)
+
+        @JvmStatic
+        val MAJORITY_REQUIRED = WildcardStringMatcher(majority = true, optional = false)
+
+        @JvmStatic
+        val MINORITY_REQUIRED = WildcardStringMatcher(majority = false, optional = false)
+
+        @JvmStatic
+        val MINORITY_OPTIONAL_ONCE = WildcardStringMatcher(majority = false, optional = true, count = 1)
+
+        @JvmStatic
+        val MINORITY_REQUIRED_ONCE = WildcardStringMatcher(majority = false, optional = false, count = 1)
+
+        @JvmStatic
+        @JsonCreator
+        fun of(majority: Boolean, optional: Boolean, count: Int? = null): WildcardStringMatcher = when (count) {
+            null -> when (majority) {
+                true -> if (optional) MAJORITY_OPTIONAL else MAJORITY_REQUIRED
+                false -> if (optional) MINORITY_OPTIONAL else MINORITY_REQUIRED
+            }
+
+            1 -> when (majority) {
+                true -> throw IllegalArgumentException("Majority can not be once.")
+                false -> if (optional) MINORITY_OPTIONAL_ONCE else MINORITY_REQUIRED_ONCE
+            }
+
+            else -> WildcardStringMatcher(majority, optional, count)
+        }
+    }
+
+    init {
+        count?.let {
+            if (it <= 0 || majority) {
+                throw IllegalArgumentException("If count provided, it should be positive and minority.")
+            }
+        }
+    }
+
+    override val type: String
+        get() = STRING_MATCHER_TYPE_WILDCARD
+
+    override fun isMatched(target: String): Boolean = true
+
+    override val targetType: Class<String>
+        get() = String::class.java
+
+    override fun onDefaultStringListMatcherConstructing(context: DefaultStringListMatcherConstructingContext) {
+        if (context.matcherIndex > 0) {
+            // If it is not the first one, check if previous one is `WildcardStringMatcher`.
+            val previous = context.matchers[context.matcherIndex - 1]
+            if (previous == AnyMatcher<String>()) {
+                throw IllegalArgumentException(
+                    "AnyMatcher<String> next to WildcardStringMatcher near index ${context.matcherIndex}!"
+                )
+            }
+        }
+        if (context.matcherIndex < context.matchers.size - 1) {
+            // If it is not the last one, check if next one is `WildcardStringMatcher` or any optional matcher.
+            val next = context.matchers[context.matcherIndex + 1]
+            if (next is WildcardStringMatcher || next !== AnyMatcher<String>()) {
+                throw IllegalArgumentException(
+                    "WildcardStringMatcher appear continuously near index ${context.matcherIndex}!"
+                )
+            }
+        }
+    }
+
+    override fun onDefaultStringListMatcherMatching(context: DefaultStringListMatchingContext): Boolean {
+        // If current matcher is the last one, and the element is the last one, matched.
+        if (context.matcherIndex == context.matchers.size - 1) {
+            if (context.targetIndex == context.target.size - 1) {
+                context.result = true
+                return true
+            } else {
+                context.result = majority
+                context.targetIndex++
+                return majority
+            }
+        }
+
+        context.matcherIndex++
+        val nextMatcher = context.matchers[context.matcherIndex]
+
+        // The matcher after WildcardStringMatcher must be functional.
+        if (nextMatcher is WildcardStringMatcher ||
+            nextMatcher == AnyMatcher<String>()
+        ) {
+
+            throw IllegalArgumentException(
+                "WildcardStringMatcher can not followed " +
+                        "by another WildcardStringMatcher or AnyMatcher<String>()."
+            )
+        }
+
+        // Or get the next matcher and find matched segment.
+        var nextSegmentId: Int
+        if (majority) {
+            // Majority.
+            nextSegmentId = context.targetIndex
+            while (nextSegmentId < context.target.size) {
+                val nextSegment = context.target[nextSegmentId]
+                if (nextMatcher.isMatched(nextSegment)) {
+                    break
+                }
+                nextSegmentId++
+            }
+            if (nextSegmentId == context.targetIndex && !optional) {
+                context.result = false
+                return false
+            }
+        } else {
+            // Minority.
+            nextSegmentId = context.target.size - 1
+            var count = count ?: Int.MAX_VALUE
+            while (nextSegmentId >= context.targetIndex) {
+                val nextSegment = context.target[nextSegmentId]
+                if (nextMatcher.isMatched(nextSegment)) {
+                    count--
+                    if (count == 0) {
+                        break
+                    }
+                    break
+                }
+                nextSegmentId--
+            }
+            if ((nextSegmentId < context.targetIndex && optional) ||
+                (nextSegmentId <= context.targetIndex && !optional)
+            ) {
+                context.result = false
+                return false
+            }
+        }
+
+        context.matcherIndex++
+        context.targetIndex = nextSegmentId + 1
+        return true
+    }
+
+    override fun onDefaultStringListMatcherMatchingRemaining(context: DefaultStringListMatchingContext): Boolean {
+        return optional
+    }
+
+    override fun onDefaultStringListMatcherMatchingEmpty(context: DefaultStringListMatchingContext): Boolean {
+        return optional
+    }
+
+    private val toStringCache: String by lazy {
+        "WildcardStringMatcher(" +
+                "majority=$majority," +
+                "optional=$optional," +
+                "count=$count)"
+    }
+
+    override fun toString(): String = toStringCache
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is WildcardStringMatcher) return false
+
+        if (majority != other.majority) return false
+        if (optional != other.optional) return false
+        if (count != other.count) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = majority.hashCode()
+        result = 31 * result + optional.hashCode()
+        result = 31 * result + (count ?: 0)
+        return result
+    }
+}
+
+val MajorityOptionalWildcardStringMatcher: WildcardStringMatcher
+    get() = WildcardStringMatcher.MAJORITY_OPTIONAL
+
+val MajorityRequiredWildcardStringMatcher: WildcardStringMatcher
+    get() = WildcardStringMatcher.MAJORITY_REQUIRED
+
+val MinorityOptionalWildcardStringMatcher: WildcardStringMatcher
+    get() = WildcardStringMatcher.MINORITY_OPTIONAL
+
+val MinorityRequiredWildcardStringMatcher: WildcardStringMatcher
+    get() = WildcardStringMatcher.MINORITY_REQUIRED
+
+val MinorityOptionalOnceWildcardStringMatcher: WildcardStringMatcher
+    get() = WildcardStringMatcher.MINORITY_OPTIONAL_ONCE
+
+val MinorityRequiredOnceWildcardStringMatcher: WildcardStringMatcher
+    get() = WildcardStringMatcher.MINORITY_REQUIRED_ONCE
+
 
 /**
  * Use some [matchers] to match a list of strings.
@@ -175,7 +395,6 @@ data class DefaultSegmentIdMatcher(
                         return context.result!!
                     }
                 }
-
                 else -> {
                     if (!matcher.isMatched(target[context.targetIndex])) {
                         return false
@@ -185,7 +404,53 @@ data class DefaultSegmentIdMatcher(
                 }
             }
         }
-        return context.matcherIndex == matchers.size && context.targetIndex == target.size
+
+        // If matcher is not finished, but target is finished.
+        // Test if remaining is optional.
+        while (context.matcherIndex < matchers.size) {
+            val matcherIndex = context.matcherIndex
+            val matcher = matchers[context.matcherIndex]
+            if (matcher is DefaultStringListMatcherMatchingCallbackSupport) {
+                if (!matcher.onDefaultStringListMatcherMatchingRemaining(context)) {
+                    return false
+                }
+                if (context.result != null) {
+                    return context.result!!
+                }
+                if (context.matcherIndex == matcherIndex) {
+                    context.matcherIndex++
+                }
+            } else {
+                return false
+            }
+        }
+
+        // If target is not finished, but matcher is finished.
+        // Try to use the last matcher to match the all.
+        if (context.targetIndex < target.size) {
+            val lastMatcher = matchers[context.matcherIndex - 1]
+            if (lastMatcher is DefaultStringListMatcherMatchingCallbackSupport) {
+                while (context.targetIndex < target.size) {
+                    val targetIndex = context.targetIndex
+
+                    if (!lastMatcher.onDefaultStringListMatcherMatchingRemaining(context)) {
+                        return false
+                    }
+                    if (context.result != null) {
+                        return context.result!!
+                    }
+
+                    if (targetIndex == context.targetIndex) {
+                        context.targetIndex++
+                    }
+                }
+                return true
+            } else {
+                return false
+            }
+        }
+
+        return true
     }
 
     private val toStringCache: String by lazy {
@@ -193,6 +458,167 @@ data class DefaultSegmentIdMatcher(
                 "type=$SEGMENT_ID_MATCHER_TYPE_DEFAULT," +
                 "segmentMatchers=$matchers)"
     }
+
+    override fun toString(): String = toStringCache
+}
+
+val MINORITY_REQUIRED_WILDCARD_STRING_MATCHER_REGEX = "(\\d+)?\\+{2}".toRegex()
+val MINORITY_OPTIONAL_WILDCARD_STRING_MATCHER_REGEX = "(\\d+)?\\?{2}".toRegex()
+
+fun String.toStringMatcher(): Matcher<String> {
+    if (isEmpty()) {
+        throw IllegalArgumentException("String matcher should not be empty.")
+    }
+
+    MINORITY_REQUIRED_WILDCARD_STRING_MATCHER_REGEX.matchEntire(this)?.let {
+        val count = it.groupValues[1].toIntOrNull()
+        return WildcardStringMatcher.of(majority = false, optional = false, count = count)
+    }
+    MINORITY_OPTIONAL_WILDCARD_STRING_MATCHER_REGEX.matchEntire(this)?.let {
+        val count = it.groupValues[1].toIntOrNull()
+        return WildcardStringMatcher.of(majority = false, optional = true, count = count)
+    }
+
+    when (this) {
+        "+" -> return WildcardStringMatcher.MINORITY_REQUIRED_ONCE
+        "?" -> return WildcardStringMatcher.MINORITY_OPTIONAL_ONCE
+        "+++" -> return WildcardStringMatcher.MAJORITY_REQUIRED
+        "???", "*" -> return WildcardStringMatcher.MAJORITY_OPTIONAL
+        else -> {
+            if (startsWith("{") && endsWith("}")) {
+                val pattern = substring(1, length - 1)
+                if (pattern.isEmpty()) {
+                    throw IllegalArgumentException("Empty regex string matcher.")
+                }
+                return RegexStringMatcher(Regex(pattern))
+            }
+            if (startsWith("\"") && endsWith("\"")) {
+                val unescaped = StringEscapeUtils.unescapeJson(substring(1, length - 1))
+                if (unescaped.isEmpty()) {
+                    throw IllegalArgumentException("Empty literal string matcher.")
+                }
+                return LiteralStringMatcher(unescaped)
+            }
+            return LiteralStringMatcher(this)
+        }
+    }
+}
+
+/**
+ * Compile expression of [DefaultSegmentIdMatcher] to its object.
+ *
+ * BNF pattern:
+ *
+ * ```bnf
+ * segmentMatcher := stringMatcher | stringMatcher "." segmentMatcher;
+ *
+ * stringMatcher := "+"                      // MinorityRequiredOnceWildcardStringMatcher
+ *                | "?"                      // MinorityOptionalOnceWildcardStringMatcher
+ *                | "++"  | count "++"       // MinorityRequiredWildcardStringMatcher
+ *                | "??"  | count "??"       // MinorityOptionalWildcardStringMatcher
+ *                | "+++"                    // MajorityRequiredOnceWildcardStringMatcher
+ *                | "???" | "*"              // MajorityOptionalOnceWildcardStringMatcher
+ *                | literal                  // LiteralStringMatcher
+ *                | "{" regex "}"            // RegexStringMatcher
+ *                | "\"" escapedLiteral "\"" // LiteralStringMatcher
+ *                ;
+ * ```
+ *
+ * @author Chuanwise
+ * @see AnyMatcher
+ */
+fun compileSegmentIdMatcher(string: String): Matcher<SegmentId> {
+    if (string.isEmpty()) {
+        throw IllegalArgumentException("Segment matcher should not be empty.")
+    }
+
+    val matchers = mutableListOf<Matcher<String>>()
+    val stringBuilder = StringBuilder()
+
+    val acceptNewMatcherState = 0
+    val acceptingMatcherState = 1
+
+    var escapeSupport = false
+    var escaping = false
+
+    var state = acceptNewMatcherState
+    var index = 0
+
+    while (index < string.length) {
+        when (state) {
+            acceptNewMatcherState -> {
+                when (val char = string[index]) {
+                    '"' -> {
+                        escapeSupport = true
+                        state = acceptingMatcherState
+                    }
+
+                    '.' -> {
+                        throw IllegalArgumentException("Empty matcher at index $index.")
+                    }
+
+                    '{' -> {
+                        escapeSupport = true
+                        state = acceptingMatcherState
+                        stringBuilder.append(char)
+                    }
+
+                    else -> {
+                        escapeSupport = false
+                        state = acceptingMatcherState
+                        stringBuilder.append(char)
+                    }
+                }
+                index++
+            }
+
+            acceptingMatcherState -> {
+                when (val char = string[index]) {
+                    '\\' -> {
+                        if (escapeSupport) {
+                            if (escaping) {
+                                stringBuilder.append('\\')
+                                escaping = false
+                            } else {
+                                escaping = true
+                            }
+                        } else {
+                            stringBuilder.append('\\')
+                        }
+                    }
+
+                    '.' -> {
+                        if (escapeSupport) {
+                            if (escaping) {
+                                stringBuilder.append('.')
+                                escaping = false
+                            }
+                        }
+                        matchers.add(stringBuilder.toString().toStringMatcher())
+                        stringBuilder.clear()
+                        state = acceptNewMatcherState
+                    }
+
+                    else -> {
+                        stringBuilder.append(char)
+                        state = acceptingMatcherState
+                    }
+                }
+                index++
+            }
+        }
+    }
+    when (state) {
+        acceptNewMatcherState -> {
+            throw IllegalArgumentException("Empty matcher at the end.")
+        }
+
+        acceptingMatcherState -> {
+            matchers.add(stringBuilder.toString().toStringMatcher())
+        }
+    }
+
+    return DefaultSegmentIdMatcher(matchers)
 }
 
 data class LiteralSegmentIdMatcher @JsonCreator constructor(
