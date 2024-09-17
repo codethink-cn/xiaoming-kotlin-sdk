@@ -55,8 +55,12 @@ class SqlPermissionProfiles(
             .firstOrNull { it.id eq id }
     }
 
-    override fun insertAndGetProfileId(subject: Subject): Long {
+    override fun getOrInsertProfileId(subject: Subject): Long {
         val subjectId = data.subjectServiceManager.getOrCreateSubjectId(subject)
+        getProfileById(subjectId)?.let {
+            return it.id
+        }
+
         return data.database.insertAndGenerateKey(table) {
             set(it.subjectId, subjectId)
         } as Long

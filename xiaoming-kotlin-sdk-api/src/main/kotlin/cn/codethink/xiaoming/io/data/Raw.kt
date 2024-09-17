@@ -284,12 +284,7 @@ class NodeRaw(
         if (raw is NodeRaw) {
             return node == raw.node
         } else if (keys.asSetEquals(raw.keys)) {
-            for (key in keys) {
-                if (get<Any>(key) != raw.get<Any>(key)) {
-                    return false
-                }
-            }
-            return true
+            return mapper.valueToTree<ObjectNode>(raw) == node
         } else {
             return false
         }
@@ -390,7 +385,7 @@ class MapRaw(
             return map == raw.map
         } else if (keys.asSetEquals(raw.keys)) {
             for (key in keys) {
-                if (get<Any>(key) != raw.get<Any>(key)) {
+                if (get<Any?>(key) != raw.get<Any?>(key)) {
                     return false
                 }
             }

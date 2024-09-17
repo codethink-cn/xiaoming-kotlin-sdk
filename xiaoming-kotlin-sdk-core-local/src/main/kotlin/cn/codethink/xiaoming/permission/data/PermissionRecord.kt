@@ -35,9 +35,15 @@ interface PermissionRecord {
 }
 
 interface PermissionRecords {
-    fun getRecords(profile: PermissionProfile, reverse: Boolean = true): List<PermissionRecord>
+    operator fun get(profile: PermissionProfile, reverse: Boolean = true): List<PermissionRecord>
 
-    fun addRecord(
+    fun update(record: PermissionRecord)
+
+    fun delete(record: PermissionRecord)
+
+    fun delete(records: List<PermissionRecord>)
+
+    fun insert(
         profile: PermissionProfile,
         subjectMatcher: Matcher<Subject>,
         nodeMatcher: Matcher<SegmentId>,

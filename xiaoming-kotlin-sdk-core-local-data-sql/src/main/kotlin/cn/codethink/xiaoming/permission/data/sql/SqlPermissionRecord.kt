@@ -22,8 +22,10 @@ import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.permission.data.PermissionProfile
 import cn.codethink.xiaoming.permission.data.PermissionRecord
 import cn.codethink.xiaoming.permission.data.PermissionRecords
+import org.ktorm.dsl.batchUpdate
 import org.ktorm.dsl.eq
 import org.ktorm.dsl.insert
+import org.ktorm.dsl.update
 import org.ktorm.entity.Entity
 import org.ktorm.entity.filter
 import org.ktorm.entity.filterNot
@@ -54,24 +56,26 @@ class SqlPermissionRecordTable(
 
     val nodeMatcher = text("node_matcher").bindTo { it.nodeMatcherString }
     val argumentMatchers = text("argument_matchers").bindTo { it.argumentMatchersString }
-    val contextVariables = text("context").bindTo { it.contextString }
+    val context = text("context").bindTo { it.contextString }
 
     val profileId = long("profile_id").bindTo { it.profileId }
     val value = boolean("value").bindTo { it.value }
     val remove = boolean("remove").bindTo { it.remove }
 }
 
+@Suppress("UNCHECKED_CAST")
 class SqlPermissionRecords(
     private val data: SqlLocalPlatformData
 ) : PermissionRecords {
     val table = SqlPermissionRecordTable(data)
 
-    override fun getRecords(profile: PermissionProfile, reverse: Boolean): List<PermissionRecord> {
+    override fun get(profile: PermissionProfile, reverse: Boolean): List<SqlPermissionRecord> {
         return data.database.sequenceOf(table)
             .filterNot { it.remove }
             .filter {
                 it.profileId eq profile.id
             }.map {
+                it["profile"] = data.permissionProfiles.getProfileById(it.profileId)!!
                 it["subjectMatcher"] = data.objectMapperOrFail.readValue(it.subjectMatcherString, Matcher::class.java)
                 it["nodeMatcher"] = data.objectMapperOrFail.readValue(it.nodeMatcherString, Matcher::class.java)
                 it["argumentMatchers"] = data.objectMapperOrFail.readValue(it.argumentMatchersString, Map::class.java)
@@ -82,7 +86,42 @@ class SqlPermissionRecords(
             }
     }
 
-    override fun addRecord(
+    override fun update(record: PermissionRecord) {
+        record as SqlPermissionRecord
+        data.database.update(table) {
+            set(it.profileId, record.profile.id)
+            set(it.subjectMatcher, data.objectMapperOrFail.writeValueAsString(record.subjectMatcher))
+            set(it.nodeMatcher, data.objectMapperOrFail.writeValueAsString(record.nodeMatcher))
+            set(it.value, record.value)
+            set(it.argumentMatchers, data.objectMapperOrFail.writeValueAsString(record.argumentMatchers))
+            set(it.context, data.objectMapperOrFail.writeValueAsString(record.context))
+
+            where { it.id eq record.id }
+        }
+    }
+
+    override fun delete(record: PermissionRecord) {
+        record as SqlPermissionRecord
+        data.database.update(table) {
+            set(it.remove, true)
+
+            where { it.id eq record.id }
+        }
+    }
+
+    override fun delete(records: List<PermissionRecord>) {
+        records as List<SqlPermissionRecord>
+        data.database.batchUpdate(table) {
+            records.forEach { record ->
+                item {
+                    set(it.remove, true)
+                    where { it.id eq record.id }
+                }
+            }
+        }
+    }
+
+    override fun insert(
         profile: PermissionProfile,
         subjectMatcher: Matcher<Subject>,
         nodeMatcher: Matcher<SegmentId>,
@@ -96,7 +135,7 @@ class SqlPermissionRecords(
             set(it.nodeMatcher, data.objectMapperOrFail.writeValueAsString(nodeMatcher))
             set(it.value, value)
             set(it.argumentMatchers, data.objectMapperOrFail.writeValueAsString(argumentMatchers))
-            set(it.contextVariables, data.objectMapperOrFail.writeValueAsString(context))
+            set(it.context, data.objectMapperOrFail.writeValueAsString(context))
         }
     }
 }

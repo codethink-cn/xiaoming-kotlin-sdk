@@ -24,7 +24,7 @@ import cn.codethink.xiaoming.common.toLiteralMatcher
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import cn.codethink.xiaoming.internal.configuration.LocalPlatformInternalConfiguration
 import cn.codethink.xiaoming.io.data.PlatformAnnotationIntrospector
-import cn.codethink.xiaoming.permission.data.insertAndGetProfile
+import cn.codethink.xiaoming.permission.data.getOrInsertProfile
 import com.fasterxml.jackson.databind.AnnotationIntrospector
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -56,11 +56,11 @@ class LocalPermissionServiceTest {
         val subject = PluginSubject(segmentIdOf("cn.codethink.xiaoming.demo"))
         val subjectMatcher = subject.toLiteralMatcher()
 
-        val profile = api.data.permissionProfiles.insertAndGetProfile(subject)
+        val profile = api.data.permissionProfiles.getOrInsertProfile(subject)
     }
 
     @Test
-    fun testGetPermissionSubject() {
+    fun testSetSimplePermission() {
         val permission = Permission(
             descriptor = PermissionDescriptor(
                 subject = subject,
@@ -98,7 +98,7 @@ class LocalPermissionServiceTest {
         )
         assertEquals(true, api.permissionServiceApi.hasPermission(profile, permission))
 
-        // Unset and check
+        // Unset and check.
         api.permissionServiceApi.setPermission(
             profile = profile,
             subjectMatcher = subjectMatcher,

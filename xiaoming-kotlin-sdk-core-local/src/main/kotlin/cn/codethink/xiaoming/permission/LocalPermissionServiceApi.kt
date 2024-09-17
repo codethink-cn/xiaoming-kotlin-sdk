@@ -94,25 +94,24 @@ class LocalPermissionServiceApi(
         }
 
         // Do operation.
-        val records = api.data.permissionRecords.getRecords(profile)
+        val records = api.data.permissionRecords.get(profile)
 
-        // If same record exist, print warning.
-        val almostSameRecord = records.firstOrNull {
-            it.subjectMatcher == subjectMatcher &&
-                    it.nodeMatcher == nodeMatcher && it.argumentMatchers == argumentMatchers && it.context == context
+        val contentEqualsWithValueIgnored = records.filter {
+            it.subjectMatcher == subjectMatcher && it.nodeMatcher == nodeMatcher && it.argumentMatchers == argumentMatchers && it.context == context
         }
-        if (almostSameRecord != null) {
-            if (almostSameRecord.value == value) {
-                api.logger.warn { "Same permission record already exist ($almostSameRecord), no any effect." }
-            } else {
-                // Change its value.
-                almostSameRecord.value = value
+        if (contentEqualsWithValueIgnored.isNotEmpty()) {
+            if (contentEqualsWithValueIgnored.size == 1) {
+                val thatOne = contentEqualsWithValueIgnored.first()
+                if (value == thatOne.value) {
+                    logger.warn { "Permission record already set: $thatOne." }
+                    return
+                }
             }
-            return
+            api.data.permissionRecords.delete(contentEqualsWithValueIgnored)
         }
 
         // Add new record.
-        api.data.permissionRecords.addRecord(
+        api.data.permissionRecords.insert(
             profile, subjectMatcher, nodeMatcher, value, argumentMatchers
         )
     }
@@ -121,7 +120,7 @@ class LocalPermissionServiceApi(
         profile: PermissionProfile, permission: Permission,
         context: Map<String, Any?> = emptyMap(), caller: Subject? = null, cause: Cause? = null
     ): Boolean? {
-        api.data.permissionRecords.getRecords(profile).forEach {
+        api.data.permissionRecords.get(profile).forEach {
             val comparingContext = PermissionComparingContext(
                 this, profile, permission, it, context, caller, cause
             )
