@@ -34,7 +34,7 @@ interface PermissionRecord {
     val context: Map<String, Any?>
 }
 
-interface PermissionRecords {
+interface PermissionRecordData {
     operator fun get(profile: PermissionProfile, reverse: Boolean = true): List<PermissionRecord>
 
     fun update(record: PermissionRecord)

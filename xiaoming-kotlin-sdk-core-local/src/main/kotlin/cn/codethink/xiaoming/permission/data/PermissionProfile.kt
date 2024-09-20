@@ -23,12 +23,12 @@ interface PermissionProfile {
     val subject: Subject
 }
 
-interface PermissionProfiles {
+interface PermissionProfileData {
     fun getProfileById(id: Long): PermissionProfile?
     fun getOrInsertProfileId(subject: Subject): Long
 }
 
-fun PermissionProfiles.getOrInsertProfile(subject: Subject): PermissionProfile {
+fun PermissionProfileData.getOrInsertProfile(subject: Subject): PermissionProfile {
     val id = getOrInsertProfileId(subject)
     return getProfileById(id)!!
 }

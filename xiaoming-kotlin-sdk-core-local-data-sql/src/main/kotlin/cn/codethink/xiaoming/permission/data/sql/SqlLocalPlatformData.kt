@@ -19,8 +19,8 @@ package cn.codethink.xiaoming.permission.data.sql
 import cn.codethink.xiaoming.common.LOCAL_PLATFORM_DATA_TYPE_SQL
 import cn.codethink.xiaoming.common.data.SubjectServiceManager
 import cn.codethink.xiaoming.common.data.Subjects
+import cn.codethink.xiaoming.data.LocalPlatformData
 import cn.codethink.xiaoming.io.data.SqlDataSource
-import cn.codethink.xiaoming.permission.data.LocalPlatformData
 import cn.codethink.xiaoming.permission.data.sql.v1.SqlLocalPlatformDataTables
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.ktorm.database.Database

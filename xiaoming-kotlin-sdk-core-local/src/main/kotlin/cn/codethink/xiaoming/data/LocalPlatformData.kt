@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.permission.data
+package cn.codethink.xiaoming.data
+
+import cn.codethink.xiaoming.permission.data.PermissionProfileData
+import cn.codethink.xiaoming.permission.data.PermissionRecordData
 
 /**
  * Operations to access and modify the data of local platform.
@@ -23,6 +26,6 @@ package cn.codethink.xiaoming.permission.data
  */
 interface LocalPlatformData {
     val type: String
-    val permissionProfiles: PermissionProfiles
-    val permissionRecords: PermissionRecords
+    val permissionProfileData: PermissionProfileData
+    val permissionRecordData: PermissionRecordData
 }

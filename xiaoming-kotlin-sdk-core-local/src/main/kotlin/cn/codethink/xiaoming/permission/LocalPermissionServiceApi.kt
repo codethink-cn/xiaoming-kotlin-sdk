@@ -94,7 +94,7 @@ class LocalPermissionServiceApi(
         }
 
         // Do operation.
-        val records = api.data.permissionRecords.get(profile)
+        val records = api.data.permissionRecordData.get(profile)
 
         val contentEqualsWithValueIgnored = records.filter {
             it.subjectMatcher == subjectMatcher && it.nodeMatcher == nodeMatcher && it.argumentMatchers == argumentMatchers && it.context == context
@@ -107,11 +107,11 @@ class LocalPermissionServiceApi(
                     return
                 }
             }
-            api.data.permissionRecords.delete(contentEqualsWithValueIgnored)
+            api.data.permissionRecordData.delete(contentEqualsWithValueIgnored)
         }
 
         // Add new record.
-        api.data.permissionRecords.insert(
+        api.data.permissionRecordData.insert(
             profile, subjectMatcher, nodeMatcher, value, argumentMatchers
         )
     }
@@ -120,7 +120,7 @@ class LocalPermissionServiceApi(
         profile: PermissionProfile, permission: Permission,
         context: Map<String, Any?> = emptyMap(), caller: Subject? = null, cause: Cause? = null
     ): Boolean? {
-        api.data.permissionRecords.get(profile).forEach {
+        api.data.permissionRecordData.get(profile).forEach {
             val comparingContext = PermissionComparingContext(
                 this, profile, permission, it, context, caller, cause
             )

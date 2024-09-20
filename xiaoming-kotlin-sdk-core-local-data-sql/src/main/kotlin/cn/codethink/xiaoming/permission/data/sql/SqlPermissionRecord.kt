@@ -21,7 +21,7 @@ import cn.codethink.xiaoming.common.SegmentId
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.permission.data.PermissionProfile
 import cn.codethink.xiaoming.permission.data.PermissionRecord
-import cn.codethink.xiaoming.permission.data.PermissionRecords
+import cn.codethink.xiaoming.permission.data.PermissionRecordData
 import org.ktorm.dsl.batchUpdate
 import org.ktorm.dsl.eq
 import org.ktorm.dsl.insert
@@ -64,9 +64,9 @@ class SqlPermissionRecordTable(
 }
 
 @Suppress("UNCHECKED_CAST")
-class SqlPermissionRecords(
+class SqlPermissionRecordData(
     private val data: SqlLocalPlatformData
-) : PermissionRecords {
+) : PermissionRecordData {
     val table = SqlPermissionRecordTable(data)
 
     override fun get(profile: PermissionProfile, reverse: Boolean): List<SqlPermissionRecord> {
@@ -75,7 +75,7 @@ class SqlPermissionRecords(
             .filter {
                 it.profileId eq profile.id
             }.map {
-                it["profile"] = data.permissionProfiles.getProfileById(it.profileId)!!
+                it["profile"] = data.permissionProfileData.getProfileById(it.profileId)!!
                 it["subjectMatcher"] = data.objectMapperOrFail.readValue(it.subjectMatcherString, Matcher::class.java)
                 it["nodeMatcher"] = data.objectMapperOrFail.readValue(it.nodeMatcherString, Matcher::class.java)
                 it["argumentMatchers"] = data.objectMapperOrFail.readValue(it.argumentMatchersString, Map::class.java)

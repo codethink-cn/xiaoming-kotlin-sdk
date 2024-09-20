@@ -16,9 +16,9 @@
 
 package cn.codethink.xiaoming.io
 
+import cn.codethink.xiaoming.data.LocalPlatformData
 import cn.codethink.xiaoming.io.data.XiaomingJacksonModuleVersion
 import cn.codethink.xiaoming.io.data.polymorphic
-import cn.codethink.xiaoming.permission.data.LocalPlatformData
 import com.fasterxml.jackson.databind.module.SimpleModule
 
 class LocalPlatformModule : SimpleModule(

@@ -22,8 +22,8 @@ import cn.codethink.xiaoming.common.data.SubjectServiceManager
 import cn.codethink.xiaoming.common.data.Subjects
 import cn.codethink.xiaoming.io.data.SqlDataSource
 import cn.codethink.xiaoming.permission.data.sql.SqlLocalPlatformData
-import cn.codethink.xiaoming.permission.data.sql.SqlPermissionProfiles
-import cn.codethink.xiaoming.permission.data.sql.SqlPermissionRecords
+import cn.codethink.xiaoming.permission.data.sql.SqlPermissionProfileData
+import cn.codethink.xiaoming.permission.data.sql.SqlPermissionRecordData
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.ktorm.database.Database
@@ -45,8 +45,8 @@ data class SqlLocalPlatformDataV1(
     override val database: Database by lazy { Database.connect(source.toDataSource()) }
     override val subjectServiceManager = SubjectServiceManager(this)
 
-    override val permissionProfiles = SqlPermissionProfiles(this)
-    override val permissionRecords = SqlPermissionRecords(this)
+    override val permissionProfileData = SqlPermissionProfileData(this)
+    override val permissionRecordData = SqlPermissionRecordData(this)
 
     override val subjects: Subjects = SqlSubjects(this)
 }

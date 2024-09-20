@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.permission.data
+package cn.codethink.xiaoming.configuration
 
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.LOCAL_PLATFORM_CONFIGURATION_FIELD_DATA
+import cn.codethink.xiaoming.data.LocalPlatformData
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue

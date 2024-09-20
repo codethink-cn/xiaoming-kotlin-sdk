@@ -56,7 +56,7 @@ class LocalPermissionServiceTest {
         val subject = PluginSubject(segmentIdOf("cn.codethink.xiaoming.demo"))
         val subjectMatcher = subject.toLiteralMatcher()
 
-        val profile = api.data.permissionProfiles.getOrInsertProfile(subject)
+        val profile = api.data.permissionProfileData.getOrInsertProfile(subject)
     }
 
     @Test

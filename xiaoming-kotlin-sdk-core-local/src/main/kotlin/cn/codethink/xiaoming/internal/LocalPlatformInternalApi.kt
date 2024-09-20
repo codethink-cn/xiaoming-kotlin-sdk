@@ -23,14 +23,14 @@ import cn.codethink.xiaoming.common.TextCause
 import cn.codethink.xiaoming.common.XiaomingSdkSubject
 import cn.codethink.xiaoming.common.currentTimeMillis
 import cn.codethink.xiaoming.common.ensureExistedDirectory
+import cn.codethink.xiaoming.configuration.LocalPlatformConfiguration
+import cn.codethink.xiaoming.data.LocalPlatformData
 import cn.codethink.xiaoming.internal.configuration.LocalPlatformInternalConfiguration
 import cn.codethink.xiaoming.internal.event.LocalPlatformStartingEvent
 import cn.codethink.xiaoming.internal.module.Module
 import cn.codethink.xiaoming.internal.module.ModuleContext
 import cn.codethink.xiaoming.internal.module.ModuleManagerApi
 import cn.codethink.xiaoming.permission.LocalPermissionServiceApi
-import cn.codethink.xiaoming.permission.data.LocalPlatformConfiguration
-import cn.codethink.xiaoming.permission.data.LocalPlatformData
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging

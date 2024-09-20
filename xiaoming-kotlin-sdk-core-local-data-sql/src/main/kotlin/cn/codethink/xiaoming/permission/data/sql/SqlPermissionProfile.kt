@@ -18,7 +18,7 @@ package cn.codethink.xiaoming.permission.data.sql
 
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.permission.data.PermissionProfile
-import cn.codethink.xiaoming.permission.data.PermissionProfiles
+import cn.codethink.xiaoming.permission.data.PermissionProfileData
 import org.ktorm.dsl.eq
 import org.ktorm.dsl.insertAndGenerateKey
 import org.ktorm.entity.Entity
@@ -44,9 +44,9 @@ class SqlPermissionProfileTable(
     val remove = boolean("remove").bindTo { it.remove }
 }
 
-class SqlPermissionProfiles(
+class SqlPermissionProfileData(
     private val data: SqlLocalPlatformData
-) : PermissionProfiles {
+) : PermissionProfileData {
     val table = SqlPermissionProfileTable(data)
 
     override fun getProfileById(id: Long): PermissionProfile? {
