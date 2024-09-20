@@ -20,6 +20,8 @@ import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.configuration.LocalPlatformConfiguration
 import cn.codethink.xiaoming.internal.module.Module
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.io.File
@@ -33,8 +35,11 @@ data class LocalPlatformInternalConfiguration(
     val workingDirectoryFile: File,
     val modulesToInstall: List<Pair<Module, Subject>> = emptyList(),
     val platformConfiguration: LocalPlatformConfiguration? = null,
-    val dataObjectMapper: ObjectMapper = jacksonObjectMapper(),
-    val configurationObjectMapper: ObjectMapper = YAMLMapper.builder().build(),
+    val dataObjectMapper: ObjectMapper = jacksonObjectMapper()
+        .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE),
+    val configurationObjectMapper: ObjectMapper = YAMLMapper.builder()
+        .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
+        .build(),
     var findAndLoadAllModules: Boolean = true,
     var findAndLoadAllJacksonModules: Boolean = true,
     var failOnModuleError: Boolean = true

@@ -22,7 +22,7 @@ import cn.codethink.xiaoming.common.DefaultDeserializer
 import cn.codethink.xiaoming.common.MapRegistrations
 import cn.codethink.xiaoming.common.Registration
 import cn.codethink.xiaoming.common.Subject
-import cn.codethink.xiaoming.common.TYPE_FIELD_NAME
+import cn.codethink.xiaoming.common.TYPE_FIELD
 import cn.codethink.xiaoming.common.XiaomingProtocolSubject
 import cn.codethink.xiaoming.common.XiaomingSdkSubject
 import cn.codethink.xiaoming.common.prependOrNull
@@ -39,7 +39,7 @@ const val DEFAULT_TYPE_NAME_VISIBLE = true
 /**
  * A deserializer that can deserialize different types of objects based
  * on the value of a single field called [typeNameField]. In the most situations,
- * it's [TYPE_FIELD_NAME].
+ * it's [TYPE_FIELD].
  *
  * @author Chuanwise
  * @see polymorphic
@@ -102,14 +102,14 @@ class PolymorphicDeserializerManager<T>(
  *
  * ```kt
  * class SomeModule: SimpleModule() {
- *     val animalDeserializers = registerPolymorphic<Animal> {
+ *     val animalDeserializers = polymorphic<Animal> {
  *         // `this` is the PolymorphicDeserializerManager.
  *     }
  * }
  * ```
  *
  * @param T the type of object to be deserialized.
- * @param typeNameField the field name to the type name, default to [TYPE_FIELD_NAME].
+ * @param typeNameField the field name to the type name, default to [TYPE_FIELD].
  * @param loadServices load all related [PolymorphicDeserializerService] and register them,
  * default to `true`.
  * @param block the block to configure the [PolymorphicDeserializerManager].
@@ -117,7 +117,7 @@ class PolymorphicDeserializerManager<T>(
  * @see dataType
  */
 inline fun <reified T> SimpleModule.polymorphic(
-    typeNameField: String = TYPE_FIELD_NAME,
+    typeNameField: String = TYPE_FIELD,
     loadServices: Boolean = true,
     block: PolymorphicDeserializerManager<T>.() -> Unit = {}
 ) = PolymorphicDeserializerManager(T::class.java, typeNameField)

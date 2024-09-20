@@ -17,7 +17,6 @@
 package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.DefaultListRegistrations
 import cn.codethink.xiaoming.common.DefaultRegistration
 import cn.codethink.xiaoming.common.DefaultStringMapRegistrations
 import cn.codethink.xiaoming.common.Matcher
@@ -25,9 +24,7 @@ import cn.codethink.xiaoming.common.Registration
 import cn.codethink.xiaoming.common.Registrations
 import cn.codethink.xiaoming.common.SegmentId
 import cn.codethink.xiaoming.common.Subject
-import cn.codethink.xiaoming.common.Tristate
 import cn.codethink.xiaoming.common.XiaomingSdkSubject
-import cn.codethink.xiaoming.common.tristateOf
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import cn.codethink.xiaoming.permission.data.PermissionProfile
 import java.util.concurrent.CopyOnWriteArrayList
@@ -49,102 +46,94 @@ class LocalPermissionServiceApi(
     /**
      * Calculator is used to deal with different type of subjects.
      */
-    private val permissionCalculators = DefaultStringMapRegistrations<PermissionCalculator<*>>()
-
-    /**
-     * The API will call the matched permission comparators, and use them to compare record
-     * and the given. If not found, use the [defaultPermissionComparators].
-     */
-    val permissionComparators = PermissionComparatorRegistrations()
-    val defaultPermissionComparators = DefaultListRegistrations<PermissionComparator>()
+    val permissionCalculatorRegistrations = DefaultStringMapRegistrations<PermissionCalculator<*>>()
 
     /**
      * Check if permission record is valid, usually called in [PermissionComparator].
      *
      * @see DefaultPermissionComparator
      */
-    val permissionContextMatchers = DefaultStringMapRegistrations<Matcher<*>>()
+    val permissionContextMatcherRegistrations = DefaultStringMapRegistrations<Matcher<*>>()
 
-    val permissionMetas = PermissionMetaRegistrations()
+    val permissionMetaRegistrations = PermissionMetaRegistrations()
 
-    val permissionAddingCheckers = PermissionAddingCheckerRegistrations()
+    val permissionSettingCheckerRegistrations = DefaultStringMapRegistrations<PermissionSettingChecker>()
 
     init {
-        registerDefaultPermissionComparator(DefaultPermissionComparator, XiaomingSdkSubject)
+        registerPermissionSettingChecker(
+            PERMISSION_COMPARATOR_TYPE_INHERITANCE, InheritancePermissionSettingChecker, XiaomingSdkSubject
+        )
     }
 
     fun setPermission(
         profile: PermissionProfile,
-        subjectMatcher: Matcher<Subject>,
-        nodeMatcher: Matcher<SegmentId>,
-        value: Boolean?,
-        argumentMatchers: Map<String, Matcher<*>> = emptyMap(),
-        context: Map<String, Any?> = emptyMap(),
+        comparator: PermissionComparator,
+        contextMatchers: Map<String, Matcher<Any?>> = emptyMap(),
         caller: Subject? = null, cause: Cause? = null
     ) {
         // Check if operation valid.
-        val checkers = permissionAddingCheckers[nodeMatcher]
-        if (checkers.isNotEmpty()) {
-            val addingContext = PermissionSettingContext(
-                this, profile, subjectMatcher, nodeMatcher, value, argumentMatchers, context, caller, cause
-            )
-            checkers.forEach { checker ->
-                checker.value.check(addingContext)
-            }
+        permissionSettingCheckerRegistrations[comparator.type]?.let {
+            val addingContext = PermissionSettingContext(this, profile, comparator, contextMatchers, caller, cause)
+            it.value.check(addingContext)
         }
 
         // Do operation.
-        val records = internalApi.data.permissionRecordData.get(profile)
+        val records = internalApi.data.permissionRecordData.getRecordsByProfileId(profile.id)
 
-        val contentEqualsWithValueIgnored = records.filter {
-            it.subjectMatcher == subjectMatcher && it.nodeMatcher == nodeMatcher && it.argumentMatchers == argumentMatchers && it.context == context
-        }
-        if (contentEqualsWithValueIgnored.isNotEmpty()) {
-            if (contentEqualsWithValueIgnored.size == 1) {
-                val thatOne = contentEqualsWithValueIgnored.first()
-                if (value == thatOne.value) {
-                    logger.warn { "Permission record already set: $thatOne." }
-                    return
-                }
+        val previousRecords = records.filter { it.comparator == comparator && it.contextMatchers == contextMatchers }
+        if (previousRecords.isNotEmpty()) {
+            if (previousRecords.size == 1) {
+                val thatOne = previousRecords.first()
+                logger.warn { "Permission record already set: $thatOne." }
+                return
             }
-            internalApi.data.permissionRecordData.delete(contentEqualsWithValueIgnored)
+            internalApi.data.permissionRecordData.delete(previousRecords)
         }
 
         // Add new record.
-        internalApi.data.permissionRecordData.insert(
-            profile, subjectMatcher, nodeMatcher, value, argumentMatchers
-        )
+        internalApi.data.permissionRecordData.insert(profile, comparator, contextMatchers)
+    }
+
+    fun unsetPermission(
+        profile: PermissionProfile,
+        comparator: PermissionComparator,
+        contextMatchers: Map<String, Matcher<Any?>> = emptyMap(),
+        caller: Subject? = null, cause: Cause? = null
+    ): Boolean {
+        val records = internalApi.data.permissionRecordData.getRecordsByProfileId(profile.id)
+            .filter { it.comparator == comparator && it.contextMatchers == contextMatchers }
+
+        if (records.isNotEmpty()) {
+            internalApi.data.permissionRecordData.delete(records)
+        }
+
+        return records.isNotEmpty()
+    }
+
+    fun hasPermission(
+        profileId: Long, permission: Permission,
+        context: Map<String, Any?> = emptyMap(),
+        caller: Subject? = null, cause: Cause? = null
+    ): Boolean? {
+        internalApi.data.permissionRecordData.getRecordsByProfileId(profileId).forEach {
+            val comparingContext = PermissionComparingContext(
+                this, profileId, permission, it, context, caller, cause
+            )
+            it.comparator.compare(comparingContext)?.let { result -> return result.value }
+        }
+        return null
     }
 
     fun hasPermission(
         profile: PermissionProfile, permission: Permission,
-        context: Map<String, Any?> = emptyMap(), caller: Subject? = null, cause: Cause? = null
+        context: Map<String, Any?> = emptyMap(),
+        caller: Subject? = null, cause: Cause? = null
     ): Boolean? {
-        internalApi.data.permissionRecordData.get(profile).forEach {
+        internalApi.data.permissionRecordData.getRecordsByProfileId(profile.id).forEach {
             val comparingContext = PermissionComparingContext(
-                this, profile, permission, it, context, caller, cause
+                this, profile.id, permission, it, context, caller, cause
             )
-            var comparatorRegistrations: List<Registration<PermissionComparator>> =
-                permissionComparators[permission.descriptor.node]
-
-            if (comparatorRegistrations.isEmpty()) {
-                comparatorRegistrations = defaultPermissionComparators.toList()
-            }
-
-            // null means no comparator matched.
-            var result: Tristate? = null
-            var resultRegistration: Registration<PermissionComparator>? = null
-            for (registration in comparatorRegistrations) {
-                if (registration.value.compare(comparingContext)) {
-                    result = tristateOf(it.value)
-                    resultRegistration = registration
-                    break
-                }
-            }
-
-            if (result != null) {
-                return result.value
-            }
+            it.comparator.compare(comparingContext)?.let { result -> return result.value }
         }
         return null
     }
@@ -154,7 +143,8 @@ class LocalPermissionServiceApi(
         subject: Subject, permission: Permission,
         context: Map<String, Any?> = emptyMap(), caller: Subject? = null, cause: Cause? = null
     ): Boolean? {
-        val calculator = permissionCalculators[subject.type]?.value as PermissionCalculator<Subject>? ?: return null
+        val calculator =
+            permissionCalculatorRegistrations[subject.type]?.value as PermissionCalculator<Subject>? ?: return null
         val calculatingContext = PermissionCalculatingContext(this, subject, permission, context, caller, cause)
 
         return calculator.hasPermission(calculatingContext)
@@ -162,45 +152,35 @@ class LocalPermissionServiceApi(
 
     fun registerPermissionCalculator(
         type: String, calculator: PermissionCalculator<*>, subject: Subject
-    ) = permissionCalculators.register(type, DefaultRegistration(calculator, subject))
+    ) = permissionCalculatorRegistrations.register(type, DefaultRegistration(calculator, subject))
 
-    fun unregisterPermissionCalculatorByType(type: String) = permissionCalculators.unregisterByKey(type)
-    fun unregisterPermissionCalculatorBySubject(subject: Subject) = permissionCalculators.unregisterBySubject(subject)
-
-    fun registerPermissionComparator(
-        matcher: Matcher<SegmentId>, comparator: PermissionComparator, subject: Subject
-    ) = permissionComparators.register(matcher, comparator, subject)
-
-    fun unregisterPermissionComparatorBySubject(subject: Subject) = permissionComparators.unregisterBySubject(subject)
-    fun unregisterPermissionComparatorIfMatched(id: SegmentId) = permissionComparators.unregisterIfMatched(id)
+    fun unregisterPermissionCalculatorByType(type: String) = permissionCalculatorRegistrations.unregisterByKey(type)
+    fun unregisterPermissionCalculatorBySubject(subject: Subject) =
+        permissionCalculatorRegistrations.unregisterBySubject(subject)
 
     fun registerPermissionMeta(id: SegmentId, meta: PermissionMeta, subject: Subject) =
-        permissionMetas.register(id, meta, subject)
+        permissionMetaRegistrations.register(id, meta, subject)
 
-    fun unregisterPermissionMetaById(id: SegmentId) = permissionMetas.unregisterById(id)
-    fun unregisterPermissionMetaBySubject(subject: Subject) = permissionMetas.unregisterBySubject(subject)
+    fun unregisterPermissionMetaById(id: SegmentId) = permissionMetaRegistrations.unregisterById(id)
+    fun unregisterPermissionMetaBySubject(subject: Subject) = permissionMetaRegistrations.unregisterBySubject(subject)
     fun unregisterPermissionMetaByIdAndSubject(id: SegmentId, subject: Subject) =
-        permissionMetas.unregisterByIdAndSubject(id, subject)
+        permissionMetaRegistrations.unregisterByIdAndSubject(id, subject)
 
-    fun registerDefaultPermissionComparator(comparator: PermissionComparator, subject: Subject): Unit =
-        defaultPermissionComparators.register(
-            DefaultRegistration(comparator, subject)
-        )
+    fun registerPermissionSettingChecker(type: String, checker: PermissionSettingChecker, subject: Subject) =
+        permissionSettingCheckerRegistrations.register(type, DefaultRegistration(checker, subject))
 
-    fun unregisterDefaultPermissionComparatorByComparator(comparator: PermissionComparator) =
-        defaultPermissionComparators.unregisterByValue(comparator)
+    fun unregisterPermissionSettingCheckerByType(type: String) =
+        permissionSettingCheckerRegistrations.unregisterByKey(type)
 
-    fun unregisterDefaultPermissionComparatorBySubject(subject: Subject) =
-        defaultPermissionComparators.unregisterBySubject(subject)
+    fun unregisterPermissionSettingCheckerBySubject(subject: Subject) =
+        permissionSettingCheckerRegistrations.unregisterBySubject(subject)
 
     fun unregisterBySubject(subject: Subject) {
         unregisterPermissionCalculatorBySubject(subject)
-        unregisterPermissionComparatorBySubject(subject)
         unregisterPermissionMetaBySubject(subject)
-        unregisterDefaultPermissionComparatorBySubject(subject)
+        unregisterPermissionSettingCheckerBySubject(subject)
     }
 }
-
 
 class PermissionComparatorRegistrations : Registrations {
     data class PermissionComparatorRegistration(
@@ -219,26 +199,6 @@ class PermissionComparatorRegistrations : Registrations {
     override fun unregisterBySubject(subject: Subject): Boolean = comparators.removeAll { it.subject == subject }
     fun unregisterIfMatched(id: SegmentId): Boolean = comparators.removeAll { it.matcher.isMatched(id) }
 }
-
-
-class PermissionAddingCheckerRegistrations : Registrations {
-    data class PermissionAddingCheckerRegistration(
-        val node: SegmentId,
-        override val value: PermissionSettingChecker,
-        override val subject: Subject
-    ) : Registration<PermissionSettingChecker>
-
-    private val checkers = CopyOnWriteArrayList<PermissionAddingCheckerRegistration>()
-    operator fun get(matcher: Matcher<SegmentId>) = checkers.filter { matcher.isMatched(it.node) }
-
-    fun register(node: SegmentId, checker: PermissionSettingChecker, subject: Subject) {
-        checkers.add(PermissionAddingCheckerRegistration(node, checker, subject))
-    }
-
-    override fun unregisterBySubject(subject: Subject): Boolean = checkers.removeAll { it.subject == subject }
-    fun unregisterIfMatched(matcher: Matcher<SegmentId>): Boolean = checkers.removeAll { matcher.isMatched(it.node) }
-}
-
 
 class PermissionMetaRegistrations : Registrations {
     class PermissionMetaRegistration(

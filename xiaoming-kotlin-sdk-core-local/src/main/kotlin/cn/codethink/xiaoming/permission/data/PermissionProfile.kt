@@ -16,19 +16,27 @@
 
 package cn.codethink.xiaoming.permission.data
 
+import cn.codethink.xiaoming.common.Matcher
 import cn.codethink.xiaoming.common.Subject
 
+/**
+ * Permission profile is a set of permissions that a subject has. It can be an external user,
+ * a group of users, a plugin, etc.
+ *
+ * @author Chuanwise
+ */
 interface PermissionProfile {
     val id: Long
     val subject: Subject
 }
 
 interface PermissionProfileData {
-    fun getProfileById(id: Long): PermissionProfile?
-    fun getOrInsertProfileId(subject: Subject): Long
-}
+    fun getProfiles(): List<PermissionProfile>
 
-fun PermissionProfileData.getOrInsertProfile(subject: Subject): PermissionProfile {
-    val id = getOrInsertProfileId(subject)
-    return getProfileById(id)!!
+    fun getProfileById(id: Long): PermissionProfile?
+    fun getIdMatchedProfileIds(matcher: Matcher<Long>): List<Long>
+    fun getIdMatchedProfiles(matcher: Matcher<Long>): List<PermissionProfile>
+
+    fun getOrInsertProfileId(subject: Subject): Long
+    fun getOrInsertProfile(subject: Subject): PermissionProfile
 }

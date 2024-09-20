@@ -42,7 +42,7 @@ abstract class Cause(
         cause: Cause? = null,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[TYPE_FIELD_NAME] = type
+        raw[TYPE_FIELD] = type
         raw[CAUSE_FIELD_CAUSE] = cause
     }
 }

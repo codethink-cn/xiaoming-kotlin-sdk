@@ -18,7 +18,7 @@
 
 package cn.codethink.xiaoming.common
 
-const val TYPE_FIELD_NAME = "type"
+const val TYPE_FIELD = "type"
 
 const val PACKET_FIELD_ID = "id"
 const val PACKET_FIELD_TYPE = "type"
@@ -46,7 +46,7 @@ const val RECEIPT_STATE_RECEIVED = "received"
 const val RECEIPT_STATE_CANCELLED = "cancelled"
 const val RECEIPT_STATE_INTERRUPTED = "interrupted"
 
-const val SUBJECT_FIELD_TYPE = TYPE_FIELD_NAME
+const val SUBJECT_FIELD_TYPE = TYPE_FIELD
 
 const val SUBJECT_TYPE_PLUGIN = "plugin"
 const val PLUGIN_SUBJECT_FIELD_ID = "id"
@@ -65,7 +65,7 @@ const val MODULE_SUBJECT_FIELD_NAME = "name"
 const val SUBJECT_TYPE_PROTOCOL = "protocol"
 const val PROTOCOL_SUBJECT_FIELD_VERSION = "version"
 
-const val CAUSE_FIELD_TYPE = TYPE_FIELD_NAME
+const val CAUSE_FIELD_TYPE = TYPE_FIELD
 const val CAUSE_FIELD_CAUSE = "cause"
 const val CAUSE_TYPE_TEXT = "text"
 const val TEXT_CAUSE_FIELD_TEXT = "text"
@@ -102,8 +102,7 @@ const val PERMISSION_SUBJECT_FIELD_SUBJECT = "subject"
 
 const val PERMISSION_VARIABLE_META_FIELD_OPTIONAL = "optional"
 const val PERMISSION_VARIABLE_META_FIELD_NULLABLE = "nullable"
-const val PERMISSION_VARIABLE_META_FIELD_DEFAULT_VALUE = "default_value"
-const val PERMISSION_VARIABLE_META_FIELD_DEFAULT_MATCHER = "default_matcher"
+const val PERMISSION_VARIABLE_META_FIELD_DEFAULT_MATCHER_OR_VALUE = "default_matcher_or_value"
 const val PERMISSION_VARIABLE_META_FIELD_DESCRIPTION = "description"
 
 const val PERMISSION_META_FIELD_NODE = "node"
@@ -115,11 +114,13 @@ const val PERMISSION_META_FIELD_DESCRIPTOR = "descriptor"
 const val PERMISSION_FIELD_DESCRIPTOR = "descriptor"
 const val PERMISSION_FIELD_ARGUMENTS = "arguments"
 
-const val MATCHER_FIELD_TYPE = TYPE_FIELD_NAME
+const val MATCHER_FIELD_TYPE = TYPE_FIELD
 const val MATCHER_TYPE_ANY = "any"
 
 const val SUBJECT_MATCHER_TYPE_DEFAULT_PLUGIN = "subject.plugin.default"
 const val DEFAULT_PLUGIN_SUBJECT_MATCHER_FIELD_ID_MATCHER = "id_matcher"
+
+const val SUBJECT_MATCHER_TYPE_DEFAULT_PROTOCOL = "subject.protocol"
 
 const val PERMISSION_MATCHER_TYPE_DEFAULT = "permission.default"
 const val DEFAULT_PERMISSION_MATCHER_FIELD_NODE_MATCHER = "node_matcher"

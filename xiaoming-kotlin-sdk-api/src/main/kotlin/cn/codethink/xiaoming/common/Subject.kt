@@ -87,6 +87,7 @@ class ProtocolSubject(
     raw: Raw
 ) : Subject(raw) {
     val version: Version by raw
+    val matcher = ProtocolSubjectMatcher()
 
     @JvmOverloads
     constructor(
@@ -144,7 +145,7 @@ class PluginSubject(
         id: SegmentId,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[TYPE_FIELD_NAME] = SUBJECT_TYPE_PLUGIN
+        raw[TYPE_FIELD] = SUBJECT_TYPE_PLUGIN
         raw[PLUGIN_SUBJECT_FIELD_ID] = id
     }
 }
@@ -185,3 +186,20 @@ class DefaultPluginSubjectMatcher(
 }
 
 fun PluginSubject.toLiteralMatcher() = DefaultPluginSubjectMatcher(id.toLiteralMatcher())
+
+
+class ProtocolSubjectMatcher @JvmOverloads constructor(
+    raw: Raw = MapRaw()
+) : AbstractData(raw), Matcher<ProtocolSubject> {
+    override val type: String by raw
+    override val targetType: Class<ProtocolSubject>
+        get() = ProtocolSubject::class.java
+
+    init {
+        raw[MATCHER_FIELD_TYPE] = SUBJECT_MATCHER_TYPE_DEFAULT_PROTOCOL
+    }
+
+    override fun isMatched(target: ProtocolSubject): Boolean {
+        return true
+    }
+}

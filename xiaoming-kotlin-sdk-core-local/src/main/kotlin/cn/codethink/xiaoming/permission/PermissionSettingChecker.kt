@@ -17,8 +17,6 @@
 package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.Matcher
-import cn.codethink.xiaoming.common.SegmentId
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.permission.data.PermissionProfile
 
@@ -26,10 +24,7 @@ import cn.codethink.xiaoming.permission.data.PermissionProfile
 data class PermissionSettingContext(
     val permissionServiceApi: LocalPermissionServiceApi,
     val profile: PermissionProfile,
-    val subjectMatcher: Matcher<Subject>,
-    val nodeMatcher: Matcher<SegmentId>,
-    val value: Boolean?,
-    val argumentMatchers: Map<String, Matcher<*>> = emptyMap(),
+    val comparator: PermissionComparator,
     val context: Map<String, Any?> = emptyMap(),
     val caller: Subject? = null,
     val cause: Cause? = null

@@ -17,8 +17,7 @@
 package cn.codethink.xiaoming.permission.data
 
 import cn.codethink.xiaoming.common.Matcher
-import cn.codethink.xiaoming.common.SegmentId
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.permission.PermissionComparator
 
 /**
  * Represent a [PermissionProfile] has or has not a permission.
@@ -27,15 +26,15 @@ import cn.codethink.xiaoming.common.Subject
  */
 interface PermissionRecord {
     val profile: PermissionProfile
-    val subjectMatcher: Matcher<Subject>
-    val nodeMatcher: Matcher<SegmentId>
-    var value: Boolean?
-    val argumentMatchers: Map<String, Matcher<*>>
-    val context: Map<String, Any?>
+    val comparator: PermissionComparator
+    val contextMatchers: Map<String, Matcher<Any?>>
 }
 
 interface PermissionRecordData {
-    operator fun get(profile: PermissionProfile, reverse: Boolean = true): List<PermissionRecord>
+    fun getRecordsByProfileId(profileId: Long, reverse: Boolean = true): List<PermissionRecord>
+    fun getRecordsByProfile(
+        profile: PermissionProfile, reverse: Boolean = true
+    ): List<PermissionRecord> = getRecordsByProfileId(profile.id, reverse)
 
     fun update(record: PermissionRecord)
 
@@ -45,10 +44,7 @@ interface PermissionRecordData {
 
     fun insert(
         profile: PermissionProfile,
-        subjectMatcher: Matcher<Subject>,
-        nodeMatcher: Matcher<SegmentId>,
-        value: Boolean?,
-        argumentMatchers: Map<String, Matcher<*>> = emptyMap(),
-        context: Map<String, Any?> = emptyMap()
-    )
+        comparator: PermissionComparator,
+        contextMatchers: Map<String, Matcher<Any?>> = emptyMap()
+    ): Any
 }

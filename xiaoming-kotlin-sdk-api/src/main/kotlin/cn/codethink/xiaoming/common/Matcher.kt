@@ -23,29 +23,36 @@ import com.fasterxml.jackson.annotation.JsonIgnore
  *
  * @author Chuanwise
  */
-interface Matcher<T> {
+interface Matcher<out T> {
     val type: String
 
     @get:JsonIgnore
-    val targetType: Class<T>
+    val targetType: Class<@UnsafeVariance T>
 
     @get:JsonIgnore
     val targetNullable: Boolean
         get() = false
 
-    fun isMatched(target: T): Boolean
+    fun isMatched(target: @UnsafeVariance T): Boolean
 }
 
 fun <T> Matcher<T>.isMatchable(target: Any?): Boolean {
     return targetType.isInstance(target) || (target == null && targetNullable)
 }
 
-@Suppress("UNCHECKED_CAST")
 fun <T> Matcher<T>.isMatchedOrNull(target: Any?): Boolean? {
     return if (isMatchable(target)) {
         (this as Matcher<Any?>).isMatched(target)
     } else {
         null
+    }
+}
+
+fun Any?.isMatchedOrEqualsTo(matcherOrValue: Any?): Boolean? {
+    return if (matcherOrValue is Matcher<*>) {
+        matcherOrValue.isMatchedOrNull(this)
+    } else {
+        this == matcherOrValue
     }
 }
 

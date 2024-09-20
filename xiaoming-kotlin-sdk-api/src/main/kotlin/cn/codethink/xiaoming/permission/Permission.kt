@@ -36,8 +36,7 @@ import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_PARAMETERS
 import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_SUBJECT
 import cn.codethink.xiaoming.common.PERMISSION_SUBJECT_FIELD_NODE
 import cn.codethink.xiaoming.common.PERMISSION_SUBJECT_FIELD_SUBJECT
-import cn.codethink.xiaoming.common.PERMISSION_VARIABLE_META_FIELD_DEFAULT_MATCHER
-import cn.codethink.xiaoming.common.PERMISSION_VARIABLE_META_FIELD_DEFAULT_VALUE
+import cn.codethink.xiaoming.common.PERMISSION_VARIABLE_META_FIELD_DEFAULT_MATCHER_OR_VALUE
 import cn.codethink.xiaoming.common.PERMISSION_VARIABLE_META_FIELD_DESCRIPTION
 import cn.codethink.xiaoming.common.PERMISSION_VARIABLE_META_FIELD_NULLABLE
 import cn.codethink.xiaoming.common.PERMISSION_VARIABLE_META_FIELD_OPTIONAL
@@ -81,51 +80,41 @@ class PermissionDescriptor(
 class PermissionParameterMeta(
     raw: Raw
 ) : AbstractData(raw) {
-    @RawValue(PERMISSION_VARIABLE_META_FIELD_DEFAULT_VALUE)
-    val defaultValue: Any? by raw
+    @RawValue(PERMISSION_VARIABLE_META_FIELD_DEFAULT_MATCHER_OR_VALUE)
+    val defaultMatcherOrValue: Any? by raw
     val description: String? by raw
 
     val optional: Boolean by raw
     val nullable: Boolean by raw
 
-    val defaultMatcher: Matcher<*>? by raw
-
     @JvmOverloads
     constructor(
-        defaultValue: Any?,
+        defaultMatcherOrValue: Any?,
         description: String?,
         optional: Boolean,
         nullable: Boolean,
-        defaultMatcher: Matcher<*>?,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[PERMISSION_VARIABLE_META_FIELD_DEFAULT_VALUE] = defaultValue
+        raw[PERMISSION_VARIABLE_META_FIELD_DEFAULT_MATCHER_OR_VALUE] = defaultMatcherOrValue
         raw[PERMISSION_VARIABLE_META_FIELD_DESCRIPTION] = description
         raw[PERMISSION_VARIABLE_META_FIELD_OPTIONAL] = optional
         raw[PERMISSION_VARIABLE_META_FIELD_NULLABLE] = nullable
-        raw[PERMISSION_VARIABLE_META_FIELD_DEFAULT_MATCHER] = defaultMatcher
 
-        if (optional && !nullable && defaultValue == null) {
+        if (optional && !nullable && defaultMatcherOrValue == null) {
             throw IllegalArgumentException(
-                "If a permission parameter is optional, it must be nullable or have a non-null default value."
-            )
-        }
-        if (optional && defaultMatcher == null) {
-            throw IllegalArgumentException(
-                "If a permission parameter is optional, it must have a default matcher."
+                "If a permission parameter is optional, it must be nullable or have a non-null default matcher or value."
             )
         }
     }
 }
 
 inline fun <reified T> PermissionParameterMeta(
-    defaultValue: T? = null,
+    defaultMatcherOrValue: T? = null,
     description: String? = null,
     optional: Boolean = defaultOptional<T>(),
     nullable: Boolean = defaultNullable<T>(),
-    defaultMatcher: Matcher<*>? = null,
     raw: Raw = MapRaw()
-) = PermissionParameterMeta(defaultValue, description, optional, nullable, defaultMatcher, raw)
+) = PermissionParameterMeta(defaultMatcherOrValue, description, optional, nullable, raw)
 
 /**
  * Describe a permission.
