@@ -26,14 +26,16 @@ import cn.codethink.xiaoming.permission.data.PermissionProfile
 import cn.codethink.xiaoming.permission.data.PermissionRecord
 
 data class PermissionComparingContext(
-    val api: LocalPermissionServiceApi,
+    val permissionServiceApi: LocalPermissionServiceApi,
     val profile: PermissionProfile,
     val permission: Permission,
     val record: PermissionRecord,
     val context: Map<String, Any?> = emptyMap(),
     val caller: Subject? = null,
     val cause: Cause? = null
-)
+) {
+    val internalApi by permissionServiceApi::internalApi
+}
 
 
 interface PermissionComparator {
@@ -71,7 +73,7 @@ object DefaultPermissionComparator : PermissionComparator {
         }
 
         // Find permission meta that registered by subject of given permission.
-        val meta = context.api.permissionMetas[
+        val meta = context.permissionServiceApi.permissionMetas[
             context.permission.descriptor.node, context.permission.descriptor.subject
         ]?.value
 
@@ -109,7 +111,7 @@ object DefaultPermissionComparator : PermissionComparator {
                         return false
                     }
                     if (matcher == null) {
-                        context.api.logger.warn {
+                        context.permissionServiceApi.logger.warn {
                             "Context value $key is null, and it is nullable, but no matcher provided " +
                                     "in comparing ${context.permission} and ${context.record}."
                         }
@@ -158,14 +160,14 @@ object DefaultPermissionComparator : PermissionComparator {
 
     private fun Map<String, Any?>.isContextMatched(context: PermissionComparingContext): Boolean {
         forEach { (key, value) ->
-            val matcher = context.api.permissionContextMatchers[key]?.value as Matcher<Any?>?
+            val matcher = context.permissionServiceApi.permissionContextMatchers[key]?.value as Matcher<Any?>?
             if (matcher == null) {
-                context.api.logger.warn { "No permission context checker found for key: $key." }
+                context.permissionServiceApi.logger.warn { "No permission context checker found for key: $key." }
                 return false
             }
 
             if (!matcher.isMatchable(value)) {
-                context.api.logger.warn { "Context value $key is not matchable: $value." }
+                context.permissionServiceApi.logger.warn { "Context value $key is not matchable: $value." }
                 return false
             }
 

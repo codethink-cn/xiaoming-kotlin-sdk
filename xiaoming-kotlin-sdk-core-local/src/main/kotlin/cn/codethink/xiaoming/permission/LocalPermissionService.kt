@@ -27,7 +27,7 @@ import cn.codethink.xiaoming.common.Subject
  * @see LocalPermissionServiceApi
  */
 class LocalPermissionService(
-    val api: LocalPermissionServiceApi
+    val permissionServiceApi: LocalPermissionServiceApi
 ) : PermissionService {
     override suspend fun hasPermission(
         subject: Subject,
@@ -35,5 +35,5 @@ class LocalPermissionService(
         context: Map<String, Any?>,
         caller: Subject?,
         cause: Cause?
-    ): Boolean? = api.hasPermission(subject, permission, context, caller, cause)
+    ): Boolean? = permissionServiceApi.hasPermission(subject, permission, context, caller, cause)
 }

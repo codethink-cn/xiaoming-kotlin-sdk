@@ -20,13 +20,15 @@ import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.Subject
 
 data class PermissionCalculatingContext<T : Subject>(
-    val api: LocalPermissionServiceApi,
+    val permissionServiceApi: LocalPermissionServiceApi,
     val subject: T,
     val permission: Permission,
     val context: Map<String, Any?> = emptyMap(),
     val caller: Subject? = null,
     val cause: Cause? = null
-)
+) {
+    val internalApi by permissionServiceApi::internalApi
+}
 
 /**
  * Calculating whether the given subject has the given permission.

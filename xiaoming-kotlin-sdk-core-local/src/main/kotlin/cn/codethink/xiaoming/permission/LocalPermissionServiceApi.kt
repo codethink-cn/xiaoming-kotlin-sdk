@@ -42,9 +42,9 @@ import kotlin.concurrent.write
  * @see LocalPermissionService
  */
 class LocalPermissionServiceApi(
-    val api: LocalPlatformInternalApi
+    val internalApi: LocalPlatformInternalApi
 ) {
-    val logger by api::logger
+    val logger by internalApi::logger
 
     /**
      * Calculator is used to deal with different type of subjects.
@@ -94,7 +94,7 @@ class LocalPermissionServiceApi(
         }
 
         // Do operation.
-        val records = api.data.permissionRecordData.get(profile)
+        val records = internalApi.data.permissionRecordData.get(profile)
 
         val contentEqualsWithValueIgnored = records.filter {
             it.subjectMatcher == subjectMatcher && it.nodeMatcher == nodeMatcher && it.argumentMatchers == argumentMatchers && it.context == context
@@ -107,11 +107,11 @@ class LocalPermissionServiceApi(
                     return
                 }
             }
-            api.data.permissionRecordData.delete(contentEqualsWithValueIgnored)
+            internalApi.data.permissionRecordData.delete(contentEqualsWithValueIgnored)
         }
 
         // Add new record.
-        api.data.permissionRecordData.insert(
+        internalApi.data.permissionRecordData.insert(
             profile, subjectMatcher, nodeMatcher, value, argumentMatchers
         )
     }
@@ -120,7 +120,7 @@ class LocalPermissionServiceApi(
         profile: PermissionProfile, permission: Permission,
         context: Map<String, Any?> = emptyMap(), caller: Subject? = null, cause: Cause? = null
     ): Boolean? {
-        api.data.permissionRecordData.get(profile).forEach {
+        internalApi.data.permissionRecordData.get(profile).forEach {
             val comparingContext = PermissionComparingContext(
                 this, profile, permission, it, context, caller, cause
             )

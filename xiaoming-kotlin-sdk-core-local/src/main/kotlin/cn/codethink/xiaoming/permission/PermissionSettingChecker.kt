@@ -24,7 +24,7 @@ import cn.codethink.xiaoming.permission.data.PermissionProfile
 
 
 data class PermissionSettingContext(
-    val api: LocalPermissionServiceApi,
+    val permissionServiceApi: LocalPermissionServiceApi,
     val profile: PermissionProfile,
     val subjectMatcher: Matcher<Subject>,
     val nodeMatcher: Matcher<SegmentId>,
@@ -33,7 +33,9 @@ data class PermissionSettingContext(
     val context: Map<String, Any?> = emptyMap(),
     val caller: Subject? = null,
     val cause: Cause? = null
-)
+) {
+    val internalApi by permissionServiceApi::internalApi
+}
 
 /**
  * Call when setting a permission.
