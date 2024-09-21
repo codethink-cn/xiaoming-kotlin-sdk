@@ -190,7 +190,7 @@ class LocalPermissionServiceTest {
 
         // C:
         // 1. inheritance(profile_id = A)
-        // 1. inheritance(profile_id = B)
+        // 2. inheritance(profile_id = B)
         api.permissionServiceApi.setPermission(subjectCProfile, InheritancePermissionComparatorV1(subjectBProfile.id))
         assertEquals(true, api.permissionServiceApi.hasPermission(subjectAProfile, permissionA))
         assertEquals(true, api.permissionServiceApi.hasPermission(subjectBProfile, permissionA))
