@@ -20,9 +20,6 @@ import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.DefaultRegistration
 import cn.codethink.xiaoming.common.ErrorMessageCause
 import cn.codethink.xiaoming.common.MapRegistrations
-import cn.codethink.xiaoming.common.PACKET_FIELD_CAUSE
-import cn.codethink.xiaoming.common.RECEIPT_PACKET_FIELD_DATA
-import cn.codethink.xiaoming.common.RECEIPT_PACKET_FIELD_STATE
 import cn.codethink.xiaoming.common.RECEIPT_STATE_FAILED
 import cn.codethink.xiaoming.common.RECEIPT_STATE_INTERRUPTED
 import cn.codethink.xiaoming.common.RECEIPT_STATE_SUCCEED
@@ -42,7 +39,6 @@ import cn.codethink.xiaoming.io.UNSUPPORTED_REQUEST_MODE
 import cn.codethink.xiaoming.io.action.Action
 import cn.codethink.xiaoming.io.data.ReceiptPacket
 import cn.codethink.xiaoming.io.data.RequestPacket
-import cn.codethink.xiaoming.io.data.set
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.time.withTimeout
 import java.time.Duration
@@ -231,13 +227,13 @@ class RequestPacketHandler : PacketHandler {
             // Update receipt packet fields.
             when (result) {
                 is SucceedRequestActionReceipt<*> -> receipt.apply {
-                    raw[RECEIPT_PACKET_FIELD_STATE] = RECEIPT_STATE_SUCCEED
-                    raw[RECEIPT_PACKET_FIELD_DATA] = result.data
+                    state = RECEIPT_STATE_SUCCEED
+                    data = result.data
                 }
 
                 is FailedRequestActionReceipt<*> -> receipt.apply {
-                    raw[RECEIPT_PACKET_FIELD_STATE] = RECEIPT_STATE_FAILED
-                    raw[PACKET_FIELD_CAUSE] = result.cause
+                    state = RECEIPT_STATE_FAILED
+                    cause = result.cause
                 }
             }
         } catch (exception: TimeoutCancellationException) {
@@ -254,8 +250,8 @@ class RequestPacketHandler : PacketHandler {
                         "The handler is registered by ${requestActionHandlerRegistration.subject}."
             }
             receipt.apply {
-                raw[RECEIPT_PACKET_FIELD_STATE] = RECEIPT_STATE_INTERRUPTED
-                raw[RECEIPT_PACKET_FIELD_DATA] = ErrorMessageCause(
+                state = RECEIPT_STATE_INTERRUPTED
+                data = ErrorMessageCause(
                     error = ACTION_HANDLER_TIMEOUT,
                     message = message,
                     context = arguments
@@ -276,8 +272,8 @@ class RequestPacketHandler : PacketHandler {
 
             // Update receipt packet fields.
             receipt.apply {
-                raw[RECEIPT_PACKET_FIELD_STATE] = RECEIPT_STATE_FAILED
-                raw[RECEIPT_PACKET_FIELD_DATA] = ErrorMessageCause(
+                state = RECEIPT_STATE_FAILED
+                data = ErrorMessageCause(
                     error = INTERNAL_ACTION_HANDLER_ERROR,
                     message = message,
                     context = emptyMap()

@@ -24,5 +24,57 @@ package cn.codethink.xiaoming.common
  * and [hashCode].
  *
  * @author Chuanwise
+ * @see NumericalId
  */
-interface Id
+interface Id {
+    override fun toString(): String
+}
+
+
+/**
+ * A numerical id that can be converted to [Int] and [Long].
+ *
+ * @author Chuanwise
+ * @see LongId
+ */
+interface NumericalId : Id {
+    fun toInt(): Int
+    fun toLong(): Long
+}
+
+
+@JvmInline
+value class LongId(
+    private val value: Long
+) : Id, Comparable<LongId>, NumericalId {
+    override fun compareTo(other: LongId): Int {
+        return value.compareTo(other.value)
+    }
+
+    override fun toInt(): Int = value.toInt()
+
+    override fun toLong(): Long = value
+
+    override fun toString(): String {
+        return value.toString()
+    }
+}
+
+fun Int.toId(): NumericalId = LongId(this.toLong())
+fun Long.toId(): NumericalId = LongId(this)
+
+
+@JvmInline
+value class StringId(
+    private val value: String
+) : Id, Comparable<StringId> {
+    override fun compareTo(other: StringId): Int {
+        return value.compareTo(other.value)
+    }
+
+    override fun toString(): String {
+        return value
+    }
+}
+
+fun String.toId(): StringId = StringId(this)

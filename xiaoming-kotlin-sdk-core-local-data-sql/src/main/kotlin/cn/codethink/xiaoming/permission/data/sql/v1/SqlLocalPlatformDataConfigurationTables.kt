@@ -16,34 +16,34 @@
 
 package cn.codethink.xiaoming.permission.data.sql.v1
 
-import cn.codethink.xiaoming.permission.data.sql.SqlLocalPlatformData
+import cn.codethink.xiaoming.permission.data.sql.SqlLocalPlatformDataConfiguration
 
 /**
  * @author Chuanwise
- * @see SqlLocalPlatformDataTables
+ * @see SqlLocalPlatformDataConfigurationTables
  */
-interface SqlLocalPlatformDataTableNames {
+interface SqlLocalPlatformDataConfigurationTableNames {
     val permissionProfiles: String
     val permissionRecords: String
     val subjects: String
 }
 
-data class SqlLocalPlatformDataTableNamesV1(
+data class SqlLocalPlatformDataConfigurationTableNamesV1(
     override val permissionProfiles: String = "permission_profile",
     override val permissionRecords: String = "permission_record",
     override val subjects: String = "subject"
-) : SqlLocalPlatformDataTableNames
+) : SqlLocalPlatformDataConfigurationTableNames
 
 /**
  * @author Chuanwise
- * @see SqlLocalPlatformData
+ * @see SqlLocalPlatformDataConfiguration
  */
-interface SqlLocalPlatformDataTables {
+interface SqlLocalPlatformDataConfigurationTables {
     val prefix: String
-    val names: SqlLocalPlatformDataTableNames
+    val names: SqlLocalPlatformDataConfigurationTableNames
 }
 
-data class SqlLocalPlatformDataTablesV1(
+data class SqlLocalPlatformDataConfigurationTablesV1(
     override val prefix: String = "",
-    override val names: SqlLocalPlatformDataTableNamesV1 = SqlLocalPlatformDataTableNamesV1()
-) : SqlLocalPlatformDataTables
+    override val names: SqlLocalPlatformDataConfigurationTableNamesV1 = SqlLocalPlatformDataConfigurationTableNamesV1()
+) : SqlLocalPlatformDataConfigurationTables

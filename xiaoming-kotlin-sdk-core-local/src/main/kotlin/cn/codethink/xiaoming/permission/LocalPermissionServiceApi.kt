@@ -19,6 +19,7 @@ package cn.codethink.xiaoming.permission
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.DefaultRegistration
 import cn.codethink.xiaoming.common.DefaultStringMapRegistrations
+import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.common.Matcher
 import cn.codethink.xiaoming.common.Registration
 import cn.codethink.xiaoming.common.Registrations
@@ -78,7 +79,7 @@ class LocalPermissionServiceApi(
         }
 
         // Do operation.
-        val records = internalApi.data.permissionRecordData.getRecordsByProfileId(profile.id)
+        val records = internalApi.data.getPermissionRecordsByPermissionProfileId(profile.id)
 
         val previousRecords = records.filter { it.comparator == comparator && it.contextMatchers == contextMatchers }
         if (previousRecords.isNotEmpty()) {
@@ -87,11 +88,11 @@ class LocalPermissionServiceApi(
                 logger.warn { "Permission record already set: $thatOne." }
                 return
             }
-            internalApi.data.permissionRecordData.delete(previousRecords)
+            internalApi.data.deletePermissionRecords(previousRecords)
         }
 
         // Add new record.
-        internalApi.data.permissionRecordData.insert(profile, comparator, contextMatchers)
+        internalApi.data.insertPermissionRecord(profile, comparator, contextMatchers)
     }
 
     fun unsetPermission(
@@ -100,22 +101,22 @@ class LocalPermissionServiceApi(
         contextMatchers: Map<String, Matcher<Any?>> = emptyMap(),
         caller: Subject? = null, cause: Cause? = null
     ): Boolean {
-        val records = internalApi.data.permissionRecordData.getRecordsByProfileId(profile.id)
+        val records = internalApi.data.getPermissionRecordsByPermissionProfileId(profile.id)
             .filter { it.comparator == comparator && it.contextMatchers == contextMatchers }
 
         if (records.isNotEmpty()) {
-            internalApi.data.permissionRecordData.delete(records)
+            internalApi.data.deletePermissionRecords(records)
         }
 
         return records.isNotEmpty()
     }
 
     fun hasPermission(
-        profileId: Long, permission: Permission,
+        profileId: Id, permission: Permission,
         context: Map<String, Any?> = emptyMap(),
         caller: Subject? = null, cause: Cause? = null
     ): Boolean? {
-        internalApi.data.permissionRecordData.getRecordsByProfileId(profileId).forEach {
+        internalApi.data.getPermissionRecordsByPermissionProfileId(profileId).forEach {
             val comparingContext = PermissionComparingContext(
                 this, profileId, permission, it, context, caller, cause
             )
@@ -129,7 +130,7 @@ class LocalPermissionServiceApi(
         context: Map<String, Any?> = emptyMap(),
         caller: Subject? = null, cause: Cause? = null
     ): Boolean? {
-        internalApi.data.permissionRecordData.getRecordsByProfileId(profile.id).forEach {
+        internalApi.data.getPermissionRecordsByPermissionProfileId(profile.id).forEach {
             val comparingContext = PermissionComparingContext(
                 this, profile.id, permission, it, context, caller, cause
             )

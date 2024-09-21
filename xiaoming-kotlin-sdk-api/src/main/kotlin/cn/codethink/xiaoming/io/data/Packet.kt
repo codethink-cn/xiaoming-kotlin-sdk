@@ -17,23 +17,12 @@
 package cn.codethink.xiaoming.io.data
 
 import cn.codethink.xiaoming.common.AbstractData
-import cn.codethink.xiaoming.common.CAUSE_FIELD_CAUSE
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.PACKET_FIELD_ID
-import cn.codethink.xiaoming.common.PACKET_FIELD_TIME
-import cn.codethink.xiaoming.common.PACKET_FIELD_TYPE
 import cn.codethink.xiaoming.common.PACKET_TYPE_RECEIPT
 import cn.codethink.xiaoming.common.PACKET_TYPE_REQUEST
-import cn.codethink.xiaoming.common.RECEIPT_PACKET_FIELD_DATA
-import cn.codethink.xiaoming.common.RECEIPT_PACKET_FIELD_REQUEST
-import cn.codethink.xiaoming.common.RECEIPT_PACKET_FIELD_STATE
-import cn.codethink.xiaoming.common.REQUEST_PACKET_FIELD_ACTION
-import cn.codethink.xiaoming.common.REQUEST_PACKET_FIELD_ARGUMENT
-import cn.codethink.xiaoming.common.REQUEST_PACKET_FIELD_MODE
-import cn.codethink.xiaoming.common.REQUEST_PACKET_FIELD_SUBJECT
-import cn.codethink.xiaoming.common.REQUEST_PACKET_FIELD_TIMEOUT
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.currentTimeSeconds
+import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
  * Packet is used to be sent between different software uses xiaoming standard.
@@ -45,10 +34,10 @@ import cn.codethink.xiaoming.common.currentTimeSeconds
 abstract class Packet(
     raw: Raw
 ) : AbstractData(raw) {
-    val id: String by raw
-    val type: String by raw
-    val time: Long by raw
-    val cause: Cause? by raw
+    var id: String by raw
+    var type: String by raw
+    var time: Long by raw
+    var cause: Cause? by raw
 
     @JvmOverloads
     constructor(
@@ -58,10 +47,10 @@ abstract class Packet(
         cause: Cause? = null,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[PACKET_FIELD_ID] = id
-        raw[PACKET_FIELD_TYPE] = type
-        raw[PACKET_FIELD_TIME] = time
-        raw[CAUSE_FIELD_CAUSE] = cause
+        this.id = id
+        this.type = type
+        this.time = time
+        this.cause = cause
     }
 }
 
@@ -70,14 +59,15 @@ abstract class Packet(
  *
  * @author Chuanwise
  */
+@JsonTypeName(PACKET_TYPE_REQUEST)
 class RequestPacket(
     raw: Raw
 ) : Packet(raw) {
-    val action: String by raw
-    val mode: String by raw
-    val argument: Any? by raw
-    val subject: Subject? by raw
-    val timeout: Long by raw
+    var action: String by raw
+    var mode: String by raw
+    var argument: Any? by raw
+    var subject: Subject? by raw
+    var timeout: Long by raw
 
     @JvmOverloads
     constructor(
@@ -91,15 +81,15 @@ class RequestPacket(
         cause: Cause? = null,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[PACKET_FIELD_ID] = id
-        raw[PACKET_FIELD_TYPE] = PACKET_TYPE_REQUEST
-        raw[PACKET_FIELD_TIME] = time
-        raw[CAUSE_FIELD_CAUSE] = cause
-        raw[REQUEST_PACKET_FIELD_ACTION] = action
-        raw[REQUEST_PACKET_FIELD_MODE] = mode
-        raw[REQUEST_PACKET_FIELD_TIMEOUT] = timeout
-        raw[REQUEST_PACKET_FIELD_ARGUMENT] = argument
-        raw[REQUEST_PACKET_FIELD_SUBJECT] = subject
+        this.id = id
+        this.type = PACKET_TYPE_REQUEST
+        this.time = time
+        this.cause = cause
+        this.action = action
+        this.mode = mode
+        this.argument = argument
+        this.subject = subject
+        this.timeout = timeout
     }
 }
 
@@ -108,12 +98,13 @@ class RequestPacket(
  *
  * @author Chuanwise
  */
+@JsonTypeName(PACKET_TYPE_RECEIPT)
 class ReceiptPacket(
     raw: Raw
 ) : Packet(raw) {
-    val state: String by raw
-    val request: String by raw
-    val data: Any? by raw
+    var state: String by raw
+    var request: String by raw
+    var data: Any? by raw
 
     @JvmOverloads
     constructor(
@@ -125,12 +116,12 @@ class ReceiptPacket(
         cause: Cause? = null,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[PACKET_FIELD_ID] = id
-        raw[PACKET_FIELD_TYPE] = PACKET_TYPE_RECEIPT
-        raw[PACKET_FIELD_TIME] = time
-        raw[CAUSE_FIELD_CAUSE] = cause
-        raw[RECEIPT_PACKET_FIELD_STATE] = state
-        raw[RECEIPT_PACKET_FIELD_REQUEST] = request
-        raw[RECEIPT_PACKET_FIELD_DATA] = data
+        this.id = id
+        this.type = PACKET_TYPE_REQUEST
+        this.time = time
+        this.cause = cause
+        this.state = state
+        this.request = request
+        this.data = data
     }
 }

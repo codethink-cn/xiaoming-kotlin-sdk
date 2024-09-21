@@ -16,6 +16,7 @@
 
 package cn.codethink.xiaoming.internal.configuration
 
+import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.configuration.LocalPlatformConfiguration
 import cn.codethink.xiaoming.internal.module.Module
@@ -33,11 +34,12 @@ import java.io.File
  */
 data class LocalPlatformInternalConfiguration(
     val workingDirectoryFile: File,
+    val id: Id,
     val modulesToInstall: List<Pair<Module, Subject>> = emptyList(),
     val platformConfiguration: LocalPlatformConfiguration? = null,
-    val dataObjectMapper: ObjectMapper = jacksonObjectMapper()
+    val internalObjectMapper: ObjectMapper = jacksonObjectMapper()
         .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE),
-    val configurationObjectMapper: ObjectMapper = YAMLMapper.builder()
+    val externalObjectMapper: ObjectMapper = YAMLMapper.builder()
         .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
         .build(),
     var findAndLoadAllModules: Boolean = true,

@@ -14,22 +14,16 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.common
+package cn.codethink.xiaoming.data
+
+import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 
 /**
- * The subject of the local data sql module.
+ * Configuration storing where to read and save data.
+ *
+ * @author Chuanwise
  */
-val SqlLocalDataModuleSubject = ModuleSubject(
-    XiaomingSdkSubject.group,
-    "xiaoming-kotlin-sdk-core-local-data-sql",
-    XiaomingSdkSubject.version
-)
-
-const val LOCAL_PLATFORM_DATA_TYPE_SQL = "sql"
-const val SQL_LOCAL_PLATFORM_DATA_FIELD_VERSION = "version"
-const val SQL_LOCAL_PLATFORM_DATA_VERSION_1 = "1"
-
-const val SQL_DATA_SOURCE_FIELD_TYPE = "type"
-
-const val SQL_DATA_SOURCE_TYPE_HIKARI_CP = "hikari_cp"
-const val MYSQL_DATABASE_DATA_SOURCE_FIELD_PROPERTIES = "properties"
+interface LocalPlatformDataConfiguration {
+    val type: String
+    fun toDataApi(internalApi: LocalPlatformInternalApi): LocalPlatformDataApi
+}

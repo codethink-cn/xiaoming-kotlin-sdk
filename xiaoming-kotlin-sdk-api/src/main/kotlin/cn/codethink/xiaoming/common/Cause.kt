@@ -17,13 +17,13 @@
 package cn.codethink.xiaoming.common
 
 import cn.codethink.xiaoming.event.Event
-import cn.codethink.xiaoming.io.data.DefaultSerialization
-import cn.codethink.xiaoming.io.data.EmptyRaw
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Packet
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
+import cn.codethink.xiaoming.io.data.setValue
+import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
  * Cause is the reason of an operation, an error, an event, etc.
@@ -42,7 +42,7 @@ abstract class Cause(
         cause: Cause? = null,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[TYPE_FIELD] = type
+        raw[FIELD_TYPE] = type
         raw[CAUSE_FIELD_CAUSE] = cause
     }
 }
@@ -63,7 +63,7 @@ class TextCause(
         cause: Cause? = null,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[CAUSE_FIELD_TYPE] = CAUSE_TYPE_TEXT
+        raw[FIELD_TYPE] = CAUSE_TYPE_TEXT
         raw[CAUSE_FIELD_CAUSE] = cause
         raw[TEXT_CAUSE_FIELD_TEXT] = text
     }
@@ -86,7 +86,7 @@ abstract class PacketCause(
         cause: Cause? = null,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[CAUSE_FIELD_TYPE] = type
+        raw[FIELD_TYPE] = type
         raw[CAUSE_FIELD_CAUSE] = cause
         raw[PACKET_CAUSE_FIELD_ID] = id
     }
@@ -107,7 +107,7 @@ class PacketIdCause(
         cause: Cause? = null,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[CAUSE_FIELD_TYPE] = CAUSE_TYPE_PACKET_ID
+        raw[FIELD_TYPE] = CAUSE_TYPE_PACKET_ID
         raw[CAUSE_FIELD_CAUSE] = cause
         raw[PACKET_CAUSE_FIELD_ID] = id
     }
@@ -131,7 +131,7 @@ class PacketDataCause(
         packet: Packet,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[CAUSE_FIELD_TYPE] = CAUSE_TYPE_PACKET_DATA
+        raw[FIELD_TYPE] = CAUSE_TYPE_PACKET_DATA
         raw[PACKET_DATA_CAUSE_FIELD_PACKET] = packet
     }
 }
@@ -148,9 +148,9 @@ class PacketDataCause(
 class ErrorMessageCause(
     raw: Raw
 ) : Cause(raw) {
-    val error: String by raw
-    val message: String by raw
-    val context: Map<String, Any?> by raw
+    var error: String by raw
+    var message: String by raw
+    var context: Map<String, Any?> by raw
 
     @JvmOverloads
     constructor(
@@ -159,12 +159,15 @@ class ErrorMessageCause(
         context: Map<String, Any?>,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[CAUSE_FIELD_TYPE] = CAUSE_TYPE_ERROR_TEXT
-        raw[ERROR_TEXT_CAUSE_FIELD_ERROR] = error
-        raw[ERROR_TEXT_CAUSE_FIELD_MESSAGE] = message
-        raw[ERROR_TEXT_CAUSE_FIELD_CONTEXT] = context
+        raw[FIELD_TYPE] = CAUSE_TYPE_ERROR_TEXT
+
+        this.error = error
+        this.message = message
+        this.context = context
     }
 }
+
+const val CAUSE_TYPE_EVENT = "event"
 
 /**
  * Represent a cause that is an event.
@@ -173,8 +176,22 @@ class ErrorMessageCause(
  *
  * @author Chuanwise
  */
-@DefaultSerialization
+@JsonTypeName(CAUSE_TYPE_EVENT)
 class EventCause(
-    val event: Event,
-    override val cause: Cause? = null
-) : Cause(EmptyRaw)
+    raw: Raw
+) : Cause(raw) {
+    var event: Event by raw
+    override var cause: Cause? by raw
+
+    @JvmOverloads
+    constructor(
+        event: Event,
+        cause: Cause? = null,
+        raw: Raw = MapRaw()
+    ) : this(raw) {
+        raw[FIELD_TYPE] = CAUSE_TYPE_EVENT
+
+        this.event = event
+        this.cause = cause
+    }
+}

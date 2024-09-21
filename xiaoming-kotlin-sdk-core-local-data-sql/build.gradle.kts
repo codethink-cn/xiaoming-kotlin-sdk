@@ -33,8 +33,12 @@ dependencies {
     val kotlinLoggingVersion: String by rootProject
     implementation("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
 
-    val ktormVersion: String by rootProject
-    implementation("org.ktorm:ktorm-core:$ktormVersion")
+    val exposedVersion: String by rootProject
+    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-kotlin-datetime:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-json:$exposedVersion")
 
     val hikariCpVersion: String by rootProject
     implementation("com.zaxxer:HikariCP:$hikariCpVersion")

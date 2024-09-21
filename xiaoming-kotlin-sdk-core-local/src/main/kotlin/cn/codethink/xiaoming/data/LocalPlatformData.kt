@@ -16,16 +16,10 @@
 
 package cn.codethink.xiaoming.data
 
-import cn.codethink.xiaoming.permission.data.PermissionProfileData
-import cn.codethink.xiaoming.permission.data.PermissionRecordData
+import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 
-/**
- * Operations to access and modify the data of local platform.
- *
- * @author Chuanwise
- */
-interface LocalPlatformData {
-    val type: String
-    val permissionProfileData: PermissionProfileData
-    val permissionRecordData: PermissionRecordData
+class LocalPlatformData(
+    val internalApi: LocalPlatformInternalApi,
+    val dataApi: LocalPlatformDataApi
+) : LocalPlatformDataApi by dataApi {
 }

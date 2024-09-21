@@ -23,6 +23,7 @@ import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.RawValue
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
+import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
  * Represent a subject can register listeners, send packets, and so on.
@@ -48,6 +49,7 @@ abstract class Subject(
  *
  * @author Chuanwise
  */
+@JsonTypeName(SUBJECT_TYPE_PROTOCOL)
 class SdkSubject(
     raw: Raw
 ) : Subject(raw) {
@@ -130,11 +132,15 @@ class ModuleSubject(
  */
 val XiaomingProtocolSubject: ProtocolSubject = ProtocolSubject(XiaomingSdkSubject.protocol)
 
+const val SUBJECT_TYPE_PLUGIN = "plugin"
+const val PLUGIN_SUBJECT_FIELD_ID = "id"
+
 /**
  * Represent a subject that is a plugin. Type is [SUBJECT_TYPE_PLUGIN].
  *
  * @author Chuanwise
  */
+@JsonTypeName(SUBJECT_TYPE_PLUGIN)
 class PluginSubject(
     raw: Raw
 ) : Subject(raw) {
@@ -145,7 +151,7 @@ class PluginSubject(
         id: SegmentId,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[TYPE_FIELD] = SUBJECT_TYPE_PLUGIN
+        raw[FIELD_TYPE] = SUBJECT_TYPE_PLUGIN
         raw[PLUGIN_SUBJECT_FIELD_ID] = id
     }
 }
@@ -156,6 +162,7 @@ class PluginSubject(
  *
  * @author Chuanwise
  */
+@JsonTypeName(SUBJECT_MATCHER_TYPE_DEFAULT_PLUGIN)
 class DefaultPluginSubjectMatcher(
     raw: Raw
 ) : AbstractData(raw), Matcher<Subject> {

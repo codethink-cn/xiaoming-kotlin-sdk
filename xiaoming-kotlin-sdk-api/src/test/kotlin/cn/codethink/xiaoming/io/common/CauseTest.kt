@@ -41,7 +41,7 @@ class CauseTest {
               "type": "text",
               "text": "Reason message here."
             }`
-        """.trimIndent(), textCause
+            """.trimIndent(), textCause
         )
 
         mapper.assertJsonContentEquals(
@@ -50,7 +50,7 @@ class CauseTest {
               "type": "packet_id",
               "id": "packet-id"
             }
-        """.trimIndent(), packetCause
+            """.trimIndent(), packetCause
         )
     }
 }

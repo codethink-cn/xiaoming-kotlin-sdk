@@ -17,13 +17,13 @@
 package cn.codethink.xiaoming.io.data
 
 import cn.codethink.xiaoming.common.AbstractData
-import cn.codethink.xiaoming.common.MYSQL_DATABASE_DATA_SOURCE_FIELD_PROPERTIES
-import cn.codethink.xiaoming.common.SQL_DATA_SOURCE_FIELD_TYPE
-import cn.codethink.xiaoming.common.SQL_DATA_SOURCE_TYPE_HIKARI_CP
+import com.fasterxml.jackson.annotation.JsonTypeName
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import java.util.Properties
 import javax.sql.DataSource
+
+const val SQL_DATA_SOURCE_TYPE_HIKARI_CP = "hikari_cp"
 
 /**
  * SQL data source that use HikariCP to manage connections.
@@ -31,20 +31,20 @@ import javax.sql.DataSource
  * @author Chuanwise
  * @see SqlDataSource
  */
+@JsonTypeName(SQL_DATA_SOURCE_TYPE_HIKARI_CP)
 class HikariCpSqlDataSource(
     raw: Raw
 ) : AbstractData(raw), SqlDataSource {
-    override val type: String by raw
-
-    val properties: Properties by raw
+    override var type: String by raw
+    var properties: Properties by raw
 
     @JvmOverloads
     constructor(
         properties: Properties,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[SQL_DATA_SOURCE_FIELD_TYPE] = SQL_DATA_SOURCE_TYPE_HIKARI_CP
-        raw[MYSQL_DATABASE_DATA_SOURCE_FIELD_PROPERTIES] = properties
+        this.type = SQL_DATA_SOURCE_TYPE_HIKARI_CP
+        this.properties = properties
     }
 
     override fun toDataSource(): DataSource = HikariDataSource(

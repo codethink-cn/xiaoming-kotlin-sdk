@@ -14,21 +14,22 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.common.data
+package cn.codethink.xiaoming.data
 
-import cn.codethink.xiaoming.common.Subject
-import cn.codethink.xiaoming.permission.data.sql.SqlLocalPlatformData
+import cn.codethink.xiaoming.common.Id
+import cn.codethink.xiaoming.common.NumericalId
+import cn.codethink.xiaoming.common.toId
+import org.jetbrains.exposed.dao.id.EntityID
 
 /**
- * Service for platform using [SqlLocalPlatformData] to save and load service.
+ * Package exposed [EntityID] as [Id].
  *
  * @author Chuanwise
- * @see SqlLocalPlatformData
  */
-interface SubjectService<T : Subject> {
-    fun getSubjectId(subject: T): Long?
-    fun getOrCreateSubjectId(subject: T): Long
-}
+@JvmInline
+value class NumericalEntityId<T : Number>(
+    private val value: T
+) : Id
 
-fun <T : Subject> SubjectService<T>.getSubjectIdOrFail(subject: T): Long = getSubjectId(subject)
-    ?: throw NoSuchElementException("No subject id found for $subject.")
+
+fun EntityID<Int>.toId(): NumericalId = value.toId()

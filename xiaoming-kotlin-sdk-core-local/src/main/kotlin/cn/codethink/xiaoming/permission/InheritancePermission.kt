@@ -17,6 +17,9 @@
 package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.common.AbstractData
+import cn.codethink.xiaoming.common.FIELD_TYPE
+import cn.codethink.xiaoming.common.FIELD_VERSION
+import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.common.Tristate
 import cn.codethink.xiaoming.common.tristateOf
 import cn.codethink.xiaoming.io.data.MapRaw
@@ -24,11 +27,11 @@ import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.RawValue
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
+import com.fasterxml.jackson.annotation.JsonTypeName
 import java.util.Stack
 import kotlin.concurrent.getOrSet
 
 const val PERMISSION_COMPARATOR_TYPE_INHERITANCE = "inheritance"
-const val INHERITANCE_PERMISSION_COMPARATOR_FIELD_VERSION = "version"
 
 const val INHERITANCE_PERMISSION_COMPARATOR_FIELD_PROFILE_ID = "profile_id"
 const val INHERITANCE_PERMISSION_COMPARATOR_FIELD_CONTEXT = "context"
@@ -44,12 +47,10 @@ const val INHERITANCE_PERMISSION_COMPARATOR_FIELD_RESULT_MAPPING = "result_mappi
  * @author Chuanwise
  * @see InheritancePermissionComparatorV1
  */
+@JsonTypeName(PERMISSION_COMPARATOR_TYPE_INHERITANCE)
 interface InheritancePermissionComparator : PermissionComparator {
-    override val type: String
-        get() = PERMISSION_COMPARATOR_TYPE_INHERITANCE
-
     val version: String
-    val profileId: Long
+    val profileId: Id
     val context: Map<String, Any?>
     val resultMapping: Map<Boolean?, Boolean?>
 }
@@ -64,10 +65,11 @@ class InheritancePermissionComparatorV1(
         private val THREAD_LOCAL_INHERITANCE_STACK = ThreadLocal<Stack<Any>>()
     }
 
+    override val type: String by raw
     override val version: String by raw
 
     @RawValue(INHERITANCE_PERMISSION_COMPARATOR_FIELD_PROFILE_ID)
-    override val profileId: Long by raw
+    override val profileId: Id by raw
 
     override val context: Map<String, Any?> by raw
 
@@ -76,13 +78,14 @@ class InheritancePermissionComparatorV1(
 
     @JvmOverloads
     constructor(
-        profileId: Long,
+        profileId: Id,
         context: Map<String, Any?> = emptyMap(),
         resultMapping: Map<Boolean?, Boolean?> = emptyMap(),
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[PERMISSION_COMPARATOR_FIELD_TYPE] = PERMISSION_COMPARATOR_TYPE_INHERITANCE
-        raw[INHERITANCE_PERMISSION_COMPARATOR_FIELD_VERSION] = INHERITANCE_PERMISSION_COMPARATOR_VERSION_1
+        raw[FIELD_TYPE] = PERMISSION_COMPARATOR_TYPE_INHERITANCE
+        raw[FIELD_VERSION] = INHERITANCE_PERMISSION_COMPARATOR_VERSION_1
+
         raw[INHERITANCE_PERMISSION_COMPARATOR_FIELD_PROFILE_ID] = profileId
         raw[INHERITANCE_PERMISSION_COMPARATOR_FIELD_CONTEXT] = context
         raw[INHERITANCE_PERMISSION_COMPARATOR_FIELD_RESULT_MAPPING] = resultMapping
@@ -101,7 +104,7 @@ class InheritancePermissionComparatorV1(
         }
 
         try {
-            val profile = context.internalApi.data.permissionProfileData.getProfileById(profileId)
+            val profile = context.internalApi.data.getPermissionProfile(profileId)
             if (profile == null) {
                 context.internalApi.logger.warn {
                     "Cannot find profile by id $profileId when matching inheritance permission."
@@ -150,7 +153,7 @@ object InheritancePermissionSettingChecker : PermissionSettingChecker {
 
         data class InheritanceTree(
             val parent: InheritanceTree?,
-            val profileId: Long
+            val profileId: Id
         )
 
         val treeNodes = ArrayDeque<InheritanceTree>()
@@ -162,7 +165,7 @@ object InheritancePermissionSettingChecker : PermissionSettingChecker {
             val profileId = treeNode.profileId
 
             // Add its sons and check.
-            context.internalApi.data.permissionRecordData.getRecordsByProfileId(profileId)
+            context.internalApi.data.getPermissionRecordsByPermissionProfileId(profileId)
                 .filter { it.comparator is InheritancePermissionComparator }
                 .forEach {
                     val inheritedProfileId = (it.comparator as InheritancePermissionComparator).profileId

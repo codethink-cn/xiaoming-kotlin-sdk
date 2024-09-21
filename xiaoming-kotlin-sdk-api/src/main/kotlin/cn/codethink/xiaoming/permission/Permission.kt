@@ -49,6 +49,7 @@ import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.RawValue
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
+import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
  * Describe a permission.
@@ -174,6 +175,7 @@ class Permission(
  *
  * @author Chuanwise
  */
+@JsonTypeName(PERMISSION_MATCHER_TYPE_LITERAL)
 class LiteralPermissionMatcher(
     raw: Raw
 ) : AbstractData(raw), LiteralMatcher<Permission> {
@@ -195,6 +197,7 @@ class LiteralPermissionMatcher(
 
 fun Permission.toLiteralMatcher(): LiteralPermissionMatcher = LiteralPermissionMatcher(this)
 
+@JsonTypeName(PERMISSION_MATCHER_TYPE_DEFAULT)
 class DefaultPermissionMatcher(
     raw: Raw
 ) : AbstractData(raw), Matcher<Permission> {

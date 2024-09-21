@@ -17,6 +17,8 @@
 package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.common.AbstractData
+import cn.codethink.xiaoming.common.FIELD_TYPE
+import cn.codethink.xiaoming.common.FIELD_VERSION
 import cn.codethink.xiaoming.common.Matcher
 import cn.codethink.xiaoming.common.SegmentId
 import cn.codethink.xiaoming.common.Subject
@@ -27,8 +29,8 @@ import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.RawValue
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
+import com.fasterxml.jackson.annotation.JsonTypeName
 
-const val DEFAULT_PERMISSION_COMPARATOR_FIELD_VERSION = "version"
 const val PERMISSION_COMPARATOR_TYPE_DEFAULT = "default"
 
 /**
@@ -41,6 +43,7 @@ const val PERMISSION_COMPARATOR_TYPE_DEFAULT = "default"
  * @author Chuanwise
  * @see DefaultPermissionComparatorV1
  */
+@JsonTypeName(PERMISSION_COMPARATOR_TYPE_DEFAULT)
 interface DefaultPermissionComparator : PermissionComparator {
     override val type: String
         get() = PERMISSION_COMPARATOR_TYPE_DEFAULT
@@ -56,6 +59,7 @@ const val DEFAULT_PERMISSION_COMPARATOR_FIELD_VALUE = "value"
 const val PERMISSION_COMPARATOR_FIELD_SUBJECT_MATCHER = "subject_matcher"
 const val PERMISSION_COMPARATOR_FIELD_NODE_MATCHER = "node_matcher"
 
+@JsonTypeName(DEFAULT_PERMISSION_COMPARATOR_VERSION_1)
 class DefaultPermissionComparatorV1(
     raw: Raw
 ) : AbstractData(raw), DefaultPermissionComparator {
@@ -75,8 +79,9 @@ class DefaultPermissionComparatorV1(
         value: Boolean?,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[PERMISSION_COMPARATOR_FIELD_TYPE] = PERMISSION_COMPARATOR_TYPE_DEFAULT
-        raw[DEFAULT_PERMISSION_COMPARATOR_FIELD_VERSION] = DEFAULT_PERMISSION_COMPARATOR_VERSION_1
+        raw[FIELD_TYPE] = PERMISSION_COMPARATOR_TYPE_DEFAULT
+        raw[FIELD_VERSION] = DEFAULT_PERMISSION_COMPARATOR_VERSION_1
+
         raw[PERMISSION_COMPARATOR_FIELD_SUBJECT_MATCHER] = subjectMatcher
         raw[PERMISSION_COMPARATOR_FIELD_NODE_MATCHER] = nodeMatcher
         raw[DEFAULT_PERMISSION_COMPARATOR_FIELD_VALUE] = value

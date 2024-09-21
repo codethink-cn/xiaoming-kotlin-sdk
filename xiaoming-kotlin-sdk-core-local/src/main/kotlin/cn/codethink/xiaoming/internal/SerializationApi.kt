@@ -19,9 +19,12 @@ package cn.codethink.xiaoming.internal
 import cn.codethink.xiaoming.common.DefaultMapRegistrations
 import cn.codethink.xiaoming.common.DefaultRegistration
 import cn.codethink.xiaoming.common.Subject
-import cn.codethink.xiaoming.io.LocalPlatformModule
+import cn.codethink.xiaoming.common.XiaomingSdkSubject
+import cn.codethink.xiaoming.io.data.DeserializerModule
 import cn.codethink.xiaoming.io.data.PlatformAnnotationIntrospector
-import cn.codethink.xiaoming.io.data.PlatformModule
+import cn.codethink.xiaoming.io.data.XiaomingJacksonModuleVersion
+import cn.codethink.xiaoming.io.data.registerPlatformDeserializers
+import cn.codethink.xiaoming.io.registerLocalPlatformDeserializers
 import com.fasterxml.jackson.databind.AnnotationIntrospector
 import com.fasterxml.jackson.databind.Module
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -35,14 +38,24 @@ import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector
 class SerializationApi(
     val internalApi: LocalPlatformInternalApi
 ) {
+    private val deserializerModule = DeserializerModule(
+        name = "DeserializerModule-${internalApi.internalConfiguration.id}",
+        version = XiaomingJacksonModuleVersion,
+        logger = internalApi.logger
+    )
+    val polymorphicDeserializers = deserializerModule.deserializers
+
     private val jacksonModules = DefaultMapRegistrations<Class<out Module>, Module>()
 
-    val platformModule = PlatformModule()
-    val localPlatformModule = LocalPlatformModule()
+    val internalObjectMapper: ObjectMapper =
+        internalApi.internalConfiguration.internalObjectMapper.apply { initialize() }
+    val externalObjectMapper: ObjectMapper =
+        internalApi.internalConfiguration.externalObjectMapper.apply { initialize() }
 
-    val dataObjectMapper: ObjectMapper = internalApi.internalConfiguration.dataObjectMapper.apply { initialize() }
-    val configurationObjectMapper: ObjectMapper =
-        internalApi.internalConfiguration.configurationObjectMapper.apply { initialize() }
+    init {
+        polymorphicDeserializers.registerPlatformDeserializers(XiaomingSdkSubject)
+        polymorphicDeserializers.registerLocalPlatformDeserializers(XiaomingSdkSubject)
+    }
 
     private fun ObjectMapper.initialize() {
         setAnnotationIntrospector(
@@ -53,17 +66,16 @@ class SerializationApi(
         )
 
         findAndRegisterModules()
-        registerModule(platformModule)
-        registerModule(localPlatformModule)
+        registerModule(deserializerModule)
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <T : Module> getJacksonModuleByType(type: Class<T>): T? = jacksonModules.get(type) as T?
+    private fun <T : Module> getJacksonModuleByType(type: Class<T>): T? = jacksonModules[type] as T?
     operator fun <T : Module> get(type: Class<T>) = getJacksonModuleByType(type)
 
     fun registerJacksonModule(module: Module, subject: Subject) {
         jacksonModules.register(module.javaClass, DefaultRegistration(module, subject))
-        dataObjectMapper.registerModule(module)
-        configurationObjectMapper.registerModule(module)
+        internalObjectMapper.registerModule(module)
+        externalObjectMapper.registerModule(module)
     }
 }

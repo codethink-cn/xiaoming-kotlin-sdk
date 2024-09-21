@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.permission.data
 
-import cn.codethink.xiaoming.common.Matcher
+import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.common.Subject
 
 /**
@@ -26,17 +26,6 @@ import cn.codethink.xiaoming.common.Subject
  * @author Chuanwise
  */
 interface PermissionProfile {
-    val id: Long
+    val id: Id
     val subject: Subject
-}
-
-interface PermissionProfileData {
-    fun getProfiles(): List<PermissionProfile>
-
-    fun getProfileById(id: Long): PermissionProfile?
-    fun getIdMatchedProfileIds(matcher: Matcher<Long>): List<Long>
-    fun getIdMatchedProfiles(matcher: Matcher<Long>): List<PermissionProfile>
-
-    fun getOrInsertProfileId(subject: Subject): Long
-    fun getOrInsertProfile(subject: Subject): PermissionProfile
 }

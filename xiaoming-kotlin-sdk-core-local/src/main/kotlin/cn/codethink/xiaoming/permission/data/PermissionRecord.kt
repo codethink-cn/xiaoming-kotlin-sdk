@@ -29,22 +29,3 @@ interface PermissionRecord {
     val comparator: PermissionComparator
     val contextMatchers: Map<String, Matcher<Any?>>
 }
-
-interface PermissionRecordData {
-    fun getRecordsByProfileId(profileId: Long, reverse: Boolean = true): List<PermissionRecord>
-    fun getRecordsByProfile(
-        profile: PermissionProfile, reverse: Boolean = true
-    ): List<PermissionRecord> = getRecordsByProfileId(profile.id, reverse)
-
-    fun update(record: PermissionRecord)
-
-    fun delete(record: PermissionRecord)
-
-    fun delete(records: List<PermissionRecord>)
-
-    fun insert(
-        profile: PermissionProfile,
-        comparator: PermissionComparator,
-        contextMatchers: Map<String, Matcher<Any?>> = emptyMap()
-    ): Any
-}

@@ -20,7 +20,9 @@ import cn.codethink.xiaoming.common.PluginSubject
 import cn.codethink.xiaoming.common.TextCause
 import cn.codethink.xiaoming.common.XiaomingSdkSubject
 import cn.codethink.xiaoming.common.segmentIdOf
+import cn.codethink.xiaoming.common.toId
 import cn.codethink.xiaoming.common.toLiteralMatcher
+import cn.codethink.xiaoming.data.insertAndGetPermissionProfile
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import cn.codethink.xiaoming.internal.configuration.LocalPlatformInternalConfiguration
 import cn.codethink.xiaoming.io.data.PlatformAnnotationIntrospector
@@ -47,7 +49,8 @@ class LocalPermissionServiceTest {
         }
 
         val internalConfiguration = LocalPlatformInternalConfiguration(
-            workingDirectoryFile = File("platform")
+            workingDirectoryFile = File("platform"),
+            id = "Test".toId()
         )
         val api = LocalPlatformInternalApi(internalConfiguration, logger).apply {
             start(TextCause("Run test programs"), XiaomingSdkSubject)
@@ -56,7 +59,7 @@ class LocalPermissionServiceTest {
         val subject = PluginSubject(segmentIdOf("cn.codethink.xiaoming.demo"))
         val subjectMatcher = subject.toLiteralMatcher()
 
-        val profile = api.data.permissionProfileData.getOrInsertProfile(subject)
+        val profile = api.data.insertAndGetPermissionProfile(subject)
     }
 
     @Test
@@ -120,15 +123,15 @@ class LocalPermissionServiceTest {
     fun testInheritancePermission() {
         val subjectA = PluginSubject(segmentIdOf("cn.codethink.xiaoming.demo.a"))
         val subjectAMatcher = subjectA.toLiteralMatcher()
-        val subjectAProfile = api.data.permissionProfileData.getOrInsertProfile(subjectA)
+        val subjectAProfile = api.data.insertAndGetPermissionProfile(subjectA)
 
         val subjectB = PluginSubject(segmentIdOf("cn.codethink.xiaoming.demo.b"))
         val subjectBMatcher = subjectB.toLiteralMatcher()
-        val subjectBProfile = api.data.permissionProfileData.getOrInsertProfile(subjectB)
+        val subjectBProfile = api.data.insertAndGetPermissionProfile(subjectB)
 
         val subjectC = PluginSubject(segmentIdOf("cn.codethink.xiaoming.demo.c"))
         val subjectCMatcher = subjectB.toLiteralMatcher()
-        val subjectCProfile = api.data.permissionProfileData.getOrInsertProfile(subjectB)
+        val subjectCProfile = api.data.insertAndGetPermissionProfile(subjectB)
 
         val permissionASegmentId = segmentIdOf("a.b")
         val permissionA = Permission(

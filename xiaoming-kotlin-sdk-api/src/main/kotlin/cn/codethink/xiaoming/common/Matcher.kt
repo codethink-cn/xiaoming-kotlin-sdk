@@ -17,6 +17,7 @@
 package cn.codethink.xiaoming.common
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
  * Serializable tools to match objects.
@@ -61,6 +62,7 @@ interface LiteralMatcher<T> : Matcher<T> {
     override fun isMatched(target: T): Boolean = value == target
 }
 
+@JsonTypeName(MATCHER_TYPE_ANY)
 @Suppress("UNCHECKED_CAST")
 object AnyMatcher : Matcher<Any?> {
     override val type: String = MATCHER_TYPE_ANY
@@ -73,6 +75,7 @@ object AnyMatcher : Matcher<Any?> {
 @Suppress("UNCHECKED_CAST")
 inline fun <reified T : Any?> AnyMatcher(): Matcher<T> = AnyMatcher as Matcher<T>
 
+@JsonTypeName(STRING_MATCHER_TYPE_REGEX)
 data class RegexStringMatcher(
     val regex: Regex
 ) : Matcher<String> {
@@ -97,6 +100,7 @@ data class RegexStringMatcher(
     }
 }
 
+@JsonTypeName(STRING_MATCHER_TYPE_LITERAL)
 data class LiteralStringMatcher(
     override val value: String
 ) : LiteralMatcher<String> {

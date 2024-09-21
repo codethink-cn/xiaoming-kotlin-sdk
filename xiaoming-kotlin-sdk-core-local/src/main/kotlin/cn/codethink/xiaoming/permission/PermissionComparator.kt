@@ -18,15 +18,16 @@ package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.Data
+import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.common.Subject
-import cn.codethink.xiaoming.common.TYPE_FIELD
 import cn.codethink.xiaoming.common.Tristate
+import cn.codethink.xiaoming.data.getPermissionProfileOrFail
 import cn.codethink.xiaoming.permission.data.PermissionProfile
 import cn.codethink.xiaoming.permission.data.PermissionRecord
 
 class PermissionComparingContext(
     val permissionServiceApi: LocalPermissionServiceApi,
-    val profileId: Long,
+    val profileId: Id,
     val permission: Permission,
     val record: PermissionRecord,
     val context: Map<String, Any?> = emptyMap(),
@@ -35,7 +36,7 @@ class PermissionComparingContext(
 ) {
     val internalApi by permissionServiceApi::internalApi
     val profile: PermissionProfile by lazy {
-        internalApi.data.permissionProfileData.getProfileById(profileId)!!
+        internalApi.data.getPermissionProfileOrFail(profileId)
     }
 }
 
@@ -49,5 +50,3 @@ interface PermissionComparator : Data {
     val type: String
     fun compare(context: PermissionComparingContext): Tristate?
 }
-
-const val PERMISSION_COMPARATOR_FIELD_TYPE = TYPE_FIELD

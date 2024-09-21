@@ -17,6 +17,7 @@
 package cn.codethink.xiaoming.common
 
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonTypeName
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
@@ -138,6 +139,7 @@ interface DefaultStringListMatcherConstructingCallbackSupport : Matcher<String> 
  *
  * @author Chuanwise
  */
+@JsonTypeName(STRING_MATCHER_TYPE_WILDCARD)
 class WildcardStringMatcher private constructor(
     val majority: Boolean,
     val optional: Boolean,
@@ -354,6 +356,7 @@ val MinorityRequiredOnceWildcardStringMatcher: WildcardStringMatcher
  * @see AnyMatcher
  * @see WildcardStringMatcher
  */
+@JsonTypeName(SEGMENT_ID_MATCHER_TYPE_DEFAULT)
 data class DefaultSegmentIdMatcher(
     val matchers: List<Matcher<String>>
 ) : Matcher<SegmentId> {
@@ -621,6 +624,7 @@ fun compileSegmentIdMatcher(string: String): Matcher<SegmentId> {
     return DefaultSegmentIdMatcher(matchers)
 }
 
+@JsonTypeName(SEGMENT_ID_MATCHER_TYPE_LITERAL)
 data class LiteralSegmentIdMatcher @JsonCreator constructor(
     val id: SegmentId
 ) : Matcher<SegmentId> {

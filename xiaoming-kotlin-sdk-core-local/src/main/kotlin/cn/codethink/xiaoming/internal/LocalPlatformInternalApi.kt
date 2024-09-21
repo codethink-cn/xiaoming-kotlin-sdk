@@ -77,11 +77,9 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
         get() = lock.read { nullablePlatformConfigurationNoLock!! }
         set(value) = lock.write { nullablePlatformConfigurationNoLock = value }
 
-    var data: LocalPlatformData
-        get() = platformConfiguration.data
-        set(value) {
-            platformConfiguration.data = value
-        }
+    private var dataNoLock: LocalPlatformData? = null
+    val data: LocalPlatformData
+        get() = lock.read { dataNoLock!! }
 
     val serializationApi = SerializationApi(this)
     val permissionServiceApi = LocalPermissionServiceApi(this)
@@ -130,8 +128,10 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
             }
 
             // Load platform configuration.
-            platformConfiguration = serializationApi.configurationObjectMapper.readValue(configurationFile)
+            platformConfiguration = serializationApi.externalObjectMapper.readValue(configurationFile)
         }
+
+        platformConfiguration.data.toDataApi(this).also { dataNoLock = LocalPlatformData(this, it) }
 
         // Notice modules.
         val moduleContext = ModuleContext(this, XiaomingSdkSubject, startingEventCause)

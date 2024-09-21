@@ -16,26 +16,18 @@
 
 package cn.codethink.xiaoming.internal.module
 
-import cn.codethink.xiaoming.common.LOCAL_PLATFORM_DATA_TYPE_SQL
-import cn.codethink.xiaoming.common.SqlLocalDataModuleSubject
-import cn.codethink.xiaoming.io.SqlLocalPlatformDataModule
-import cn.codethink.xiaoming.permission.data.sql.SqlLocalPlatformData
+import cn.codethink.xiaoming.common.ModuleSubject
+import cn.codethink.xiaoming.common.XiaomingSdkSubject
+import cn.codethink.xiaoming.io.registerLocalDataSqlDeserializers
 
 class SqlLocalDataModule : Module {
-    override val subject = SqlLocalDataModuleSubject
-    val jacksonModule = SqlLocalPlatformDataModule()
+    override val subject = ModuleSubject(
+        group = XiaomingSdkSubject.group,
+        name = "xiaoming-kotlin-sdk-core-local-data-sql",
+        version = XiaomingSdkSubject.version
+    )
 
     override fun onPlatformStart(context: ModuleContext) {
-        context.internalApi.serializationApi.registerJacksonModule(jacksonModule, subject)
-        context.internalApi.serializationApi.localPlatformModule.deserializers.platformData.registerDeserializer(
-            LOCAL_PLATFORM_DATA_TYPE_SQL, jacksonModule.deserializers.sqlLocalPlatformData, subject
-        )
-    }
-
-    override fun onPlatformStarted(context: ModuleContext) {
-        val data = context.internalApi.platformConfiguration.data
-        if (data is SqlLocalPlatformData) {
-            data.objectMapper = context.internalApi.serializationApi.dataObjectMapper
-        }
+        context.internalApi.serializationApi.polymorphicDeserializers.registerLocalDataSqlDeserializers(subject)
     }
 }

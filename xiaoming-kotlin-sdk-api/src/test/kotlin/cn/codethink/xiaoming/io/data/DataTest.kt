@@ -17,6 +17,7 @@
 package cn.codethink.xiaoming.io.data
 
 import cn.codethink.xiaoming.common.PluginSubject
+import cn.codethink.xiaoming.common.XiaomingSdkSubject
 import cn.codethink.xiaoming.common.assertJsonContentEquals
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -41,7 +42,9 @@ class DataTest {
     @Test
     fun testDeserializeData() {
         val mapper = jacksonObjectMapper().apply {
-            registerModule(PlatformModule())
+            registerModule(DeserializerModule().apply {
+                deserializers.registerPlatformDeserializers(XiaomingSdkSubject)
+            })
             configure(SerializationFeature.INDENT_OUTPUT, true)
         }
         val packet = mapper.readValue<Packet>(
@@ -59,7 +62,7 @@ class DataTest {
                 "birthday": "1893-12-26"
               }
             }
-        """.trimMargin()
+            """.trimMargin()
         ) as RequestPacket
 
         // Deserialized from string.

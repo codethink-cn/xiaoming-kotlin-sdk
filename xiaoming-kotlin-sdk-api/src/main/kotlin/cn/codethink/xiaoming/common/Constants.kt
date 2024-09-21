@@ -18,22 +18,12 @@
 
 package cn.codethink.xiaoming.common
 
-const val TYPE_FIELD = "type"
-
-const val PACKET_FIELD_ID = "id"
-const val PACKET_FIELD_TYPE = "type"
-const val PACKET_FIELD_TIME = "time"
-const val PACKET_FIELD_CAUSE = "cause"
+const val FIELD_TYPE = "type"
+const val FIELD_VERSION = "version"
 
 const val PACKET_TYPE_REQUEST = "request"
-const val REQUEST_PACKET_FIELD_ACTION = "action"
-const val REQUEST_PACKET_FIELD_SUBJECT = "subject"
 const val REQUEST_PACKET_FIELD_ARGUMENT = "argument"
-const val REQUEST_PACKET_FIELD_MODE = "mode"
-const val REQUEST_PACKET_FIELD_TIMEOUT = "timeout"
-const val RECEIPT_PACKET_FIELD_STATE = "state"
-const val RECEIPT_PACKET_FIELD_REQUEST = "request"
-const val RECEIPT_PACKET_FIELD_DATA = "data"
+
 const val REQUEST_MODE_SYNC = "sync"
 const val REQUEST_MODE_ASYNC = "async"
 const val REQUEST_MODE_ASYNC_RESULT = "async_result"
@@ -46,10 +36,7 @@ const val RECEIPT_STATE_RECEIVED = "received"
 const val RECEIPT_STATE_CANCELLED = "cancelled"
 const val RECEIPT_STATE_INTERRUPTED = "interrupted"
 
-const val SUBJECT_FIELD_TYPE = TYPE_FIELD
-
-const val SUBJECT_TYPE_PLUGIN = "plugin"
-const val PLUGIN_SUBJECT_FIELD_ID = "id"
+const val SUBJECT_FIELD_TYPE = FIELD_TYPE
 
 const val SUBJECT_TYPE_SDK = "sdk"
 const val SDK_SUBJECT_FIELD_VERSION = "version"
@@ -65,8 +52,8 @@ const val MODULE_SUBJECT_FIELD_NAME = "name"
 const val SUBJECT_TYPE_PROTOCOL = "protocol"
 const val PROTOCOL_SUBJECT_FIELD_VERSION = "version"
 
-const val CAUSE_FIELD_TYPE = TYPE_FIELD
 const val CAUSE_FIELD_CAUSE = "cause"
+
 const val CAUSE_TYPE_TEXT = "text"
 const val TEXT_CAUSE_FIELD_TEXT = "text"
 
@@ -75,8 +62,6 @@ const val ERROR_TEXT_CAUSE_FIELD_ERROR = "error"
 const val ERROR_TEXT_CAUSE_FIELD_MESSAGE = "message"
 const val ERROR_TEXT_CAUSE_FIELD_CONTEXT = "context"
 
-const val CAUSE_TYPE_EVENT = "event"
-const val EVENT_CAUSE_FIELD_EVENT = "event"
 
 const val CAUSE_TYPE_PACKET_DATA = "packet_data"
 const val CAUSE_TYPE_PACKET_ID = "packet_id"
@@ -114,7 +99,7 @@ const val PERMISSION_META_FIELD_DESCRIPTOR = "descriptor"
 const val PERMISSION_FIELD_DESCRIPTOR = "descriptor"
 const val PERMISSION_FIELD_ARGUMENTS = "arguments"
 
-const val MATCHER_FIELD_TYPE = TYPE_FIELD
+const val MATCHER_FIELD_TYPE = FIELD_TYPE
 const val MATCHER_TYPE_ANY = "any"
 
 const val SUBJECT_MATCHER_TYPE_DEFAULT_PLUGIN = "subject.plugin.default"
