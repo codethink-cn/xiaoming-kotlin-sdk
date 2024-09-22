@@ -25,8 +25,8 @@ import cn.codethink.xiaoming.common.Subject
  */
 interface Authorizer {
     fun authorize(token: String): Subject?
-    fun connected(subject: Subject) = Unit
-    fun disconnected(subject: Subject) = Unit
+    fun onConnected(subject: Subject) = Unit
+    fun onDisconnected(subject: Subject) = Unit
 }
 
 object EmptyAuthorizer : Authorizer {

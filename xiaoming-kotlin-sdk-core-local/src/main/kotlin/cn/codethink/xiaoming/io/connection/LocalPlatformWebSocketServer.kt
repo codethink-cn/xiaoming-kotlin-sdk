@@ -137,7 +137,7 @@ class LocalPlatformWebSocketServer(
         }
 
         internal suspend fun receiving() {
-            authorizer.connected(connectionSubject)
+            authorizer.onConnected(connectionSubject)
             val address = "${session.call.request.host()}:${session.call.request.port()}${session.call.request.path()}"
             try {
                 sendNoCheck("Timestamp: $currentTimeMillis")
@@ -157,7 +157,7 @@ class LocalPlatformWebSocketServer(
             } finally {
                 try {
                     lock.write { mutableConnections.remove(this) }
-                    authorizer.disconnected(connectionSubject)
+                    authorizer.onDisconnected(connectionSubject)
                 } finally {
                     onlineLock.write {
                         stateNoLock = OnlineState.DISCONNECTED
