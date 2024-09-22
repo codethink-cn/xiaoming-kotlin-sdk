@@ -1,0 +1,1 @@
+unsupportedPacketType: "Packet type ${packetType} is not supported by the protocol, acceptable types are: ${acceptablePacketType}."
