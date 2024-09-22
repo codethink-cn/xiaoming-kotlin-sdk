@@ -14,16 +14,21 @@
  * limitations under the License.
  */
 
-@file:JvmName("Errors")
+package cn.codethink.xiaoming.connection
 
-package cn.codethink.xiaoming.io
+/**
+ * Configuration of [ConnectionManager].
+ *
+ * @author Chuanwise
+ */
+interface ConnectionManagerConfiguration {
+    val version: String
 
-const val ERROR_ADAPTER_NOT_FOUND = "adapter_not_found"
+    /**
+     * Whether to keep connections when the connection manager is reloaded.
+     */
+    val keepConnections: Boolean
 
-const val ERROR_UNSUPPORTED_PACKET_TYPE = "unsupported_packet_type"
-
-const val ERROR_UNSUPPORTED_REQUEST_MODE = "unsupported_request_mode"
-const val ERROR_UNSUPPORTED_REQUEST_ACTION = "unsupported_request_action"
-
-const val ERROR_INTERNAL_ACTION_HANDLER_ERROR = "internal_action_handler_error"
-const val ERROR_ACTION_HANDLER_TIMEOUT = "action_handler_timeout"
+    val servers: MutableMap<String, ServerConfiguration>
+    val clients: MutableMap<String, ConnectionConfiguration>
+}

@@ -14,16 +14,21 @@
  * limitations under the License.
  */
 
-@file:JvmName("Errors")
+package cn.codethink.xiaoming.connection
 
-package cn.codethink.xiaoming.io
+import com.fasterxml.jackson.annotation.JsonTypeName
 
-const val ERROR_ADAPTER_NOT_FOUND = "adapter_not_found"
+const val CONNECTION_MANAGER_CONFIGURATION_VERSION_1 = "1"
 
-const val ERROR_UNSUPPORTED_PACKET_TYPE = "unsupported_packet_type"
-
-const val ERROR_UNSUPPORTED_REQUEST_MODE = "unsupported_request_mode"
-const val ERROR_UNSUPPORTED_REQUEST_ACTION = "unsupported_request_action"
-
-const val ERROR_INTERNAL_ACTION_HANDLER_ERROR = "internal_action_handler_error"
-const val ERROR_ACTION_HANDLER_TIMEOUT = "action_handler_timeout"
+/**
+ * @author Chuanwise
+ * @see ConnectionManagerConfiguration
+ */
+@JsonTypeName(CONNECTION_MANAGER_CONFIGURATION_VERSION_1)
+class ConnectionManagerConfigurationV1(
+    override val keepConnections: Boolean,
+    override val servers: MutableMap<String, ServerConfiguration>,
+    override val clients: MutableMap<String, ConnectionConfiguration>
+) : ConnectionManagerConfiguration {
+    override val version: String = CONNECTION_MANAGER_CONFIGURATION_VERSION_1
+}

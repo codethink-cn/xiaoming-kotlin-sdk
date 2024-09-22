@@ -33,3 +33,6 @@ fun File.ensureExistedDirectory(
         throw IllegalStateException(block())
     }
 }
+
+const val LANGUAGE_RESOURCE_DIRECTORY_PATH = "xiaoming/languages"
+const val DEFAULT_LOCALE_LANGUAGE_FILE_PATH = "$LANGUAGE_RESOURCE_DIRECTORY_PATH/en_US.yml"

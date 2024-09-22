@@ -36,9 +36,9 @@ import cn.codethink.xiaoming.common.buildUnsupportedRequestActionArguments
 import cn.codethink.xiaoming.common.buildUnsupportedRequestModeArguments
 import cn.codethink.xiaoming.common.currentTimeMillis
 import cn.codethink.xiaoming.common.currentTimeSeconds
-import cn.codethink.xiaoming.io.ACTION_HANDLER_TIMEOUT
-import cn.codethink.xiaoming.io.INTERNAL_ACTION_HANDLER_ERROR
-import cn.codethink.xiaoming.io.UNSUPPORTED_REQUEST_MODE
+import cn.codethink.xiaoming.io.ERROR_ACTION_HANDLER_TIMEOUT
+import cn.codethink.xiaoming.io.ERROR_INTERNAL_ACTION_HANDLER_ERROR
+import cn.codethink.xiaoming.io.ERROR_UNSUPPORTED_REQUEST_MODE
 import cn.codethink.xiaoming.io.action.Action
 import cn.codethink.xiaoming.io.data.ReceiptPacket
 import cn.codethink.xiaoming.io.data.RequestPacket
@@ -150,7 +150,7 @@ class RequestPacketHandler : PacketHandler {
                     state = RECEIPT_STATE_FAILED,
                     request = packet.id,
                     cause = ErrorMessageCause(
-                        error = UNSUPPORTED_REQUEST_MODE,
+                        error = ERROR_UNSUPPORTED_REQUEST_MODE,
                         message = message,
                         context = arguments
                     )
@@ -182,7 +182,7 @@ class RequestPacketHandler : PacketHandler {
                     state = RECEIPT_STATE_FAILED,
                     request = packet.id,
                     cause = ErrorMessageCause(
-                        error = UNSUPPORTED_REQUEST_MODE,
+                        error = ERROR_UNSUPPORTED_REQUEST_MODE,
                         message = message,
                         context = arguments
                     )
@@ -255,7 +255,7 @@ class RequestPacketHandler : PacketHandler {
             receipt.apply {
                 state = RECEIPT_STATE_INTERRUPTED
                 data = ErrorMessageCause(
-                    error = ACTION_HANDLER_TIMEOUT,
+                    error = ERROR_ACTION_HANDLER_TIMEOUT,
                     message = message,
                     context = arguments
                 )
@@ -277,7 +277,7 @@ class RequestPacketHandler : PacketHandler {
             receipt.apply {
                 state = RECEIPT_STATE_FAILED
                 data = ErrorMessageCause(
-                    error = INTERNAL_ACTION_HANDLER_ERROR,
+                    error = ERROR_INTERNAL_ACTION_HANDLER_ERROR,
                     message = message,
                     context = emptyMap()
                 )

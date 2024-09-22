@@ -30,7 +30,12 @@ class LanguageConfiguration(
     val unsupportedRequestAction: Template by raw
     val internalActionHandlerError: Template by raw
     val actionHandlerTimeout: Template by raw
+    val adapterNotFound: Template by raw
 }
+
+fun buildAdapterNotFoundArguments(adapterType: String): Map<String, Any?> = mapOf(
+    "adapterType" to adapterType
+)
 
 fun buildUnsupportedPacketTypeArguments(
     packetType: String,

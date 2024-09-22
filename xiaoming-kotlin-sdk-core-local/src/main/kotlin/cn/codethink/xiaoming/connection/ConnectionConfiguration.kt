@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-@file:JvmName("Errors")
+package cn.codethink.xiaoming.connection
 
-package cn.codethink.xiaoming.io
+import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
+import cn.codethink.xiaoming.io.connection.Connection
 
-const val ERROR_ADAPTER_NOT_FOUND = "adapter_not_found"
-
-const val ERROR_UNSUPPORTED_PACKET_TYPE = "unsupported_packet_type"
-
-const val ERROR_UNSUPPORTED_REQUEST_MODE = "unsupported_request_mode"
-const val ERROR_UNSUPPORTED_REQUEST_ACTION = "unsupported_request_action"
-
-const val ERROR_INTERNAL_ACTION_HANDLER_ERROR = "internal_action_handler_error"
-const val ERROR_ACTION_HANDLER_TIMEOUT = "action_handler_timeout"
+/**
+ * Configuration to establish a [Connection].
+ *
+ * @author Chuanwise
+ */
+interface ConnectionConfiguration {
+    val type: String
+    val subject: Subject
+    fun toConnection(api: LocalPlatformInternalApi): Connection
+}

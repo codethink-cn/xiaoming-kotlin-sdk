@@ -14,16 +14,11 @@
  * limitations under the License.
  */
 
-@file:JvmName("Errors")
+package cn.codethink.xiaoming.connection
 
-package cn.codethink.xiaoming.io
+/**
+ * Manages connections between current platform and other software.
+ */
+class ConnectionManager {
 
-const val ERROR_ADAPTER_NOT_FOUND = "adapter_not_found"
-
-const val ERROR_UNSUPPORTED_PACKET_TYPE = "unsupported_packet_type"
-
-const val ERROR_UNSUPPORTED_REQUEST_MODE = "unsupported_request_mode"
-const val ERROR_UNSUPPORTED_REQUEST_ACTION = "unsupported_request_action"
-
-const val ERROR_INTERNAL_ACTION_HANDLER_ERROR = "internal_action_handler_error"
-const val ERROR_ACTION_HANDLER_TIMEOUT = "action_handler_timeout"
+}

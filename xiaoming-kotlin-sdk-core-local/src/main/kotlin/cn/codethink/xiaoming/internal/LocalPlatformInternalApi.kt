@@ -17,7 +17,11 @@
 package cn.codethink.xiaoming.internal
 
 import cn.codethink.xiaoming.common.Cause
+
+cimport cn.codethink.xiaoming.common.DEFAULT_LOCALE_LANGUAGE_FILE_PATH
 import cn.codethink.xiaoming.common.EventCause
+import cn.codethink.xiaoming.common.LANGUAGE_RESOURCE_DIRECTORY_PATH
+import cn.codethink.xiaoming.common.LanguageConfiguration
 import cn.codethink.xiaoming.common.PlatformSubject
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.TextCause
@@ -74,10 +78,15 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
     val state: LocalPlatformInternalState
         get() = lock.read { stateNoLock }
 
-    private var nullablePlatformConfigurationNoLock: LocalPlatformConfiguration? = null
+    private var platformConfigurationNoLock: LocalPlatformConfiguration? = null
     var platformConfiguration: LocalPlatformConfiguration
-        get() = lock.read { nullablePlatformConfigurationNoLock!! }
-        set(value) = lock.write { nullablePlatformConfigurationNoLock = value }
+        get() = lock.read { platformConfigurationNoLock!! }
+        set(value) = lock.write { platformConfigurationNoLock = value }
+
+    private var languageConfigurationNoLock: LanguageConfiguration? = null
+    var languageConfiguration: LanguageConfiguration
+        get() = lock.read { languageConfigurationNoLock!! }
+        set(value) = lock.write { languageConfigurationNoLock = value }
 
     private var dataNoLock: LocalPlatformData? = null
     val data: LocalPlatformData
@@ -128,6 +137,7 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
         if (internalConfiguration.platformConfiguration != null) {
             platformConfiguration = internalConfiguration.platformConfiguration
         } else {
+            // 1. Load platform configuration.
             val configurationsDirectoryFile = File(internalConfiguration.workingDirectoryFile, "configurations")
             configurationsDirectoryFile.ensureExistedDirectory()
 
@@ -137,8 +147,28 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
                 TODO("Copy the default configuration file.")
             }
 
-            // Load platform configuration.
             platformConfiguration = serializationApi.externalObjectMapper.readValue(configurationFile)
+
+            // 2. Load language file.
+            val languageFile = File(configurationsDirectoryFile, "language.yml")
+            if (languageFile.isFile) {
+                languageConfiguration = serializationApi.externalObjectMapper.readValue(languageFile)
+            } else {
+                val locale = internalConfiguration.locale
+                val specifiedLocalLanguageInputStream =
+                    javaClass.classLoader.getResourceAsStream("$LANGUAGE_RESOURCE_DIRECTORY_PATH/$locale.yml")
+                if (specifiedLocalLanguageInputStream == null) {
+                    logger.warn { "Cannot find language file for locale $locale, use default language (en_US) instead." }
+
+                    val defaultLanguageInputStream = javaClass.classLoader.getResourceAsStream(
+                        DEFAULT_LOCALE_LANGUAGE_FILE_PATH
+                    ) ?: throw NoSuchElementException("Cannot find default language file.")
+                    languageConfiguration = serializationApi.externalObjectMapper.readValue(defaultLanguageInputStream)
+                } else {
+                    languageConfiguration =
+                        serializationApi.externalObjectMapper.readValue(specifiedLocalLanguageInputStream)
+                }
+            }
         }
 
         // Load data API.

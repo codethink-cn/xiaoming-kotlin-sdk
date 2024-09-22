@@ -24,8 +24,6 @@ import cn.codethink.xiaoming.common.XiaomingSdkSubject
 import cn.codethink.xiaoming.common.currentTimeMillis
 import cn.codethink.xiaoming.common.segmentIdOf
 import cn.codethink.xiaoming.common.toId
-import cn.codethink.xiaoming.common.toLiteralMatcher
-import cn.codethink.xiaoming.data.insertAndGetPermissionProfile
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import cn.codethink.xiaoming.internal.configuration.LocalPlatformInternalConfiguration
 import cn.codethink.xiaoming.io.data.PlatformAnnotationIntrospector
@@ -97,22 +95,17 @@ class WebSocketClientTest {
         val api = LocalPlatformInternalApi(internalConfiguration, logger).apply {
             start(TextCause("Run test programs"), XiaomingSdkSubject)
         }
-
-        val subject = PluginSubject(segmentIdOf("cn.codethink.xiaoming.demo"))
-        val subjectMatcher = subject.toLiteralMatcher()
-
-        val profile = api.data.insertAndGetPermissionProfile(subject)
     }
 
     @Test
     fun testConnect(): Unit = runBlocking {
+        val demoPluginSubject = PluginSubject(segmentIdOf("cn.codethink.xiaoming.demo"))
         val supervisorJob = SupervisorJob()
-        val subject = XiaomingSdkSubject
 
         val server = LocalPlatformWebSocketServer(
             configuration = TestLocalPlatformWebSocketServerConfiguration(),
             internalApi = api,
-            subject = subject,
+            subject = api.subject,
             authorizer = TestAuthorizer(),
             parentJob = supervisorJob
         )
@@ -122,7 +115,7 @@ class WebSocketClientTest {
             configuration = clientConfiguration,
             logger = logger,
             httpClient = HttpClient { install(WebSockets) },
-            subject = subject,
+            subject = demoPluginSubject,
             parentJob = supervisorJob
         )
 

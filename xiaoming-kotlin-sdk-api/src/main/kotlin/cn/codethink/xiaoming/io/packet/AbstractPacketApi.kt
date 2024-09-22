@@ -25,7 +25,7 @@ import cn.codethink.xiaoming.common.RECEIPT_STATE_FAILED
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.XiaomingProtocolSubject
 import cn.codethink.xiaoming.common.buildUnsupportedPacketTypeArguments
-import cn.codethink.xiaoming.io.UNSUPPORTED_PACKET_TYPE
+import cn.codethink.xiaoming.io.ERROR_UNSUPPORTED_PACKET_TYPE
 import cn.codethink.xiaoming.io.data.Packet
 import cn.codethink.xiaoming.io.data.ReceiptPacket
 import io.github.oshai.kotlinlogging.KLogger
@@ -78,7 +78,7 @@ abstract class AbstractPacketApi(
                     state = RECEIPT_STATE_FAILED,
                     request = packet.id,
                     cause = ErrorMessageCause(
-                        error = UNSUPPORTED_PACKET_TYPE,
+                        error = ERROR_UNSUPPORTED_PACKET_TYPE,
                         message = message,
                         context = arguments
                     )

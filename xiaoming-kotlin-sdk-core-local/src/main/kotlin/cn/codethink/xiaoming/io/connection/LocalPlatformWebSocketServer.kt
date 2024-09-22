@@ -17,11 +17,14 @@
 package cn.codethink.xiaoming.io.connection
 
 import cn.codethink.xiaoming.common.Cause
+import cn.codethink.xiaoming.common.ErrorMessageCause
 import cn.codethink.xiaoming.common.HEADER_VALUE_AUTHORIZATION_BEARER_WITH_SPACE
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.TextCause
+import cn.codethink.xiaoming.common.buildAdapterNotFoundArguments
 import cn.codethink.xiaoming.common.currentTimeMillis
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
+import cn.codethink.xiaoming.io.ERROR_ADAPTER_NOT_FOUND
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
@@ -228,7 +231,14 @@ class LocalPlatformWebSocketServer(
         // 2. Adapt connection.
         val adapter = internalApi.connectionManagerApi.getConnectionAdapter(subject.type)
         if (adapter == null) {
-            connection.close(TextCause("Adapter not found."), subject)
+            val arguments = buildAdapterNotFoundArguments(subject.type)
+            connection.close(
+                ErrorMessageCause(
+                    error = ERROR_ADAPTER_NOT_FOUND,
+                    message = internalApi.languageConfiguration.adapterNotFound.format(arguments),
+                    context = arguments
+                ), subject
+            )
             return
         }
         adapter.adapt(internalApi, subject, connection)
