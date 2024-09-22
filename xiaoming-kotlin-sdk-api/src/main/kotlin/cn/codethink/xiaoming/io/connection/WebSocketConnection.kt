@@ -71,7 +71,7 @@ class WebSocketConnection(
     private val scope: CoroutineScope = CoroutineScope(parentCoroutineContext + supervisorJob)
     override val coroutineContext: CoroutineContext by scope::coroutineContext
 
-    private val channel: Channel<String> = Channel(Channel.UNLIMITED)
+    override val channel: Channel<String> = Channel(Channel.UNLIMITED)
 
     private val lock = ReentrantReadWriteLock()
     private val condition = lock.writeLock().newCondition()

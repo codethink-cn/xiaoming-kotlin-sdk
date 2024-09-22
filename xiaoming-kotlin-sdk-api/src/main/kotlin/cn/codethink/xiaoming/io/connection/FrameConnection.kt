@@ -16,6 +16,8 @@
 
 package cn.codethink.xiaoming.io.connection
 
+import kotlinx.coroutines.channels.Channel
+
 /**
  * A connection that deals with frames.
  *
@@ -31,6 +33,11 @@ interface FrameConnection : Connection {
      * Receive a string from the other side.
      */
     suspend fun receive(string: String)
+
+    /**
+     * Receiving channel.
+     */
+    val channel: Channel<String>
 
     val isClosed: Boolean
     val isConnected: Boolean
