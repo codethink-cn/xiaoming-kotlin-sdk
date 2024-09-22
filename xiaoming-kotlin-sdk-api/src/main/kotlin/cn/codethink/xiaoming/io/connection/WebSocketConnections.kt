@@ -16,6 +16,7 @@
 
 package cn.codethink.xiaoming.io.connection
 
+import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.Subject
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.server.application.Application
@@ -30,13 +31,10 @@ import io.ktor.server.websocket.WebSocketServerSession
 import io.ktor.server.websocket.WebSockets
 import io.ktor.server.websocket.webSocket
 import io.ktor.util.pipeline.PipelineContext
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.runBlocking
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
@@ -51,19 +49,24 @@ interface WebSocketConnectionsConfiguration {
 val WebSocketConnectionsConfiguration.address: String
     get() = "$host:$port$path"
 
+/**
+ * Connections on WebSocket.
+ *
+ * @author Chuanwise
+ */
 abstract class WebSocketConnections(
     private val configuration: WebSocketConnectionsConfiguration,
     private val logger: KLogger,
     override val subject: Subject,
     applicationEngineFactory: ApplicationEngineFactory<*, *> = Netty,
-    protected val parentJob: Job? = null,
-    protected val dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    parentJob: Job? = null,
+    parentCoroutineContext: CoroutineContext = Dispatchers.IO,
 ) : Connections {
     private val supervisorJob = SupervisorJob(parentJob)
-    private val scope: CoroutineScope = CoroutineScope(dispatcher + supervisorJob)
+    private val scope: CoroutineScope = CoroutineScope(parentCoroutineContext + supervisorJob)
     final override val coroutineContext: CoroutineContext by scope::coroutineContext
 
-    private val lock = ReentrantReadWriteLock()
+    protected val lock = ReentrantReadWriteLock()
 
     enum class State {
         INITIALIZED,
@@ -79,16 +82,19 @@ abstract class WebSocketConnections(
     override val isClosed: Boolean
         get() = state == State.CLOSED
 
+    override val isStarted: Boolean
+        get() = state == State.STARTED
+
     private val server = embeddedServer(
         applicationEngineFactory,
         parentCoroutineContext = coroutineContext,
         port = configuration.port,
         host = configuration.host ?: "0.0.0.0"
     ) {
-        module(dispatcher)
+        module()
     }.start()
 
-    private fun Application.module(dispatcher: CoroutineDispatcher) {
+    private fun Application.module() {
         lock.write {
             stateNoLock = when (stateNoLock) {
                 State.INITIALIZED -> State.STARTED
@@ -105,27 +111,36 @@ abstract class WebSocketConnections(
         }
         routing {
             webSocket(configuration.path) {
-                onConnected()
+                onConnected(supervisorJob, coroutineContext)
             }
         }
     }
 
-    override fun close(): Unit = runBlocking {
+    override fun close(cause: Cause, subject: Subject) {
         lock.write {
             stateNoLock = when (stateNoLock) {
                 State.INITIALIZED, State.STARTED -> State.CLOSING
                 else -> throw IllegalStateException("Client internal error: unexpected state before closing: $stateNoLock.")
             }
-
-            server.stop()
-            supervisorJob.cancelAndJoin()
-            stateNoLock = State.CLOSED
-
-            logger.debug { "Closed server with subject: $subject in ${configuration.address}." }
         }
+
+        connections.forEach {
+            it.close(cause, subject)
+        }
+
+        server.stop()
+        supervisorJob.cancel()
+
+        lock.write {
+            stateNoLock = when (stateNoLock) {
+                State.CLOSING -> State.CLOSED
+                else -> throw IllegalStateException("Client internal error: unexpected state after closing: $stateNoLock.")
+            }
+        }
+        logger.debug { "Closed server with subject: $subject in ${configuration.address}." }
     }
 
     abstract suspend fun PipelineContext<Unit, ApplicationCall>.onConnect()
 
-    abstract suspend fun WebSocketServerSession.onConnected()
+    abstract suspend fun WebSocketServerSession.onConnected(parentJob: Job, parentCoroutineContext: CoroutineContext)
 }

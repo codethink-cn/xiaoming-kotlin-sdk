@@ -166,7 +166,7 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
     }
 
     override fun close() {
-        stop(TextCause("AutoClosable#close() called."))
+        stop(TextCause("API closed."))
     }
 }
 

@@ -16,23 +16,15 @@
 
 package cn.codethink.xiaoming.io.connection
 
-import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.Subject
-import cn.codethink.xiaoming.common.TextCause
-import kotlinx.coroutines.CoroutineScope
 
 /**
- * Connections is a server may hold multiple connections.
+ * Authorize connection and return a connection subject.
  *
  * @author Chuanwise
- * @see WebSocketConnections
  */
-interface Connections : AutoCloseable, CoroutineScope {
-    val connections: List<Connection>
-    val isStarted: Boolean
-    val isClosed: Boolean
-    val subject: Subject
-
-    fun close(cause: Cause, subject: Subject)
-    override fun close() = close(TextCause("Server closed."), subject)
+interface Authorizer {
+    fun authorize(token: String): Subject?
+    fun connected(subject: Subject) = Unit
+    fun disconnected(subject: Subject) = Unit
 }

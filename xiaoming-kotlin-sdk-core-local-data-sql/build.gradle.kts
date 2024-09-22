@@ -43,6 +43,13 @@ dependencies {
     val hikariCpVersion: String by rootProject
     implementation("com.zaxxer:HikariCP:$hikariCpVersion")
 
+    val ktorVersion: String by rootProject
+    implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-websockets:$ktorVersion")
+    implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
+
     val junitVersion: String by rootProject
     testImplementation(platform("org.junit:junit-bom:$junitVersion"))
     testImplementation("org.junit.jupiter:junit-jupiter")

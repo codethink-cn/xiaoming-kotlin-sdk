@@ -16,12 +16,12 @@
 
 package cn.codethink.xiaoming.io.connection
 
+import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.HEADER_KEY_AUTHORIZATION
 import cn.codethink.xiaoming.common.HEADER_VALUE_AUTHORIZATION_BEARER_WITH_SPACE
 import cn.codethink.xiaoming.common.Subject
-import cn.codethink.xiaoming.io.data.Packet
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
+import cn.codethink.xiaoming.common.TextCause
+import cn.codethink.xiaoming.common.rootCause
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.webSocket
@@ -30,15 +30,16 @@ import io.ktor.http.HttpMethod
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
 import io.ktor.websocket.readText
-import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import java.io.EOFException
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
@@ -50,7 +51,8 @@ interface WebSocketConnectionConfiguration {
     val port: Int
     val path: String
     val maxReconnectAttempts: Int?
-    val accessToken: String
+    val reconnectIntervalMillis: Long?
+    val token: String
 }
 
 val WebSocketConnectionConfiguration.address: String
@@ -59,19 +61,20 @@ val WebSocketConnectionConfiguration.address: String
 
 class WebSocketConnection(
     private val configuration: WebSocketConnectionConfiguration,
-    private val mapper: ObjectMapper,
     private val logger: KLogger,
+    subject: Subject,
     httpClient: HttpClient,
-    override val subject: Subject,
     parentJob: Job? = null,
-    dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    parentCoroutineContext: CoroutineContext = Dispatchers.IO,
 ) : WebSocketLikeConnection, CoroutineScope {
     private val supervisorJob = SupervisorJob(parentJob)
-    private val scope: CoroutineScope = CoroutineScope(dispatcher + supervisorJob)
+    private val scope: CoroutineScope = CoroutineScope(parentCoroutineContext + supervisorJob)
     override val coroutineContext: CoroutineContext by scope::coroutineContext
 
-    private val channel: Channel<Packet> = Channel(Channel.UNLIMITED)
+    private val channel: Channel<String> = Channel(Channel.UNLIMITED)
+
     private val lock = ReentrantReadWriteLock()
+    private val condition = lock.writeLock().newCondition()
 
     enum class State {
         INITIALIZED,
@@ -90,6 +93,11 @@ class WebSocketConnection(
     private val state: State
         get() = lock.read { stateNoLock }
 
+    private var subjectNoLock: Subject = subject
+    override var subject: Subject
+        get() = lock.read { subjectNoLock }
+        set(value) = lock.write { subjectNoLock = value }
+
     override val isClosed: Boolean
         get() = state == State.CLOSED
 
@@ -105,7 +113,7 @@ class WebSocketConnection(
             logger.info { "Connecting to $address with subject: $subject (attempt: $attempt)." }
             lock.write {
                 stateNoLock = when (stateNoLock) {
-                    State.INITIALIZED, State.WAITING -> {
+                    State.INITIALIZED, State.WAITING, State.DISCONNECTED -> {
                         State.CONNECTING
                     }
 
@@ -114,7 +122,10 @@ class WebSocketConnection(
                         "Client internal error: unexpected client state before connecting: $stateNoLock."
                     )
                 }
+                condition.signalAll()
+            }
 
+            try {
                 httpClient.webSocket(
                     method = configuration.method,
                     host = configuration.host,
@@ -123,7 +134,7 @@ class WebSocketConnection(
                     request = {
                         header(
                             HEADER_KEY_AUTHORIZATION,
-                            HEADER_VALUE_AUTHORIZATION_BEARER_WITH_SPACE + configuration.accessToken
+                            HEADER_VALUE_AUTHORIZATION_BEARER_WITH_SPACE + configuration.token
                         )
                     }
                 ) {
@@ -135,8 +146,9 @@ class WebSocketConnection(
                                 "Client internal error: unexpected client state after connected: $stateNoLock."
                             )
                         }
+                        condition.signalAll()
                     }
-                    logger.debug { "Handshaking with $address." }
+                    logger.debug { "Connected to $address." }
 
                     try {
                         for (frame in incoming) {
@@ -148,9 +160,10 @@ class WebSocketConnection(
                             val text = frame.readText()
                             receive(text)
                         }
+                    } catch (_: EOFException) {
+                    } catch (_: CancellationException) {
                     } catch (exception: Exception) {
-                        logger.error(exception) { "Error occurred when receiving from $address." }
-
+                        logger.error(exception) { "Error occurred when receiving from server $address." }
                     } finally {
                         lock.write {
                             stateNoLock = when (stateNoLock) {
@@ -160,18 +173,31 @@ class WebSocketConnection(
                                     "Client internal error: unexpected state after connected: $stateNoLock."
                                 )
                             }
+                            condition.signalAll()
                         }
                     }
                 }
+            } catch (exception: Exception) {
+                logger.error { "Error occurred when connecting to $address: ${exception.rootCause.message}." }
             }
 
             // Exit if it's closing.
-            lock.read {
-                if (stateNoLock == State.CLOSING) {
-                    return@launch
+            lock.write {
+                stateNoLock = when (stateNoLock) {
+                    State.DISCONNECTED, State.CONNECTING -> State.WAITING
+                    State.CLOSING, State.CLOSED -> return@launch
+                    else -> throw IllegalStateException(
+                        "Client internal error: unexpected state after disconnected: $stateNoLock."
+                    )
                 }
             }
+
+            val reconnectIntervalMillis = configuration.reconnectIntervalMillis ?: break
+            logger.info { "Disconnected from $address with subject: $subject (attempt: $attempt), waiting for reconnecting." }
+            delay(reconnectIntervalMillis)
         }
+
+        close(TextCause("Max reconnect attempts reached or disconnected and reconnect is disabled."), subject)
     }
 
     private fun assertConnected() {
@@ -180,37 +206,58 @@ class WebSocketConnection(
         }
     }
 
-    override suspend fun send(string: String) = lock.read {
-        assertConnected()
-
-        val session = session ?: throw IllegalStateException(
-            "Client internal error: session is not established but state is $stateNoLock."
-        )
-
-        val frame = Frame.Text(string)
-        session.outgoing.send(frame)
-        logger.debug { "Sent: $string to ${configuration.address}." }
-    }
-
-    override suspend fun receive(string: String) = lock.read {
-        assertConnected()
-
-        val packet = mapper.readValue<Packet>(string)
-        channel.send(packet)
-    }
-
-    override fun close(): Unit = runBlocking {
-        lock.write {
-            stateNoLock = when (stateNoLock) {
-                State.INITIALIZED, State.CONNECTING, State.CONNECTED, State.DISCONNECTED, State.WAITING -> State.CLOSING
-                else -> throw IllegalStateException("Client internal error: unexpected state before closing: $stateNoLock.")
-            }
-
-            channel.close()
-            supervisorJob.cancelAndJoin()
-            stateNoLock = State.CLOSED
-
-            logger.debug { "Closed client with subject: $subject." }
+    @JvmOverloads
+    fun await(time: Long, unit: TimeUnit = TimeUnit.MILLISECONDS) = lock.write {
+        if (stateNoLock == State.CLOSED) {
+            throw IllegalStateException("Client is closed.")
         }
+        condition.await(time, unit)
+    }
+
+    fun await() = lock.write {
+        if (stateNoLock == State.CLOSED) {
+            throw IllegalStateException("Client is closed.")
+        }
+        condition.await()
+    }
+
+    override suspend fun send(string: String) {
+        assertConnected()
+        val session = lock.read {
+            session ?: throw IllegalStateException(
+                "Client internal error: session is not established but state is $stateNoLock."
+            )
+        }
+
+        session.send(Frame.Text(string))
+        session.flush()
+
+        logger.debug { "Sent: '$string' to ${configuration.address}." }
+    }
+
+    override suspend fun receive(string: String) {
+        assertConnected()
+
+        channel.send(string)
+        logger.debug { "Received: '$string' from ${configuration.address}." }
+    }
+
+    override fun close() {
+        close(TextCause("Client closed."), subject)
+    }
+
+    override fun close(cause: Cause, subject: Subject) = lock.write {
+        stateNoLock = when (stateNoLock) {
+            State.INITIALIZED, State.CONNECTING, State.CONNECTED, State.DISCONNECTED, State.WAITING -> State.CLOSING
+            else -> throw IllegalStateException("Client internal error: unexpected state before closing: $stateNoLock.")
+        }
+        condition.signalAll()
+
+        channel.close()
+        supervisorJob.cancel()
+        stateNoLock = State.CLOSED
+        condition.signalAll()
+
+        logger.debug { "Client with subject: $subjectNoLock closed by $subject caused by $cause." }
     }
 }
