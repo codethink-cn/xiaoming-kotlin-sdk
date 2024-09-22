@@ -26,6 +26,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.io.File
+import java.util.Locale
 
 /**
  * Effect configuration for local platform.
@@ -35,12 +36,11 @@ import java.io.File
 data class LocalPlatformInternalConfiguration(
     val workingDirectoryFile: File,
     val id: Id,
-    val modulesToInstall: List<Pair<Module, Subject>> = emptyList(),
+    val locale: Locale = Locale.getDefault(),
+    val modules: List<Pair<Module, Subject>> = emptyList(),
     val platformConfiguration: LocalPlatformConfiguration? = null,
-    val internalObjectMapper: ObjectMapper = jacksonObjectMapper()
-        .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE),
-    val externalObjectMapper: ObjectMapper = YAMLMapper.builder()
-        .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
+    val internalObjectMapper: ObjectMapper = jacksonObjectMapper().setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE),
+    val externalObjectMapper: ObjectMapper = YAMLMapper.builder().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
         .build(),
     var findAndLoadAllModules: Boolean = true,
     var findAndLoadAllJacksonModules: Boolean = true,

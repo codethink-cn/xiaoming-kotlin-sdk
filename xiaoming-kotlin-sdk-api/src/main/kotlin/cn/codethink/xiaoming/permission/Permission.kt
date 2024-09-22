@@ -44,9 +44,9 @@ import cn.codethink.xiaoming.common.SegmentId
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.defaultNullable
 import cn.codethink.xiaoming.common.defaultOptional
+import cn.codethink.xiaoming.io.data.Field
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.RawValue
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
 import com.fasterxml.jackson.annotation.JsonTypeName
@@ -81,7 +81,7 @@ class PermissionDescriptor(
 class PermissionParameterMeta(
     raw: Raw
 ) : AbstractData(raw) {
-    @RawValue(PERMISSION_VARIABLE_META_FIELD_DEFAULT_MATCHER_OR_VALUE)
+    @Field(PERMISSION_VARIABLE_META_FIELD_DEFAULT_MATCHER_OR_VALUE)
     val defaultMatcherOrValue: Any? by raw
     val description: String? by raw
 
@@ -205,10 +205,10 @@ class DefaultPermissionMatcher(
     override val targetType: Class<Permission>
         get() = Permission::class.java
 
-    @RawValue(DEFAULT_PERMISSION_MATCHER_FIELD_NODE_MATCHER)
+    @Field(DEFAULT_PERMISSION_MATCHER_FIELD_NODE_MATCHER)
     val nodeMatcher: Matcher<SegmentId> by raw
 
-    @RawValue(DEFAULT_PERMISSION_MATCHER_FIELD_ARGUMENT_MATCHERS)
+    @Field(DEFAULT_PERMISSION_MATCHER_FIELD_ARGUMENT_MATCHERS)
     val argumentMatchers: Map<String, Matcher<*>> by raw
 
     @JvmOverloads

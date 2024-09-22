@@ -24,9 +24,9 @@ import cn.codethink.xiaoming.common.SegmentId
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.Tristate
 import cn.codethink.xiaoming.common.tristateOf
+import cn.codethink.xiaoming.io.data.Field
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.RawValue
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
 import com.fasterxml.jackson.annotation.JsonTypeName
@@ -66,10 +66,10 @@ class DefaultPermissionComparatorV1(
     override val version: String by raw
     override val value: Boolean? by raw
 
-    @RawValue(PERMISSION_COMPARATOR_FIELD_SUBJECT_MATCHER)
+    @Field(PERMISSION_COMPARATOR_FIELD_SUBJECT_MATCHER)
     override val subjectMatcher: Matcher<Subject> by raw
 
-    @RawValue(PERMISSION_COMPARATOR_FIELD_NODE_MATCHER)
+    @Field(PERMISSION_COMPARATOR_FIELD_NODE_MATCHER)
     override val nodeMatcher: Matcher<SegmentId> by raw
 
     @JvmOverloads

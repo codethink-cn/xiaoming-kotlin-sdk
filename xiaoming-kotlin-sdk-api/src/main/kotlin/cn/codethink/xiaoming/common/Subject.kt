@@ -18,11 +18,12 @@
 
 package cn.codethink.xiaoming.common
 
+import cn.codethink.xiaoming.io.data.Field
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.RawValue
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
+import cn.codethink.xiaoming.io.data.setValue
 import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
@@ -156,6 +157,29 @@ class PluginSubject(
     }
 }
 
+const val SUBJECT_TYPE_PLATFORM = "platform"
+
+/**
+ * Represent a subject that is a platform. Type is [SUBJECT_TYPE_PLATFORM].
+ *
+ * @author Chuanwise
+ */
+@JsonTypeName(SUBJECT_TYPE_PLATFORM)
+class PlatformSubject(
+    raw: Raw
+) : Subject(raw) {
+    var id: Id by raw
+
+    @JvmOverloads
+    constructor(
+        id: Id,
+        raw: Raw = MapRaw()
+    ) : this(raw) {
+        raw[FIELD_TYPE] = SUBJECT_TYPE_PLATFORM
+        this.id = id
+    }
+}
+
 /**
  * Used to match plugin subject from [Subject]. Type is
  * [DEFAULT_PLUGIN_SUBJECT_MATCHER_FIELD_ID_MATCHER].
@@ -170,7 +194,7 @@ class DefaultPluginSubjectMatcher(
     override val targetType: Class<Subject>
         get() = Subject::class.java
 
-    @RawValue(DEFAULT_PLUGIN_SUBJECT_MATCHER_FIELD_ID_MATCHER)
+    @Field(DEFAULT_PLUGIN_SUBJECT_MATCHER_FIELD_ID_MATCHER)
     val idMatcher: Matcher<SegmentId> by raw
 
     @JvmOverloads

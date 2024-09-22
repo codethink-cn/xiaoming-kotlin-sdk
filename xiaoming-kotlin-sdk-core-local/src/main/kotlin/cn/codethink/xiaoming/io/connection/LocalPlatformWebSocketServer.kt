@@ -21,7 +21,7 @@ import cn.codethink.xiaoming.common.HEADER_VALUE_AUTHORIZATION_BEARER_WITH_SPACE
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.TextCause
 import cn.codethink.xiaoming.common.currentTimeMillis
-import io.github.oshai.kotlinlogging.KLogger
+import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
@@ -66,19 +66,20 @@ val CONNECTION_SUBJECT_ATTRIBUTE_KEY = AttributeKey<Subject>("Connection Subject
  */
 class LocalPlatformWebSocketServer(
     val configuration: WebSocketServerConfiguration,
-    val logger: KLogger,
     subject: Subject,
     val authorizer: Authorizer,
+    val internalApi: LocalPlatformInternalApi,
     applicationEngineFactory: ApplicationEngineFactory<*, *> = Netty,
     parentJob: Job? = null,
     parentCoroutineContext: CoroutineContext = Dispatchers.IO
 ) : WebSocketServer(
-    configuration, logger, subject, applicationEngineFactory, parentJob, parentCoroutineContext
+    configuration, internalApi.logger, subject, applicationEngineFactory, parentJob, parentCoroutineContext
 ) {
     private val mutableConnections = mutableListOf<OnlineConnection>()
     override val connections: List<OnlineConnection>
         get() = lock.read { mutableConnections.toList() }
 
+    private val logger by internalApi::logger
     enum class OnlineState {
         INITIALIZING,
         CONNECTED,
@@ -216,12 +217,23 @@ class LocalPlatformWebSocketServer(
     override suspend fun WebSocketServerSession.onConnected(
         parentJob: Job, parentCoroutineContext: CoroutineContext
     ) {
+        // 1. Create and add connection.
         val connection = lock.write {
             val connectionSubject = call.attributes[CONNECTION_SUBJECT_ATTRIBUTE_KEY]
             OnlineConnection(this, connectionSubject, parentJob, parentCoroutineContext).apply {
                 mutableConnections.add(this)
             }
         }
+
+        // 2. Adapt connection.
+        val adapter = internalApi.connectionManagerApi.getConnectionAdapter(subject.type)
+        if (adapter == null) {
+            connection.close(TextCause("Adapter not found."), subject)
+            return
+        }
+        adapter.adapt(internalApi, subject, connection)
+
+        // 3. Start receiving.
         connection.receiving()
     }
 }

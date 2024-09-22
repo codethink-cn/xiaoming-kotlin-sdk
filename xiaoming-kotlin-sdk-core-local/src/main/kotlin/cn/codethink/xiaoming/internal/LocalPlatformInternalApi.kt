@@ -18,6 +18,7 @@ package cn.codethink.xiaoming.internal
 
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.EventCause
+import cn.codethink.xiaoming.common.PlatformSubject
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.TextCause
 import cn.codethink.xiaoming.common.XiaomingSdkSubject
@@ -87,6 +88,10 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
     val moduleManagerApi = ModuleManagerApi(this)
     val connectionManagerApi = ConnectionManagerApi(this)
 
+    private var subjectNoLock: PlatformSubject? = null
+    val subject: PlatformSubject
+        get() = lock.read { subjectNoLock!! }
+
     fun start(cause: Cause, subject: Subject) = lock.write {
         assertState(LocalPlatformInternalState.INITIALIZED) {
             "Cannot start the platform when it's not initialized. " +
@@ -111,10 +116,13 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
         val startingEventCause = EventCause(startingEvent)
 
         // Install modules.
-        internalConfiguration.modulesToInstall.forEach { installModule(it.first, startingEventCause, it.second) }
+        internalConfiguration.modules.forEach { installModule(it.first, startingEventCause, it.second) }
         if (internalConfiguration.findAndLoadAllModules) {
             ServiceLoader.load(Module::class.java).forEach { installModule(it, startingEventCause, XiaomingSdkSubject) }
         }
+
+        // Set platform subject.
+        subjectNoLock = PlatformSubject(internalConfiguration.id)
 
         // Load configuration if absent.
         if (internalConfiguration.platformConfiguration != null) {
@@ -133,6 +141,7 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
             platformConfiguration = serializationApi.externalObjectMapper.readValue(configurationFile)
         }
 
+        // Load data API.
         platformConfiguration.data.toDataApi(this).also { dataNoLock = LocalPlatformData(this, it) }
 
         // Notice modules.
@@ -158,7 +167,7 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
             if (internalConfiguration.failOnModuleError) {
                 throw exception
             } else {
-                logger.error(exception) { "Failed to install module ${module.subject} from `modulesToInstall`." }
+                logger.error(exception) { "Failed to install module ${module.subject} from `modules`." }
             }
         }
     }

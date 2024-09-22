@@ -22,9 +22,9 @@ import cn.codethink.xiaoming.common.FIELD_VERSION
 import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.common.Tristate
 import cn.codethink.xiaoming.common.tristateOf
+import cn.codethink.xiaoming.io.data.Field
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.RawValue
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
 import com.fasterxml.jackson.annotation.JsonTypeName
@@ -68,12 +68,12 @@ class InheritancePermissionComparatorV1(
     override val type: String by raw
     override val version: String by raw
 
-    @RawValue(INHERITANCE_PERMISSION_COMPARATOR_FIELD_PROFILE_ID)
+    @Field(INHERITANCE_PERMISSION_COMPARATOR_FIELD_PROFILE_ID)
     override val profileId: Id by raw
 
     override val context: Map<String, Any?> by raw
 
-    @RawValue(INHERITANCE_PERMISSION_COMPARATOR_FIELD_RESULT_MAPPING)
+    @Field(INHERITANCE_PERMISSION_COMPARATOR_FIELD_RESULT_MAPPING)
     override val resultMapping: Map<Boolean?, Boolean?> by raw
 
     @JvmOverloads

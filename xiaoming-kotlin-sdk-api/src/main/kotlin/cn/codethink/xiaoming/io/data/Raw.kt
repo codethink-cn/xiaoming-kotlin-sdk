@@ -45,17 +45,17 @@ val DEFAULT_FIELD_VALUE = null
 @MustBeDocumented
 @Target(AnnotationTarget.FIELD, AnnotationTarget.LOCAL_VARIABLE, AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class RawValue(
+annotation class Field(
     /**
      * By default, the name of the field is the same as the name of the property.
-     * Use [RawValue.name] to override it like this:
+     * Use [Field.name] to override it like this:
      *
      * ```kt
      * // read this field by "raw.get("field", String::class.java)"
      * val field: String by raw
      *
      * // read this field by "raw.get("cn.codethink.xiaoming:extension-field", String::class.java)"
-     * @RawValue("cn.codethink.xiaoming:extension-field")
+     * @Field("cn.codethink.xiaoming:extension-field")
      * val extensionField: String by raw
      * ```
      */
@@ -73,9 +73,9 @@ annotation class RawValue(
     val optional: Tristate = Tristate.NULL
 )
 
-fun RawValue?.nameOrDefault(defaultValue: String): String = this?.name ?: defaultValue
-inline fun <reified T> RawValue?.nullableOrDefault(): Boolean = this?.nullable?.value ?: defaultNullable<T>()
-inline fun <reified T> RawValue?.optionalOrDefault(): Boolean = this?.optional?.value ?: defaultOptional<T>()
+fun Field?.nameOrDefault(defaultValue: String): String = this?.name ?: defaultValue
+inline fun <reified T> Field?.nullableOrDefault(): Boolean = this?.nullable?.value ?: defaultNullable<T>()
+inline fun <reified T> Field?.optionalOrDefault(): Boolean = this?.optional?.value ?: defaultOptional<T>()
 
 /**
  * Classes implementing this
@@ -104,6 +104,7 @@ interface Raw {
     val isEmpty: Boolean
 
     fun contentEquals(raw: Raw): Boolean
+    fun contentToString(): String
 }
 
 inline operator fun <reified T : Any?> Raw.get(name: String): T = get(
@@ -116,7 +117,7 @@ inline operator fun <reified T : Any?> Raw.set(name: String, value: T) = set(
 )
 
 inline operator fun <reified T : Any?> Raw.getValue(thisRef: Any?, property: KProperty<*>): T {
-    val annotation = property.annotations.firstOrNull { it is RawValue } as RawValue?
+    val annotation = property.annotations.firstOrNull { it is Field } as Field?
     return get(
         name = annotation.nameOrDefault(property.name), type = object : TypeReference<T>() {}.type,
         optional = annotation.optionalOrDefault<T>(),
@@ -125,7 +126,7 @@ inline operator fun <reified T : Any?> Raw.getValue(thisRef: Any?, property: KPr
 }
 
 inline operator fun <reified T : Any?> Raw.setValue(thisRef: Any?, property: KProperty<*>, value: T) {
-    val annotation = property.annotations.firstOrNull { it is RawValue } as RawValue?
+    val annotation = property.annotations.firstOrNull { it is Field } as Field?
     return set(
         name = annotation.nameOrDefault(property.name), value = value,
         optional = annotation.optionalOrDefault<T>(),
@@ -270,7 +271,9 @@ class NodeRaw(
         return node.has(key)
     }
 
-    override fun toString(): String = "NodeRaw(${node.properties()?.joinToString(", ")})"
+    override fun toString(): String = "NodeRaw(${node.properties().joinToString(", ")})"
+
+    override fun contentToString(): String = node.properties().joinToString(", ")
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -398,6 +401,8 @@ class MapRaw(
     override fun hashCode(): Int = map.hashCode()
 
     override fun toString(): String = "MapRaw(${map.entries.joinToString(", ")})"
+
+    override fun contentToString(): String = map.entries.joinToString(", ")
 }
 
 object MapRawSerializer : StdSerializer<MapRaw>(MapRaw::class.java) {
@@ -448,4 +453,6 @@ object EmptyRaw : Raw {
 
     override val isEmpty: Boolean
         get() = true
+
+    override fun contentToString(): String = ""
 }
