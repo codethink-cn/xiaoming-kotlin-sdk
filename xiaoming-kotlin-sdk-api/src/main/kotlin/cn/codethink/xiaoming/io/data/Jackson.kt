@@ -30,6 +30,7 @@ import cn.codethink.xiaoming.common.LiteralSegmentIdMatcher
 import cn.codethink.xiaoming.common.LiteralStringMatcher
 import cn.codethink.xiaoming.common.LongId
 import cn.codethink.xiaoming.common.Matcher
+import cn.codethink.xiaoming.common.PlatformSubject
 import cn.codethink.xiaoming.common.PluginSubject
 import cn.codethink.xiaoming.common.RegexStringMatcher
 import cn.codethink.xiaoming.common.SdkSubject
@@ -120,6 +121,7 @@ fun PolymorphicDeserializers.registerPlatformDeserializers(subject: Subject) = s
     names<Subject>(FIELD_TYPE) {
         name<SdkSubject>()
         name<PluginSubject>()
+        name<PlatformSubject>()
     }
     names<Matcher<Any?>>(FIELD_TYPE) {
         name<AnyMatcher>()
