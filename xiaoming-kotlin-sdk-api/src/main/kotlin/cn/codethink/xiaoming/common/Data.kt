@@ -60,7 +60,7 @@ object DefaultDataSerializer : JsonSerializer<Data>() {
 abstract class AbstractData(
     override val raw: Raw
 ) : Data {
-    override fun toString(): String = "${javaClass.simpleName}(raw=$raw)"
+    override fun toString(): String = "${javaClass.simpleName}(${raw.contentToString()})"
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
