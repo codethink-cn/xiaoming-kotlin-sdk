@@ -21,8 +21,8 @@ import cn.codethink.xiaoming.common.ErrorMessageCause
 import cn.codethink.xiaoming.common.HEADER_VALUE_AUTHORIZATION_BEARER_WITH_SPACE
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.TextCause
-import cn.codethink.xiaoming.common.buildAdapterNotFoundArguments
 import cn.codethink.xiaoming.common.currentTimeMillis
+import cn.codethink.xiaoming.connection.buildAdapterNotFoundArguments
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import cn.codethink.xiaoming.io.ERROR_ADAPTER_NOT_FOUND
 import io.ktor.http.HttpStatusCode
@@ -235,7 +235,7 @@ class LocalPlatformWebSocketServer(
             connection.close(
                 ErrorMessageCause(
                     error = ERROR_ADAPTER_NOT_FOUND,
-                    message = internalApi.languageConfiguration.adapterNotFound.format(arguments),
+                    message = internalApi.languageConfiguration.connection.adapterNotFound.format(arguments),
                     context = arguments
                 ), subject
             )

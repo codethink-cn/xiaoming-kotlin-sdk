@@ -14,25 +14,17 @@
  * limitations under the License.
  */
 
-@file:JvmName("Files")
+package cn.codethink.xiaoming.language
 
-package cn.codethink.xiaoming.common
-
-import java.io.File
+import cn.codethink.xiaoming.connection.ConnectionLanguageConfiguration
+import cn.codethink.xiaoming.io.packet.ProtocolLanguageConfiguration
 
 /**
- * Make sure a directory exists.
+ * Language configuration.
  *
- * @throws IllegalStateException if the directory does not exist and failed to create it.
+ * @author Chuanwise
  */
-@JvmOverloads
-fun File.ensureExistedDirectory(
-    block: () -> String = { "Failed to create directory ${absolutePath}." }
-) {
-    if (!isDirectory && !mkdirs()) {
-        throw IllegalStateException(block())
-    }
-}
-
-const val LANGUAGE_RESOURCE_DIRECTORY_PATH = "xiaoming/languages"
-const val DEFAULT_LOCALE_LANGUAGE_RESOURCE_DIRECTORY_PATH = "$LANGUAGE_RESOURCE_DIRECTORY_PATH/en_US"
+data class LanguageConfiguration(
+    val protocol: ProtocolLanguageConfiguration,
+    val connection: ConnectionLanguageConfiguration
+)

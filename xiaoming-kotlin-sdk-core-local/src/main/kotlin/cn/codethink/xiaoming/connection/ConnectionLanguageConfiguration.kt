@@ -14,25 +14,24 @@
  * limitations under the License.
  */
 
-@file:JvmName("Files")
+package cn.codethink.xiaoming.connection
 
-package cn.codethink.xiaoming.common
-
-import java.io.File
+import cn.codethink.xiaoming.common.AbstractData
+import cn.codethink.xiaoming.common.Template
+import cn.codethink.xiaoming.io.data.Raw
+import cn.codethink.xiaoming.io.data.getValue
 
 /**
- * Make sure a directory exists.
+ * Connection language configuration.
  *
- * @throws IllegalStateException if the directory does not exist and failed to create it.
+ * @author Chuanwise
  */
-@JvmOverloads
-fun File.ensureExistedDirectory(
-    block: () -> String = { "Failed to create directory ${absolutePath}." }
-) {
-    if (!isDirectory && !mkdirs()) {
-        throw IllegalStateException(block())
-    }
+class ConnectionLanguageConfiguration(
+    raw: Raw
+) : AbstractData(raw) {
+    val adapterNotFound: Template by raw
 }
 
-const val LANGUAGE_RESOURCE_DIRECTORY_PATH = "xiaoming/languages"
-const val DEFAULT_LOCALE_LANGUAGE_RESOURCE_DIRECTORY_PATH = "$LANGUAGE_RESOURCE_DIRECTORY_PATH/en_US"
+fun buildAdapterNotFoundArguments(adapterType: String): Map<String, Any?> = mapOf(
+    "adapterType" to adapterType
+)

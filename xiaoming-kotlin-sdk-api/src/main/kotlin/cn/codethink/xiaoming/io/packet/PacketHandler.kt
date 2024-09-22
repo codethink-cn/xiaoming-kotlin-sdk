@@ -26,7 +26,11 @@ import cn.codethink.xiaoming.io.data.Packet
 open class PacketContext(
     val api: PacketApi,
     val packet: Packet,
-) : PacketApi by api
+) {
+    val logger by api::logger
+    val language by api::language
+    val subject by api::subject
+}
 
 interface PacketHandler {
     suspend fun handle(context: PacketContext)

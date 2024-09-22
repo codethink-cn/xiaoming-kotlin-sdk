@@ -17,10 +17,9 @@
 package cn.codethink.xiaoming.internal
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.DEFAULT_LOCALE_LANGUAGE_FILE_PATH
+import cn.codethink.xiaoming.common.DEFAULT_LOCALE_LANGUAGE_RESOURCE_DIRECTORY_PATH
 import cn.codethink.xiaoming.common.EventCause
 import cn.codethink.xiaoming.common.LANGUAGE_RESOURCE_DIRECTORY_PATH
-import cn.codethink.xiaoming.common.LanguageConfiguration
 import cn.codethink.xiaoming.common.PlatformSubject
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.TextCause
@@ -35,6 +34,7 @@ import cn.codethink.xiaoming.internal.event.LocalPlatformStartingEvent
 import cn.codethink.xiaoming.internal.module.Module
 import cn.codethink.xiaoming.internal.module.ModuleContext
 import cn.codethink.xiaoming.internal.module.ModuleManagerApi
+import cn.codethink.xiaoming.language.LanguageConfiguration
 import cn.codethink.xiaoming.permission.LocalPermissionServiceApi
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.oshai.kotlinlogging.KLogger
@@ -149,25 +149,7 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
             platformConfiguration = serializationApi.externalObjectMapper.readValue(configurationFile)
 
             // 2. Load language file.
-            val languageFile = File(configurationsDirectoryFile, "language.yml")
-            if (languageFile.isFile) {
-                languageConfiguration = serializationApi.externalObjectMapper.readValue(languageFile)
-            } else {
-                val locale = internalConfiguration.locale
-                val specifiedLocalLanguageInputStream =
-                    javaClass.classLoader.getResourceAsStream("$LANGUAGE_RESOURCE_DIRECTORY_PATH/$locale.yml")
-                if (specifiedLocalLanguageInputStream == null) {
-                    logger.warn { "Cannot find language file for locale $locale, use default language (en_US) instead." }
-
-                    val defaultLanguageInputStream = javaClass.classLoader.getResourceAsStream(
-                        DEFAULT_LOCALE_LANGUAGE_FILE_PATH
-                    ) ?: throw NoSuchElementException("Cannot find default language file.")
-                    languageConfiguration = serializationApi.externalObjectMapper.readValue(defaultLanguageInputStream)
-                } else {
-                    languageConfiguration =
-                        serializationApi.externalObjectMapper.readValue(specifiedLocalLanguageInputStream)
-                }
-            }
+            languageConfiguration = loadLanguageConfiguration()
         }
 
         // Load data API.
@@ -217,4 +199,39 @@ fun LocalPlatformInternalApi.assertState(
     if (state != this.state) {
         throw IllegalStateException(block())
     }
+}
+
+private fun LocalPlatformInternalApi.loadLanguageConfiguration(): LanguageConfiguration {
+    val configurationsDirectoryFile = File(internalConfiguration.workingDirectoryFile, "configurations")
+
+    val languageDirectoryFile = File(configurationsDirectoryFile, "languages")
+    return LanguageConfiguration(
+        protocol = loadLanguageFile(languageDirectoryFile, "protocol.yml"),
+        connection = loadLanguageFile(languageDirectoryFile, "connection.yml")
+    )
+}
+
+private inline fun <reified T> LocalPlatformInternalApi.loadLanguageFile(languageDirectoryFile: File, name: String): T {
+    // 1. Find file in language directory.
+    val file = File(languageDirectoryFile, name)
+    if (file.isFile) {
+        return serializationApi.externalObjectMapper.readValue(languageDirectoryFile)
+    }
+
+    // 2. Find local locale language file in resource files.
+    val locale = internalConfiguration.locale
+    val specifiedFilePath = "$LANGUAGE_RESOURCE_DIRECTORY_PATH/$locale/$name"
+    val specifiedInputStream = javaClass.classLoader.getResourceAsStream(specifiedFilePath)
+    if (specifiedInputStream != null) {
+        return serializationApi.externalObjectMapper.readValue(specifiedInputStream)
+    }
+
+    logger.warn { "Cannot find language file $name for locale $locale from resource files, use default language (en_US) instead." }
+
+    // 3. Find default locale language file in resource files.
+    val defaultFilePath = "$DEFAULT_LOCALE_LANGUAGE_RESOURCE_DIRECTORY_PATH/$name"
+    val defaultInputStream = javaClass.classLoader.getResourceAsStream(defaultFilePath)
+        ?: throw NoSuchElementException("Cannot find default language resource file $defaultFilePath.")
+
+    return serializationApi.externalObjectMapper.readValue(defaultInputStream)
 }

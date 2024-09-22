@@ -14,15 +14,19 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.common
+package cn.codethink.xiaoming.io.packet
 
+import cn.codethink.xiaoming.common.AbstractData
+import cn.codethink.xiaoming.common.Template
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
 
 /**
- * Language configuration.
+ * Protocol language configuration.
+ *
+ * @author Chuanwise
  */
-class LanguageConfiguration(
+class ProtocolLanguageConfiguration(
     raw: Raw
 ) : AbstractData(raw) {
     val unsupportedPacketType: Template by raw
@@ -30,12 +34,7 @@ class LanguageConfiguration(
     val unsupportedRequestAction: Template by raw
     val internalActionHandlerError: Template by raw
     val actionHandlerTimeout: Template by raw
-    val adapterNotFound: Template by raw
 }
-
-fun buildAdapterNotFoundArguments(adapterType: String): Map<String, Any?> = mapOf(
-    "adapterType" to adapterType
-)
 
 fun buildUnsupportedPacketTypeArguments(
     packetType: String,

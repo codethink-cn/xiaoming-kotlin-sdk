@@ -31,9 +31,6 @@ import cn.codethink.xiaoming.common.REQUEST_PACKET_FIELD_ARGUMENT
 import cn.codethink.xiaoming.common.Registration
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.XiaomingProtocolSubject
-import cn.codethink.xiaoming.common.buildActionHandlerTimeoutArguments
-import cn.codethink.xiaoming.common.buildUnsupportedRequestActionArguments
-import cn.codethink.xiaoming.common.buildUnsupportedRequestModeArguments
 import cn.codethink.xiaoming.common.currentTimeMillis
 import cn.codethink.xiaoming.common.currentTimeSeconds
 import cn.codethink.xiaoming.io.ERROR_ACTION_HANDLER_TIMEOUT
@@ -142,7 +139,7 @@ class RequestPacketHandler : PacketHandler {
         val requestModeHandlerRegistration = requestModeHandlers[packet.mode]
         if (requestModeHandlerRegistration == null) {
             val arguments = buildUnsupportedRequestModeArguments(packet.mode, requestModeHandlers.toMap().keys)
-            val message = context.configuration.language.unsupportedRequestMode.format(arguments)
+            val message = context.language.unsupportedRequestMode.format(arguments)
 
             context.api.send(
                 ReceiptPacket(
@@ -174,7 +171,7 @@ class RequestPacketHandler : PacketHandler {
             requestActionHandlers[packet.action] as PacketActionHandlerRegistration<Any?, Any?>?
         if (requestActionHandlerRegistration == null) {
             val arguments = buildUnsupportedRequestActionArguments(packet.action)
-            val message = context.api.configuration.language.unsupportedRequestAction.format(arguments)
+            val message = context.api.language.unsupportedRequestAction.format(arguments)
 
             context.api.send(
                 ReceiptPacket(
@@ -241,7 +238,7 @@ class RequestPacketHandler : PacketHandler {
             }
         } catch (exception: TimeoutCancellationException) {
             val arguments = buildActionHandlerTimeoutArguments(packet.timeout)
-            val message = context.configuration.language.actionHandlerTimeout.format(arguments)
+            val message = context.language.actionHandlerTimeout.format(arguments)
 
             // Calculate duration and log it.
             durationSeconds = currentTimeSeconds - durationSeconds
@@ -266,7 +263,7 @@ class RequestPacketHandler : PacketHandler {
             durationMillis = currentTimeSeconds - durationMillis
 
             // Log error.
-            val message = context.api.configuration.language.internalActionHandlerError.toString()
+            val message = context.api.language.internalActionHandlerError.toString()
             context.logger.error(exception) {
                 "Exception occurred while handling request action:$packet " +
                         "after ${durationSeconds}s (${durationMillis}ms). " +
