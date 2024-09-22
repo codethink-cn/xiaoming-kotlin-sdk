@@ -16,10 +16,22 @@
 
 package cn.codethink.xiaoming.io.connection
 
+import cn.codethink.xiaoming.common.PluginSubject
 import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.TextCause
 import cn.codethink.xiaoming.common.XiaomingProtocolSubject
 import cn.codethink.xiaoming.common.XiaomingSdkSubject
 import cn.codethink.xiaoming.common.currentTimeMillis
+import cn.codethink.xiaoming.common.segmentIdOf
+import cn.codethink.xiaoming.common.toId
+import cn.codethink.xiaoming.common.toLiteralMatcher
+import cn.codethink.xiaoming.data.insertAndGetPermissionProfile
+import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
+import cn.codethink.xiaoming.internal.configuration.LocalPlatformInternalConfiguration
+import cn.codethink.xiaoming.io.data.PlatformAnnotationIntrospector
+import com.fasterxml.jackson.databind.AnnotationIntrospector
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.WebSockets
@@ -29,6 +41,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
+import java.io.File
 
 const val TEST_HOST = "127.0.0.1"
 const val TEST_PORT = 11451
@@ -65,6 +78,32 @@ class WebSocketClientTest {
         }
     }
 
+    companion object {
+        val logger = KotlinLogging.logger { }
+        val mapper = jacksonObjectMapper().apply {
+            setAnnotationIntrospector(
+                AnnotationIntrospector.pair(
+                    PlatformAnnotationIntrospector(),
+                    JacksonAnnotationIntrospector()
+                )
+            )
+            findAndRegisterModules()
+        }
+
+        val internalConfiguration = LocalPlatformInternalConfiguration(
+            workingDirectoryFile = File("platform"),
+            id = "Test".toId()
+        )
+        val api = LocalPlatformInternalApi(internalConfiguration, logger).apply {
+            start(TextCause("Run test programs"), XiaomingSdkSubject)
+        }
+
+        val subject = PluginSubject(segmentIdOf("cn.codethink.xiaoming.demo"))
+        val subjectMatcher = subject.toLiteralMatcher()
+
+        val profile = api.data.insertAndGetPermissionProfile(subject)
+    }
+
     @Test
     fun testConnect(): Unit = runBlocking {
         val supervisorJob = SupervisorJob()
@@ -72,7 +111,7 @@ class WebSocketClientTest {
 
         val server = LocalPlatformWebSocketServer(
             configuration = TestLocalPlatformWebSocketServerConfiguration(),
-            logger = logger,
+            internalApi = api,
             subject = subject,
             authorizer = TestAuthorizer(),
             parentJob = supervisorJob
@@ -117,7 +156,7 @@ class WebSocketClientTest {
 
         val server = LocalPlatformWebSocketServer(
             configuration = TestLocalPlatformWebSocketServerConfiguration(),
-            logger = logger,
+            internalApi = api,
             subject = subject,
             authorizer = TestAuthorizer(),
             parentJob = supervisorJob
