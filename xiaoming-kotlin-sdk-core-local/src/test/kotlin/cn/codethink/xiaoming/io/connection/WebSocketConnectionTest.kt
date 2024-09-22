@@ -27,6 +27,7 @@ import io.ktor.http.HttpMethod
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 
 const val TEST_HOST = "127.0.0.1"
@@ -122,7 +123,10 @@ class WebSocketConnectionTest {
             parentJob = supervisorJob
         )
 
-        val connectionConfiguration = TestWebSocketConnectionConfiguration(token = "WrongToken")
+        val connectionConfiguration = TestWebSocketConnectionConfiguration(
+            token = "WrongToken",
+            reconnectIntervalMillis = 1000
+        )
         val connection = WebSocketConnection(
             configuration = connectionConfiguration,
             logger = logger,
@@ -134,23 +138,18 @@ class WebSocketConnectionTest {
         var durationMillis = currentTimeMillis
         while (true) {
             connection.await(500)
-            if (connection.isConnected) {
+            if (connection.isConnected || (currentTimeMillis - durationMillis) > 5000) {
                 break
             }
             logger.info { "Waiting, connection.isConnected: ${connection.isConnected}, pass ${currentTimeMillis - durationMillis}ms." }
         }
         durationMillis = currentTimeMillis - durationMillis
 
-        logger.info { "connection.isConnected: ${connection.isConnected}, cost ${durationMillis}ms." }
+        assertFalse(connection.isConnected)
+        logger.info { "connection.isConnected: ${connection.isConnected}, after ${durationMillis}ms." }
 
-        delay(100)
-        logger.info { "Closing" }
         connections.close()
-
-        logger.info { "Looking client effect" }
-        delay(10000)
         connection.close()
-
         supervisorJob.cancel()
     }
 }
