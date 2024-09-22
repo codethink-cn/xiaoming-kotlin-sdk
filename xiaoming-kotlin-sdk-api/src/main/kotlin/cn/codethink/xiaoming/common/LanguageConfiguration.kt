@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-@file:JvmName("PacketApiMessages")
+package cn.codethink.xiaoming.common
 
-package cn.codethink.xiaoming.io.packet
-
-import cn.codethink.xiaoming.common.AbstractData
-import cn.codethink.xiaoming.common.Template
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
 
-class PacketApiMessage(
+/**
+ * Language configuration.
+ */
+class LanguageConfiguration(
     raw: Raw
 ) : AbstractData(raw) {
     val unsupportedPacketType: Template by raw
