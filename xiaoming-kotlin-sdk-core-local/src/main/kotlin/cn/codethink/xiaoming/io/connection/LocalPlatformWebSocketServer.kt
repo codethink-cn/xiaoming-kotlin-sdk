@@ -52,33 +52,27 @@ import kotlin.concurrent.read
 import kotlin.concurrent.write
 import kotlin.coroutines.CoroutineContext
 
-data class LocalPlatformWebSocketConnectionsConfiguration(
-    override val port: Int,
-    override val host: String?,
-    override val path: String
-) : WebSocketConnectionsConfiguration
-
 val CONNECTION_SUBJECT_ATTRIBUTE_KEY = AttributeKey<Subject>("Connection Subject")
 
 /**
- * WebSocket connections for local platform.
+ * WebSocket server for local platform.
  *
  * It uses [authorizer] to authorize and allocate a connection subject to check
  * its permission.
  *
  * @author Chuanwise
- * @see WebSocketConnections
+ * @see WebSocketServer
  * @see Authorizer
  */
-class LocalPlatformWebSocketConnections(
-    val configuration: LocalPlatformWebSocketConnectionsConfiguration,
+class LocalPlatformWebSocketServer(
+    val configuration: WebSocketServerConfiguration,
     val logger: KLogger,
     subject: Subject,
     val authorizer: Authorizer,
     applicationEngineFactory: ApplicationEngineFactory<*, *> = Netty,
     parentJob: Job? = null,
     parentCoroutineContext: CoroutineContext = Dispatchers.IO
-) : WebSocketConnections(
+) : WebSocketServer(
     configuration, logger, subject, applicationEngineFactory, parentJob, parentCoroutineContext
 ) {
     private val mutableConnections = mutableListOf<OnlineConnection>()

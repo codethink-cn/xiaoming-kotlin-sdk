@@ -45,7 +45,7 @@ import kotlin.concurrent.read
 import kotlin.concurrent.write
 import kotlin.coroutines.CoroutineContext
 
-interface WebSocketConnectionConfiguration {
+interface WebSocketClientConfiguration {
     val method: HttpMethod
     val host: String
     val port: Int
@@ -55,12 +55,12 @@ interface WebSocketConnectionConfiguration {
     val token: String
 }
 
-val WebSocketConnectionConfiguration.address: String
+val WebSocketClientConfiguration.address: String
     get() = "$host:$port$path"
 
 
-class WebSocketConnection(
-    private val configuration: WebSocketConnectionConfiguration,
+class WebSocketClient(
+    private val configuration: WebSocketClientConfiguration,
     private val logger: KLogger,
     subject: Subject,
     httpClient: HttpClient,

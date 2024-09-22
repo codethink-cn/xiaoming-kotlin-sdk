@@ -22,12 +22,12 @@ import cn.codethink.xiaoming.common.TextCause
 import kotlinx.coroutines.CoroutineScope
 
 /**
- * Connections is a server may hold multiple connections.
+ * Server may hold multiple connections.
  *
  * @author Chuanwise
- * @see WebSocketConnections
+ * @see WebSocketServer
  */
-interface Connections : AutoCloseable, CoroutineScope {
+interface Server : AutoCloseable, CoroutineScope {
     val connections: List<Connection>
     val isStarted: Boolean
     val isClosed: Boolean

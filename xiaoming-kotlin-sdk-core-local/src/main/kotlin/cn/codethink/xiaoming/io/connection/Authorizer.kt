@@ -28,3 +28,7 @@ interface Authorizer {
     fun connected(subject: Subject) = Unit
     fun disconnected(subject: Subject) = Unit
 }
+
+object EmptyAuthorizer : Authorizer {
+    override fun authorize(token: String): Subject? = null
+}

@@ -35,10 +35,10 @@ const val TEST_PORT = 11451
 const val TEST_PATH = "/1893/12/26"
 const val TEST_TOKEN = "ExampleAccessToken"
 
-class WebSocketConnectionTest {
+class WebSocketClientTest {
     val logger = KotlinLogging.logger { }
 
-    data class TestWebSocketConnectionConfiguration(
+    data class TestWebSocketClientConfiguration(
         override val method: HttpMethod = HttpMethod.Get,
         override val host: String = TEST_HOST,
         override val port: Int = TEST_PORT,
@@ -46,13 +46,13 @@ class WebSocketConnectionTest {
         override val maxReconnectAttempts: Int? = null,
         override val token: String = TEST_TOKEN,
         override val reconnectIntervalMillis: Long? = 5000
-    ) : WebSocketConnectionConfiguration
+    ) : WebSocketClientConfiguration
 
-    data class TestLocalPlatformWebSocketConnectionsConfiguration(
+    data class TestLocalPlatformWebSocketServerConfiguration(
         override val port: Int = TEST_PORT,
         override val host: String? = TEST_HOST,
         override val path: String = TEST_PATH
-    ) : LocalPlatformWebSocketConnectionsConfiguration
+    ) : WebSocketServerConfiguration
 
     inner class TestAuthorizer : Authorizer {
         override fun authorize(token: String): Subject? {
@@ -70,17 +70,17 @@ class WebSocketConnectionTest {
         val supervisorJob = SupervisorJob()
         val subject = XiaomingSdkSubject
 
-        val connections = LocalPlatformWebSocketConnections(
-            configuration = TestLocalPlatformWebSocketConnectionsConfiguration(),
+        val server = LocalPlatformWebSocketServer(
+            configuration = TestLocalPlatformWebSocketServerConfiguration(),
             logger = logger,
             subject = subject,
             authorizer = TestAuthorizer(),
             parentJob = supervisorJob
         )
 
-        val connectionConfiguration = TestWebSocketConnectionConfiguration()
-        val connection = WebSocketConnection(
-            configuration = connectionConfiguration,
+        val clientConfiguration = TestWebSocketClientConfiguration()
+        val client = WebSocketClient(
+            configuration = clientConfiguration,
             logger = logger,
             httpClient = HttpClient { install(WebSockets) },
             subject = subject,
@@ -89,23 +89,23 @@ class WebSocketConnectionTest {
 
         var durationMillis = currentTimeMillis
         while (true) {
-            connection.await(500)
-            if (connection.isConnected) {
+            client.await(500)
+            if (client.isConnected) {
                 break
             }
-            logger.info { "Waiting, connection.isConnected: ${connection.isConnected}, pass ${currentTimeMillis - durationMillis}ms." }
+            logger.info { "Waiting, connection.isConnected: ${client.isConnected}, pass ${currentTimeMillis - durationMillis}ms." }
         }
         durationMillis = currentTimeMillis - durationMillis
 
-        logger.info { "connection.isConnected: ${connection.isConnected}, cost ${durationMillis}ms." }
+        logger.info { "connection.isConnected: ${client.isConnected}, cost ${durationMillis}ms." }
 
         delay(100)
         logger.info { "Closing" }
-        connections.close()
+        server.close()
 
         logger.info { "Looking client effect" }
         delay(10000)
-        connection.close()
+        client.close()
 
         supervisorJob.cancel()
     }
@@ -115,20 +115,20 @@ class WebSocketConnectionTest {
         val supervisorJob = SupervisorJob()
         val subject = XiaomingSdkSubject
 
-        val connections = LocalPlatformWebSocketConnections(
-            configuration = TestLocalPlatformWebSocketConnectionsConfiguration(),
+        val server = LocalPlatformWebSocketServer(
+            configuration = TestLocalPlatformWebSocketServerConfiguration(),
             logger = logger,
             subject = subject,
             authorizer = TestAuthorizer(),
             parentJob = supervisorJob
         )
 
-        val connectionConfiguration = TestWebSocketConnectionConfiguration(
+        val clientConfiguration = TestWebSocketClientConfiguration(
             token = "WrongToken",
             reconnectIntervalMillis = 1000
         )
-        val connection = WebSocketConnection(
-            configuration = connectionConfiguration,
+        val connection = WebSocketClient(
+            configuration = clientConfiguration,
             logger = logger,
             httpClient = HttpClient { install(WebSockets) },
             subject = subject,
@@ -148,7 +148,7 @@ class WebSocketConnectionTest {
         assertFalse(connection.isConnected)
         logger.info { "connection.isConnected: ${connection.isConnected}, after ${durationMillis}ms." }
 
-        connections.close()
+        server.close()
         connection.close()
         supervisorJob.cancel()
     }

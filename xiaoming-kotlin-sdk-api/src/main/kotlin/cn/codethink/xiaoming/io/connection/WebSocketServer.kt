@@ -40,28 +40,28 @@ import kotlin.concurrent.read
 import kotlin.concurrent.write
 import kotlin.coroutines.CoroutineContext
 
-interface WebSocketConnectionsConfiguration {
+interface WebSocketServerConfiguration {
     val port: Int
     val host: String?
     val path: String
 }
 
-val WebSocketConnectionsConfiguration.address: String
+val WebSocketServerConfiguration.address: String
     get() = "$host:$port$path"
 
 /**
- * Connections on WebSocket.
+ * Server on WebSocket.
  *
  * @author Chuanwise
  */
-abstract class WebSocketConnections(
-    private val configuration: WebSocketConnectionsConfiguration,
+abstract class WebSocketServer(
+    private val configuration: WebSocketServerConfiguration,
     private val logger: KLogger,
     override val subject: Subject,
     applicationEngineFactory: ApplicationEngineFactory<*, *> = Netty,
     parentJob: Job? = null,
     parentCoroutineContext: CoroutineContext = Dispatchers.IO,
-) : Connections {
+) : Server {
     private val supervisorJob = SupervisorJob(parentJob)
     private val scope: CoroutineScope = CoroutineScope(parentCoroutineContext + supervisorJob)
     final override val coroutineContext: CoroutineContext by scope::coroutineContext

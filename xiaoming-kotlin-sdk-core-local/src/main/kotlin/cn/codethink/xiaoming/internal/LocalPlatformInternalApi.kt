@@ -24,6 +24,7 @@ import cn.codethink.xiaoming.common.XiaomingSdkSubject
 import cn.codethink.xiaoming.common.currentTimeMillis
 import cn.codethink.xiaoming.common.ensureExistedDirectory
 import cn.codethink.xiaoming.configuration.LocalPlatformConfiguration
+import cn.codethink.xiaoming.connection.ConnectionManagerApi
 import cn.codethink.xiaoming.data.LocalPlatformData
 import cn.codethink.xiaoming.internal.configuration.LocalPlatformInternalConfiguration
 import cn.codethink.xiaoming.internal.event.LocalPlatformStartingEvent
@@ -60,8 +61,8 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
     parentCoroutineContext: CoroutineContext = EmptyCoroutineContext
 ) : CoroutineScope, AutoCloseable {
     // Coroutine related APIs.
-    private val job = SupervisorJob(parentJob)
-    private val coroutineScope = CoroutineScope(parentCoroutineContext + job)
+    val supervisorJob = SupervisorJob(parentJob)
+    private val coroutineScope = CoroutineScope(parentCoroutineContext + supervisorJob)
     override val coroutineContext: CoroutineContext by coroutineScope::coroutineContext
 
     /**
@@ -84,6 +85,7 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
     val serializationApi = SerializationApi(this)
     val permissionServiceApi = LocalPermissionServiceApi(this)
     val moduleManagerApi = ModuleManagerApi(this)
+    val connectionManagerApi = ConnectionManagerApi(this)
 
     fun start(cause: Cause, subject: Subject) = lock.write {
         assertState(LocalPlatformInternalState.INITIALIZED) {

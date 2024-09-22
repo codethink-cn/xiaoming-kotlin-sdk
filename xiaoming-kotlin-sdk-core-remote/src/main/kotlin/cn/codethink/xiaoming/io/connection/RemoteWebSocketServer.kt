@@ -28,17 +28,17 @@ import kotlinx.coroutines.Job
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.coroutines.CoroutineContext
 
-interface RemoteWebSocketConnectionsConfiguration : WebSocketConnectionsConfiguration
+interface RemoteWebSocketServerConfiguration : WebSocketServerConfiguration
 
 
-class RemoteWebSocketConnections(
-    private val configuration: WebSocketConnectionsConfiguration,
+class RemoteWebSocketServer(
+    private val configuration: WebSocketServerConfiguration,
     private val logger: KLogger,
     override val subject: Subject,
     applicationEngineFactory: ApplicationEngineFactory<*, *> = Netty,
     parentJob: Job? = null,
     parentCoroutineContext: CoroutineContext = Dispatchers.IO
-) : WebSocketConnections(
+) : WebSocketServer(
     configuration, logger, subject, applicationEngineFactory, parentJob, parentCoroutineContext
 ) {
     private val mutableConnections: MutableList<Connection> = CopyOnWriteArrayList()
