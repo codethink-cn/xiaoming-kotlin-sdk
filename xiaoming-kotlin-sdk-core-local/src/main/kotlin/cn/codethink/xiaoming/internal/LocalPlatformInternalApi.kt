@@ -17,8 +17,7 @@
 package cn.codethink.xiaoming.internal
 
 import cn.codethink.xiaoming.common.Cause
-
-cimport cn.codethink.xiaoming.common.DEFAULT_LOCALE_LANGUAGE_FILE_PATH
+import cn.codethink.xiaoming.common.DEFAULT_LOCALE_LANGUAGE_FILE_PATH
 import cn.codethink.xiaoming.common.EventCause
 import cn.codethink.xiaoming.common.LANGUAGE_RESOURCE_DIRECTORY_PATH
 import cn.codethink.xiaoming.common.LanguageConfiguration
