@@ -38,7 +38,5 @@ interface FrameConnection : Connection {
      * Receiving channel.
      */
     val channel: Channel<String>
-
-    val isClosed: Boolean
     val isConnected: Boolean
 }

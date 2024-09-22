@@ -16,20 +16,10 @@
 
 package cn.codethink.xiaoming.io.connection
 
-import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.Subject
-import kotlinx.coroutines.CoroutineScope
-
 /**
- * A full-duplex connection.
- *
  * @author Chuanwise
  * @see FrameConnection
  */
-sealed interface Connection : CoroutineScope, AutoCloseable {
-    // Can only be changed by the connection itself on connected.
-    var subject: Subject
-    fun close(cause: Cause, subject: Subject)
-
-    val isClosed: Boolean
+interface FrameServer : Server {
+    override val connections: List<FrameConnection>
 }

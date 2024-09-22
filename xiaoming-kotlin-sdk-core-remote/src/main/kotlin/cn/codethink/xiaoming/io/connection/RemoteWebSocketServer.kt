@@ -41,8 +41,8 @@ class RemoteWebSocketServer(
 ) : WebSocketServer(
     configuration, logger, subject, applicationEngineFactory, parentJob, parentCoroutineContext
 ) {
-    private val mutableConnections: MutableList<Connection> = CopyOnWriteArrayList()
-    override val connections: List<Connection> = mutableConnections.toList()
+    private val mutableConnections: MutableList<FrameConnection> = CopyOnWriteArrayList()
+    override val connections: List<FrameConnection> = mutableConnections.toList()
 
     override suspend fun PipelineContext<Unit, ApplicationCall>.onConnect() {
         TODO("Not yet implemented")

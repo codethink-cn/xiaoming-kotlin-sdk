@@ -61,7 +61,7 @@ abstract class WebSocketServer(
     applicationEngineFactory: ApplicationEngineFactory<*, *> = Netty,
     parentJob: Job? = null,
     parentCoroutineContext: CoroutineContext = Dispatchers.IO,
-) : Server {
+) : FrameServer {
     private val supervisorJob = SupervisorJob(parentJob)
     private val scope: CoroutineScope = CoroutineScope(parentCoroutineContext + supervisorJob)
     final override val coroutineContext: CoroutineContext by scope::coroutineContext
@@ -125,7 +125,9 @@ abstract class WebSocketServer(
         }
 
         connections.forEach {
-            it.close(cause, subject)
+            if (!it.isClosed) {
+                it.close(cause, subject)
+            }
         }
 
         server.stop()

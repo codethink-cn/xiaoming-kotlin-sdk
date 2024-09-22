@@ -87,7 +87,9 @@ class LocalPlatformWebSocketServer(
         INITIALIZING,
         CONNECTED,
         DISCONNECTING,
-        DISCONNECTED
+        DISCONNECTED,
+        CLOSING,
+        CLOSED,
     }
 
     inner class OnlineConnection(
@@ -114,7 +116,7 @@ class LocalPlatformWebSocketServer(
             get() = onlineLock.read { stateNoLock == OnlineState.CONNECTED }
 
         override val isClosed: Boolean
-            get() = onlineLock.read { stateNoLock == OnlineState.DISCONNECTED }
+            get() = onlineLock.read { stateNoLock == OnlineState.CLOSED }
 
         private fun assertConnected() {
             if (!isConnected) {
@@ -176,16 +178,14 @@ class LocalPlatformWebSocketServer(
 
         override fun close(cause: Cause, subject: Subject) = onlineLock.write {
             stateNoLock = when (stateNoLock) {
-                OnlineState.INITIALIZING, OnlineState.CONNECTED, OnlineState.DISCONNECTING -> OnlineState.DISCONNECTED
-                else -> throw IllegalStateException("Online connection internal error: unexpected state before closing: $stateNoLock.")
+                OnlineState.INITIALIZING, OnlineState.CONNECTED, OnlineState.DISCONNECTING, OnlineState.DISCONNECTED -> OnlineState.CLOSING
+                else -> throw IllegalStateException("Online connection internal error: unexpected state before close: $stateNoLock.")
             }
-
-            stateNoLock = OnlineState.DISCONNECTING
             runBlocking {
                 session.close()
             }
             supervisorJob.cancel()
-            stateNoLock = OnlineState.DISCONNECTED
+            stateNoLock = OnlineState.CLOSED
 
             logger.debug { "Online connection with subject: $connectionSubject closed by $subject caused by $cause." }
         }
