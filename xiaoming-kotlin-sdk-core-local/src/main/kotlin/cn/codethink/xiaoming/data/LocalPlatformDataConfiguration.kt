@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.data
 
-import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
+import cn.codethink.xiaoming.internal.Serialization
 
 /**
  * Configuration storing where to read and save data.
@@ -25,5 +25,5 @@ import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
  */
 interface LocalPlatformDataConfiguration {
     val type: String
-    fun toDataApi(internalApi: LocalPlatformInternalApi): LocalPlatformDataApi
+    fun toDataApi(serialization: Serialization): LocalPlatformDataApi
 }

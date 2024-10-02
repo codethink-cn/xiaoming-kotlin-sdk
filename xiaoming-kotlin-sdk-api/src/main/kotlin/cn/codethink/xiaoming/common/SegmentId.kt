@@ -19,6 +19,8 @@ package cn.codethink.xiaoming.common
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.fasterxml.jackson.core.JsonGenerator
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
@@ -77,11 +79,8 @@ object SegmentIdStringSerializer : StdSerializer<SegmentId>(SegmentId::class.jav
 
 object SegmentIdStringDeserializer : StdDeserializer<SegmentId>(SegmentId::class.java) {
     private fun readResolve(): Any = SegmentIdStringDeserializer
-    override fun deserialize(
-        parser: com.fasterxml.jackson.core.JsonParser,
-        context: com.fasterxml.jackson.databind.DeserializationContext
-    ): SegmentId {
-        return segmentIdOf(parser.nextTextValue())
+    override fun deserialize(parser: JsonParser, context: DeserializationContext): SegmentId {
+        return segmentIdOf(parser.valueAsString)
     }
 }
 
@@ -625,7 +624,7 @@ fun compileSegmentIdMatcher(string: String): Matcher<SegmentId> {
 }
 
 @JsonTypeName(SEGMENT_ID_MATCHER_TYPE_LITERAL)
-data class LiteralSegmentIdMatcher @JsonCreator constructor(
+data class LiteralSegmentIdMatcher(
     val id: SegmentId
 ) : Matcher<SegmentId> {
     override val type: String

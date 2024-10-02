@@ -19,9 +19,7 @@
 package cn.codethink.xiaoming.io.data
 
 import cn.codethink.xiaoming.common.AnyMatcher
-import cn.codethink.xiaoming.common.Data
-import cn.codethink.xiaoming.common.DefaultDataDeserializer
-import cn.codethink.xiaoming.common.DefaultDataSerializer
+import cn.codethink.xiaoming.common.DataDeserializerModifier
 import cn.codethink.xiaoming.common.DefaultPluginSubjectMatcher
 import cn.codethink.xiaoming.common.DefaultSegmentIdMatcher
 import cn.codethink.xiaoming.common.FIELD_TYPE
@@ -47,66 +45,23 @@ import cn.codethink.xiaoming.permission.LiteralPermissionMatcher
 import com.fasterxml.jackson.core.JsonToken
 import com.fasterxml.jackson.core.Version
 import com.fasterxml.jackson.databind.Module
-import com.fasterxml.jackson.databind.introspect.Annotated
-import com.fasterxml.jackson.databind.introspect.NopAnnotationIntrospector
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
-import java.lang.reflect.Modifier
-
-/**
- * A Jackson annotation introspector that can create serializers and deserializers
- * of [Data] objects automatically.
- *
- * Notice that if the subclasses of [Data] class is marked with [DefaultSerialization],
- * it will not be serialized by [DefaultDataSerializer].
- *
- * Usage:
- *
- * ```kt
- * val mapper: ObjectMapper = jacksonObjectMapper().apply {
- *     setAnnotationIntrospector(AnnotationIntrospector.pair(
- *         // This class overrides some features of Jackson annotations.
- *         PlatformAnnotationIntrospector(),
- *         JacksonAnnotationIntrospector()
- *     ))
- * }
- * ```
- *
- * @author Chuanwise
- */
-class PlatformAnnotationIntrospector : NopAnnotationIntrospector() {
-    @Suppress("UNCHECKED_CAST")
-    override fun findDeserializer(annotated: Annotated): Any? {
-        if (Data::class.java.isAssignableFrom(annotated.rawType)) {
-            val modifiers = annotated.rawType.modifiers
-            if (!(Modifier.isInterface(modifiers) || Modifier.isAbstract(modifiers))) {
-                val rawClass: Class<out Data> = annotated.rawType as Class<out Data>
-                return DefaultDataDeserializer(rawClass)
-            }
-        }
-        return null
-    }
-
-    override fun findSerializer(annotated: Annotated): Any? {
-        if (Data::class.java.isAssignableFrom(annotated.rawType)) {
-            return DefaultDataSerializer
-        }
-        return null
-    }
-}
 
 class DeserializerModule(
     private val name: String = "DeserializerModule",
     private val version: Version = Version.unknownVersion(),
-    private val logger: KLogger = KotlinLogging.logger { }
+    logger: KLogger = KotlinLogging.logger { }
 ) : Module() {
     override fun getModuleName(): String = name
     override fun version(): Version = version
 
     val deserializers = PolymorphicDeserializers(logger)
+    val deserializerModifier = DataDeserializerModifier
 
     override fun setupModule(context: SetupContext) {
         context.addDeserializers(deserializers)
+        context.addBeanDeserializerModifier(deserializerModifier)
     }
 }
 

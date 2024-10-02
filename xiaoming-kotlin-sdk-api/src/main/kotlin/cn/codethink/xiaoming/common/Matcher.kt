@@ -17,6 +17,7 @@
 package cn.codethink.xiaoming.common
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
@@ -24,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
  *
  * @author Chuanwise
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 interface Matcher<out T> {
     val type: String
 

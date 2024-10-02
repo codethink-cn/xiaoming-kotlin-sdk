@@ -16,20 +16,26 @@
 
 package cn.codethink.xiaoming.io.connection
 
+import cn.codethink.xiaoming.TEST_CAUSE
+import cn.codethink.xiaoming.TEST_SUBJECT
+import cn.codethink.xiaoming.common.PlatformSubject
 import cn.codethink.xiaoming.common.PluginSubject
 import cn.codethink.xiaoming.common.Subject
-import cn.codethink.xiaoming.common.TextCause
 import cn.codethink.xiaoming.common.XiaomingProtocolSubject
 import cn.codethink.xiaoming.common.XiaomingSdkSubject
 import cn.codethink.xiaoming.common.currentTimeMillis
+import cn.codethink.xiaoming.common.getTestResourceAsStream
 import cn.codethink.xiaoming.common.segmentIdOf
 import cn.codethink.xiaoming.common.toId
-import cn.codethink.xiaoming.connection.ConnectionManagerConfigurationV1
+import cn.codethink.xiaoming.data.LocalPlatformData
+import cn.codethink.xiaoming.data.LocalPlatformDataConfiguration
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
-import cn.codethink.xiaoming.internal.configuration.LocalPlatformInternalConfiguration
-import cn.codethink.xiaoming.io.data.PlatformAnnotationIntrospector
-import com.fasterxml.jackson.databind.AnnotationIntrospector
-import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector
+import cn.codethink.xiaoming.internal.Serialization
+import cn.codethink.xiaoming.internal.configuration.DefaultLocalPlatformInternalConfiguration
+import cn.codethink.xiaoming.io.data.registerPlatformDeserializers
+import cn.codethink.xiaoming.io.registerLocalDataSqlDeserializers
+import cn.codethink.xiaoming.io.registerLocalPlatformDeserializers
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -39,7 +45,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
-import java.io.File
+import java.util.Locale
 
 const val TEST_HOST = "127.0.0.1"
 const val TEST_PORT = 11451
@@ -62,28 +68,33 @@ class WebSocketClientConnectionInternalApiTest {
 
     companion object {
         val logger = KotlinLogging.logger { }
-        val mapper = jacksonObjectMapper().apply {
-            setAnnotationIntrospector(
-                AnnotationIntrospector.pair(
-                    PlatformAnnotationIntrospector(),
-                    JacksonAnnotationIntrospector()
-                )
-            )
-            findAndRegisterModules()
+        val serialization = Serialization(
+            logger = logger,
+            objectMapper = jacksonObjectMapper().apply {
+                propertyNamingStrategy = PropertyNamingStrategies.SNAKE_CASE
+                findAndRegisterModules()
+            }
+        ).apply {
+            deserializers.registerPlatformDeserializers(TEST_SUBJECT)
+            deserializers.registerLocalPlatformDeserializers(TEST_SUBJECT)
+            deserializers.registerLocalDataSqlDeserializers(TEST_SUBJECT)
         }
 
-        val internalConfiguration = LocalPlatformInternalConfiguration(
-            workingDirectoryFile = File("platform"),
-            id = "Test".toId(),
-            connectionConfiguration = ConnectionManagerConfigurationV1(
-                keepConnectionsOnEmpty = true,
-                keepConnectionsOnReload = true,
-                servers = mutableMapOf(),
-                clients = mutableMapOf()
-            )
-        )
-        val api = LocalPlatformInternalApi(internalConfiguration, logger).apply {
-            start(TextCause("Run test programs"), XiaomingSdkSubject)
+        val api = LocalPlatformInternalApi(
+            logger = logger,
+            configuration = DefaultLocalPlatformInternalConfiguration(
+                id = "Test".toId(),
+                serialization = serialization,
+                locale = Locale.getDefault(),
+                data = LocalPlatformData(
+                    platformDataApi = getTestResourceAsStream("xiaoming/data.json").use {
+                        serialization.objectMapper.readValue(it, LocalPlatformDataConfiguration::class.java)
+                    }.toDataApi(serialization)
+                )
+            ),
+            subject = PlatformSubject("test".toId())
+        ).apply {
+            start(TEST_CAUSE, TEST_SUBJECT)
         }
     }
 
@@ -109,14 +120,14 @@ class WebSocketClientConnectionInternalApiTest {
             port = TEST_PORT,
             path = TEST_PATH,
             token = TEST_TOKEN,
-            reconnectIntervalMillis = null
+            reconnectIntervalMillis = 1000
         )
         val client = WebSocketClientConnectionInternalApi(
             configuration = clientConfiguration,
             logger = logger,
             httpClient = HttpClient { install(WebSockets) },
             subject = demoPluginSubject,
-            parentJob = supervisorJob
+            parentJob = supervisorJob,
         )
 
         var durationMillis = currentTimeMillis

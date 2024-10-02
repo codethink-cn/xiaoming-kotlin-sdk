@@ -43,10 +43,11 @@ class DataTest {
 
     @Test
     fun testDeserializeData() {
+        val deserializerModule = DeserializerModule().apply {
+            deserializers.registerPlatformDeserializers(XiaomingSdkSubject)
+        }
         val mapper = jacksonObjectMapper().apply {
-            registerModule(DeserializerModule().apply {
-                deserializers.registerPlatformDeserializers(XiaomingSdkSubject)
-            })
+            registerModule(deserializerModule)
             configure(SerializationFeature.INDENT_OUTPUT, true)
         }
         val packet = mapper.readValue<Packet>(

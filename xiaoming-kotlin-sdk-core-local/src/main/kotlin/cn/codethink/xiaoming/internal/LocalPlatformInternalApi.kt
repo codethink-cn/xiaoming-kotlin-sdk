@@ -17,33 +17,25 @@
 package cn.codethink.xiaoming.internal
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.DEFAULT_LOCALE_LANGUAGE_RESOURCE_DIRECTORY_PATH
 import cn.codethink.xiaoming.common.EventCause
-import cn.codethink.xiaoming.common.LANGUAGE_RESOURCE_DIRECTORY_PATH
 import cn.codethink.xiaoming.common.PlatformSubject
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.TextCause
 import cn.codethink.xiaoming.common.XiaomingSdkSubject
 import cn.codethink.xiaoming.common.currentTimeMillis
-import cn.codethink.xiaoming.common.ensureExistedDirectory
+import cn.codethink.xiaoming.common.withDurationLogging
 import cn.codethink.xiaoming.configuration.LocalPlatformConfiguration
 import cn.codethink.xiaoming.connection.ConnectionManagerApi
 import cn.codethink.xiaoming.data.LocalPlatformData
 import cn.codethink.xiaoming.internal.configuration.LocalPlatformInternalConfiguration
-import cn.codethink.xiaoming.internal.event.LocalPlatformStartingEvent
-import cn.codethink.xiaoming.internal.module.Module
+import cn.codethink.xiaoming.internal.event.PlatformStartingEvent
 import cn.codethink.xiaoming.internal.module.ModuleContext
-import cn.codethink.xiaoming.internal.module.ModuleManagerApi
 import cn.codethink.xiaoming.language.LanguageConfiguration
 import cn.codethink.xiaoming.permission.LocalPermissionServiceApi
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.oshai.kotlinlogging.KLogger
-import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import java.io.File
-import java.util.ServiceLoader
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
@@ -59,8 +51,9 @@ import kotlin.coroutines.EmptyCoroutineContext
  * @author Chuanwise
  */
 class LocalPlatformInternalApi @JvmOverloads constructor(
-    val internalConfiguration: LocalPlatformInternalConfiguration,
-    val logger: KLogger = KotlinLogging.logger { },
+    val logger: KLogger,
+    val configuration: LocalPlatformInternalConfiguration,
+    val subject: PlatformSubject,
     parentJob: Job? = null,
     parentCoroutineContext: CoroutineContext = EmptyCoroutineContext
 ) : CoroutineScope, AutoCloseable {
@@ -87,18 +80,10 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
         get() = lock.read { languageConfigurationNoLock!! }
         set(value) = lock.write { languageConfigurationNoLock = value }
 
-    private var dataNoLock: LocalPlatformData? = null
-    val data: LocalPlatformData
-        get() = lock.read { dataNoLock!! }
+    val data: LocalPlatformData by configuration::data
 
-    val serializationApi = SerializationApi(this)
     val permissionServiceApi = LocalPermissionServiceApi(this)
-    val moduleManagerApi = ModuleManagerApi(this)
     val connectionManagerApi = ConnectionManagerApi(this)
-
-    private var subjectNoLock: PlatformSubject? = null
-    val subject: PlatformSubject
-        get() = lock.read { subjectNoLock!! }
 
     fun start(cause: Cause, subject: Subject) = lock.write {
         assertState(LocalPlatformInternalState.INITIALIZED) {
@@ -120,78 +105,51 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
 
     // Only called when write lock acquired.
     private fun doStart(cause: Cause, subject: Subject) {
-        val startingEvent = LocalPlatformStartingEvent(this, cause, subject)
+        val startingEvent = PlatformStartingEvent(cause, subject, this)
         val startingEventCause = EventCause(startingEvent)
 
         // Install modules.
-        internalConfiguration.modules.forEach { installModule(it.first, startingEventCause, it.second) }
-        if (internalConfiguration.findAndLoadAllModules) {
-            ServiceLoader.load(Module::class.java).forEach { installModule(it, startingEventCause, XiaomingSdkSubject) }
-        }
-
-        // Set platform subject.
-        subjectNoLock = PlatformSubject(internalConfiguration.id)
-
-        // Load configuration if absent.
-        if (internalConfiguration.platformConfiguration != null) {
-            platformConfiguration = internalConfiguration.platformConfiguration
-        } else {
-            // 1. Load platform configuration.
-            val configurationsDirectoryFile = File(internalConfiguration.workingDirectoryFile, "configurations")
-            configurationsDirectoryFile.ensureExistedDirectory()
-
-            val configurationFile = File(configurationsDirectoryFile, "platform.yml")
-            if (!configurationFile.exists()) {
-                // Copy the default configuration file.
-                TODO("Copy the default configuration file.")
+        val moduleContext = ModuleContext(this, this.subject, startingEventCause)
+        configuration.modules.forEach {
+            doModuleRelatedAction("install module ${it.subject}") {
+                it.onPlatformStart(ModuleContext(this, XiaomingSdkSubject, startingEventCause))
             }
-
-            platformConfiguration = serializationApi.externalObjectMapper.readValue(configurationFile)
-
-            // 2. Load language file.
-            languageConfiguration = loadLanguageConfiguration()
         }
 
-        // Load data API.
-        platformConfiguration.data.toDataApi(this).also { dataNoLock = LocalPlatformData(this, it) }
-
-        // Start connections.
-        connectionManagerApi.onStart(cause, subject)
+        // Start plugins, etc.
 
         // Notice modules.
-        val moduleContext = ModuleContext(this, XiaomingSdkSubject, startingEventCause)
-        moduleManagerApi.modules.values.forEach {
-            try {
-                it.value.onPlatformStarted(moduleContext)
-            } catch (exception: Throwable) {
-                if (internalConfiguration.failOnModuleError) {
-                    throw exception
-                } else {
-                    logger.error(exception) { "Failed to notice module ${it.subject} that platform started." }
-                }
+        configuration.modules.forEach {
+            doModuleRelatedAction("notice module ${it.subject}") {
+                it.onPlatformStarted(moduleContext)
             }
         }
     }
 
-    private fun installModule(module: Module, cause: Cause, subject: Subject) {
+    private inline fun <reified T> doModuleRelatedAction(
+        description: String,
+        crossinline action: () -> T
+    ): T? {
         try {
-            moduleManagerApi.install(module, cause, XiaomingSdkSubject)
-            logger.info { "Module ${module.subject} installed from services (`findAndLoadAllModules` is true)." }
-        } catch (exception: Throwable) {
-            if (internalConfiguration.failOnModuleError) {
-                throw exception
+            return withDurationLogging(logger, description) {
+                action()
+            }
+        } catch (e: Exception) {
+            if (configuration.failOnModuleError) {
+                throw e
             } else {
-                logger.error(exception) { "Failed to install module ${module.subject} from `modules`." }
+                logger.error(e) { "Failed to $description." }
+                return null
             }
         }
     }
 
-    fun stop(cause: Cause) {
+    fun stop(cause: Cause, subject: Subject) {
         TODO()
     }
 
     override fun close() {
-        stop(TextCause("API closed."))
+        stop(TextCause("Local platform internal API closed."), subject)
     }
 }
 
@@ -202,39 +160,4 @@ fun LocalPlatformInternalApi.assertState(
     if (state != this.state) {
         throw IllegalStateException(block())
     }
-}
-
-private fun LocalPlatformInternalApi.loadLanguageConfiguration(): LanguageConfiguration {
-    val configurationsDirectoryFile = File(internalConfiguration.workingDirectoryFile, "configurations")
-
-    val languageDirectoryFile = File(configurationsDirectoryFile, "languages")
-    return LanguageConfiguration(
-        protocol = loadLanguageFile(languageDirectoryFile, "protocol.yml"),
-        connection = loadLanguageFile(languageDirectoryFile, "connection.yml")
-    )
-}
-
-private inline fun <reified T> LocalPlatformInternalApi.loadLanguageFile(languageDirectoryFile: File, name: String): T {
-    // 1. Find file in language directory.
-    val file = File(languageDirectoryFile, name)
-    if (file.isFile) {
-        return serializationApi.externalObjectMapper.readValue(languageDirectoryFile)
-    }
-
-    // 2. Find local locale language file in resource files.
-    val locale = internalConfiguration.locale
-    val specifiedFilePath = "$LANGUAGE_RESOURCE_DIRECTORY_PATH/$locale/$name"
-    val specifiedInputStream = javaClass.classLoader.getResourceAsStream(specifiedFilePath)
-    if (specifiedInputStream != null) {
-        return serializationApi.externalObjectMapper.readValue(specifiedInputStream)
-    }
-
-    logger.warn { "Cannot find language file $name for locale $locale from resource files, use default language (en_US) instead." }
-
-    // 3. Find default locale language file in resource files.
-    val defaultFilePath = "$DEFAULT_LOCALE_LANGUAGE_RESOURCE_DIRECTORY_PATH/$name"
-    val defaultInputStream = javaClass.classLoader.getResourceAsStream(defaultFilePath)
-        ?: throw NoSuchElementException("Cannot find default language resource file $defaultFilePath.")
-
-    return serializationApi.externalObjectMapper.readValue(defaultInputStream)
 }

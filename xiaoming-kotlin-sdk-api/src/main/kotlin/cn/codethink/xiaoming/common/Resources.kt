@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.internal.module
+package cn.codethink.xiaoming.common
 
-import cn.codethink.xiaoming.common.ModuleSubject
-import cn.codethink.xiaoming.common.XiaomingSdkSubject
-import cn.codethink.xiaoming.io.registerLocalDataSqlDeserializers
+import java.io.InputStream
 
-class SqlLocalDataModule : Module {
-    override val subject = ModuleSubject(
-        group = XiaomingSdkSubject.group,
-        name = "xiaoming-kotlin-sdk-core-local-data-sql",
-        version = XiaomingSdkSubject.version
-    )
+@InternalApi
+fun Any.getTestResourceAsStream(path: String): InputStream {
+    // 1. Get resource as stream.
+    this::class.java.classLoader.getResourceAsStream(path)?.let { return it }
 
-    override fun onPlatformStart(context: ModuleContext) {
-        context.internalApi.serializationApi.polymorphicDeserializers.registerLocalDataSqlDeserializers(subject)
+    // 2. Get example resource as stream.
+    val examplePath = "$path.example"
+    this::class.java.classLoader.getResourceAsStream(examplePath)?.let {
+        throw NoSuchElementException("Test resource not found: '$path'. Copy and modify example file: '$examplePath' first.")
     }
+
+    throw NoSuchElementException("Test resource not found: '$path'.")
 }

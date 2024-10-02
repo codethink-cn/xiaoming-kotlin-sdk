@@ -16,44 +16,66 @@
 
 package cn.codethink.xiaoming.permission
 
+import cn.codethink.xiaoming.TEST_CAUSE
+import cn.codethink.xiaoming.TEST_SUBJECT
+import cn.codethink.xiaoming.common.PlatformSubject
 import cn.codethink.xiaoming.common.PluginSubject
-import cn.codethink.xiaoming.common.TextCause
-import cn.codethink.xiaoming.common.XiaomingSdkSubject
+import cn.codethink.xiaoming.common.getTestResourceAsStream
 import cn.codethink.xiaoming.common.segmentIdOf
 import cn.codethink.xiaoming.common.toId
 import cn.codethink.xiaoming.common.toLiteralMatcher
-import cn.codethink.xiaoming.connection.ConnectionManagerConfigurationV1
+import cn.codethink.xiaoming.data.LocalPlatformData
+import cn.codethink.xiaoming.data.LocalPlatformDataConfiguration
 import cn.codethink.xiaoming.data.insertAndGetPermissionProfile
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
-import cn.codethink.xiaoming.internal.configuration.LocalPlatformInternalConfiguration
+import cn.codethink.xiaoming.internal.Serialization
+import cn.codethink.xiaoming.internal.configuration.DefaultLocalPlatformInternalConfiguration
+import cn.codethink.xiaoming.io.data.registerPlatformDeserializers
+import cn.codethink.xiaoming.io.registerLocalDataSqlDeserializers
+import cn.codethink.xiaoming.io.registerLocalPlatformDeserializers
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.io.File
+import java.util.Locale
 
 class LocalPermissionServiceTest {
-    companion object {
-        val logger = KotlinLogging.logger { }
-        val internalConfiguration = LocalPlatformInternalConfiguration(
-            workingDirectoryFile = File("platform"),
-            id = "Test".toId(),
-            connectionConfiguration = ConnectionManagerConfigurationV1(
-                keepConnectionsOnEmpty = true,
-                keepConnectionsOnReload = true,
-                servers = mutableMapOf(),
-                clients = mutableMapOf()
-            )
-        )
-        val api = LocalPlatformInternalApi(internalConfiguration, logger).apply {
-            start(TextCause("Run test programs"), XiaomingSdkSubject)
+    private val logger = KotlinLogging.logger { }
+    private val serialization = Serialization(
+        logger = logger,
+        objectMapper = jacksonObjectMapper().apply {
+            propertyNamingStrategy = PropertyNamingStrategies.SNAKE_CASE
+            findAndRegisterModules()
         }
-
-        val subject = PluginSubject(segmentIdOf("cn.codethink.xiaoming.demo"))
-        val subjectMatcher = subject.toLiteralMatcher()
-
-        val profile = api.data.insertAndGetPermissionProfile(subject)
+    ).apply {
+        deserializers.registerPlatformDeserializers(TEST_SUBJECT)
+        deserializers.registerLocalPlatformDeserializers(TEST_SUBJECT)
+        deserializers.registerLocalDataSqlDeserializers(TEST_SUBJECT)
     }
+
+    private val api = LocalPlatformInternalApi(
+        logger = logger,
+        configuration = DefaultLocalPlatformInternalConfiguration(
+            id = "Test".toId(),
+            serialization = serialization,
+            locale = Locale.getDefault(),
+            data = LocalPlatformData(
+                platformDataApi = getTestResourceAsStream("xiaoming/data.json").use {
+                    serialization.objectMapper.readValue(it, LocalPlatformDataConfiguration::class.java)
+                }.toDataApi(serialization)
+            )
+        ),
+        subject = PlatformSubject("test".toId())
+    ).apply {
+        start(TEST_CAUSE, TEST_SUBJECT)
+    }
+
+    private val subject = PluginSubject(segmentIdOf("cn.codethink.xiaoming.demo"))
+    private val subjectMatcher = subject.toLiteralMatcher()
+
+    private val profile = api.data.insertAndGetPermissionProfile(subject)
 
     @Test
     fun testSetSimplePermission() {

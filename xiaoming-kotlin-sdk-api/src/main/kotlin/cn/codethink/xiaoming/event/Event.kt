@@ -19,6 +19,8 @@ package cn.codethink.xiaoming.event
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
+import cn.codethink.xiaoming.io.data.getValue
+import cn.codethink.xiaoming.io.data.setValue
 
 /**
  * Represent an event that can be listened by listeners and published by subjects.
@@ -26,5 +28,15 @@ import cn.codethink.xiaoming.io.data.Raw
  * @author Chuanwise
  */
 abstract class Event(
-    raw: Raw = MapRaw()
-) : AbstractData(raw)
+    raw: Raw
+) : AbstractData(raw) {
+    var type: String by raw
+
+    @JvmOverloads
+    constructor(
+        type: String,
+        raw: Raw = MapRaw()
+    ) : this(raw) {
+        this.type = type
+    }
+}

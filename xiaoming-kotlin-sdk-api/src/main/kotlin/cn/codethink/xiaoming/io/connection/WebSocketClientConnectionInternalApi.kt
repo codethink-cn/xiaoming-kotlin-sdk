@@ -208,7 +208,15 @@ class WebSocketClientConnectionInternalApi(
             delay(reconnectIntervalMillis)
         }
 
-        close(TextCause("Max reconnect attempts reached or disconnected and reconnect is disabled."), subject)
+        close(
+            TextCause(
+                if (configuration.reconnectIntervalMillis != null) {
+                    "Max reconnect attempts reached or disconnected and reconnect is disabled."
+                } else {
+                    "Disconnected and reconnect is disabled."
+                }
+            ), subject
+        )
     }
 
     private fun assertConnected() {

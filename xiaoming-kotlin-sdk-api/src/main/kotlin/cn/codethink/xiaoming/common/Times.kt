@@ -18,6 +18,8 @@
 
 package cn.codethink.xiaoming.common
 
+import io.github.oshai.kotlinlogging.KLogger
+
 /**
  * Get the current time in seconds.
  *
@@ -28,3 +30,24 @@ val currentTimeSeconds: Long
 
 val currentTimeMillis: Long
     get() = System.currentTimeMillis()
+
+@InternalApi
+inline fun <reified T> withDurationLogging(
+    logger: KLogger,
+    description: String,
+    crossinline block: () -> T
+): T {
+    logger.debug { "$description." }
+
+    var durationTimeMillis = currentTimeMillis
+    try {
+        val result = block()
+        durationTimeMillis = currentTimeMillis - durationTimeMillis
+
+        logger.debug { "$description in ${durationTimeMillis}ms." }
+        return result
+    } catch (e: Exception) {
+        logger.warn { "$description quit after ${durationTimeMillis}ms." }
+        throw e
+    }
+}

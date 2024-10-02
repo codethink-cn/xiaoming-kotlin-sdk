@@ -1,0 +1,16 @@
+{
+  "type": "sql",
+  "version": 1,
+  "source": {
+    "type": "hikari_cp",
+    "properties": {
+      "jdbcUrl": "Your JDBC url here, don't forget to add testRuntimeOnly dependencies",
+      "username": "Your Database username here.",
+      "password": "Your Database password here."
+    }
+  },
+  "tables": {
+    "prefix": "demo_",
+    "names": {}
+  }
+}

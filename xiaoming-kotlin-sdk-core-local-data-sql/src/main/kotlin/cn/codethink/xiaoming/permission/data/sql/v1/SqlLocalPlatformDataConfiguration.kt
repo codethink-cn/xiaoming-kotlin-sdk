@@ -20,7 +20,7 @@ import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.FIELD_TYPE
 import cn.codethink.xiaoming.common.FIELD_VERSION
 import cn.codethink.xiaoming.data.LocalPlatformDataApi
-import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
+import cn.codethink.xiaoming.internal.Serialization
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.SqlDataSource
@@ -60,7 +60,7 @@ class SqlLocalPlatformDataConfigurationV1(
         this.tables = tables
     }
 
-    override fun toDataApi(internalApi: LocalPlatformInternalApi): LocalPlatformDataApi {
-        return SqlLocalPlatformDataApi(internalApi, this)
+    override fun toDataApi(serialization: Serialization): LocalPlatformDataApi {
+        return SqlLocalPlatformDataApi(serialization, this)
     }
 }

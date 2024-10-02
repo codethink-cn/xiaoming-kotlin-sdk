@@ -16,24 +16,19 @@
 
 package cn.codethink.xiaoming.connection
 
-import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.DefaultRegistration
 import cn.codethink.xiaoming.common.DefaultStringMapRegistrations
 import cn.codethink.xiaoming.common.Id
-import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.MapRegistrations
 import cn.codethink.xiaoming.common.Registration
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.TextCause
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
-import cn.codethink.xiaoming.internal.LocalPlatformInternalState
-import cn.codethink.xiaoming.internal.assertState
 import cn.codethink.xiaoming.io.action.ConnectRequestPara
 import cn.codethink.xiaoming.io.action.RequestHandler
 import cn.codethink.xiaoming.io.connection.Authorizer
 import cn.codethink.xiaoming.io.connection.EmptyAuthorizer
 import cn.codethink.xiaoming.io.connection.ServerApi
-import kotlin.concurrent.read
 
 class ConnectionManagerApi(
     private val internalApi: LocalPlatformInternalApi
@@ -51,75 +46,6 @@ class ConnectionManagerApi(
 
     // Associated by subject type.
     private val connectRequestHandlers = DefaultStringMapRegistrations<RequestHandler<ConnectRequestPara, Any?>>()
-
-    @InternalApi
-    fun onStart(cause: Cause, subject: Subject) = internalApi.lock.read {
-        // Register plugin enable and disable event listener.
-        onConfigurationReload(cause, subject)
-    }
-
-    @InternalApi
-    fun onConfigurationReload(cause: Cause, subject: Subject) = internalApi.lock.read {
-        internalApi.assertState(LocalPlatformInternalState.STARTING)
-
-        val connections = internalApi.internalConfiguration.connectionConfiguration
-        if (!connections.keepConnectionsOnReload) {
-            val keys = ArrayList(servers.toMap().keys)
-            keys.forEach {
-                val registration = servers.unregisterByKey(it)
-                if (registration != null) {
-                    registration.value.close(cause, subject)
-                    internalApi.logger.warn { "Close server $it because of configuration reload." }
-                }
-            }
-        }
-
-        // Close servers that are not in the configuration.
-        ArrayList(servers.toMap().entries).forEach {
-            // Check if item removed.
-            if (it.key in connections.servers) {
-                // Check if item's subject changed.
-                val configurationItem = connections.servers[it.key]!!
-                if (!it.value.keepOnConfigurationReload && !configurationItem.enable) {
-                    val registration = servers.unregisterByKey(it.key)
-                    if (registration != null) {
-                        registration.value.close(cause, subject)
-                        internalApi.logger.warn {
-                            "Close server ${it.key} because of configuration reload and this item is disabled."
-                        }
-                    }
-                }
-            } else {
-                if (!it.value.keepOnConfigurationReload) {
-                    val registration = servers.unregisterByKey(it.key)
-                    if (registration != null) {
-                        registration.value.close(cause, subject)
-                        internalApi.logger.warn {
-                            "Close server ${it.key} because of configuration reload and this item is removed."
-                        }
-                    }
-                }
-            }
-        }
-
-        // Check if server can be enabled.
-        connections.servers.forEach {
-            if (servers[it.key] == null && it.value.enable) {
-                val server = it.value.toServerApi(internalApi, it.key)
-                servers.register(
-                    it.key, ServerRegistration(
-                        keepOnConfigurationReload = false,
-                        keepOnNoAdapter = false,
-                        subject = internalApi.subject,
-                        value = server
-                    )
-                )
-                internalApi.logger.info {
-                    "Started server '${it.key}' due to configuration reloaded."
-                }
-            }
-        }
-    }
 
     fun getConnectRequestHandler(type: String): RequestHandler<ConnectRequestPara, Any?>? {
         return connectRequestHandlers[type]?.value

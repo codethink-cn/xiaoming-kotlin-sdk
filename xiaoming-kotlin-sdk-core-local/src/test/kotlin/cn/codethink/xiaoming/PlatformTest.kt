@@ -17,21 +17,29 @@
 package cn.codethink.xiaoming
 
 import cn.codethink.xiaoming.common.ConnectionSubject
+import cn.codethink.xiaoming.common.PlatformSubject
 import cn.codethink.xiaoming.common.TextCause
 import cn.codethink.xiaoming.common.XiaomingSdkSubject
+import cn.codethink.xiaoming.common.getTestResourceAsStream
 import cn.codethink.xiaoming.common.toId
-import cn.codethink.xiaoming.connection.ConnectionManagerConfigurationV1
-import cn.codethink.xiaoming.connection.WebSocketServerConfiguration
+import cn.codethink.xiaoming.data.LocalPlatformData
+import cn.codethink.xiaoming.data.LocalPlatformDataConfiguration
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
-import cn.codethink.xiaoming.internal.configuration.LocalPlatformInternalConfiguration
+import cn.codethink.xiaoming.internal.Serialization
+import cn.codethink.xiaoming.internal.configuration.DefaultLocalPlatformInternalConfiguration
 import cn.codethink.xiaoming.io.connection.DefaultWebSocketClientConfiguration
 import cn.codethink.xiaoming.io.connection.TextFrameConnectionApi
 import cn.codethink.xiaoming.io.connection.WebSocketClientConnectionInternalApi
+import cn.codethink.xiaoming.io.data.registerPlatformDeserializers
+import cn.codethink.xiaoming.io.registerLocalDataSqlDeserializers
+import cn.codethink.xiaoming.io.registerLocalPlatformDeserializers
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.WebSockets
 import org.junit.jupiter.api.Test
-import java.io.File
+import java.util.Locale
 
 const val TEST_PATH = "/"
 const val TEST_PORT = 8080
@@ -43,22 +51,33 @@ val TEST_SUBJECT = XiaomingSdkSubject
 class PlatformTest {
     companion object {
         val logger = KotlinLogging.logger { }
-        val internalConfiguration = LocalPlatformInternalConfiguration(
-            workingDirectoryFile = File("platform"),
-            id = "Test".toId(),
-            connectionConfiguration = ConnectionManagerConfigurationV1(
-                keepConnectionsOnEmpty = true,
-                keepConnectionsOnReload = true,
-                servers = mutableMapOf(
-                    "demo".toId() to WebSocketServerConfiguration(
-                        port = TEST_PORT,
-                        path = TEST_PATH,
-                    )
-                ),
-                clients = mutableMapOf()
-            )
-        )
-        val platformInternalApi = LocalPlatformInternalApi(internalConfiguration, logger).apply {
+
+        val serialization = Serialization(
+            logger = logger,
+            objectMapper = jacksonObjectMapper().apply {
+                propertyNamingStrategy = PropertyNamingStrategies.SNAKE_CASE
+                findAndRegisterModules()
+            }
+        ).apply {
+            deserializers.registerPlatformDeserializers(TEST_SUBJECT)
+            deserializers.registerLocalPlatformDeserializers(TEST_SUBJECT)
+            deserializers.registerLocalDataSqlDeserializers(TEST_SUBJECT)
+        }
+
+        val api = LocalPlatformInternalApi(
+            logger = logger,
+            configuration = DefaultLocalPlatformInternalConfiguration(
+                id = "Test".toId(),
+                serialization = serialization,
+                locale = Locale.getDefault(),
+                data = LocalPlatformData(
+                    platformDataApi = getTestResourceAsStream("xiaoming/data.json").use {
+                        serialization.objectMapper.readValue(it, LocalPlatformDataConfiguration::class.java)
+                    }.toDataApi(serialization)
+                )
+            ),
+            subject = PlatformSubject("test".toId())
+        ).apply {
             start(TEST_CAUSE, TEST_SUBJECT)
         }
     }
@@ -81,7 +100,7 @@ class PlatformTest {
 
         val connectionApi = TextFrameConnectionApi(
             logger = logger,
-            objectMapper = platformInternalApi.serializationApi.internalObjectMapper,
+            objectMapper = serialization.objectMapper,
             connectionInternalApi = connectionInternalApi
         )
 

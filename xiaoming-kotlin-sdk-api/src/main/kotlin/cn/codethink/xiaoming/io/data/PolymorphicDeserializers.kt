@@ -17,6 +17,7 @@
 package cn.codethink.xiaoming.io.data
 
 import cn.codethink.xiaoming.common.Data
+import cn.codethink.xiaoming.common.DataDeserializer
 import cn.codethink.xiaoming.common.DefaultDataDeserializer
 import cn.codethink.xiaoming.common.DefaultDeserializer
 import cn.codethink.xiaoming.common.Registration
@@ -90,6 +91,7 @@ class PolymorphicDeserializers(
     private val tokenBasedDeserializerRegistrations =
         mutableMapOf<Class<*>, MutableMap<JsonToken, TokenBasedDeserializerRegistration<*>>>()
 
+    @DataDeserializer
     @Suppress("UNCHECKED_CAST")
     private inner class DynamicDeserializer<T>(
         private val type: Class<T>
@@ -197,7 +199,7 @@ class PolymorphicDeserializers(
             if (deserializerCandidates.isEmpty()) {
                 throw NoSuchElementException("No deserializer found for type $type.")
             } else if (deserializerCandidates.size == 1) {
-                deserializerCandidates[0].deserialize(node.traverse(parser.codec), context) as T
+                deserializerCandidates.single().deserialize(node.traverse(parser.codec), context) as T
             } else {
                 throw IllegalStateException(
                     "Ambiguous deserializers for type $type: " +

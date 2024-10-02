@@ -17,42 +17,45 @@
 package cn.codethink.xiaoming.internal.configuration
 
 import cn.codethink.xiaoming.common.Id
-import cn.codethink.xiaoming.common.Subject
-import cn.codethink.xiaoming.configuration.LocalPlatformConfiguration
-import cn.codethink.xiaoming.connection.ConnectionManagerConfiguration
+import cn.codethink.xiaoming.data.LocalPlatformData
+import cn.codethink.xiaoming.internal.Serialization
 import cn.codethink.xiaoming.internal.module.Module
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.PropertyNamingStrategies
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import java.io.File
 import java.util.Locale
 
-fun defaultInternalObjectMapper() = jacksonObjectMapper().apply {
-    setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+interface LocalPlatformInternalConfiguration {
+    val id: Id
+
+    /**
+     * Serialization related APIs.
+     */
+    val serialization: Serialization
+
+    /**
+     * Locale of the platform.
+     */
+    val locale: Locale
+
+    /**
+     * Data accessing API.
+     */
+    val data: LocalPlatformData
+
+    /**
+     * Modules to install.
+     */
+    val modules: List<Module>
+
+    /**
+     * Whether to fail on module error.
+     */
+    val failOnModuleError: Boolean
 }
 
-fun defaultExternalObjectMapper() = YAMLMapper.builder()
-    .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
-    .propertyNamingStrategy(PropertyNamingStrategies.KEBAB_CASE)
-    .build()
-
-/**
- * Effect configuration for local platform.
- *
- * @author Chuanwise
- */
-data class LocalPlatformInternalConfiguration(
-    val workingDirectoryFile: File,
-    val id: Id,
-    val locale: Locale = Locale.getDefault(),
-    val modules: List<Pair<Module, Subject>> = emptyList(),
-    val platformConfiguration: LocalPlatformConfiguration? = null,
-    val connectionConfiguration: ConnectionManagerConfiguration,
-    val internalObjectMapper: ObjectMapper = defaultInternalObjectMapper(),
-    val externalObjectMapper: ObjectMapper = defaultExternalObjectMapper(),
-    var findAndLoadAllModules: Boolean = true,
-    var findAndLoadAllJacksonModules: Boolean = true,
-    var failOnModuleError: Boolean = true
-)
+data class DefaultLocalPlatformInternalConfiguration(
+    override val id: Id,
+    override val serialization: Serialization,
+    override val locale: Locale,
+    override val data: LocalPlatformData,
+    override val modules: List<Module> = emptyList(),
+    override val failOnModuleError: Boolean = true
+) : LocalPlatformInternalConfiguration

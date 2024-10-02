@@ -47,7 +47,7 @@ dependencies {
 
     val mysqlConnectorVersion: String by rootProject
     testRuntimeOnly("com.mysql:mysql-connector-j:$mysqlConnectorVersion")
-    testRuntimeOnly(project(":xiaoming-kotlin-sdk-core-local-data-sql"))
+    testImplementation(project(":xiaoming-kotlin-sdk-core-local-data-sql"))
 
     val ktorVersion: String by rootProject
     implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")

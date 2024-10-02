@@ -20,11 +20,15 @@ import cn.codethink.xiaoming.io.data.NodeRaw
 import cn.codethink.xiaoming.io.data.Raw
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.databind.BeanDescription
+import com.fasterxml.jackson.databind.DeserializationConfig
 import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.node.ObjectNode
 
@@ -106,6 +110,31 @@ class DefaultDataDeserializer<T : Data>(
     }
 }
 
+@Target(AnnotationTarget.CLASS, AnnotationTarget.TYPE)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class DataDeserializer
+
+object DataDeserializerModifier : BeanDeserializerModifier() {
+    private fun readResolve(): Any = DataDeserializerModifier
+
+    override fun modifyDeserializer(
+        config: DeserializationConfig,
+        beanDesc: BeanDescription,
+        deserializer: JsonDeserializer<*>
+    ): JsonDeserializer<*> {
+        if (!beanDesc.type.isTypeOrSubTypeOf(Data::class.java)) {
+            return super.modifyDeserializer(config, beanDesc, deserializer)
+        }
+
+        if (deserializer.javaClass.getAnnotation(DataDeserializer::class.java) != null) {
+            return deserializer
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        return DefaultDataDeserializer(beanDesc.type.rawClass as Class<Data>)
+    }
+}
+
 inline fun <reified T : Data> DefaultDataDeserializer() = DefaultDataDeserializer(T::class.java)
 
 /**
@@ -116,8 +145,18 @@ inline fun <reified T : Data> DefaultDataDeserializer() = DefaultDataDeserialize
 class DefaultDeserializer<T>(
     private val type: Class<T>
 ) : StdDeserializer<T>(type) {
+    private val recursive = ThreadLocal<Boolean>()
+
     override fun deserialize(parser: JsonParser, context: DeserializationContext): T {
-        return parser.readValueAs(type)
+        if (recursive.get() != null) {
+            throw IllegalStateException("Cannot deserialize object recursively.")
+        }
+        try {
+            recursive.set(true)
+            return parser.readValueAs(type)
+        } finally {
+            recursive.set(null)
+        }
     }
 }
 

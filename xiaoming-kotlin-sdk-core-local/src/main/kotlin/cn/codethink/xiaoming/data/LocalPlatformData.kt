@@ -16,10 +16,6 @@
 
 package cn.codethink.xiaoming.data
 
-import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
-
 class LocalPlatformData(
-    val internalApi: LocalPlatformInternalApi,
-    val dataApi: LocalPlatformDataApi
-) : LocalPlatformDataApi by dataApi {
-}
+    private val platformDataApi: LocalPlatformDataApi
+) : LocalPlatformDataApi by platformDataApi
