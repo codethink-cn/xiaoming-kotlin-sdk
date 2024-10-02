@@ -57,6 +57,7 @@ interface InheritancePermissionComparator : PermissionComparator {
 
 const val INHERITANCE_PERMISSION_COMPARATOR_VERSION_1 = "1"
 
+@JsonTypeName(INHERITANCE_PERMISSION_COMPARATOR_VERSION_1)
 class InheritancePermissionComparatorV1(
     raw: Raw
 ) : AbstractData(raw), InheritancePermissionComparator {

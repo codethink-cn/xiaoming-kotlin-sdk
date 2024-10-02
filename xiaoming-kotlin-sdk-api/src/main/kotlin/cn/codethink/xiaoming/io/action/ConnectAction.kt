@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.io.connection
+package cn.codethink.xiaoming.io.action
 
-import cn.codethink.xiaoming.common.Cause
+import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.Subject
-import cn.codethink.xiaoming.common.TextCause
-import kotlinx.coroutines.CoroutineScope
+import cn.codethink.xiaoming.io.data.MapRaw
+import cn.codethink.xiaoming.io.data.Raw
+import cn.codethink.xiaoming.io.data.getValue
+import cn.codethink.xiaoming.io.data.setValue
 
-/**
- * Server may hold multiple connections.
- *
- * @author Chuanwise
- * @see WebSocketServer
- */
-interface Server : AutoCloseable, CoroutineScope {
-    val connections: List<Connection>
-    val isStarted: Boolean
-    val isClosed: Boolean
-    val subject: Subject
+class ConnectRequestPara(
+    raw: Raw
+) : AbstractData(raw) {
+    var subject: Subject by raw
 
-    fun close(cause: Cause, subject: Subject)
-    override fun close() = close(TextCause("Server closed."), subject)
+    @JvmOverloads
+    constructor(
+        subject: Subject,
+        raw: Raw = MapRaw()
+    ) : this(raw) {
+        this.subject = subject
+    }
 }

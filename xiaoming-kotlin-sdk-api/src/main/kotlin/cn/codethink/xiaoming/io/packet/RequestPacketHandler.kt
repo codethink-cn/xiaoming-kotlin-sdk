@@ -16,141 +16,103 @@
 
 package cn.codethink.xiaoming.io.packet
 
-import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.DefaultRegistration
 import cn.codethink.xiaoming.common.ErrorMessageCause
 import cn.codethink.xiaoming.common.MapRegistrations
 import cn.codethink.xiaoming.common.RECEIPT_STATE_FAILED
 import cn.codethink.xiaoming.common.RECEIPT_STATE_INTERRUPTED
+import cn.codethink.xiaoming.common.RECEIPT_STATE_RECEIVED
 import cn.codethink.xiaoming.common.RECEIPT_STATE_SUCCEED
 import cn.codethink.xiaoming.common.RECEIPT_STATE_UNDEFINED
 import cn.codethink.xiaoming.common.REQUEST_MODE_ASYNC
-import cn.codethink.xiaoming.common.REQUEST_MODE_ASYNC_RESULT
 import cn.codethink.xiaoming.common.REQUEST_MODE_SYNC
-import cn.codethink.xiaoming.common.REQUEST_PACKET_FIELD_ARGUMENT
 import cn.codethink.xiaoming.common.Registration
 import cn.codethink.xiaoming.common.Subject
-import cn.codethink.xiaoming.common.XiaomingProtocolSubject
 import cn.codethink.xiaoming.common.currentTimeMillis
 import cn.codethink.xiaoming.common.currentTimeSeconds
 import cn.codethink.xiaoming.io.ERROR_ACTION_HANDLER_TIMEOUT
 import cn.codethink.xiaoming.io.ERROR_INTERNAL_ACTION_HANDLER_ERROR
 import cn.codethink.xiaoming.io.ERROR_UNSUPPORTED_REQUEST_MODE
+import cn.codethink.xiaoming.io.ProtocolLanguageConfiguration
 import cn.codethink.xiaoming.io.action.Action
-import cn.codethink.xiaoming.io.data.ReceiptPacket
-import cn.codethink.xiaoming.io.data.RequestPacket
+import cn.codethink.xiaoming.io.action.FailedRequestResult
+import cn.codethink.xiaoming.io.action.InterruptedRequestResult
+import cn.codethink.xiaoming.io.action.PacketRequestContext
+import cn.codethink.xiaoming.io.action.RequestHandler
+import cn.codethink.xiaoming.io.action.SucceedRequestResult
+import cn.codethink.xiaoming.io.buildActionHandlerTimeoutArguments
+import cn.codethink.xiaoming.io.buildUnsupportedRequestActionArguments
+import cn.codethink.xiaoming.io.buildUnsupportedRequestModeArguments
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.time.withTimeout
 import java.time.Duration
-import java.util.concurrent.locks.ReentrantReadWriteLock
-
-/**
- * The receipt of a request action.
- *
- * @author Chuanwise
- * @see SucceedRequestActionReceipt
- * @see FailedRequestActionReceipt
- */
-sealed interface RequestActionReceipt<R> {
-    val succeed: Boolean
-}
-
-data class SucceedRequestActionReceipt<R>(
-    val data: R
-) : RequestActionReceipt<R> {
-    override val succeed: Boolean
-        get() = true
-}
-
-data class FailedRequestActionReceipt<R>(
-    val cause: Cause
-) : RequestActionReceipt<R> {
-    override val succeed: Boolean
-        get() = false
-}
-
-class RequestActionContext(
-    api: PacketApi,
-    packet: RequestPacket,
-    val receipt: ReceiptPacket
-) : PacketContext(api, packet)
-
-interface RequestActionHandler<P, R> {
-    suspend fun handle(context: RequestActionContext, argument: P): RequestActionReceipt<R>
-}
 
 /**
  * Handle the [RequestPacket]s.
  *
  * @author Chuanwise
  */
-class RequestPacketHandler : PacketHandler {
+class RequestPacketHandler(
+    private val language: ProtocolLanguageConfiguration,
+    subject: Subject
+) : PacketHandler {
     inner class SyncRequestPacketHandler : PacketHandler {
         override suspend fun handle(context: PacketContext) {
-            TODO("Not yet implemented")
+            dispatchActionAndGetReceipt(context)?.let {
+                context.send(it)
+            }
         }
     }
 
     inner class AsyncRequestPacketHandler : PacketHandler {
         override suspend fun handle(context: PacketContext) {
-            TODO("Not yet implemented")
+            context.send(ReceiptPacket(
+                id = randomUuidString(),
+                target = context.received.packet.id,
+                state = RECEIPT_STATE_RECEIVED,
+                subject = context.connection.subject,
+                session = context.connection.session,
+            ))
+
+            dispatchActionAndGetReceipt(context)
         }
     }
 
-    inner class AsyncResultRequestPacketHandler : PacketHandler {
-        override suspend fun handle(context: PacketContext) {
-            TODO("Not yet implemented")
-        }
-    }
+    private val modes = MapRegistrations<String, PacketHandler, DefaultRegistration<PacketHandler>>()
 
-    val requestModeHandlers = MapRegistrations<String, PacketHandler, DefaultRegistration<PacketHandler>>().apply {
-        register(REQUEST_MODE_SYNC, DefaultRegistration(SyncRequestPacketHandler(), XiaomingProtocolSubject))
-        register(REQUEST_MODE_ASYNC, DefaultRegistration(AsyncRequestPacketHandler(), XiaomingProtocolSubject))
-        register(
-            REQUEST_MODE_ASYNC_RESULT,
-            DefaultRegistration(AsyncResultRequestPacketHandler(), XiaomingProtocolSubject)
-        )
-    }
-
-    class Metrics {
-        val lock: ReentrantReadWriteLock = ReentrantReadWriteLock()
-
-        var handleCount: Int = 0
-        var succeedCount: Int = 0
-        var failedCount: Int = 0
-        var timeoutCount: Int = 0
-        var durationMillis: Long = 0
-    }
-
-    class PacketActionHandlerRegistration<P, R>(
+    inner class PacketActionHandlerRegistration<P, R>(
         val action: Action<P, R>,
-        override val value: RequestActionHandler<P, R>,
+        override val value: RequestHandler<P, R>,
         override val subject: Subject
-    ) : Registration<RequestActionHandler<P, R>> {
-        val metrics: Metrics = Metrics()
-    }
+    ) : Registration<RequestHandler<P, R>>
 
-    val requestActionHandlers =
-        MapRegistrations<String, RequestActionHandler<Nothing, Nothing>, PacketActionHandlerRegistration<Nothing, Nothing>>()
+    private val actions = MapRegistrations<String, RequestHandler<Nothing, Nothing>, PacketActionHandlerRegistration<Nothing, Nothing>>()
+
+    init {
+        registerModeHandler(REQUEST_MODE_SYNC, SyncRequestPacketHandler(), subject)
+        registerModeHandler(REQUEST_MODE_ASYNC, AsyncRequestPacketHandler(), subject)
+    }
 
     override suspend fun handle(context: PacketContext) {
-        val packet: RequestPacket = context.packet as RequestPacket
+        val packet: RequestPacket = context.received.packet as RequestPacket
 
-        val requestModeHandlerRegistration = requestModeHandlers[packet.mode]
+        val requestModeHandlerRegistration = modes[packet.mode]
         if (requestModeHandlerRegistration == null) {
-            val arguments = buildUnsupportedRequestModeArguments(packet.mode, requestModeHandlers.toMap().keys)
-            val message = context.language.unsupportedRequestMode.format(arguments)
+            val arguments = buildUnsupportedRequestModeArguments(packet.mode, modes.toMap().keys)
+            val message = language.unsupportedRequestMode.format(arguments)
 
-            context.api.send(
+            context.send(
                 ReceiptPacket(
-                    id = randomPacketId(),
+                    id = randomUuidString(),
+                    target = packet.id,
                     state = RECEIPT_STATE_FAILED,
-                    request = packet.id,
+                    subject = context.connection.subject,
                     cause = ErrorMessageCause(
                         error = ERROR_UNSUPPORTED_REQUEST_MODE,
                         message = message,
                         context = arguments
-                    )
+                    ),
+                    session = context.connection.session
                 )
             )
             context.logger.warn { message }
@@ -158,31 +120,30 @@ class RequestPacketHandler : PacketHandler {
         }
 
         // Set cause.
-
-
         requestModeHandlerRegistration.value.handle(context)
     }
 
-    private suspend fun doAction(context: PacketContext): ReceiptPacket? {
-        val packet = context.packet as RequestPacket
+    private suspend fun dispatchActionAndGetReceipt(context: PacketContext): ReceiptPacket? {
+        val request = context.received.packet as RequestPacket
 
         @Suppress("UNCHECKED_CAST")
-        val requestActionHandlerRegistration =
-            requestActionHandlers[packet.action] as PacketActionHandlerRegistration<Any?, Any?>?
-        if (requestActionHandlerRegistration == null) {
-            val arguments = buildUnsupportedRequestActionArguments(packet.action)
-            val message = context.api.language.unsupportedRequestAction.format(arguments)
+        val registration = actions[request.action] as PacketActionHandlerRegistration<Any?, Any?>?
+        if (registration == null) {
+            val arguments = buildUnsupportedRequestActionArguments(request.action)
+            val message = language.unsupportedRequestAction.format(arguments)
 
-            context.api.send(
+            context.send(
                 ReceiptPacket(
-                    id = randomPacketId(),
+                    id = randomUuidString(),
+                    target = request.id,
                     state = RECEIPT_STATE_FAILED,
-                    request = packet.id,
+                    subject = context.connection.subject,
                     cause = ErrorMessageCause(
                         error = ERROR_UNSUPPORTED_REQUEST_MODE,
                         message = message,
                         context = arguments
-                    )
+                    ),
+                    session = context.connection.session
                 )
             )
             context.logger.warn { message }
@@ -191,63 +152,68 @@ class RequestPacketHandler : PacketHandler {
 
         // Create receipt packet for action handler to extend fields.
         val receipt = ReceiptPacket(
-            id = randomPacketId(),
+            id = randomUuidString(),
+            target = request.id,
             state = RECEIPT_STATE_UNDEFINED,
-            request = packet.id,
-        )
-        val requestActionContext = RequestActionContext(context.api, context.packet, receipt)
-
-        // Deserialize argument.
-        val argument = packet.raw.get(
-            name = REQUEST_PACKET_FIELD_ARGUMENT,
-            type = requestActionHandlerRegistration.action.requestArgument.type,
-            optional = requestActionHandlerRegistration.action.requestArgument.optional,
-            nullable = requestActionHandlerRegistration.action.requestArgument.nullable
+            subject = context.connection.subject,
+            session = context.connection.session
         )
 
         // Handle the request action.
-        val timeout = Duration.ofSeconds(packet.timeout)
+        val timeout = Duration.ofSeconds(request.timeout)
         var durationSeconds = currentTimeSeconds
         var durationMillis = currentTimeMillis
 
         return try {
             // Handle packet.
             val result = withTimeout(timeout) {
-                requestActionHandlerRegistration.value.handle(requestActionContext, argument)
+                registration.value.handle(
+                    PacketRequestContext(
+                        action = registration.action,
+                        request = request,
+                        defaultSubject = context.connection.subject,
+                        receipt = receipt,
+                        connection = context.connection
+                    )
+                )
             }
 
             // Calculate duration and log it.
             durationSeconds = currentTimeSeconds - durationSeconds
             durationMillis = currentTimeSeconds - durationMillis
-            context.logger.info {
-                "Handle request action ${packet.type} succeed, " +
-                        "cost ${durationSeconds}s (${durationMillis}ms)."
+            context.logger.debug {
+                "Handle request action ${request.type} returns $result, cost ${durationSeconds}s (${durationMillis}ms)."
             }
 
             // Update receipt packet fields.
             when (result) {
-                is SucceedRequestActionReceipt<*> -> receipt.apply {
+                is SucceedRequestResult -> receipt.apply {
                     state = RECEIPT_STATE_SUCCEED
                     data = result.data
                 }
 
-                is FailedRequestActionReceipt<*> -> receipt.apply {
+                is FailedRequestResult -> receipt.apply {
                     state = RECEIPT_STATE_FAILED
+                    cause = result.cause
+                }
+
+                is InterruptedRequestResult -> receipt.apply {
+                    state = RECEIPT_STATE_INTERRUPTED
                     cause = result.cause
                 }
             }
         } catch (exception: TimeoutCancellationException) {
-            val arguments = buildActionHandlerTimeoutArguments(packet.timeout)
-            val message = context.language.actionHandlerTimeout.format(arguments)
+            val arguments = buildActionHandlerTimeoutArguments(request.timeout)
+            val message = language.actionHandlerTimeout.format(arguments)
 
             // Calculate duration and log it.
             durationSeconds = currentTimeSeconds - durationSeconds
             durationMillis = currentTimeSeconds - durationMillis
 
             context.logger.warn {
-                "Timeout occurred while handling request action: $packet " +
-                        "after ${durationSeconds}s (${durationMillis}ms), expected: ${packet.timeout}s. " +
-                        "The handler is registered by ${requestActionHandlerRegistration.subject}."
+                "Timeout occurred while handling request action: $request " +
+                        "after ${durationSeconds}s (${durationMillis}ms), expected: ${request.timeout}s. " +
+                        "The handler is registered by ${registration.subject}."
             }
             receipt.apply {
                 state = RECEIPT_STATE_INTERRUPTED
@@ -263,11 +229,11 @@ class RequestPacketHandler : PacketHandler {
             durationMillis = currentTimeSeconds - durationMillis
 
             // Log error.
-            val message = context.api.language.internalActionHandlerError.toString()
+            val message = language.internalActionHandlerError.toString()
             context.logger.error(exception) {
-                "Exception occurred while handling request action:$packet " +
+                "Exception occurred while handling request action:$request " +
                         "after ${durationSeconds}s (${durationMillis}ms). " +
-                        "The handler is registered by ${requestActionHandlerRegistration.subject}."
+                        "The handler is registered by ${registration.subject}."
             }
 
             // Update receipt packet fields.
@@ -280,5 +246,35 @@ class RequestPacketHandler : PacketHandler {
                 )
             }
         }
+    }
+
+    fun registerModeHandler(mode: String, handler: PacketHandler, subject: Subject) {
+        modes.register(mode, DefaultRegistration(handler, subject))
+    }
+
+    fun unregisterModeHandlerByMode(mode: String) {
+        modes.unregisterByKey(mode)
+    }
+
+    fun unregisterModeHandlerBySubject(subject: Subject) {
+        modes.unregisterBySubject(subject)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun <P, R> registerActionHandler(action: Action<P, R>, handler: RequestHandler<P, R>, subject: Subject) {
+        actions.register(action.name, PacketActionHandlerRegistration(action, handler, subject) as PacketActionHandlerRegistration<Nothing, Nothing>)
+    }
+
+    fun unregisterActionHandlerByAction(action: String) {
+        actions.unregisterByKey(action)
+    }
+
+    fun unregisterActionHandlerBySubject(subject: Subject) {
+        actions.unregisterBySubject(subject)
+    }
+
+    fun unregisterBySubject(subject: Subject) {
+        unregisterModeHandlerBySubject(subject)
+        unregisterActionHandlerBySubject(subject)
     }
 }

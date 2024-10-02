@@ -1,5 +1,4 @@
 # Packet handler related.
-unsupportedPacketType": "数据包类型 ${packetType} 不被协议支持，可接受的类型有：${supportedPacketTypes}。"
 unsupportedRequestMode": "请求模式 ${requestMode} 不被协议支持，可接受的模式有：${supportedRequestModes}。"
 unsupportedRequestAction": "请求动作 ${requestAction} 不被协议支持。"
 internalActionHandlerError": "请求处理器内部出现意外错误。"

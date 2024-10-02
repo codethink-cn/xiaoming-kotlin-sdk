@@ -18,15 +18,17 @@ package cn.codethink.xiaoming.connection
 
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
-import cn.codethink.xiaoming.io.connection.Connection
+import cn.codethink.xiaoming.io.connection.ConnectionInternalApi
 
 /**
- * Configuration to establish a [Connection].
+ * Configuration to establish a [ConnectionInternalApi].
+ *
+ * It maybe a client, or a server with only one online connected client.
  *
  * @author Chuanwise
  */
 interface ConnectionConfiguration {
     val type: String
     val subject: Subject
-    fun toConnection(api: LocalPlatformInternalApi): Connection
+    fun toConnection(api: LocalPlatformInternalApi): ConnectionInternalApi<*>
 }

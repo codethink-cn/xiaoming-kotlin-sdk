@@ -17,7 +17,7 @@
 package cn.codethink.xiaoming.language
 
 import cn.codethink.xiaoming.connection.ConnectionLanguageConfiguration
-import cn.codethink.xiaoming.io.packet.ProtocolLanguageConfiguration
+import cn.codethink.xiaoming.io.ProtocolLanguageConfiguration
 
 /**
  * Language configuration.

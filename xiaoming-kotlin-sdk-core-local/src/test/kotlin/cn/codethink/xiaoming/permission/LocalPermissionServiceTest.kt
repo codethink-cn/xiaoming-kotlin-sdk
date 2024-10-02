@@ -22,13 +22,10 @@ import cn.codethink.xiaoming.common.XiaomingSdkSubject
 import cn.codethink.xiaoming.common.segmentIdOf
 import cn.codethink.xiaoming.common.toId
 import cn.codethink.xiaoming.common.toLiteralMatcher
+import cn.codethink.xiaoming.connection.ConnectionManagerConfigurationV1
 import cn.codethink.xiaoming.data.insertAndGetPermissionProfile
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import cn.codethink.xiaoming.internal.configuration.LocalPlatformInternalConfiguration
-import cn.codethink.xiaoming.io.data.PlatformAnnotationIntrospector
-import com.fasterxml.jackson.databind.AnnotationIntrospector
-import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -38,19 +35,15 @@ import java.io.File
 class LocalPermissionServiceTest {
     companion object {
         val logger = KotlinLogging.logger { }
-        val mapper = jacksonObjectMapper().apply {
-            setAnnotationIntrospector(
-                AnnotationIntrospector.pair(
-                    PlatformAnnotationIntrospector(),
-                    JacksonAnnotationIntrospector()
-                )
-            )
-            findAndRegisterModules()
-        }
-
         val internalConfiguration = LocalPlatformInternalConfiguration(
             workingDirectoryFile = File("platform"),
-            id = "Test".toId()
+            id = "Test".toId(),
+            connectionConfiguration = ConnectionManagerConfigurationV1(
+                keepConnectionsOnEmpty = true,
+                keepConnectionsOnReload = true,
+                servers = mutableMapOf(),
+                clients = mutableMapOf()
+            )
         )
         val api = LocalPlatformInternalApi(internalConfiguration, logger).apply {
             start(TextCause("Run test programs"), XiaomingSdkSubject)

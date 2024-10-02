@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.connection
-
-import cn.codethink.xiaoming.common.Id
-import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
-import cn.codethink.xiaoming.io.connection.ServerApi
+package cn.codethink.xiaoming.io.action
 
 /**
- * Configuration to establish [ServerApi].
+ * Used to handle a request.
  *
  * @author Chuanwise
  */
-interface ServerConfiguration {
-    val type: String
-    val enable: Boolean
-
-    fun toServerApi(api: LocalPlatformInternalApi, id: Id): ServerApi
+interface RequestHandler<P, R> {
+    fun handle(context: RequestContext<P, R>) : RequestResult<R>
 }

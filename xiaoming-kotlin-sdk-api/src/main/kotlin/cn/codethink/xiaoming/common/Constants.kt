@@ -26,14 +26,14 @@ const val REQUEST_PACKET_FIELD_ARGUMENT = "argument"
 
 const val REQUEST_MODE_SYNC = "sync"
 const val REQUEST_MODE_ASYNC = "async"
-const val REQUEST_MODE_ASYNC_RESULT = "async_result"
 
 const val PACKET_TYPE_RECEIPT = "receipt"
+const val RECEIPT_PACKET_FIELD_DATA = "data"
+
 const val RECEIPT_STATE_UNDEFINED = "undefined"
 const val RECEIPT_STATE_SUCCEED = "succeed"
 const val RECEIPT_STATE_FAILED = "failed"
 const val RECEIPT_STATE_RECEIVED = "received"
-const val RECEIPT_STATE_CANCELLED = "cancelled"
 const val RECEIPT_STATE_INTERRUPTED = "interrupted"
 
 const val SUBJECT_FIELD_TYPE = FIELD_TYPE
@@ -68,7 +68,6 @@ const val CAUSE_TYPE_PACKET_ID = "packet_id"
 const val PACKET_DATA_CAUSE_FIELD_PACKET = "packet"
 const val PACKET_CAUSE_FIELD_ID = "id"
 
-const val PUBLISH_EVENT_REQUEST_ACTION = "publish_event"
 const val PUBLISH_EVENT_REQUEST_PARA_TYPE = "type"
 const val PUBLISH_EVENT_REQUEST_PARA_EVENT = "event"
 const val PUBLISH_EVENT_REQUEST_PARA_MUTABLE = "mutable"

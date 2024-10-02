@@ -14,20 +14,24 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.connection
+package cn.codethink.xiaoming.io.connection
 
-import cn.codethink.xiaoming.common.Id
-import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
-import cn.codethink.xiaoming.io.connection.ServerApi
+import cn.codethink.xiaoming.common.Cause
+import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.TextCause
+import kotlinx.coroutines.CoroutineScope
 
 /**
- * Configuration to establish [ServerApi].
+ * Server accept connections.
  *
  * @author Chuanwise
+ * @see WebSocketServerApi
  */
-interface ServerConfiguration {
-    val type: String
-    val enable: Boolean
+interface ServerApi : AutoCloseable, CoroutineScope {
+    val isStarted: Boolean
+    val isClosed: Boolean
+    val subject: Subject
 
-    fun toServerApi(api: LocalPlatformInternalApi, id: Id): ServerApi
+    fun close(cause: Cause, subject: Subject)
+    override fun close() = close(TextCause("Server closed."), subject)
 }

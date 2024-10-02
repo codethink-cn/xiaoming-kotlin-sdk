@@ -31,6 +31,7 @@ import io.ktor.server.websocket.WebSocketServerSession
 import io.ktor.server.websocket.WebSockets
 import io.ktor.server.websocket.webSocket
 import io.ktor.util.pipeline.PipelineContext
+import io.ktor.websocket.Frame
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -42,26 +43,32 @@ import kotlin.coroutines.CoroutineContext
 
 interface WebSocketServerConfiguration {
     val port: Int
-    val host: String?
     val path: String
+    val host: String
 }
 
 val WebSocketServerConfiguration.address: String
     get() = "$host:$port$path"
+
+data class DefaultWebSocketServerConfiguration(
+    override val port: Int,
+    override val path: String,
+    override val host: String = "0.0.0.0",
+) : WebSocketServerConfiguration
 
 /**
  * Server on WebSocket.
  *
  * @author Chuanwise
  */
-abstract class WebSocketServer(
+abstract class WebSocketServerApi(
     private val configuration: WebSocketServerConfiguration,
     private val logger: KLogger,
     override val subject: Subject,
     applicationEngineFactory: ApplicationEngineFactory<*, *> = Netty,
     parentJob: Job? = null,
     parentCoroutineContext: CoroutineContext = Dispatchers.IO,
-) : FrameServer {
+) : LongConnectionServerApi<Frame> {
     private val supervisorJob = SupervisorJob(parentJob)
     private val scope: CoroutineScope = CoroutineScope(parentCoroutineContext + supervisorJob)
     final override val coroutineContext: CoroutineContext by scope::coroutineContext
@@ -89,7 +96,7 @@ abstract class WebSocketServer(
         applicationEngineFactory,
         parentCoroutineContext = coroutineContext,
         port = configuration.port,
-        host = configuration.host ?: "0.0.0.0"
+        host = configuration.host
     ) {
         module()
     }.start()
@@ -124,7 +131,7 @@ abstract class WebSocketServer(
             }
         }
 
-        connections.forEach {
+        connectionApis.forEach {
             if (!it.isClosed) {
                 it.close(cause, subject)
             }

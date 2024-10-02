@@ -16,27 +16,14 @@
 
 package cn.codethink.xiaoming.io.connection
 
-import kotlinx.coroutines.channels.Channel
+import io.ktor.websocket.Frame
+import io.ktor.websocket.WebSocketSession
 
 /**
- * A connection that deals with frames.
+ * Connection for WebSocket.
  *
  * @author Chuanwise
  */
-interface FrameConnection : Connection {
-    /**
-     * Send a string to the other side.
-     */
-    suspend fun send(string: String)
-
-    /**
-     * Receive a string from the other side.
-     */
-    suspend fun receive(string: String)
-
-    /**
-     * Receiving channel.
-     */
-    val channel: Channel<String>
-    val isConnected: Boolean
+interface WebSocketConnectionInternalApi : LongConnectionInternalApi<Frame> {
+    val session: WebSocketSession
 }

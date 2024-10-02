@@ -14,27 +14,31 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.connection
+package cn.codethink.xiaoming
 
-import cn.codethink.xiaoming.common.PlatformSubject
-import cn.codethink.xiaoming.common.SUBJECT_TYPE_PLATFORM
+import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.event.Event
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
-import cn.codethink.xiaoming.io.connection.Connection
+import cn.codethink.xiaoming.io.ProtocolLanguageConfiguration
+import cn.codethink.xiaoming.io.action.EventSnapshot
 
-/**
- * Adapt current connection as a platform.
- *
- * @author Chuanwise
- */
-object PlatformConnectionAdapter : ConnectionAdapter {
-    override fun adapt(api: LocalPlatformInternalApi, subject: Subject, connection: Connection): Boolean {
-        if (subject !is PlatformSubject || subject.type != SUBJECT_TYPE_PLATFORM) {
-            throw IllegalArgumentException("Unexpected subject: $subject.")
-        }
+class LocalPlatformApi(
+    val platformInternalApi: LocalPlatformInternalApi,
+    override val language: ProtocolLanguageConfiguration
+) : PlatformApi {
 
+    fun start(cause: Cause, subject: Subject) {
 
+    }
 
-        return true
+    override fun publishEvent(
+        type: String,
+        event: Event,
+        mutable: Boolean,
+        timeout: Long?,
+        cause: Cause?
+    ): List<EventSnapshot> {
+        TODO("Not yet implemented")
     }
 }

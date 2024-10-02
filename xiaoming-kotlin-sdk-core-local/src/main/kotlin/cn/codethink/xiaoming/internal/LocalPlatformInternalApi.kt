@@ -155,6 +155,9 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
         // Load data API.
         platformConfiguration.data.toDataApi(this).also { dataNoLock = LocalPlatformData(this, it) }
 
+        // Start connections.
+        connectionManagerApi.onStart(cause, subject)
+
         // Notice modules.
         val moduleContext = ModuleContext(this, XiaomingSdkSubject, startingEventCause)
         moduleManagerApi.modules.values.forEach {

@@ -19,6 +19,7 @@ package cn.codethink.xiaoming.connection
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.DefaultRegistration
 import cn.codethink.xiaoming.common.DefaultStringMapRegistrations
+import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.MapRegistrations
 import cn.codethink.xiaoming.common.Registration
@@ -27,9 +28,11 @@ import cn.codethink.xiaoming.common.TextCause
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import cn.codethink.xiaoming.internal.LocalPlatformInternalState
 import cn.codethink.xiaoming.internal.assertState
+import cn.codethink.xiaoming.io.action.ConnectRequestPara
+import cn.codethink.xiaoming.io.action.RequestHandler
 import cn.codethink.xiaoming.io.connection.Authorizer
 import cn.codethink.xiaoming.io.connection.EmptyAuthorizer
-import cn.codethink.xiaoming.io.connection.Server
+import cn.codethink.xiaoming.io.connection.ServerApi
 import kotlin.concurrent.read
 
 class ConnectionManagerApi(
@@ -41,31 +44,32 @@ class ConnectionManagerApi(
         val keepOnConfigurationReload: Boolean,
         val keepOnNoAdapter: Boolean,
         override val subject: Subject,
-        override val value: Server
-    ) : Registration<Server>
+        override val value: ServerApi
+    ) : Registration<ServerApi>
 
-    private val servers = MapRegistrations<String, Server, ServerRegistration>()
+    private val servers = MapRegistrations<Id, ServerApi, ServerRegistration>()
 
     // Associated by subject type.
-    private val adapters = DefaultStringMapRegistrations<ConnectionAdapter>()
+    private val connectRequestHandlers = DefaultStringMapRegistrations<RequestHandler<ConnectRequestPara, Any?>>()
 
     @InternalApi
     fun onStart(cause: Cause, subject: Subject) = internalApi.lock.read {
         // Register plugin enable and disable event listener.
+        onConfigurationReload(cause, subject)
     }
 
     @InternalApi
     fun onConfigurationReload(cause: Cause, subject: Subject) = internalApi.lock.read {
         internalApi.assertState(LocalPlatformInternalState.STARTING)
 
-        val connections = internalApi.platformConfiguration.connections
-        if (!connections.keepConnections) {
+        val connections = internalApi.internalConfiguration.connectionConfiguration
+        if (!connections.keepConnectionsOnReload) {
             val keys = ArrayList(servers.toMap().keys)
             keys.forEach {
                 val registration = servers.unregisterByKey(it)
                 if (registration != null) {
                     registration.value.close(cause, subject)
-                    internalApi.logger.warn { "Close server $it because of configuration reload and `keepConnections = false`." }
+                    internalApi.logger.warn { "Close server $it because of configuration reload." }
                 }
             }
         }
@@ -76,16 +80,6 @@ class ConnectionManagerApi(
             if (it.key in connections.servers) {
                 // Check if item's subject changed.
                 val configurationItem = connections.servers[it.key]!!
-                if (it.value.value.subject != configurationItem.subject) {
-                    val registration = servers.unregisterByKey(it.key)
-                    if (registration != null) {
-                        registration.value.close(cause, subject)
-                        internalApi.logger.warn {
-                            "Close server ${it.key} because of configuration reload and its subject is changed " +
-                                    "from ${it.value.value.subject} to ${configurationItem.subject}."
-                        }
-                    }
-                }
                 if (!it.value.keepOnConfigurationReload && !configurationItem.enable) {
                     val registration = servers.unregisterByKey(it.key)
                     if (registration != null) {
@@ -111,59 +105,32 @@ class ConnectionManagerApi(
         // Check if server can be enabled.
         connections.servers.forEach {
             if (servers[it.key] == null && it.value.enable) {
-                val registration = adapters[it.value.subject.type]
-                if (registration == null) {
-                    internalApi.logger.warn {
-                        "Cannot enable server ${it.key} because there is no adapter for subject type ${it.value.subject.type}."
-                    }
-                } else {
-                    val server = it.value.toServer(internalApi)
-                    servers.register(
-                        it.key, ServerRegistration(
-                            keepOnConfigurationReload = false,
-                            keepOnNoAdapter = false,
-                            subject = it.value.subject,
-                            value = server
-                        )
+                val server = it.value.toServerApi(internalApi, it.key)
+                servers.register(
+                    it.key, ServerRegistration(
+                        keepOnConfigurationReload = false,
+                        keepOnNoAdapter = false,
+                        subject = internalApi.subject,
+                        value = server
                     )
-                    internalApi.logger.info {
-                        "Started server ${it.key} with subject ${it.value.subject} and type ${it.value.subject.type} due to configuration reloaded."
-                    }
+                )
+                internalApi.logger.info {
+                    "Started server '${it.key}' due to configuration reloaded."
                 }
             }
         }
     }
 
-    fun getConnectionAdapter(type: String): ConnectionAdapter? = adapters[type]?.value
-
-    fun registerConnectionAdapter(type: String, adapter: ConnectionAdapter, subject: Subject) {
-        val effected = adapters[type] == null
-        adapters.register(type, DefaultRegistration(adapter, subject))
-
-        if (effected) {
-            // Find if there are some server need to be started.
-            val connections = internalApi.platformConfiguration.connections
-            connections.servers.forEach {
-                if (it.value.subject.type == type && it.value.enable && servers[it.key] == null) {
-                    val server = it.value.toServer(internalApi)
-                    servers.register(
-                        it.key, ServerRegistration(
-                            keepOnConfigurationReload = false,
-                            keepOnNoAdapter = false,
-                            subject = it.value.subject,
-                            value = server
-                        )
-                    )
-                    internalApi.logger.info {
-                        "Started server ${it.key} with subject ${it.value.subject} and type ${it.value.subject.type} due to adapter registered."
-                    }
-                }
-            }
-        }
+    fun getConnectRequestHandler(type: String): RequestHandler<ConnectRequestPara, Any?>? {
+        return connectRequestHandlers[type]?.value
     }
 
-    fun unregisterConnectionAdapterByType(type: String) {
-        val effected = adapters.unregisterByKey(type) != null
+    fun registerConnectRequestHandler(type: String, handler: RequestHandler<ConnectRequestPara, Any?>, subject: Subject) {
+        connectRequestHandlers.register(type, DefaultRegistration(handler, subject))
+    }
+
+    fun unregisterConnectRequestHandlerByType(type: String) {
+        val effected = connectRequestHandlers.unregisterByKey(type) != null
         if (effected) {
             // Find if there are some server need to be stopped.
             ArrayList(servers.toMap().entries).forEach {

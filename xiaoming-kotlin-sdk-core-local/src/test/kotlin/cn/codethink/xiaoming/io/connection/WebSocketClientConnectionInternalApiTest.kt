@@ -24,6 +24,7 @@ import cn.codethink.xiaoming.common.XiaomingSdkSubject
 import cn.codethink.xiaoming.common.currentTimeMillis
 import cn.codethink.xiaoming.common.segmentIdOf
 import cn.codethink.xiaoming.common.toId
+import cn.codethink.xiaoming.connection.ConnectionManagerConfigurationV1
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import cn.codethink.xiaoming.internal.configuration.LocalPlatformInternalConfiguration
 import cn.codethink.xiaoming.io.data.PlatformAnnotationIntrospector
@@ -33,7 +34,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.WebSockets
-import io.ktor.http.HttpMethod
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -46,24 +46,8 @@ const val TEST_PORT = 11451
 const val TEST_PATH = "/1893/12/26"
 const val TEST_TOKEN = "ExampleAccessToken"
 
-class WebSocketClientTest {
+class WebSocketClientConnectionInternalApiTest {
     val logger = KotlinLogging.logger { }
-
-    data class TestWebSocketClientConfiguration(
-        override val method: HttpMethod = HttpMethod.Get,
-        override val host: String = TEST_HOST,
-        override val port: Int = TEST_PORT,
-        override val path: String = TEST_PATH,
-        override val maxReconnectAttempts: Int? = null,
-        override val token: String = TEST_TOKEN,
-        override val reconnectIntervalMillis: Long? = 5000
-    ) : WebSocketClientConfiguration
-
-    data class TestLocalPlatformWebSocketServerConfiguration(
-        override val port: Int = TEST_PORT,
-        override val host: String? = TEST_HOST,
-        override val path: String = TEST_PATH
-    ) : WebSocketServerConfiguration
 
     inner class TestAuthorizer : Authorizer {
         override fun authorize(token: String): Subject? {
@@ -90,7 +74,13 @@ class WebSocketClientTest {
 
         val internalConfiguration = LocalPlatformInternalConfiguration(
             workingDirectoryFile = File("platform"),
-            id = "Test".toId()
+            id = "Test".toId(),
+            connectionConfiguration = ConnectionManagerConfigurationV1(
+                keepConnectionsOnEmpty = true,
+                keepConnectionsOnReload = true,
+                servers = mutableMapOf(),
+                clients = mutableMapOf()
+            )
         )
         val api = LocalPlatformInternalApi(internalConfiguration, logger).apply {
             start(TextCause("Run test programs"), XiaomingSdkSubject)
@@ -102,16 +92,26 @@ class WebSocketClientTest {
         val demoPluginSubject = PluginSubject(segmentIdOf("cn.codethink.xiaoming.demo"))
         val supervisorJob = SupervisorJob()
 
-        val server = LocalPlatformWebSocketServer(
-            configuration = TestLocalPlatformWebSocketServerConfiguration(),
+        val server = LocalPlatformWebSocketServerApi(
+            configuration = DefaultWebSocketServerConfiguration(
+                port = TEST_PORT,
+                host = TEST_HOST,
+                path = TEST_PATH
+            ),
             internalApi = api,
             subject = api.subject,
             authorizer = TestAuthorizer(),
             parentJob = supervisorJob
         )
 
-        val clientConfiguration = TestWebSocketClientConfiguration()
-        val client = WebSocketClient(
+        val clientConfiguration = DefaultWebSocketClientConfiguration(
+            host = TEST_HOST,
+            port = TEST_PORT,
+            path = TEST_PATH,
+            token = TEST_TOKEN,
+            reconnectIntervalMillis = null
+        )
+        val client = WebSocketClientConnectionInternalApi(
             configuration = clientConfiguration,
             logger = logger,
             httpClient = HttpClient { install(WebSockets) },
@@ -147,19 +147,26 @@ class WebSocketClientTest {
         val supervisorJob = SupervisorJob()
         val subject = XiaomingSdkSubject
 
-        val server = LocalPlatformWebSocketServer(
-            configuration = TestLocalPlatformWebSocketServerConfiguration(),
+        val server = LocalPlatformWebSocketServerApi(
+            configuration = DefaultWebSocketServerConfiguration(
+                port = TEST_PORT,
+                host = TEST_HOST,
+                path = TEST_PATH
+            ),
             internalApi = api,
             subject = subject,
             authorizer = TestAuthorizer(),
             parentJob = supervisorJob
         )
 
-        val clientConfiguration = TestWebSocketClientConfiguration(
+        val clientConfiguration = DefaultWebSocketClientConfiguration(
+            host = TEST_HOST,
+            port = TEST_PORT,
+            path = TEST_PATH,
             token = "WrongToken",
             reconnectIntervalMillis = 1000
         )
-        val connection = WebSocketClient(
+        val connection = WebSocketClientConnectionInternalApi(
             configuration = clientConfiguration,
             logger = logger,
             httpClient = HttpClient { install(WebSockets) },

@@ -180,6 +180,29 @@ class PlatformSubject(
     }
 }
 
+const val SUBJECT_TYPE_CONNECTION = "connection"
+
+/**
+ * Represent a subject that is a platform. Type is [SUBJECT_TYPE_CONNECTION].
+ *
+ * @author Chuanwise
+ */
+@JsonTypeName(SUBJECT_TYPE_CONNECTION)
+class ConnectionSubject(
+    raw: Raw
+) : Subject(raw) {
+    var id: Id by raw
+
+    @JvmOverloads
+    constructor(
+        id: Id,
+        raw: Raw = MapRaw()
+    ) : this(raw) {
+        raw[FIELD_TYPE] = SUBJECT_TYPE_CONNECTION
+        this.id = id
+    }
+}
+
 /**
  * Used to match plugin subject from [Subject]. Type is
  * [DEFAULT_PLUGIN_SUBJECT_MATCHER_FIELD_ID_MATCHER].

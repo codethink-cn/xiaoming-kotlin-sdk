@@ -18,18 +18,35 @@ package cn.codethink.xiaoming.io.connection
 
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.TextCause
+import cn.codethink.xiaoming.common.currentTimeSeconds
+import cn.codethink.xiaoming.io.action.Action
 import kotlinx.coroutines.CoroutineScope
 
 /**
- * A full-duplex connection.
+ * Used to do request and get its response.
  *
  * @author Chuanwise
- * @see FrameConnection
+ * @see PacketConnection
  */
-sealed interface Connection : CoroutineScope, AutoCloseable {
-    // Can only be changed by the connection itself on connected.
-    var subject: Subject
-    fun close(cause: Cause, subject: Subject)
-
+interface Connection<T> : AutoCloseable, CoroutineScope {
+    val subject: Subject
+    val session: String
     val isClosed: Boolean
+
+    suspend fun <P, R> request(
+        action: Action<P, R>,
+        mode: String,
+        timeout: Long,
+        argument: P? = null,
+        subject: Subject? = null,
+        time: Long = currentTimeSeconds,
+        cause: Cause? = null
+    ) : Pair<Received<T>, R?>
+
+    fun close(cause: Cause, subject: Subject)
+    override fun close() = close(TextCause("Connection closed."), subject)
 }
+
+val Connection<*>.isNotClosed: Boolean
+    get() = !isClosed

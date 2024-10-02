@@ -14,17 +14,12 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.connection
-
-import cn.codethink.xiaoming.common.Subject
-import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
-import cn.codethink.xiaoming.io.connection.Connection
+package cn.codethink.xiaoming.io.connection
 
 /**
- * Adapt current platform to be a subject.
- *
  * @author Chuanwise
+ * @see LongConnectionInternalApi
  */
-interface ConnectionAdapter {
-    fun adapt(api: LocalPlatformInternalApi, subject: Subject, connection: Connection): Boolean
+interface LongConnectionServerApi<T> : ServerApi {
+    val connectionApis: List<LongConnectionInternalApi<T>>
 }

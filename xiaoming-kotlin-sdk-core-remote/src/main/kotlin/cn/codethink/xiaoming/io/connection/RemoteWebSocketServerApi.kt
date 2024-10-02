@@ -25,24 +25,23 @@ import io.ktor.server.websocket.WebSocketServerSession
 import io.ktor.util.pipeline.PipelineContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.coroutines.CoroutineContext
 
 interface RemoteWebSocketServerConfiguration : WebSocketServerConfiguration
 
 
-class RemoteWebSocketServer(
+abstract class RemoteWebSocketServerApi(
     private val configuration: WebSocketServerConfiguration,
     private val logger: KLogger,
     override val subject: Subject,
     applicationEngineFactory: ApplicationEngineFactory<*, *> = Netty,
     parentJob: Job? = null,
     parentCoroutineContext: CoroutineContext = Dispatchers.IO
-) : WebSocketServer(
+) : WebSocketServerApi(
     configuration, logger, subject, applicationEngineFactory, parentJob, parentCoroutineContext
 ) {
-    private val mutableConnections: MutableList<FrameConnection> = CopyOnWriteArrayList()
-    override val connections: List<FrameConnection> = mutableConnections.toList()
+//    private val mutableConnections: MutableList<LongConnectionInternalApi> = CopyOnWriteArrayList()
+//    override val connectionApis: List<LongConnectionInternalApi> = mutableConnections.toList()
 
     override suspend fun PipelineContext<Unit, ApplicationCall>.onConnect() {
         TODO("Not yet implemented")

@@ -1,0 +1,102 @@
+/*
+ * Copyright 2024 CodeThink Technologies and contributors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package cn.codethink.xiaoming
+
+import cn.codethink.xiaoming.common.ConnectionSubject
+import cn.codethink.xiaoming.common.TextCause
+import cn.codethink.xiaoming.common.XiaomingSdkSubject
+import cn.codethink.xiaoming.common.toId
+import cn.codethink.xiaoming.connection.ConnectionManagerConfigurationV1
+import cn.codethink.xiaoming.connection.WebSocketServerConfiguration
+import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
+import cn.codethink.xiaoming.internal.configuration.LocalPlatformInternalConfiguration
+import cn.codethink.xiaoming.io.connection.DefaultWebSocketClientConfiguration
+import cn.codethink.xiaoming.io.connection.TextFrameConnectionApi
+import cn.codethink.xiaoming.io.connection.WebSocketClientConnectionInternalApi
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.websocket.WebSockets
+import org.junit.jupiter.api.Test
+import java.io.File
+
+const val TEST_PATH = "/"
+const val TEST_PORT = 8080
+const val TEST_TOKEN = "ExampleAccessToken"
+
+val TEST_CAUSE = TextCause("Run test programs")
+val TEST_SUBJECT = XiaomingSdkSubject
+
+class PlatformTest {
+    companion object {
+        val logger = KotlinLogging.logger { }
+        val internalConfiguration = LocalPlatformInternalConfiguration(
+            workingDirectoryFile = File("platform"),
+            id = "Test".toId(),
+            connectionConfiguration = ConnectionManagerConfigurationV1(
+                keepConnectionsOnEmpty = true,
+                keepConnectionsOnReload = true,
+                servers = mutableMapOf(
+                    "demo".toId() to WebSocketServerConfiguration(
+                        port = TEST_PORT,
+                        path = TEST_PATH,
+                    )
+                ),
+                clients = mutableMapOf()
+            )
+        )
+        val platformInternalApi = LocalPlatformInternalApi(internalConfiguration, logger).apply {
+            start(TEST_CAUSE, TEST_SUBJECT)
+        }
+    }
+
+    @Test
+    fun testConnectAsPlugin() {
+        val subject = ConnectionSubject("demo-client".toId())
+        val connectionInternalApi = WebSocketClientConnectionInternalApi(
+            configuration = DefaultWebSocketClientConfiguration(
+                host = "localhost",
+                path = TEST_PATH,
+                port = TEST_PORT,
+                token = TEST_TOKEN,
+                reconnectIntervalMillis = null
+            ),
+            logger = logger,
+            subject = subject,
+            httpClient = HttpClient { install(WebSockets) }
+        )
+
+        val connectionApi = TextFrameConnectionApi(
+            logger = logger,
+            objectMapper = platformInternalApi.serializationApi.internalObjectMapper,
+            connectionInternalApi = connectionInternalApi
+        )
+
+//        platformInternalApi.serializationApi.externalObjectMapper
+//        val packetConnection = PacketConnection(
+//            logger = logger,
+//            session = randomUuidString(),
+//            platform = Platform(
+//                api = LocalPlatformApi(
+//                    platformInternalApi = platformInternalApi,
+//                    language =
+//                ).apply { start(TEST_CAUSE, TEST_SUBJECT) }
+//            ),
+//            subject = subject,
+//            connectionApi = connectionApi
+//        )
+    }
+}

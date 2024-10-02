@@ -16,19 +16,24 @@
 
 package cn.codethink.xiaoming.connection
 
+import cn.codethink.xiaoming.common.Id
+
 /**
  * Configuration of [ConnectionManager].
  *
  * @author Chuanwise
  */
 interface ConnectionManagerConfiguration {
-    val version: String
-
     /**
      * Whether to keep connections when the connection manager is reloaded.
      */
-    val keepConnections: Boolean
+    val keepConnectionsOnReload: Boolean
 
-    val servers: MutableMap<String, ServerConfiguration>
-    val clients: MutableMap<String, ConnectionConfiguration>
+    /**
+     * Whether to keep connections when the connection is empty.
+     */
+    val keepConnectionsOnEmpty: Boolean
+
+    val servers: MutableMap<Id, ServerConfiguration>
+    val clients: MutableMap<Id, ConnectionConfiguration>
 }

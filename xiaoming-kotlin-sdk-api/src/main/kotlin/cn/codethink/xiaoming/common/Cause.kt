@@ -18,7 +18,7 @@ package cn.codethink.xiaoming.common
 
 import cn.codethink.xiaoming.event.Event
 import cn.codethink.xiaoming.io.data.MapRaw
-import cn.codethink.xiaoming.io.data.Packet
+import cn.codethink.xiaoming.io.packet.Packet
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set

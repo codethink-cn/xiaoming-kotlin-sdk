@@ -18,7 +18,6 @@
 
 package cn.codethink.xiaoming.io.action
 
-import cn.codethink.xiaoming.common.PUBLISH_EVENT_REQUEST_ACTION
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.XiaomingProtocolSubject
 import cn.codethink.xiaoming.common.defaultNullable
@@ -73,5 +72,8 @@ inline fun <reified P, reified R> StandardAction(
     name: String
 ) = Action<P, R>(name, XiaomingProtocolSubject)
 
+const val CONNECT_REQUEST_ACTION = "connect"
+val CONNECT = StandardAction<ConnectRequestPara, Any?>(CONNECT_REQUEST_ACTION)
 
+const val PUBLISH_EVENT_REQUEST_ACTION = "publish_event"
 val PUBLISH_EVENT = StandardAction<PublishEventRequestPara, PublishEventReceiptData>(PUBLISH_EVENT_REQUEST_ACTION)

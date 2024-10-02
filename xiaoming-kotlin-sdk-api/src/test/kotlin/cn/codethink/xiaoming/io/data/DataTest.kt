@@ -19,6 +19,8 @@ package cn.codethink.xiaoming.io.data
 import cn.codethink.xiaoming.common.PluginSubject
 import cn.codethink.xiaoming.common.XiaomingSdkSubject
 import cn.codethink.xiaoming.common.assertJsonContentEquals
+import cn.codethink.xiaoming.io.packet.Packet
+import cn.codethink.xiaoming.io.packet.RequestPacket
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue

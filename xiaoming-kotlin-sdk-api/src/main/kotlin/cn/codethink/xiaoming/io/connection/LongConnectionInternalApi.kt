@@ -17,9 +17,11 @@
 package cn.codethink.xiaoming.io.connection
 
 /**
+ * Long connection is a connection that can be kept alive for a long time.
+ *
  * @author Chuanwise
- * @see FrameConnection
  */
-interface FrameServer : Server {
-    override val connections: List<FrameConnection>
+interface LongConnectionInternalApi<T> : ConnectionInternalApi<T> {
+    val isConnected: Boolean
+    val isConnecting: Boolean
 }

@@ -18,6 +18,7 @@ package cn.codethink.xiaoming
 
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.event.Event
+import cn.codethink.xiaoming.io.ProtocolLanguageConfiguration
 import cn.codethink.xiaoming.io.action.EventSnapshot
 
 /**
@@ -26,6 +27,8 @@ import cn.codethink.xiaoming.io.action.EventSnapshot
  * @author Chuanwise
  */
 interface PlatformApi {
+    val language: ProtocolLanguageConfiguration
+
     fun publishEvent(
         type: String, event: Event, mutable: Boolean = true,
         timeout: Long? = null, cause: Cause? = null

@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.connection
+package cn.codethink.xiaoming
 
-import cn.codethink.xiaoming.common.Id
-import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
-import cn.codethink.xiaoming.io.connection.ServerApi
+import cn.codethink.xiaoming.io.ProtocolLanguageConfiguration
 
 /**
- * Configuration to establish [ServerApi].
+ * Platform is a plugin architecture.
  *
  * @author Chuanwise
  */
-interface ServerConfiguration {
-    val type: String
-    val enable: Boolean
+class Platform(
+    val api: PlatformApi
+) {
+    val language: ProtocolLanguageConfiguration by api::language
 
-    fun toServerApi(api: LocalPlatformInternalApi, id: Id): ServerApi
+
 }

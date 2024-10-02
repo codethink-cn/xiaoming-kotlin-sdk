@@ -29,7 +29,6 @@ import io.ktor.client.request.header
 import io.ktor.http.HttpMethod
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
-import io.ktor.websocket.readText
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -58,20 +57,29 @@ interface WebSocketClientConfiguration {
 val WebSocketClientConfiguration.address: String
     get() = "$host:$port$path"
 
+data class DefaultWebSocketClientConfiguration(
+    override val method: HttpMethod = HttpMethod.Get,
+    override val host: String,
+    override val path: String,
+    override val port: Int,
+    override val token: String,
+    override val reconnectIntervalMillis: Long?,
+    override val maxReconnectAttempts: Int? = null,
+) : WebSocketClientConfiguration
 
-class WebSocketClient(
+class WebSocketClientConnectionInternalApi(
     private val configuration: WebSocketClientConfiguration,
     private val logger: KLogger,
     subject: Subject,
     httpClient: HttpClient,
     parentJob: Job? = null,
     parentCoroutineContext: CoroutineContext = Dispatchers.IO,
-) : WebSocketLikeConnection, CoroutineScope {
+) : WebSocketConnectionInternalApi, CoroutineScope {
     private val supervisorJob = SupervisorJob(parentJob)
     private val scope: CoroutineScope = CoroutineScope(parentCoroutineContext + supervisorJob)
     override val coroutineContext: CoroutineContext by scope::coroutineContext
 
-    override val channel: Channel<String> = Channel(Channel.UNLIMITED)
+    override val channel: Channel<Frame> = Channel(Channel.UNLIMITED)
 
     private val lock = ReentrantReadWriteLock()
     private val condition = lock.writeLock().newCondition()
@@ -104,7 +112,16 @@ class WebSocketClient(
     override val isConnected: Boolean
         get() = state == State.CONNECTED
 
-    private var session: WebSocketSession? = null
+    override val isConnecting: Boolean
+        get() {
+            val state = state
+            return state == State.CONNECTING || state == State.WAITING
+        }
+
+    private var sessionNoLock: WebSocketSession? = null
+    override val session: WebSocketSession
+        get() = lock.read { sessionNoLock ?: throw IllegalStateException("Client is not connected.") }
+
     private val connectingJob = launch {
         val connectAttempts = 1..(configuration.maxReconnectAttempts ?: Int.MAX_VALUE)
         for (attempt in connectAttempts) {
@@ -152,13 +169,7 @@ class WebSocketClient(
 
                     try {
                         for (frame in incoming) {
-                            if (frame !is Frame.Text) {
-                                logger.warn { "Unexpected incoming frame: $frame from $address, except `Frame.Text`!" }
-                                continue
-                            }
-
-                            val text = frame.readText()
-                            receive(text)
+                            receive(frame)
                         }
                     } catch (_: EOFException) {
                     } catch (_: CancellationException) {
@@ -206,40 +217,39 @@ class WebSocketClient(
         }
     }
 
-    @JvmOverloads
-    fun await(time: Long, unit: TimeUnit = TimeUnit.MILLISECONDS) = lock.write {
+    override fun await(time: Long, unit: TimeUnit): Boolean = lock.write {
         if (stateNoLock == State.CLOSED) {
             throw IllegalStateException("Client is closed.")
         }
-        condition.await(time, unit)
+        return condition.await(time, unit)
     }
 
-    fun await() = lock.write {
+    override fun await() = lock.write {
         if (stateNoLock == State.CLOSED) {
             throw IllegalStateException("Client is closed.")
         }
         condition.await()
     }
 
-    override suspend fun send(string: String) {
+    override suspend fun send(data: Frame) {
         assertConnected()
         val session = lock.read {
-            session ?: throw IllegalStateException(
+            sessionNoLock ?: throw IllegalStateException(
                 "Client internal error: session is not established but state is $stateNoLock."
             )
         }
 
-        session.send(Frame.Text(string))
+        session.send(data)
         session.flush()
 
-        logger.debug { "Sent: '$string' to ${configuration.address}." }
+        logger.debug { "Sent: '$data' to ${configuration.address}." }
     }
 
-    override suspend fun receive(string: String) {
+    override suspend fun receive(data: Frame) {
         assertConnected()
 
-        channel.send(string)
-        logger.debug { "Received: '$string' from ${configuration.address}." }
+        channel.send(data)
+        logger.debug { "Received: '$data' from ${configuration.address}." }
     }
 
     override fun close() {

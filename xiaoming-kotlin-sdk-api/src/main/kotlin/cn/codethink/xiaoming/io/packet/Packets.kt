@@ -25,4 +25,4 @@ import java.util.UUID
  *
  * @author Chuanwise
  */
-fun randomPacketId(): String = UUID.randomUUID().toString()
+fun randomUuidString(): String = UUID.randomUUID().toString()

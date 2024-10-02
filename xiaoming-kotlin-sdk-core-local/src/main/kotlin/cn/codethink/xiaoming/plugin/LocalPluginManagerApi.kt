@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.io.connection
+package cn.codethink.xiaoming.plugin
 
-interface WebSocketLikeConnection : FrameConnection {
+import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
+import java.util.concurrent.locks.ReentrantReadWriteLock
+
+class LocalPluginManagerApi(
+    val internalApi: LocalPlatformInternalApi
+) {
+    val lock = ReentrantReadWriteLock()
 }

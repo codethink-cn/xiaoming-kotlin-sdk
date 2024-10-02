@@ -17,14 +17,10 @@
 package cn.codethink.xiaoming.io.connection
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.ErrorMessageCause
 import cn.codethink.xiaoming.common.HEADER_VALUE_AUTHORIZATION_BEARER_WITH_SPACE
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.TextCause
-import cn.codethink.xiaoming.common.currentTimeMillis
-import cn.codethink.xiaoming.connection.buildAdapterNotFoundArguments
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
-import cn.codethink.xiaoming.io.ERROR_ADAPTER_NOT_FOUND
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
@@ -40,8 +36,6 @@ import io.ktor.util.AttributeKey
 import io.ktor.util.pipeline.PipelineContext
 import io.ktor.websocket.Frame
 import io.ktor.websocket.close
-import io.ktor.websocket.readText
-import io.ktor.websocket.send
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -50,6 +44,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import java.io.EOFException
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
@@ -64,10 +59,10 @@ val CONNECTION_SUBJECT_ATTRIBUTE_KEY = AttributeKey<Subject>("Connection Subject
  * its permission.
  *
  * @author Chuanwise
- * @see WebSocketServer
+ * @see WebSocketServerApi
  * @see Authorizer
  */
-class LocalPlatformWebSocketServer(
+class LocalPlatformWebSocketServerApi(
     val configuration: WebSocketServerConfiguration,
     subject: Subject,
     val authorizer: Authorizer,
@@ -75,11 +70,11 @@ class LocalPlatformWebSocketServer(
     applicationEngineFactory: ApplicationEngineFactory<*, *> = Netty,
     parentJob: Job? = null,
     parentCoroutineContext: CoroutineContext = Dispatchers.IO
-) : WebSocketServer(
+) : WebSocketServerApi(
     configuration, internalApi.logger, subject, applicationEngineFactory, parentJob, parentCoroutineContext
 ) {
-    private val mutableConnections = mutableListOf<OnlineConnection>()
-    override val connections: List<OnlineConnection>
+    private val mutableConnections = mutableListOf<OnlineConnectionInternalApi>()
+    override val connectionApis: List<OnlineConnectionInternalApi>
         get() = lock.read { mutableConnections.toList() }
 
     private val logger by internalApi::logger
@@ -92,28 +87,26 @@ class LocalPlatformWebSocketServer(
         CLOSED,
     }
 
-    inner class OnlineConnection(
-        val session: WebSocketServerSession,
-        val connectionSubject: Subject,
+    inner class OnlineConnectionInternalApi(
+        override val session: WebSocketServerSession,
+        override val subject: Subject,
         parentJob: Job,
         parentCoroutineContext: CoroutineContext
-    ) : FrameConnection {
+    ) : WebSocketConnectionInternalApi {
         private val supervisorJob = SupervisorJob(parentJob)
         private val scope = CoroutineScope(parentCoroutineContext + supervisorJob)
         override val coroutineContext: CoroutineContext = scope.coroutineContext
 
-        override val channel: Channel<String> = Channel(Channel.UNLIMITED)
+        override val channel: Channel<Frame> = Channel(Channel.UNLIMITED)
 
         private val onlineLock = ReentrantReadWriteLock()
+        private val onlineLockCondition = onlineLock.writeLock().newCondition()
         private var stateNoLock = OnlineState.INITIALIZING
-
-        private var subjectNoLock: Subject? = null
-        override var subject: Subject
-            get() = onlineLock.read { subjectNoLock!! }
-            set(value) = onlineLock.write { subjectNoLock = value }
 
         override val isConnected: Boolean
             get() = onlineLock.read { stateNoLock == OnlineState.CONNECTED }
+
+        override val isConnecting: Boolean = false
 
         override val isClosed: Boolean
             get() = onlineLock.read { stateNoLock == OnlineState.CLOSED }
@@ -124,37 +117,30 @@ class LocalPlatformWebSocketServer(
             }
         }
 
-        override suspend fun send(string: String) {
+        override suspend fun send(data: Frame) {
             assertConnected()
-            sendNoCheck(string)
+            sendNoCheck(data)
         }
 
-        private suspend fun sendNoCheck(string: String) {
+        private suspend fun sendNoCheck(frame: Frame) {
             val session = onlineLock.read { session }
-            session.send(string)
+            session.send(frame)
             session.flush()
-            logger.debug { "Sent: '$string' to ${configuration.address}." }
+            logger.debug { "Sent: '$frame' to ${configuration.address}." }
         }
 
-        override suspend fun receive(string: String) {
+        override suspend fun receive(data: Frame) {
             assertConnected()
-            channel.send(string)
-            logger.debug { "Received: '$string' from ${configuration.address}." }
+            channel.send(data)
+            logger.debug { "Received: '$data' from ${configuration.address}." }
         }
 
         internal suspend fun receiving() {
-            authorizer.onConnected(connectionSubject)
+            authorizer.onConnected(subject)
             val address = "${session.call.request.host()}:${session.call.request.port()}${session.call.request.path()}"
             try {
-                sendNoCheck("Timestamp: $currentTimeMillis")
                 for (frame in session.incoming) {
-                    if (frame !is Frame.Text) {
-                        logger.warn { "Unexpected incoming frame: $frame from $address, except `Frame.Text`!" }
-                        continue
-                    }
-
-                    val text = frame.readText()
-                    receive(text)
+                    receive(frame)
                 }
             } catch (_: EOFException) {
             } catch (_: CancellationException) {
@@ -163,7 +149,7 @@ class LocalPlatformWebSocketServer(
             } finally {
                 try {
                     lock.write { mutableConnections.remove(this) }
-                    authorizer.onDisconnected(connectionSubject)
+                    authorizer.onDisconnected(subject)
                 } finally {
                     onlineLock.write {
                         stateNoLock = OnlineState.DISCONNECTED
@@ -172,9 +158,7 @@ class LocalPlatformWebSocketServer(
             }
         }
 
-        override fun close() {
-            close(TextCause("Server closed."), connectionSubject)
-        }
+        override fun close() = close(TextCause("Server closed."), subject)
 
         override fun close(cause: Cause, subject: Subject) = onlineLock.write {
             stateNoLock = when (stateNoLock) {
@@ -187,7 +171,17 @@ class LocalPlatformWebSocketServer(
             supervisorJob.cancel()
             stateNoLock = OnlineState.CLOSED
 
-            logger.debug { "Online connection with subject: $connectionSubject closed by $subject caused by $cause." }
+            logger.debug { "Online connection with subject: ${this.subject} closed by $subject caused by $cause." }
+        }
+
+        override fun await() = onlineLock.write {
+            assertConnected()
+            onlineLockCondition.await()
+        }
+
+        override fun await(time: Long, unit: TimeUnit): Boolean = onlineLock.write {
+            assertConnected()
+            onlineLockCondition.await(time, unit)
         }
     }
 
@@ -223,27 +217,12 @@ class LocalPlatformWebSocketServer(
         // 1. Create and add connection.
         val connection = lock.write {
             val connectionSubject = call.attributes[CONNECTION_SUBJECT_ATTRIBUTE_KEY]
-            OnlineConnection(this, connectionSubject, parentJob, parentCoroutineContext).apply {
+            OnlineConnectionInternalApi(this, connectionSubject, parentJob, parentCoroutineContext).apply {
                 mutableConnections.add(this)
             }
         }
 
-        // 2. Adapt connection.
-        val adapter = internalApi.connectionManagerApi.getConnectionAdapter(subject.type)
-        if (adapter == null) {
-            val arguments = buildAdapterNotFoundArguments(subject.type)
-            connection.close(
-                ErrorMessageCause(
-                    error = ERROR_ADAPTER_NOT_FOUND,
-                    message = internalApi.languageConfiguration.connection.adapterNotFound.format(arguments),
-                    context = arguments
-                ), subject
-            )
-            return
-        }
-        adapter.adapt(internalApi, subject, connection)
-
-        // 3. Start receiving.
+        // 2. Start receiving.
         connection.receiving()
     }
 }

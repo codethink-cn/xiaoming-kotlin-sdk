@@ -16,6 +16,7 @@
 
 package cn.codethink.xiaoming.connection
 
+import cn.codethink.xiaoming.common.Id
 import com.fasterxml.jackson.annotation.JsonTypeName
 
 const val CONNECTION_MANAGER_CONFIGURATION_VERSION_1 = "1"
@@ -26,9 +27,10 @@ const val CONNECTION_MANAGER_CONFIGURATION_VERSION_1 = "1"
  */
 @JsonTypeName(CONNECTION_MANAGER_CONFIGURATION_VERSION_1)
 class ConnectionManagerConfigurationV1(
-    override val keepConnections: Boolean,
-    override val servers: MutableMap<String, ServerConfiguration>,
-    override val clients: MutableMap<String, ConnectionConfiguration>
+    override val keepConnectionsOnReload: Boolean,
+    override val keepConnectionsOnEmpty: Boolean,
+    override val servers: MutableMap<Id, ServerConfiguration>,
+    override val clients: MutableMap<Id, ConnectionConfiguration>,
 ) : ConnectionManagerConfiguration {
-    override val version: String = CONNECTION_MANAGER_CONFIGURATION_VERSION_1
+    val version: String = CONNECTION_MANAGER_CONFIGURATION_VERSION_1
 }

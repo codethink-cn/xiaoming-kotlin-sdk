@@ -19,6 +19,7 @@ package cn.codethink.xiaoming.internal.configuration
 import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.configuration.LocalPlatformConfiguration
+import cn.codethink.xiaoming.connection.ConnectionManagerConfiguration
 import cn.codethink.xiaoming.internal.module.Module
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
@@ -27,6 +28,15 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.io.File
 import java.util.Locale
+
+fun defaultInternalObjectMapper() = jacksonObjectMapper().apply {
+    setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+}
+
+fun defaultExternalObjectMapper() = YAMLMapper.builder()
+    .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
+    .propertyNamingStrategy(PropertyNamingStrategies.KEBAB_CASE)
+    .build()
 
 /**
  * Effect configuration for local platform.
@@ -39,9 +49,9 @@ data class LocalPlatformInternalConfiguration(
     val locale: Locale = Locale.getDefault(),
     val modules: List<Pair<Module, Subject>> = emptyList(),
     val platformConfiguration: LocalPlatformConfiguration? = null,
-    val internalObjectMapper: ObjectMapper = jacksonObjectMapper().setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE),
-    val externalObjectMapper: ObjectMapper = YAMLMapper.builder().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
-        .build(),
+    val connectionConfiguration: ConnectionManagerConfiguration,
+    val internalObjectMapper: ObjectMapper = defaultInternalObjectMapper(),
+    val externalObjectMapper: ObjectMapper = defaultExternalObjectMapper(),
     var findAndLoadAllModules: Boolean = true,
     var findAndLoadAllJacksonModules: Boolean = true,
     var failOnModuleError: Boolean = true

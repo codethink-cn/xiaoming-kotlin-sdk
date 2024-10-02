@@ -16,30 +16,30 @@
 
 package cn.codethink.xiaoming.connection
 
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.ConnectionSubject
+import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
-import cn.codethink.xiaoming.io.connection.LocalPlatformWebSocketServer
-import cn.codethink.xiaoming.io.connection.Server
+import cn.codethink.xiaoming.io.connection.LocalPlatformWebSocketServerApi
+import cn.codethink.xiaoming.io.connection.ServerApi
 import cn.codethink.xiaoming.io.connection.WebSocketServerConfiguration
 
 
 const val SERVER_CONFIGURATION_TYPE_WEBSOCKET = "web_socket"
 
-class LocalPlatformWebSocketServerConfiguration(
+class WebSocketServerConfiguration(
     override val port: Int,
-    override val host: String?,
     override val path: String,
-    override val subject: Subject,
+    override val host: String = "0.0.0.0",
     override val enable: Boolean = true
 ) : ServerConfiguration, WebSocketServerConfiguration {
     override val type: String = SERVER_CONFIGURATION_TYPE_WEBSOCKET
 
-    override fun toServer(api: LocalPlatformInternalApi): Server {
-        return LocalPlatformWebSocketServer(
+    override fun toServerApi(api: LocalPlatformInternalApi, id: Id): ServerApi {
+        return LocalPlatformWebSocketServerApi(
             configuration = this,
             internalApi = api,
             authorizer = api.connectionManagerApi.authorizer,
-            subject = subject,
+            subject = ConnectionSubject(id),
             parentJob = api.supervisorJob,
             parentCoroutineContext = api.coroutineContext
         )

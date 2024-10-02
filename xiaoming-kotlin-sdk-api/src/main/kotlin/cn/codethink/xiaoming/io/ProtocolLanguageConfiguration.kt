@@ -14,35 +14,21 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.io.packet
+package cn.codethink.xiaoming.io
 
-import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.Template
-import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.getValue
 
 /**
  * Protocol language configuration.
  *
  * @author Chuanwise
  */
-class ProtocolLanguageConfiguration(
-    raw: Raw
-) : AbstractData(raw) {
-    val unsupportedPacketType: Template by raw
-    val unsupportedRequestMode: Template by raw
-    val unsupportedRequestAction: Template by raw
-    val internalActionHandlerError: Template by raw
-    val actionHandlerTimeout: Template by raw
+interface ProtocolLanguageConfiguration {
+    val unsupportedRequestMode: Template
+    val unsupportedRequestAction: Template
+    val internalActionHandlerError: Template
+    val actionHandlerTimeout: Template
 }
-
-fun buildUnsupportedPacketTypeArguments(
-    packetType: String,
-    supportedPacketTypes: Set<String>
-): Map<String, Any?> = mapOf(
-    "packetType" to packetType,
-    "supportedPacketTypes" to supportedPacketTypes.joinToString(", ")
-)
 
 fun buildUnsupportedRequestModeArguments(
     requestMode: String,

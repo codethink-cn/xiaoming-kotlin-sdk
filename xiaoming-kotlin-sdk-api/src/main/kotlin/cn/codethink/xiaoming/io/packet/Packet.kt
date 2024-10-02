@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.io.data
+package cn.codethink.xiaoming.io.packet
 
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.Cause
@@ -22,6 +22,10 @@ import cn.codethink.xiaoming.common.PACKET_TYPE_RECEIPT
 import cn.codethink.xiaoming.common.PACKET_TYPE_REQUEST
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.currentTimeSeconds
+import cn.codethink.xiaoming.io.data.MapRaw
+import cn.codethink.xiaoming.io.data.Raw
+import cn.codethink.xiaoming.io.data.getValue
+import cn.codethink.xiaoming.io.data.setValue
 import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
@@ -38,19 +42,25 @@ abstract class Packet(
     var type: String by raw
     var time: Long by raw
     var cause: Cause? by raw
+    var subject: Subject by raw
+    var session: String? by raw
 
     @JvmOverloads
     constructor(
         id: String,
         type: String,
+        subject: Subject,
         time: Long = currentTimeSeconds,
         cause: Cause? = null,
+        session: String? = null,
         raw: Raw = MapRaw()
     ) : this(raw) {
         this.id = id
         this.type = type
         this.time = time
         this.cause = cause
+        this.subject = subject
+        this.session = session
     }
 }
 
@@ -66,7 +76,6 @@ class RequestPacket(
     var action: String by raw
     var mode: String by raw
     var argument: Any? by raw
-    var subject: Subject? by raw
     var timeout: Long by raw
 
     @JvmOverloads
@@ -75,20 +84,23 @@ class RequestPacket(
         action: String,
         mode: String,
         timeout: Long,
+        subject: Subject,
         argument: Any? = null,
-        subject: Subject? = null,
         time: Long = currentTimeSeconds,
         cause: Cause? = null,
+        session: String? = null,
         raw: Raw = MapRaw()
     ) : this(raw) {
         this.id = id
         this.type = PACKET_TYPE_REQUEST
         this.time = time
         this.cause = cause
+        this.subject = subject
+        this.session = session
+
         this.action = action
         this.mode = mode
         this.argument = argument
-        this.subject = subject
         this.timeout = timeout
     }
 }
@@ -102,26 +114,31 @@ class RequestPacket(
 class ReceiptPacket(
     raw: Raw
 ) : Packet(raw) {
+    var target: String by raw
     var state: String by raw
-    var request: String by raw
     var data: Any? by raw
 
     @JvmOverloads
     constructor(
         id: String,
+        target: String,
         state: String,
-        request: String,
+        subject: Subject,
         data: Any? = null,
         time: Long = currentTimeSeconds,
         cause: Cause? = null,
+        session: String? = null,
         raw: Raw = MapRaw()
     ) : this(raw) {
         this.id = id
         this.type = PACKET_TYPE_REQUEST
         this.time = time
         this.cause = cause
+        this.subject = subject
+        this.session = session
+
+        this.target = target
         this.state = state
-        this.request = request
         this.data = data
     }
 }

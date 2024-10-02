@@ -16,20 +16,29 @@
 
 package cn.codethink.xiaoming.io.packet
 
-import cn.codethink.xiaoming.io.data.Packet
+import cn.codethink.xiaoming.Platform
+import cn.codethink.xiaoming.common.Cause
+import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.io.connection.ConnectionApi
+import cn.codethink.xiaoming.io.connection.PacketConnection
+import cn.codethink.xiaoming.io.connection.Received
+import io.github.oshai.kotlinlogging.KLogger
 
-/**
- * Container of object needed in handling packet.
- *
- * @author Chuanwise
- */
-open class PacketContext(
-    val api: PacketApi,
-    val packet: Packet,
+data class PacketContext(
+    val logger: KLogger,
+    val connection: PacketConnection<*>,
+    private val connectionApi: ConnectionApi<*>,
+
+    val received: Received<*>,
+    val platform: Platform,
+
+    var disconnect: Boolean = false,
+    var disconnectCause: Cause? = null,
+    var disconnectSubject: Subject? = null
 ) {
-    val logger by api::logger
-    val language by api::language
-    val subject by api::subject
+    suspend fun send(packet: Packet) {
+        connectionApi.send(packet)
+    }
 }
 
 interface PacketHandler {
