@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
 import org.apache.commons.text.StringSubstitutor
+import java.util.Properties
 
 /**
  * Template is a key-value pair, which is used to format a string.
@@ -41,6 +42,9 @@ value class Template(
 ) {
     fun format(substitutor: StringSubstitutor): String = substitutor.replace(format)
     fun format(arguments: Map<String, Any?>): String = format(StringSubstitutor(arguments))
+
+    @Suppress("UNCHECKED_CAST")
+    fun format(properties: Properties): String = format(properties.toMap() as Map<String, Any?>)
 
     override fun toString(): String = format
 }
