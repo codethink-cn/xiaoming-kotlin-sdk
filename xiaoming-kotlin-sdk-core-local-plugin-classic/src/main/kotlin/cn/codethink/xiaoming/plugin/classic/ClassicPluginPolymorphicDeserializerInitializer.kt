@@ -17,7 +17,6 @@
 package cn.codethink.xiaoming.plugin.classic
 
 import cn.codethink.xiaoming.common.FIELD_TYPE
-import cn.codethink.xiaoming.common.FIELD_VERSION
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.io.data.PolymorphicDeserializerInitializer
 import cn.codethink.xiaoming.io.data.PolymorphicDeserializers
@@ -33,9 +32,6 @@ import cn.codethink.xiaoming.plugin.PluginMeta
 class ClassicPluginPolymorphicDeserializerInitializer : PolymorphicDeserializerInitializer {
     override fun initialize(deserializers: PolymorphicDeserializers, subject: Subject) {
         deserializers.subject(subject) {
-            names<ClassicPluginConfiguration>(FIELD_VERSION) {
-                name<ClassicPluginConfigurationV1>()
-            }
             names<PluginMeta>(FIELD_TYPE) {
                 name<ClassicPluginMeta>()
             }
