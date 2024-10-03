@@ -1,5 +1,4 @@
-# Packet handler related.
-unsupportedRequestMode": "请求模式 ${requestMode} 不被协议支持，可接受的模式有：${supportedRequestModes}。"
-unsupportedRequestAction": "请求动作 ${requestAction} 不被协议支持。"
-internalActionHandlerError": "请求处理器内部出现意外错误。"
-actionHandlerTimeout": "请求处理器执行超过给定的最长时间：${timeout}s。"
+unsupported-request-mode: "请求模式 ${requestMode} 不被协议支持，可接受的模式有：${supportedRequestModes}。"
+unsupported-request-action: "请求动作 ${requestAction} 不被协议支持。"
+internal-action-handler-error: "请求处理器内部出现意外错误。"
+action-handler-timeout: "请求处理器执行超过给定的最长时间：${timeout}s。"

@@ -16,10 +16,13 @@
 
 package cn.codethink.xiaoming.permission.data.sql.v1
 
+import cn.codethink.xiaoming.LocalPlatformApi
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.FIELD_TYPE
 import cn.codethink.xiaoming.common.FIELD_VERSION
 import cn.codethink.xiaoming.data.LocalPlatformDataApi
+import cn.codethink.xiaoming.io.data.DefaultValue
+import cn.codethink.xiaoming.io.data.Field
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.SqlDataSource
@@ -29,7 +32,6 @@ import cn.codethink.xiaoming.io.data.setValue
 import cn.codethink.xiaoming.permission.data.sql.SqlLocalPlatformDataApi
 import cn.codethink.xiaoming.permission.data.sql.SqlLocalPlatformDataConfiguration
 import com.fasterxml.jackson.annotation.JsonTypeName
-import com.fasterxml.jackson.databind.ObjectMapper
 
 const val LOCAL_PLATFORM_DATA_CONFIGURATION_TYPE_SQL = "sql"
 const val SQL_LOCAL_PLATFORM_DATA_CONFIGURATION_VERSION_1 = "1"
@@ -44,6 +46,7 @@ class SqlLocalPlatformDataConfigurationV1(
     override val type: String by raw
     override val version: String by raw
 
+    @Field(defaultValue = DefaultValue.EMPTY)
     override var tables: SqlLocalPlatformDataConfigurationTablesV1 by raw
     override var source: SqlDataSource by raw
 
@@ -60,7 +63,7 @@ class SqlLocalPlatformDataConfigurationV1(
         this.tables = tables
     }
 
-    override fun toDataApi(objectMapper: ObjectMapper): LocalPlatformDataApi {
-        return SqlLocalPlatformDataApi(objectMapper, this)
+    override fun toDataApi(platformApi: LocalPlatformApi): LocalPlatformDataApi {
+        return SqlLocalPlatformDataApi(platformApi.dataObjectMapper, this)
     }
 }

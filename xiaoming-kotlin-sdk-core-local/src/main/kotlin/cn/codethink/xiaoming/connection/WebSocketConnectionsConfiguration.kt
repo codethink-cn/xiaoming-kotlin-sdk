@@ -37,7 +37,6 @@ class WebSocketServerConfiguration(
     override fun toServerApi(api: LocalPlatformInternalApi, id: Id): ServerApi {
         return LocalPlatformWebSocketServerApi(
             configuration = this,
-            internalApi = api,
             authorizer = api.connectionManagerApi.authorizer,
             subject = ConnectionSubject(id),
             parentJob = api.supervisorJob,

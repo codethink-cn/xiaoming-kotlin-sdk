@@ -14,16 +14,27 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.data
+package cn.codethink.xiaoming.common
 
-import cn.codethink.xiaoming.LocalPlatformApi
+import io.github.oshai.kotlinlogging.KLogger
 
-/**
- * Configuration storing where to read and save data.
- *
- * @author Chuanwise
- */
-interface LocalPlatformDataConfiguration {
-    val type: String
-    fun toDataApi(platformApi: LocalPlatformApi): LocalPlatformDataApi
+@InternalApi
+inline fun <reified T> doModuleRelatedAction(
+    logger: KLogger,
+    description: String,
+    failOnModuleError: Boolean,
+    crossinline action: () -> T
+): T? {
+    try {
+        return withDurationLogging(logger, description) {
+            action()
+        }
+    } catch (e: Exception) {
+        if (failOnModuleError) {
+            throw e
+        } else {
+            logger.error(e) { "Failed to $description." }
+            return null
+        }
+    }
 }

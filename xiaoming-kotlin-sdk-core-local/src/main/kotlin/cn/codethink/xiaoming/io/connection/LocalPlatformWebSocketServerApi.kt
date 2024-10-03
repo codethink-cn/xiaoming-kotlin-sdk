@@ -20,7 +20,8 @@ import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.HEADER_VALUE_AUTHORIZATION_BEARER_WITH_SPACE
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.TextCause
-import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
@@ -66,18 +67,17 @@ class LocalPlatformWebSocketServerApi(
     val configuration: WebSocketServerConfiguration,
     subject: Subject,
     val authorizer: Authorizer,
-    val internalApi: LocalPlatformInternalApi,
+    private val logger: KLogger = KotlinLogging.logger { },
     applicationEngineFactory: ApplicationEngineFactory<*, *> = Netty,
     parentJob: Job? = null,
     parentCoroutineContext: CoroutineContext = Dispatchers.IO
 ) : WebSocketServerApi(
-    configuration, internalApi.logger, subject, applicationEngineFactory, parentJob, parentCoroutineContext
+    configuration, subject, logger, applicationEngineFactory, parentJob, parentCoroutineContext
 ) {
     private val mutableConnections = mutableListOf<OnlineConnectionInternalApi>()
     override val connectionApis: List<OnlineConnectionInternalApi>
         get() = lock.read { mutableConnections.toList() }
 
-    private val logger by internalApi::logger
     enum class OnlineState {
         INITIALIZING,
         CONNECTED,

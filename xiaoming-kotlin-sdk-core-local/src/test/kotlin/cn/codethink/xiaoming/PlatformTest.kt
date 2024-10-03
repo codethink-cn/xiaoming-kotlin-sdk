@@ -17,15 +17,9 @@
 package cn.codethink.xiaoming
 
 import cn.codethink.xiaoming.common.ConnectionSubject
-import cn.codethink.xiaoming.common.PlatformSubject
 import cn.codethink.xiaoming.common.TextCause
 import cn.codethink.xiaoming.common.XiaomingSdkSubject
-import cn.codethink.xiaoming.common.getTestResourceAsStream
 import cn.codethink.xiaoming.common.toId
-import cn.codethink.xiaoming.data.LocalPlatformData
-import cn.codethink.xiaoming.data.LocalPlatformDataConfiguration
-import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
-import cn.codethink.xiaoming.internal.configuration.DefaultLocalPlatformInternalConfiguration
 import cn.codethink.xiaoming.io.connection.DefaultWebSocketClientConfiguration
 import cn.codethink.xiaoming.io.connection.TextFrameConnectionApi
 import cn.codethink.xiaoming.io.connection.WebSocketClientConnectionInternalApi
@@ -38,7 +32,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.WebSockets
 import org.junit.jupiter.api.Test
-import java.util.Locale
 
 const val TEST_PATH = "/"
 const val TEST_PORT = 8080
@@ -61,24 +54,6 @@ class PlatformTest {
         propertyNamingStrategy = PropertyNamingStrategies.SNAKE_CASE
         findAndRegisterModules()
         registerModule(deserializerModule)
-    }
-
-    private val api = LocalPlatformInternalApi(
-        logger = logger,
-        configuration = DefaultLocalPlatformInternalConfiguration(
-            id = "Test".toId(),
-            deserializerModule = deserializerModule,
-            dataObjectMapper = dataObjectMapper,
-            locale = Locale.getDefault(),
-            data = LocalPlatformData(
-                platformDataApi = getTestResourceAsStream("xiaoming/data.json").use {
-                    dataObjectMapper.readValue(it, LocalPlatformDataConfiguration::class.java)
-                }.toDataApi(dataObjectMapper)
-            )
-        ),
-        subject = PlatformSubject("test".toId())
-    ).apply {
-        start(TEST_CAUSE, TEST_SUBJECT)
     }
 
     @Test

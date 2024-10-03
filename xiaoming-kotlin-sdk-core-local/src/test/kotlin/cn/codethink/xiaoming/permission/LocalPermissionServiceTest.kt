@@ -16,24 +16,25 @@
 
 package cn.codethink.xiaoming.permission
 
+import cn.codethink.xiaoming.DefaultLocalPlatformApi
+import cn.codethink.xiaoming.DefaultLocalPlatformConfiguration
 import cn.codethink.xiaoming.TEST_CAUSE
 import cn.codethink.xiaoming.TEST_SUBJECT
-import cn.codethink.xiaoming.common.PlatformSubject
 import cn.codethink.xiaoming.common.PluginSubject
 import cn.codethink.xiaoming.common.getTestResourceAsStream
 import cn.codethink.xiaoming.common.segmentIdOf
-import cn.codethink.xiaoming.common.toId
 import cn.codethink.xiaoming.common.toLiteralMatcher
-import cn.codethink.xiaoming.data.LocalPlatformData
 import cn.codethink.xiaoming.data.LocalPlatformDataConfiguration
 import cn.codethink.xiaoming.data.insertAndGetPermissionProfile
-import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
-import cn.codethink.xiaoming.internal.configuration.DefaultLocalPlatformInternalConfiguration
+import cn.codethink.xiaoming.io.DefaultProtocolLanguageConfiguration
 import cn.codethink.xiaoming.io.data.DeserializerModule
 import cn.codethink.xiaoming.io.data.XiaomingJacksonModuleVersion
 import cn.codethink.xiaoming.io.data.findAndApplyInitializers
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -56,23 +57,29 @@ class LocalPermissionServiceTest {
         registerModule(deserializerModule)
     }
 
-    private val api = LocalPlatformInternalApi(
-        logger = logger,
-        configuration = DefaultLocalPlatformInternalConfiguration(
-            id = "Test".toId(),
-            deserializerModule = deserializerModule,
+    private val fileObjectMapper = YAMLMapper.builder()
+        .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
+        .propertyNamingStrategy(PropertyNamingStrategies.KEBAB_CASE)
+        .addModule(deserializerModule)
+        .findAndAddModules()
+        .build()
+
+    private val platformApi = DefaultLocalPlatformApi(
+        configuration = DefaultLocalPlatformConfiguration(
+            subject = TEST_SUBJECT,
+            language = getTestResourceAsStream("xiaoming/languages/${Locale.getDefault()}/protocol.yml").use {
+                fileObjectMapper.readValue<DefaultProtocolLanguageConfiguration>(it)
+            },
             dataObjectMapper = dataObjectMapper,
-            locale = Locale.getDefault(),
-            data = LocalPlatformData(
-                platformDataApi = getTestResourceAsStream("xiaoming/data.json").use {
-                    dataObjectMapper.readValue(it, LocalPlatformDataConfiguration::class.java)
-                }.toDataApi(dataObjectMapper)
-            )
+            deserializerModule = deserializerModule,
+            data = getTestResourceAsStream("xiaoming/data.yml").use {
+                fileObjectMapper.readValue<LocalPlatformDataConfiguration>(it)
+            }
         ),
-        subject = PlatformSubject("test".toId())
     ).apply {
         start(TEST_CAUSE, TEST_SUBJECT)
     }
+    private val api = platformApi.internalApi
 
     private val subject = PluginSubject(segmentIdOf("cn.codethink.xiaoming.demo"))
     private val subjectMatcher = subject.toLiteralMatcher()

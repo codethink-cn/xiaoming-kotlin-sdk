@@ -30,6 +30,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.batchUpsert
@@ -102,6 +103,14 @@ class SqlLocalPlatformDataApi(
         comparator = this[permissionRecords.permissionComparator],
         contextMatchers = this[permissionRecords.contextMatchers]
     )
+
+    init {
+        transaction(database) {
+            SchemaUtils.createMissingTablesAndColumns(
+                subjects, permissionProfiles, permissionRecords
+            )
+        }
+    }
 
     override fun getSubject(id: Id): Subject? {
         id as NumericalId

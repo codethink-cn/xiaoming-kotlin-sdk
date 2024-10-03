@@ -19,6 +19,7 @@ package cn.codethink.xiaoming.io.data
 import cn.codethink.xiaoming.common.Tristate
 import cn.codethink.xiaoming.common.defaultNullable
 import cn.codethink.xiaoming.common.defaultOptional
+import cn.codethink.xiaoming.common.getOrConstruct
 import cn.codethink.xiaoming.common.upgrade
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.type.TypeReference
@@ -30,11 +31,32 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
 import java.lang.reflect.Type
 import java.util.concurrent.locks.ReentrantReadWriteLock
+import java.util.function.Supplier
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 import kotlin.reflect.KProperty
 
-val DEFAULT_FIELD_VALUE = null
+/**
+ * Specify default value for field.
+ *
+ * @author Chuanwise
+ */
+enum class DefaultValue {
+    /**
+     * The field is required and not-nullable, or exception will be thrown.
+     */
+    NULL,
+
+    /**
+     * Corresponding empty value as default value.
+     */
+    EMPTY,
+
+    /**
+     * No default value provided.
+     */
+    UNDEFINED
+}
 
 /**
  * An annotation to override some default settings of accessing and modifying
@@ -59,7 +81,7 @@ annotation class Field(
      * val extensionField: String by raw
      * ```
      */
-    val name: String,
+    val name: String = "",
 
     /**
      * If the type of field `T` is nullable, the default value of [nullable] is `true`.
@@ -70,12 +92,52 @@ annotation class Field(
     /**
      * If the field is optional, the default value of [optional] is `true`.
      */
-    val optional: Tristate = Tristate.NULL
+    val optional: Tristate = Tristate.NULL,
+
+    /**
+     * @see DefaultValue
+     */
+    val defaultValue: DefaultValue = DefaultValue.UNDEFINED
 )
 
-fun Field?.nameOrDefault(defaultValue: String): String = this?.name ?: defaultValue
+fun Field?.nameOrDefault(defaultValue: String): String = this?.name?.takeIf { it.isNotBlank() } ?: defaultValue
 inline fun <reified T> Field?.nullableOrDefault(): Boolean = this?.nullable?.value ?: defaultNullable<T>()
 inline fun <reified T> Field?.optionalOrDefault(): Boolean = this?.optional?.value ?: defaultOptional<T>()
+inline fun <reified T> Field?.defaultValueFactoryOrNull(): Supplier<T?>? = when (this?.defaultValue) {
+    null -> null
+    DefaultValue.NULL -> {
+        null
+    }
+
+    DefaultValue.EMPTY, DefaultValue.UNDEFINED -> {
+        if (defaultValue == DefaultValue.UNDEFINED && (optional.value == false || (nullable.value == true))) {
+            null
+        } else {
+            Supplier {
+                if (T::class.java.isArray) {
+                    java.lang.reflect.Array.newInstance(T::class.java.componentType, 0) as T
+                }
+
+                @Suppress("IMPLICIT_CAST_TO_ANY")
+                when (T::class) {
+                    String::class -> ""
+                    Int::class -> 0
+                    Long::class -> 0L
+                    Short::class -> 0.toShort()
+                    Byte::class -> 0.toByte()
+                    Double::class -> 0.0
+                    Float::class -> 0.0f
+                    Char::class -> 0.toChar()
+                    Boolean::class -> false
+                    Map::class -> emptyMap<Nothing, Nothing>()
+                    List::class -> emptyList<Nothing>()
+                    Set::class -> emptySet<Nothing>()
+                    else -> getOrConstruct(T::class.java)
+                } as T
+            }
+        }
+    }
+}
 
 /**
  * Classes implementing this
@@ -89,7 +151,7 @@ interface Raw {
         type: Type,
         optional: Boolean,
         nullable: Boolean,
-        defaultValue: Any? = DEFAULT_FIELD_VALUE
+        defaultValueFactory: Supplier<Any?>? = null
     ): Any?
 
     fun set(
@@ -119,16 +181,19 @@ inline operator fun <reified T : Any?> Raw.set(name: String, value: T) = set(
 inline operator fun <reified T : Any?> Raw.getValue(thisRef: Any?, property: KProperty<*>): T {
     val annotation = property.annotations.firstOrNull { it is Field } as Field?
     return get(
-        name = annotation.nameOrDefault(property.name), type = object : TypeReference<T>() {}.type,
+        name = annotation.nameOrDefault(property.name),
+        type = object : TypeReference<T>() {}.type,
         optional = annotation.optionalOrDefault<T>(),
-        nullable = annotation.nullableOrDefault<T>()
+        nullable = annotation.nullableOrDefault<T>(),
+        defaultValueFactory = { annotation.defaultValueFactoryOrNull<T>() }
     ) as T
 }
 
 inline operator fun <reified T : Any?> Raw.setValue(thisRef: Any?, property: KProperty<*>, value: T) {
     val annotation = property.annotations.firstOrNull { it is Field } as Field?
     return set(
-        name = annotation.nameOrDefault(property.name), value = value,
+        name = annotation.nameOrDefault(property.name),
+        value = value,
         optional = annotation.optionalOrDefault<T>(),
         nullable = annotation.nullableOrDefault<T>()
     )
@@ -180,15 +245,15 @@ class NodeRaw(
         type: Type,
         optional: Boolean,
         nullable: Boolean,
-        defaultValue: Any?
+        defaultValueFactory: Supplier<Any?>?
     ): Any? = lock.read {
         // Method to read value from node.
         fun doGetValue(): Any? {
             val javaType = mapper.constructType(type)
             val fieldNode = node[name]
                 ?: if (optional) {
-                    if (defaultValue != null || nullable) {
-                        return defaultValue
+                    if (defaultValueFactory != null || nullable) {
+                        return defaultValueFactory?.get()
                     }
                     throw NoSuchElementException("Field $name is optional, but not found in $this.")
                 } else {
@@ -332,7 +397,7 @@ class MapRaw(
         type: Type,
         optional: Boolean,
         nullable: Boolean,
-        defaultValue: Any?
+        defaultValueFactory: Supplier<Any?>?
     ): Any? {
         val value = map[name]
         if (value == null) {
@@ -343,8 +408,8 @@ class MapRaw(
                 throw NullPointerException("Field $name is not nullable, but found null in $this.")
             }
             if (optional) {
-                if (defaultValue != null || nullable) {
-                    return defaultValue
+                if (defaultValueFactory != null || nullable) {
+                    return defaultValueFactory?.get()
                 }
                 throw NoSuchElementException(
                     "Field $name is optional and not nullable, but not found in $this and default value is null."
@@ -427,11 +492,11 @@ object EmptyRaw : Raw {
         type: Type,
         optional: Boolean,
         nullable: Boolean,
-        defaultValue: Any?
+        defaultValueFactory: Supplier<Any?>?
     ): Any? {
         if (optional) {
-            if (defaultValue != null || nullable) {
-                return defaultValue
+            if (defaultValueFactory != null || nullable) {
+                return defaultValueFactory?.get()
             } else {
                 throw NoSuchElementException("Field $name is optional, but not found in $this.")
             }

@@ -16,21 +16,12 @@
 
 package cn.codethink.xiaoming.io.connection
 
-import cn.codethink.xiaoming.TEST_CAUSE
 import cn.codethink.xiaoming.TEST_SUBJECT
-import cn.codethink.xiaoming.common.PlatformSubject
 import cn.codethink.xiaoming.common.PluginSubject
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.XiaomingProtocolSubject
-import cn.codethink.xiaoming.common.XiaomingSdkSubject
 import cn.codethink.xiaoming.common.currentTimeMillis
-import cn.codethink.xiaoming.common.getTestResourceAsStream
 import cn.codethink.xiaoming.common.segmentIdOf
-import cn.codethink.xiaoming.common.toId
-import cn.codethink.xiaoming.data.LocalPlatformData
-import cn.codethink.xiaoming.data.LocalPlatformDataConfiguration
-import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
-import cn.codethink.xiaoming.internal.configuration.DefaultLocalPlatformInternalConfiguration
 import cn.codethink.xiaoming.io.data.DeserializerModule
 import cn.codethink.xiaoming.io.data.XiaomingJacksonModuleVersion
 import cn.codethink.xiaoming.io.data.findAndApplyInitializers
@@ -44,7 +35,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
-import java.util.Locale
 
 const val TEST_HOST = "127.0.0.1"
 const val TEST_PORT = 11451
@@ -78,24 +68,6 @@ class WebSocketClientConnectionInternalApiTest {
         registerModule(deserializerModule)
     }
 
-    private val api = LocalPlatformInternalApi(
-        logger = logger,
-        configuration = DefaultLocalPlatformInternalConfiguration(
-            id = "Test".toId(),
-            deserializerModule = deserializerModule,
-            dataObjectMapper = dataObjectMapper,
-            locale = Locale.getDefault(),
-            data = LocalPlatformData(
-                platformDataApi = getTestResourceAsStream("xiaoming/data.json").use {
-                    dataObjectMapper.readValue(it, LocalPlatformDataConfiguration::class.java)
-                }.toDataApi(dataObjectMapper)
-            )
-        ),
-        subject = PlatformSubject("test".toId())
-    ).apply {
-        start(TEST_CAUSE, TEST_SUBJECT)
-    }
-
     @Test
     fun testConnect(): Unit = runBlocking {
         val demoPluginSubject = PluginSubject(segmentIdOf("cn.codethink.xiaoming.demo"))
@@ -107,8 +79,7 @@ class WebSocketClientConnectionInternalApiTest {
                 host = TEST_HOST,
                 path = TEST_PATH
             ),
-            internalApi = api,
-            subject = api.subject,
+            subject = TEST_SUBJECT,
             authorizer = TestAuthorizer(),
             parentJob = supervisorJob
         )
@@ -153,19 +124,14 @@ class WebSocketClientConnectionInternalApiTest {
 
     @Test
     fun testAuthorizeFail(): Unit = runBlocking {
-        val supervisorJob = SupervisorJob()
-        val subject = XiaomingSdkSubject
-
         val server = LocalPlatformWebSocketServerApi(
             configuration = DefaultWebSocketServerConfiguration(
                 port = TEST_PORT,
                 host = TEST_HOST,
                 path = TEST_PATH
             ),
-            internalApi = api,
-            subject = subject,
-            authorizer = TestAuthorizer(),
-            parentJob = supervisorJob
+            subject = TEST_SUBJECT,
+            authorizer = TestAuthorizer()
         )
 
         val clientConfiguration = DefaultWebSocketClientConfiguration(
@@ -179,8 +145,7 @@ class WebSocketClientConnectionInternalApiTest {
             configuration = clientConfiguration,
             logger = logger,
             httpClient = HttpClient { install(WebSockets) },
-            subject = subject,
-            parentJob = supervisorJob
+            subject = TEST_SUBJECT
         )
 
         var durationMillis = currentTimeMillis
@@ -198,6 +163,5 @@ class WebSocketClientConnectionInternalApiTest {
 
         server.close()
         connection.close()
-        supervisorJob.cancel()
     }
 }

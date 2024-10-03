@@ -1,0 +1,12 @@
+type: "sql"
+version: 1
+
+source:
+  type: "hikari_cp"
+  properties:
+    jdbcUrl: "jdbc:sqlite:platform.db"
+    username: "root"
+    password: "root"
+
+tables:
+  prefix: "demo_"

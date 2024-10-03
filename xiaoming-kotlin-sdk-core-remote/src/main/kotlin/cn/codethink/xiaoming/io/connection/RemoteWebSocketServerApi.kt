@@ -38,7 +38,7 @@ abstract class RemoteWebSocketServerApi(
     parentJob: Job? = null,
     parentCoroutineContext: CoroutineContext = Dispatchers.IO
 ) : WebSocketServerApi(
-    configuration, logger, subject, applicationEngineFactory, parentJob, parentCoroutineContext
+    configuration, subject, logger, applicationEngineFactory, parentJob, parentCoroutineContext
 ) {
 //    private val mutableConnections: MutableList<LongConnectionInternalApi> = CopyOnWriteArrayList()
 //    override val connectionApis: List<LongConnectionInternalApi> = mutableConnections.toList()

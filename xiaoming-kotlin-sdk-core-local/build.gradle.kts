@@ -45,8 +45,8 @@ dependencies {
     val kotlinCoroutineVersion: String by rootProject
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutineVersion")
 
-    val mysqlConnectorVersion: String by rootProject
-    testRuntimeOnly("com.mysql:mysql-connector-j:$mysqlConnectorVersion")
+    val sqliteJdbcVersion: String by rootProject
+    runtimeOnly("org.xerial:sqlite-jdbc:$sqliteJdbcVersion")
     testImplementation(project(":xiaoming-kotlin-sdk-core-local-data-sql"))
 
     val ktorVersion: String by rootProject

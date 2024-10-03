@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.data
+package cn.codethink.xiaoming
 
-import cn.codethink.xiaoming.LocalPlatformApi
+const val CONTRIBUTORS_PATH = "xiaoming/contributors.txt"
 
-/**
- * Configuration storing where to read and save data.
- *
- * @author Chuanwise
- */
-interface LocalPlatformDataConfiguration {
-    val type: String
-    fun toDataApi(platformApi: LocalPlatformApi): LocalPlatformDataApi
+val contributors: Set<String> by lazy {
+    val stream = Platform::class.java.classLoader.getResourceAsStream(CONTRIBUTORS_PATH)
+        ?: throw NoSuchElementException("Cannot find the contributors file in the classpath: $CONTRIBUTORS_PATH.")
+
+    stream.reader().readLines().shuffled().toSet()
 }

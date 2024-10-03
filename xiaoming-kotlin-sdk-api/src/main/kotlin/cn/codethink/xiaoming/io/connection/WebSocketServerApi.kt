@@ -19,6 +19,7 @@ package cn.codethink.xiaoming.io.connection
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.Subject
 import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.ApplicationCallPipeline
@@ -63,8 +64,8 @@ data class DefaultWebSocketServerConfiguration(
  */
 abstract class WebSocketServerApi(
     private val configuration: WebSocketServerConfiguration,
-    private val logger: KLogger,
     override val subject: Subject,
+    private val logger: KLogger = KotlinLogging.logger { },
     applicationEngineFactory: ApplicationEngineFactory<*, *> = Netty,
     parentJob: Job? = null,
     parentCoroutineContext: CoroutineContext = Dispatchers.IO,

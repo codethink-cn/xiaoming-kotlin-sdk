@@ -30,6 +30,13 @@ interface ProtocolLanguageConfiguration {
     val actionHandlerTimeout: Template
 }
 
+data class DefaultProtocolLanguageConfiguration(
+    override val unsupportedRequestMode: Template,
+    override val unsupportedRequestAction: Template,
+    override val internalActionHandlerError: Template,
+    override val actionHandlerTimeout: Template
+) : ProtocolLanguageConfiguration
+
 fun buildUnsupportedRequestModeArguments(
     requestMode: String,
     supportedRequestModes: Set<String>

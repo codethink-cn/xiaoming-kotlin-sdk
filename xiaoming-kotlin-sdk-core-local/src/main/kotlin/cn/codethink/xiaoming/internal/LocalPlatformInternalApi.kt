@@ -17,11 +17,9 @@
 package cn.codethink.xiaoming.internal
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.PlatformSubject
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.TextCause
-import cn.codethink.xiaoming.common.currentTimeMillis
-import cn.codethink.xiaoming.common.withDurationLogging
+import cn.codethink.xiaoming.common.doModuleRelatedAction
 import cn.codethink.xiaoming.configuration.LocalPlatformConfiguration
 import cn.codethink.xiaoming.connection.ConnectionManagerApi
 import cn.codethink.xiaoming.data.LocalPlatformData
@@ -50,7 +48,7 @@ import kotlin.coroutines.EmptyCoroutineContext
 class LocalPlatformInternalApi @JvmOverloads constructor(
     val logger: KLogger,
     val configuration: LocalPlatformInternalConfiguration,
-    val subject: PlatformSubject,
+    val subject: Subject,
     parentJob: Job? = null,
     parentCoroutineContext: CoroutineContext = EmptyCoroutineContext
 ) : CoroutineScope, AutoCloseable {
@@ -89,41 +87,19 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
         }
 
         try {
-            var durationTimeMillis = currentTimeMillis
-
             // Call module lifecycle methods.
             configuration.modules.forEach {
                 doModuleRelatedAction(
-                    "callback module '${it.subject.name}' lifecycle methods 'Module#onPlatformStarting'"
-                ) {
-                    it.onPlatformStarting(context)
-                }
+                    logger = logger,
+                    description = "callback module '${it.subject.name}' lifecycle methods 'Module#onPlatformStarting'",
+                    failOnModuleError = configuration.failOnModuleError
+                ) { it.onPlatformStarting(context) }
             }
 
-            durationTimeMillis = currentTimeMillis - durationTimeMillis
             stateNoLock = LocalPlatformInternalState.STARTED
-            logger.debug { "Platform started in ${durationTimeMillis}ms." }
-        } catch (exception: Throwable) {
-            stateNoLock = LocalPlatformInternalState.STARTING_ERROR
-            throw exception
-        }
-    }
-
-    private inline fun <reified T> doModuleRelatedAction(
-        description: String,
-        crossinline action: () -> T
-    ): T? {
-        try {
-            return withDurationLogging(logger, description) {
-                action()
-            }
         } catch (e: Exception) {
-            if (configuration.failOnModuleError) {
-                throw e
-            } else {
-                logger.error(e) { "Failed to $description." }
-                return null
-            }
+            stateNoLock = LocalPlatformInternalState.STARTING_ERROR
+            throw e
         }
     }
 
