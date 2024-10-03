@@ -14,14 +14,19 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin
+package cn.codethink.xiaoming.plugin.classic
 
-import cn.codethink.xiaoming.common.NamespaceId
-import cn.codethink.xiaoming.common.Version
+import cn.codethink.xiaoming.plugin.PluginState
 
-interface PluginMeta {
-    val type: String
-    val id: NamespaceId
-    val name: String
-    val version: Version
+enum class ClassicalPluginState : PluginState {
+    INITIALIZED,
+    LOADING,
+    LOADING_ERROR,
+    LOADED,
+    ENABLING,
+    ENABLING_ERROR,
+    ENABLED,
+    DISABLING,
+    DISABLING_ERROR,
+    DISABLED,
 }

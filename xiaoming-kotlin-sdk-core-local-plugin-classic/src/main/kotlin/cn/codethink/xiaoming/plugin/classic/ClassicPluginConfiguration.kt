@@ -16,8 +16,14 @@
 
 package cn.codethink.xiaoming.plugin.classic
 
+import cn.codethink.xiaoming.plugin.PluginLevel
+
 interface ClassicPluginConfiguration {
     val version: String
 
-    val level: ClassicPluginLevel
+    val level: PluginLevel
+
+    val distribution: String
+
+    val autoUpdate: Boolean
 }

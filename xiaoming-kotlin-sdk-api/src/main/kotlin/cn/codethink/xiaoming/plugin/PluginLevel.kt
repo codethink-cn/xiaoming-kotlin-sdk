@@ -16,12 +16,29 @@
 
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.common.NamespaceId
-import cn.codethink.xiaoming.common.Version
+/**
+ * Level of plugins, depend on deployers' configuration.
+ *
+ * @author Chuanwise
+ */
+enum class PluginLevel {
+    /**
+     * Ignore this plugin.
+     */
+    ABSENT,
 
-interface PluginMeta {
-    val type: String
-    val id: NamespaceId
-    val name: String
-    val version: Version
+    /**
+     * Just know there is a plugin.
+     */
+    PRESENT,
+
+    /**
+     * Just load the plugin.
+     */
+    DISABLE,
+
+    /**
+     * Enable the plugin.
+     */
+    ENABLE
 }

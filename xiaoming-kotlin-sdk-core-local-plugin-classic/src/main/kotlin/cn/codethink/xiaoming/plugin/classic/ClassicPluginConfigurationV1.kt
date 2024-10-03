@@ -16,13 +16,16 @@
 
 package cn.codethink.xiaoming.plugin.classic
 
+import cn.codethink.xiaoming.plugin.PluginLevel
 import com.fasterxml.jackson.annotation.JsonTypeName
 
 const val CLASSIC_PLUGIN_CONFIGURATION_VERSION = "1"
 
 @JsonTypeName(CLASSIC_PLUGIN_CONFIGURATION_VERSION)
 class ClassicPluginConfigurationV1(
-    override val level: ClassicPluginLevel = ClassicPluginLevel.ENABLE
+    override val distribution: String,
+    override val level: PluginLevel = PluginLevel.ENABLE,
+    override val autoUpdate: Boolean = true,
 ) : ClassicPluginConfiguration {
     override val version: String = CLASSIC_PLUGIN_CONFIGURATION_VERSION
 }

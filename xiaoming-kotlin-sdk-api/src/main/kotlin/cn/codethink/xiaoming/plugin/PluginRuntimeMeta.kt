@@ -16,12 +16,13 @@
 
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.common.NamespaceId
-import cn.codethink.xiaoming.common.Version
-
-interface PluginMeta {
-    val type: String
-    val id: NamespaceId
-    val name: String
-    val version: Version
+/**
+ * Manages the runtime meta of a plugin.
+ *
+ * @author Chuanwise
+ */
+interface PluginRuntimeMeta {
+    val meta: PluginMeta
+    val state: PluginState
+    val level: PluginLevel
 }

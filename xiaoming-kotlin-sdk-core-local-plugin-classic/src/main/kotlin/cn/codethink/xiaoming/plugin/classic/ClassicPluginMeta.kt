@@ -18,15 +18,22 @@ package cn.codethink.xiaoming.plugin.classic
 
 import cn.codethink.xiaoming.common.NamespaceId
 import cn.codethink.xiaoming.common.Version
+import cn.codethink.xiaoming.plugin.PluginMeta
+import com.fasterxml.jackson.annotation.JsonTypeName
+
+const val PLUGIN_META_TYPE_CLASSIC = "classic"
 
 /**
  * Represent a file in classic plugin resource file `plugin.yml`.
  *
  * @author Chuanwise
  */
-class ClassicPluginMetaConfiguration(
-    val id: NamespaceId,
-    val name: String,
-    val version: Version,
+@JsonTypeName(PLUGIN_META_TYPE_CLASSIC)
+class ClassicPluginMeta(
+    override val id: NamespaceId,
+    override val name: String,
+    override val version: Version,
     val main: String
-)
+) : PluginMeta {
+    override val type: String = PLUGIN_META_TYPE_CLASSIC
+}

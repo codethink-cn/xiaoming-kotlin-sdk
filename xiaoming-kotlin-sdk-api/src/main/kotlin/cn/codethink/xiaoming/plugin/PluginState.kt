@@ -14,32 +14,12 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin.classic
+package cn.codethink.xiaoming.plugin
 
 /**
- * Level of classic plugins, depend on deployers' configuration.
+ * Plugin state. Implementation classes support Jackson serialization
+ * and deserialization.
  *
  * @author Chuanwise
- * @see ClassicPluginConfiguration
  */
-enum class ClassicPluginLevel {
-    /**
-     * Ignore this plugin.
-     */
-    ABSENT,
-
-    /**
-     * Just know there is a plugin.
-     */
-    PRESENT,
-
-    /**
-     * Just load the plugin.
-     */
-    DISABLE,
-
-    /**
-     * Enable the plugin.
-     */
-    ENABLE
-}
+interface PluginState
