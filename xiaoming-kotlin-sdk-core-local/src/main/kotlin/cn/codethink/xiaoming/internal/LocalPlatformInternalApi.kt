@@ -28,7 +28,7 @@ import cn.codethink.xiaoming.configuration.LocalPlatformConfiguration
 import cn.codethink.xiaoming.connection.ConnectionManagerApi
 import cn.codethink.xiaoming.data.LocalPlatformData
 import cn.codethink.xiaoming.internal.configuration.LocalPlatformInternalConfiguration
-import cn.codethink.xiaoming.internal.event.PlatformStartingEvent
+import cn.codethink.xiaoming.internal.event.PlatformStartEvent
 import cn.codethink.xiaoming.internal.module.ModuleContext
 import cn.codethink.xiaoming.language.LanguageConfiguration
 import cn.codethink.xiaoming.permission.LocalPermissionServiceApi
@@ -105,7 +105,7 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
 
     // Only called when write lock acquired.
     private fun doStart(cause: Cause, subject: Subject) {
-        val startingEvent = PlatformStartingEvent(cause, subject, this)
+        val startingEvent = PlatformStartEvent(cause, subject)
         val startingEventCause = EventCause(startingEvent)
 
         // Install modules.

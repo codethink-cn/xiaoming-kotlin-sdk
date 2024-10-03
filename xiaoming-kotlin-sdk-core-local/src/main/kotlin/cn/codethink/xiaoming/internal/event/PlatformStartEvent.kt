@@ -20,7 +20,6 @@ import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.InternalEvent
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.event.Event
-import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
@@ -35,26 +34,20 @@ const val EVENT_TYPE_PLATFORM_STARTING = "platform_starting"
  * @author Chuanwise
  */
 @InternalEvent
-class PlatformStartingEvent(
+class PlatformStartEvent(
     raw: Raw,
 ) : Event(raw) {
     var cause: Cause by raw
     var subject: Subject by raw
-    var api: LocalPlatformInternalApi? = null
 
     @JvmOverloads
     constructor(
         cause: Cause,
         subject: Subject,
-        api: LocalPlatformInternalApi,
         raw: Raw = MapRaw()
     ) : this(raw) {
         this.type = EVENT_TYPE_PLATFORM_STARTING
         this.cause = cause
         this.subject = subject
-        this.api = api
     }
 }
-
-val PlatformStartingEvent.apiOrFail: LocalPlatformInternalApi
-    get() = api ?: throw NoSuchElementException("Internal API is not set yet.")
