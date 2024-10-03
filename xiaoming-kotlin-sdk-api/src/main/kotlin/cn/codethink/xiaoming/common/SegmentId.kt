@@ -69,6 +69,13 @@ data class SegmentId(
 
 fun segmentIdOf(string: String): SegmentId = SegmentId(string.split("."))
 fun String.toSegmentId(): SegmentId = segmentIdOf(this)
+fun String.toSegmentIdOrNull(): SegmentId? {
+    return try {
+        toSegmentId()
+    } catch (_: Throwable) {
+        null
+    }
+}
 fun List<String>.toSegmentId(): SegmentId = SegmentId(this)
 
 object SegmentIdStringSerializer : StdSerializer<SegmentId>(SegmentId::class.java) {

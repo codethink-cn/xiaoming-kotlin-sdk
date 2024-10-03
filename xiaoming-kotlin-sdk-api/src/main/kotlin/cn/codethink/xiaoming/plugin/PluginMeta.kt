@@ -14,20 +14,18 @@
  * limitations under the License.
  */
 
-pluginManagement {
-    repositories {
-        mavenCentral()
-        gradlePluginPortal()
-    }
-}
+package cn.codethink.xiaoming.plugin
 
-plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.5.0"
-}
+import cn.codethink.xiaoming.common.AbstractData
+import cn.codethink.xiaoming.common.NamespaceId
+import cn.codethink.xiaoming.common.Version
+import cn.codethink.xiaoming.io.data.Raw
+import cn.codethink.xiaoming.io.data.getValue
 
-rootProject.name = "xiaoming-kotlin-sdk"
-include("xiaoming-kotlin-sdk-api")
-include("xiaoming-kotlin-sdk-core-local")
-include("xiaoming-kotlin-sdk-core-remote")
-include("xiaoming-kotlin-sdk-core-local-data-sql")
-include("xiaoming-kotlin-sdk-core-local-plugin-classic")
+class PluginMeta(
+    raw: Raw
+) : AbstractData(raw) {
+    val id: NamespaceId by raw
+    val name: String by raw
+    val version: Version by raw
+}

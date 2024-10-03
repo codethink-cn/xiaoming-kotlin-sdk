@@ -14,20 +14,32 @@
  * limitations under the License.
  */
 
-pluginManagement {
-    repositories {
-        mavenCentral()
-        gradlePluginPortal()
-    }
-}
+package cn.codethink.xiaoming.plugin.classic
 
-plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.5.0"
-}
+/**
+ * Level of classic plugins, depend on deployers' configuration.
+ *
+ * @author Chuanwise
+ * @see ClassicPluginConfiguration
+ */
+enum class ClassicPluginLevel {
+    /**
+     * Ignore this plugin.
+     */
+    ABSENT,
 
-rootProject.name = "xiaoming-kotlin-sdk"
-include("xiaoming-kotlin-sdk-api")
-include("xiaoming-kotlin-sdk-core-local")
-include("xiaoming-kotlin-sdk-core-remote")
-include("xiaoming-kotlin-sdk-core-local-data-sql")
-include("xiaoming-kotlin-sdk-core-local-plugin-classic")
+    /**
+     * Just know there is a plugin.
+     */
+    PRESENT,
+
+    /**
+     * Just load the plugin.
+     */
+    DISABLE,
+
+    /**
+     * Enable the plugin.
+     */
+    ENABLE
+}

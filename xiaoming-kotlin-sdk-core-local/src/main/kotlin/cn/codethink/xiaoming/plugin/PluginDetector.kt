@@ -14,20 +14,15 @@
  * limitations under the License.
  */
 
-pluginManagement {
-    repositories {
-        mavenCentral()
-        gradlePluginPortal()
-    }
-}
+package cn.codethink.xiaoming.plugin
 
-plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.5.0"
-}
+import cn.codethink.xiaoming.LocalPlatformApi
 
-rootProject.name = "xiaoming-kotlin-sdk"
-include("xiaoming-kotlin-sdk-api")
-include("xiaoming-kotlin-sdk-core-local")
-include("xiaoming-kotlin-sdk-core-remote")
-include("xiaoming-kotlin-sdk-core-local-data-sql")
-include("xiaoming-kotlin-sdk-core-local-plugin-classic")
+/**
+ * Detect all available plugins (installed or to be installed).
+ *
+ * @author Chuanwise
+ */
+interface PluginDetector {
+    fun detectAll(platformApi: LocalPlatformApi): Iterable<Plugin>
+}

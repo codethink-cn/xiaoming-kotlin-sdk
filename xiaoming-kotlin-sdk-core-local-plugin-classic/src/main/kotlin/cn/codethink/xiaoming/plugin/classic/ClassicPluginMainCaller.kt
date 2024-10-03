@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-pluginManagement {
-    repositories {
-        mavenCentral()
-        gradlePluginPortal()
-    }
-}
+package cn.codethink.xiaoming.plugin.classic
 
-plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.5.0"
-}
+import cn.codethink.xiaoming.common.Cause
+import cn.codethink.xiaoming.common.Subject
 
-rootProject.name = "xiaoming-kotlin-sdk"
-include("xiaoming-kotlin-sdk-api")
-include("xiaoming-kotlin-sdk-core-local")
-include("xiaoming-kotlin-sdk-core-remote")
-include("xiaoming-kotlin-sdk-core-local-data-sql")
-include("xiaoming-kotlin-sdk-core-local-plugin-classic")
+/**
+ * Used to call methods in classic plugin main.
+ *
+ * @author Chuanwise
+ * @see KotlinClassicPluginMainCaller
+ * @see JavaClassicPluginMainCaller
+ */
+interface ClassicPluginMainCaller {
+    fun onLoad(plugin: ClassicPlugin, cause: Cause, subject: Subject)
+    fun onEnable(plugin: ClassicPlugin, cause: Cause, subject: Subject)
+    fun onDisable(plugin: ClassicPlugin, cause: Cause, subject: Subject)
+}

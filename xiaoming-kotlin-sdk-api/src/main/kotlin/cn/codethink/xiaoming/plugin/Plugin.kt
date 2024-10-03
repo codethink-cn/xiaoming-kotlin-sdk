@@ -21,6 +21,19 @@ import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.PluginSubject
 import cn.codethink.xiaoming.common.Subject
 
+enum class PluginState {
+    INITIALIZED,
+    LOADING,
+    LOADING_ERROR,
+    LOADED,
+    ENABLING,
+    ENABLING_ERROR,
+    ENABLED,
+    DISABLING,
+    DISABLING_ERROR,
+    DISABLED,
+}
+
 /**
  * Plugin is a set of functions that extend platform's abilities. It can service
  * platform locally and remotely.
@@ -28,20 +41,7 @@ import cn.codethink.xiaoming.common.Subject
  * @author Chuanwise
  */
 interface Plugin {
-    enum class State {
-        INITIALIZED,
-        LOADING,
-        LOADING_ERROR,
-        LOADED,
-        ENABLING,
-        ENABLING_ERROR,
-        ENABLED,
-        DISABLING,
-        DISABLING_ERROR,
-        DISABLED,
-    }
-
-    val state: State
+    val state: PluginState
     val subject: PluginSubject
 
     fun load(platform: Platform, cause: Cause, subject: Subject)
