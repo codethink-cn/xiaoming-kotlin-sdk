@@ -140,7 +140,7 @@ class PacketDataCause(
 
 
 /**
- * Compared to the traditional [TextCause], this class provides [id] and [context]
+ * Compared to the traditional [TextCause], this class provides [id] and [arguments]
  * that are easier for programs to recognize, so that relevant solutions can be provided
  * based on them. At the same time, it also provides [text] that is easy for humans
  * to read.
@@ -152,20 +152,20 @@ class StandardTextCause(
 ) : Cause(raw) {
     var id: String by raw
     var text: String by raw
-    var context: Map<String, Any?> by raw
+    var arguments: Map<String, Any?> by raw
 
     @JvmOverloads
     constructor(
         id: String,
         text: String,
-        context: Map<String, Any?>,
+        arguments: Map<String, Any?> = emptyMap(),
         raw: Raw = MapRaw()
     ) : this(raw) {
         raw[FIELD_TYPE] = CAUSE_TYPE_STANDARD_TEXT
 
         this.id = id
         this.text = text
-        this.context = context
+        this.arguments = arguments
     }
 }
 

@@ -110,7 +110,7 @@ class RequestPacketHandler(
                     cause = StandardTextCause(
                         id = ERROR_UNSUPPORTED_REQUEST_MODE,
                         text = message,
-                        context = arguments
+                        arguments = arguments
                     ),
                     session = context.connection.session
                 )
@@ -141,7 +141,7 @@ class RequestPacketHandler(
                     cause = StandardTextCause(
                         id = ERROR_UNSUPPORTED_REQUEST_MODE,
                         text = message,
-                        context = arguments
+                        arguments = arguments
                     ),
                     session = context.connection.session
                 )
@@ -220,7 +220,7 @@ class RequestPacketHandler(
                 data = StandardTextCause(
                     id = ERROR_ACTION_HANDLER_TIMEOUT,
                     text = message,
-                    context = arguments
+                    arguments = arguments
                 )
             }
         } catch (exception: Exception) {
@@ -242,7 +242,7 @@ class RequestPacketHandler(
                 data = StandardTextCause(
                     id = ERROR_INTERNAL_ACTION_HANDLER_ERROR,
                     text = message,
-                    context = emptyMap()
+                    arguments = emptyMap()
                 )
             }
         }
