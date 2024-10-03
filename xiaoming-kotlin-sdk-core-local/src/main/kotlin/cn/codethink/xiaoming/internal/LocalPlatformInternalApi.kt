@@ -93,7 +93,9 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
 
             // Call module lifecycle methods.
             configuration.modules.forEach {
-                doModuleRelatedAction("callback module lifecycle methods") {
+                doModuleRelatedAction(
+                    "callback module '${it.subject.name}' lifecycle methods 'Module#onPlatformStarting'"
+                ) {
                     it.onPlatformStarting(context)
                 }
             }
