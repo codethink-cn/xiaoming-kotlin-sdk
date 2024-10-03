@@ -47,7 +47,7 @@ inline fun <reified T> withDurationLogging(
         logger.debug { "$description in ${durationTimeMillis}ms." }
         return result
     } catch (e: Exception) {
-        logger.warn { "$description quit after ${durationTimeMillis}ms." }
+        logger.warn { "Unexpected exception occurred when $description after ${durationTimeMillis}ms." }
         throw e
     }
 }
