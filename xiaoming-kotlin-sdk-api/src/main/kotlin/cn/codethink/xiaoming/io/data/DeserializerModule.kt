@@ -65,3 +65,8 @@ fun DeserializerModule.findAndApplyInitializers(classLoader: ClassLoader, subjec
     ServiceLoader.load(PolymorphicDeserializerInitializer::class.java, classLoader)
         .forEach { it.initialize(deserializers, subject) }
 }
+
+fun DeserializerModule.findAndApplyInitializers(subject: Subject) = apply {
+    ServiceLoader.load(PolymorphicDeserializerInitializer::class.java)
+        .forEach { it.initialize(deserializers, subject) }
+}
