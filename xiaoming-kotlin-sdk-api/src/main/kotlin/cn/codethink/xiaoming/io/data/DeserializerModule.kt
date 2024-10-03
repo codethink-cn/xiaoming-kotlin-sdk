@@ -47,7 +47,7 @@ class DeserializerModule(
 
 val XiaomingJacksonModuleVersion = XiaomingSdkSubject.let {
     val version = it.version
-    val snapshotInfo = version.preRelease.prependOrNull("-").orEmpty() + version.build.prependOrNull("+").orEmpty()
+    val snapshotInfo = version.preRelease.orEmpty() + version.build.prependOrNull("+").orEmpty()
     Version(version.major, version.minor, version.patch, snapshotInfo, it.group, it.name)
 }
 
