@@ -61,7 +61,7 @@ interface PolymorphicDeserializerInitializer {
     fun initialize(deserializers: PolymorphicDeserializers, subject: Subject)
 }
 
-fun DeserializerModule.findAndApplyInitializers(subject: Subject) = apply {
-    ServiceLoader.load(PolymorphicDeserializerInitializer::class.java)
+fun DeserializerModule.findAndApplyInitializers(classLoader: ClassLoader, subject: Subject) = apply {
+    ServiceLoader.load(PolymorphicDeserializerInitializer::class.java, classLoader)
         .forEach { it.initialize(deserializers, subject) }
 }

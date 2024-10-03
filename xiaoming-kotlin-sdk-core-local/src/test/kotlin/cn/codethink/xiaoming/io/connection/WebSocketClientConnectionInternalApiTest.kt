@@ -59,7 +59,7 @@ class WebSocketClientConnectionInternalApiTest {
         version = XiaomingJacksonModuleVersion,
         logger = logger
     ).apply {
-        findAndApplyInitializers(TEST_SUBJECT)
+        findAndApplyInitializers(javaClass.classLoader, TEST_SUBJECT)
     }
 
     private val dataObjectMapper = jacksonObjectMapper().apply {
