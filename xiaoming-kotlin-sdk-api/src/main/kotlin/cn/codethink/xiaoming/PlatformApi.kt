@@ -19,7 +19,6 @@ package cn.codethink.xiaoming
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.event.Event
-import cn.codethink.xiaoming.io.ProtocolLanguageConfiguration
 import cn.codethink.xiaoming.io.action.EventSnapshot
 import kotlinx.coroutines.CoroutineScope
 
@@ -29,7 +28,6 @@ import kotlinx.coroutines.CoroutineScope
  * @author Chuanwise
  */
 interface PlatformApi : CoroutineScope, AutoCloseable {
-    val language: ProtocolLanguageConfiguration
     val subject: Subject
 
     fun publishEvent(

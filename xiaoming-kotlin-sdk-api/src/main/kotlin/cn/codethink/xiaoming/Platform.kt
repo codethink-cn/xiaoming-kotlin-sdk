@@ -16,8 +16,6 @@
 
 package cn.codethink.xiaoming
 
-import cn.codethink.xiaoming.io.ProtocolLanguageConfiguration
-
 /**
  * Platform is a plugin architecture.
  *
@@ -26,7 +24,4 @@ import cn.codethink.xiaoming.io.ProtocolLanguageConfiguration
 class Platform(
     val api: PlatformApi
 ) {
-    val language: ProtocolLanguageConfiguration by api::language
-
-
 }

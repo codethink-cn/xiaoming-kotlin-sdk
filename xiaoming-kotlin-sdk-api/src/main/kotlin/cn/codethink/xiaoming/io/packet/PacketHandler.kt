@@ -16,9 +16,9 @@
 
 package cn.codethink.xiaoming.io.packet
 
-import cn.codethink.xiaoming.Platform
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.io.ProtocolLanguageConfiguration
 import cn.codethink.xiaoming.io.connection.ConnectionApi
 import cn.codethink.xiaoming.io.connection.PacketConnection
 import cn.codethink.xiaoming.io.connection.Received
@@ -30,7 +30,7 @@ data class PacketContext(
     private val connectionApi: ConnectionApi<*>,
 
     val received: Received<*>,
-    val platform: Platform,
+    val language: ProtocolLanguageConfiguration,
 
     var disconnect: Boolean = false,
     var disconnectCause: Cause? = null,

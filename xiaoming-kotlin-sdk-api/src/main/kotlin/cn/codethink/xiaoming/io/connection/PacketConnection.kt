@@ -16,7 +16,6 @@
 
 package cn.codethink.xiaoming.io.connection
 
-import cn.codethink.xiaoming.Platform
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.DefaultRegistration
 import cn.codethink.xiaoming.common.DefaultStringMapRegistrations
@@ -26,6 +25,7 @@ import cn.codethink.xiaoming.common.RECEIPT_PACKET_FIELD_DATA
 import cn.codethink.xiaoming.common.RECEIPT_STATE_SUCCEED
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.TextCause
+import cn.codethink.xiaoming.io.ProtocolLanguageConfiguration
 import cn.codethink.xiaoming.io.action.Action
 import cn.codethink.xiaoming.io.packet.Packet
 import cn.codethink.xiaoming.io.packet.PacketContext
@@ -60,7 +60,7 @@ import kotlin.time.Duration.Companion.milliseconds
 class PacketConnection<T>(
     private val logger: KLogger,
     override val session: String,
-    private val platform: Platform,
+    private val language: ProtocolLanguageConfiguration,
     override val subject: Subject,
     private val connectionApi: ConnectionApi<T>,
     parentJob: Job? = null,
@@ -96,7 +96,7 @@ class PacketConnection<T>(
             ?: throw IllegalStateException("No receipt packet handler.")
 
     init {
-        registerTypeHandler(PACKET_TYPE_REQUEST, RequestPacketHandler(platform.language, subject), subject)
+        registerTypeHandler(PACKET_TYPE_REQUEST, RequestPacketHandler(language, subject), subject)
         registerTypeHandler(PACKET_TYPE_REQUEST, ReceiptPacketHandler<T>(), subject)
     }
 
@@ -150,7 +150,7 @@ class PacketConnection<T>(
             return
         }
 
-        val context = PacketContext(logger, this, connectionApi, received, platform)
+        val context = PacketContext(logger, this, connectionApi, received, language)
         try {
             registration.value.handle(context)
         } catch (e: Exception) {

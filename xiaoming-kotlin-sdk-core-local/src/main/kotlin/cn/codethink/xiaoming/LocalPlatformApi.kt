@@ -72,7 +72,6 @@ class DefaultLocalPlatformApi(
 ) : LocalPlatformApi {
     // Forward to configuration.
     override val subject: Subject by configuration::subject
-    override val language: ProtocolLanguageConfiguration by configuration::language
     override val modules: List<Module> by configuration::modules
     override val deserializerModule: DeserializerModule by configuration::deserializerModule
     override val dataObjectMapper: ObjectMapper by configuration::dataObjectMapper
