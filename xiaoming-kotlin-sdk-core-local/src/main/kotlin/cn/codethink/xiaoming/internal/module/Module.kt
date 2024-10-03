@@ -37,7 +37,7 @@ interface Module {
     val subject: ModuleSubject
 
     /**
-     * Called when the module is installed, platform is starting.
+     * Called when the module is installed, platform is start.
      */
     fun onPlatformStart(context: ModuleContext) = Unit
 
