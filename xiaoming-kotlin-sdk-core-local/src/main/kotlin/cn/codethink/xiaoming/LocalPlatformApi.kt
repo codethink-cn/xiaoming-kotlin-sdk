@@ -22,11 +22,15 @@ import cn.codethink.xiaoming.event.Event
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import cn.codethink.xiaoming.io.ProtocolLanguageConfiguration
 import cn.codethink.xiaoming.io.action.EventSnapshot
+import kotlin.coroutines.CoroutineContext
 
 class LocalPlatformApi(
-    val platformInternalApi: LocalPlatformInternalApi,
-    override val language: ProtocolLanguageConfiguration
+    private val internalApi: LocalPlatformInternalApi,
+    override val language: ProtocolLanguageConfiguration,
+    override val subject: Subject
 ) : PlatformApi {
+    override val coroutineContext: CoroutineContext by internalApi::coroutineContext
+    override fun close() = internalApi.close()
 
     fun start(cause: Cause, subject: Subject) {
 
