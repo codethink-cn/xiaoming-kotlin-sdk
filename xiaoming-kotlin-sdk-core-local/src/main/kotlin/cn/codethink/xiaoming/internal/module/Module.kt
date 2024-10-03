@@ -16,13 +16,13 @@
 
 package cn.codethink.xiaoming.internal.module
 
+import cn.codethink.xiaoming.LocalPlatformApi
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.ModuleSubject
 import cn.codethink.xiaoming.common.Subject
-import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 
 data class ModuleContext(
-    val internalApi: LocalPlatformInternalApi,
+    val platformApi: LocalPlatformApi,
     val subject: Subject,
     val cause: Cause
 )

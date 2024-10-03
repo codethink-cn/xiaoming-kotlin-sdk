@@ -20,21 +20,35 @@ import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.event.Event
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
+import cn.codethink.xiaoming.internal.module.Module
 import cn.codethink.xiaoming.io.ProtocolLanguageConfiguration
 import cn.codethink.xiaoming.io.action.EventSnapshot
+import cn.codethink.xiaoming.io.data.DeserializerModule
 import kotlin.coroutines.CoroutineContext
 
-class LocalPlatformApi(
-    private val internalApi: LocalPlatformInternalApi,
+interface LocalPlatformApi : PlatformApi {
+    val modules: List<Module>
+    val deserializerModule: DeserializerModule
+    val internalApi: LocalPlatformInternalApi
+}
+
+
+class DefaultLocalPlatformApi(
+    override val internalApi: LocalPlatformInternalApi,
     override val language: ProtocolLanguageConfiguration,
     override val subject: Subject
-) : PlatformApi {
+) : LocalPlatformApi {
     override val coroutineContext: CoroutineContext by internalApi::coroutineContext
     override fun close() = internalApi.close()
 
     fun start(cause: Cause, subject: Subject) {
 
     }
+
+    override val modules: List<Module>
+        get() = TODO("Not yet implemented")
+    override val deserializerModule: DeserializerModule
+        get() = TODO("Not yet implemented")
 
     override fun publishEvent(
         type: String,
