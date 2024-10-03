@@ -17,16 +17,16 @@
 package cn.codethink.xiaoming.internal
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.EventCause
 import cn.codethink.xiaoming.common.PlatformSubject
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.TextCause
 import cn.codethink.xiaoming.common.currentTimeMillis
+import cn.codethink.xiaoming.common.withDurationLogging
 import cn.codethink.xiaoming.configuration.LocalPlatformConfiguration
 import cn.codethink.xiaoming.connection.ConnectionManagerApi
 import cn.codethink.xiaoming.data.LocalPlatformData
 import cn.codethink.xiaoming.internal.configuration.LocalPlatformInternalConfiguration
-import cn.codethink.xiaoming.internal.event.PlatformStartEvent
+import cn.codethink.xiaoming.internal.module.ModuleContext
 import cn.codethink.xiaoming.language.LanguageConfiguration
 import cn.codethink.xiaoming.permission.LocalPermissionServiceApi
 import io.github.oshai.kotlinlogging.KLogger
@@ -82,17 +82,24 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
     val permissionServiceApi = LocalPermissionServiceApi(this)
     val connectionManagerApi = ConnectionManagerApi(this)
 
-    fun start(cause: Cause, subject: Subject) = lock.write {
-        assertState(LocalPlatformInternalState.INITIALIZED) {
-            "Cannot start the platform when it's not initialized. " +
-                    "Notice that DON'T reuse the platform internal API object. To restart it, create a new object please."
+    fun start(cause: Cause, subject: Subject, context: ModuleContext) = lock.write {
+        stateNoLock = when (stateNoLock) {
+            LocalPlatformInternalState.INITIALIZED -> LocalPlatformInternalState.STARTING
+            else -> throw IllegalStateException("Cannot start platform when it's not initialized.")
         }
-        stateNoLock = LocalPlatformInternalState.STARTING
+
         try {
             var durationTimeMillis = currentTimeMillis
-            doStart(cause, subject)
-            durationTimeMillis = currentTimeMillis - durationTimeMillis
 
+            // Call module lifecycle methods.
+            configuration.modules.forEach {
+                doModuleRelatedAction("callback module lifecycle methods") {
+                    it.onPlatformStarting(context)
+                }
+            }
+
+            durationTimeMillis = currentTimeMillis - durationTimeMillis
+            stateNoLock = LocalPlatformInternalState.STARTED
             logger.debug { "Platform started in ${durationTimeMillis}ms." }
         } catch (exception: Throwable) {
             stateNoLock = LocalPlatformInternalState.STARTING_ERROR
@@ -100,10 +107,22 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
         }
     }
 
-    // Only called when write lock acquired.
-    private fun doStart(cause: Cause, subject: Subject) {
-        val startingEvent = PlatformStartEvent(cause, subject)
-        val startingEventCause = EventCause(startingEvent)
+    private inline fun <reified T> doModuleRelatedAction(
+        description: String,
+        crossinline action: () -> T
+    ): T? {
+        try {
+            return withDurationLogging(logger, description) {
+                action()
+            }
+        } catch (e: Exception) {
+            if (configuration.failOnModuleError) {
+                throw e
+            } else {
+                logger.error(e) { "Failed to $description." }
+                return null
+            }
+        }
     }
 
     fun stop(cause: Cause, subject: Subject) {

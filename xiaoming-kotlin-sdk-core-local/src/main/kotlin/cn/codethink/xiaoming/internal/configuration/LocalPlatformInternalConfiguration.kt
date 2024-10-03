@@ -18,6 +18,7 @@ package cn.codethink.xiaoming.internal.configuration
 
 import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.data.LocalPlatformData
+import cn.codethink.xiaoming.internal.module.Module
 import cn.codethink.xiaoming.io.data.DeserializerModule
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.util.Locale
@@ -41,6 +42,16 @@ interface LocalPlatformInternalConfiguration {
     val locale: Locale
 
     /**
+     * Modules of the platform.
+     */
+    val modules: List<Module>
+
+    /**
+     * Whether to fail on module error.
+     */
+    val failOnModuleError: Boolean
+
+    /**
      * Data accessing API.
      */
     val data: LocalPlatformData
@@ -51,5 +62,7 @@ data class DefaultLocalPlatformInternalConfiguration(
     override val deserializerModule: DeserializerModule,
     override val dataObjectMapper: ObjectMapper,
     override val locale: Locale,
+    override val modules: List<Module>,
+    override val failOnModuleError: Boolean,
     override val data: LocalPlatformData
 ) : LocalPlatformInternalConfiguration

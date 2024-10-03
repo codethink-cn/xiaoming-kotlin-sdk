@@ -42,6 +42,11 @@ interface Module {
     fun onPlatformStart(context: ModuleContext) = Unit
 
     /**
+     * Called when the module is installed, platform is starting.
+     */
+    fun onPlatformStarting(context: ModuleContext) = Unit
+
+    /**
      * Called when the module is started, platform is started.
      */
     fun onPlatformStarted(context: ModuleContext) = Unit
@@ -50,6 +55,11 @@ interface Module {
      * Called when the module is uninstalled, platform is stopping.
      */
     fun onPlatformStop(context: ModuleContext) = Unit
+
+    /**
+     * Called when the module is uninstalled, platform is stopping.
+     */
+    fun onPlatformStopping(context: ModuleContext) = Unit
 
     /**
      * Called when the module is uninstalled, platform is stopped.
