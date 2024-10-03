@@ -57,11 +57,7 @@ const val CAUSE_FIELD_CAUSE = "cause"
 const val CAUSE_TYPE_TEXT = "text"
 const val TEXT_CAUSE_FIELD_TEXT = "text"
 
-const val CAUSE_TYPE_ERROR_TEXT = "error_message"
-const val ERROR_TEXT_CAUSE_FIELD_ERROR = "error"
-const val ERROR_TEXT_CAUSE_FIELD_MESSAGE = "message"
-const val ERROR_TEXT_CAUSE_FIELD_CONTEXT = "context"
-
+const val CAUSE_TYPE_STANDARD_TEXT = "standard_text"
 
 const val CAUSE_TYPE_PACKET_DATA = "packet_data"
 const val CAUSE_TYPE_PACKET_ID = "packet_id"

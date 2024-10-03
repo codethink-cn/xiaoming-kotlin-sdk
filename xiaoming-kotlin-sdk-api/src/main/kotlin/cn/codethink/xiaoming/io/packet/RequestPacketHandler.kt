@@ -17,7 +17,6 @@
 package cn.codethink.xiaoming.io.packet
 
 import cn.codethink.xiaoming.common.DefaultRegistration
-import cn.codethink.xiaoming.common.ErrorMessageCause
 import cn.codethink.xiaoming.common.MapRegistrations
 import cn.codethink.xiaoming.common.RECEIPT_STATE_FAILED
 import cn.codethink.xiaoming.common.RECEIPT_STATE_INTERRUPTED
@@ -27,6 +26,7 @@ import cn.codethink.xiaoming.common.RECEIPT_STATE_UNDEFINED
 import cn.codethink.xiaoming.common.REQUEST_MODE_ASYNC
 import cn.codethink.xiaoming.common.REQUEST_MODE_SYNC
 import cn.codethink.xiaoming.common.Registration
+import cn.codethink.xiaoming.common.StandardTextCause
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.currentTimeMillis
 import cn.codethink.xiaoming.common.currentTimeSeconds
@@ -107,9 +107,9 @@ class RequestPacketHandler(
                     target = packet.id,
                     state = RECEIPT_STATE_FAILED,
                     subject = context.connection.subject,
-                    cause = ErrorMessageCause(
-                        error = ERROR_UNSUPPORTED_REQUEST_MODE,
-                        message = message,
+                    cause = StandardTextCause(
+                        id = ERROR_UNSUPPORTED_REQUEST_MODE,
+                        text = message,
                         context = arguments
                     ),
                     session = context.connection.session
@@ -138,9 +138,9 @@ class RequestPacketHandler(
                     target = request.id,
                     state = RECEIPT_STATE_FAILED,
                     subject = context.connection.subject,
-                    cause = ErrorMessageCause(
-                        error = ERROR_UNSUPPORTED_REQUEST_MODE,
-                        message = message,
+                    cause = StandardTextCause(
+                        id = ERROR_UNSUPPORTED_REQUEST_MODE,
+                        text = message,
                         context = arguments
                     ),
                     session = context.connection.session
@@ -217,9 +217,9 @@ class RequestPacketHandler(
             }
             receipt.apply {
                 state = RECEIPT_STATE_INTERRUPTED
-                data = ErrorMessageCause(
-                    error = ERROR_ACTION_HANDLER_TIMEOUT,
-                    message = message,
+                data = StandardTextCause(
+                    id = ERROR_ACTION_HANDLER_TIMEOUT,
+                    text = message,
                     context = arguments
                 )
             }
@@ -239,9 +239,9 @@ class RequestPacketHandler(
             // Update receipt packet fields.
             receipt.apply {
                 state = RECEIPT_STATE_FAILED
-                data = ErrorMessageCause(
-                    error = ERROR_INTERNAL_ACTION_HANDLER_ERROR,
-                    message = message,
+                data = StandardTextCause(
+                    id = ERROR_INTERNAL_ACTION_HANDLER_ERROR,
+                    text = message,
                     context = emptyMap()
                 )
             }

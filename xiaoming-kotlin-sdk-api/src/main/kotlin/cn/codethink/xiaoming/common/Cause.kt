@@ -18,11 +18,11 @@ package cn.codethink.xiaoming.common
 
 import cn.codethink.xiaoming.event.Event
 import cn.codethink.xiaoming.io.data.MapRaw
-import cn.codethink.xiaoming.io.packet.Packet
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
 import cn.codethink.xiaoming.io.data.setValue
+import cn.codethink.xiaoming.io.packet.Packet
 import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
@@ -34,7 +34,7 @@ abstract class Cause(
     raw: Raw
 ) : AbstractData(raw) {
     val type: String by raw
-    open val cause: Cause? by raw
+    open var cause: Cause? by raw
 
     @JvmOverloads
     constructor(
@@ -52,10 +52,10 @@ abstract class Cause(
  *
  * @author Chuanwise
  */
-class TextCause(
+open class TextCause(
     raw: Raw
 ) : Cause(raw) {
-    val text: String by raw
+    var text: String by raw
 
     @JvmOverloads
     constructor(
@@ -64,6 +64,8 @@ class TextCause(
         raw: Raw = MapRaw()
     ) : this(raw) {
         raw[FIELD_TYPE] = CAUSE_TYPE_TEXT
+
+        this.cause = cause
         raw[CAUSE_FIELD_CAUSE] = cause
         raw[TEXT_CAUSE_FIELD_TEXT] = text
     }
@@ -124,7 +126,7 @@ class PacketDataCause(
     val packet: Packet by raw
 
     override val id: String by packet::id
-    override val cause: Cause? by packet::cause
+    override var cause: Cause? by packet::cause
 
     @JvmOverloads
     constructor(
@@ -138,31 +140,31 @@ class PacketDataCause(
 
 
 /**
- * Compared to the traditional [TextCause], this class provides [error] and [context]
+ * Compared to the traditional [TextCause], this class provides [id] and [context]
  * that are easier for programs to recognize, so that relevant solutions can be provided
- * based on them. At the same time, it also provides [message] that is easy for humans
+ * based on them. At the same time, it also provides [text] that is easy for humans
  * to read.
  *
  * @author Chuanwise
  */
-class ErrorMessageCause(
+class StandardTextCause(
     raw: Raw
 ) : Cause(raw) {
-    var error: String by raw
-    var message: String by raw
+    var id: String by raw
+    var text: String by raw
     var context: Map<String, Any?> by raw
 
     @JvmOverloads
     constructor(
-        error: String,
-        message: String,
+        id: String,
+        text: String,
         context: Map<String, Any?>,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[FIELD_TYPE] = CAUSE_TYPE_ERROR_TEXT
+        raw[FIELD_TYPE] = CAUSE_TYPE_STANDARD_TEXT
 
-        this.error = error
-        this.message = message
+        this.id = id
+        this.text = text
         this.context = context
     }
 }
@@ -181,7 +183,6 @@ class EventCause(
     raw: Raw
 ) : Cause(raw) {
     var event: Event by raw
-    override var cause: Cause? by raw
 
     @JvmOverloads
     constructor(
