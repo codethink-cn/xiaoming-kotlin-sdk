@@ -32,7 +32,6 @@ data class ModuleContext(
  * and uninstall after platform stopped.
  *
  * @author Chuanwise
- * @see ModuleManagerApi
  */
 interface Module {
     val subject: ModuleSubject

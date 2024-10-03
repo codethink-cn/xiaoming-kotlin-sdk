@@ -21,15 +21,12 @@ import cn.codethink.xiaoming.common.EventCause
 import cn.codethink.xiaoming.common.PlatformSubject
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.common.TextCause
-import cn.codethink.xiaoming.common.XiaomingSdkSubject
 import cn.codethink.xiaoming.common.currentTimeMillis
-import cn.codethink.xiaoming.common.withDurationLogging
 import cn.codethink.xiaoming.configuration.LocalPlatformConfiguration
 import cn.codethink.xiaoming.connection.ConnectionManagerApi
 import cn.codethink.xiaoming.data.LocalPlatformData
 import cn.codethink.xiaoming.internal.configuration.LocalPlatformInternalConfiguration
 import cn.codethink.xiaoming.internal.event.PlatformStartEvent
-import cn.codethink.xiaoming.internal.module.ModuleContext
 import cn.codethink.xiaoming.language.LanguageConfiguration
 import cn.codethink.xiaoming.permission.LocalPermissionServiceApi
 import io.github.oshai.kotlinlogging.KLogger
@@ -107,41 +104,6 @@ class LocalPlatformInternalApi @JvmOverloads constructor(
     private fun doStart(cause: Cause, subject: Subject) {
         val startingEvent = PlatformStartEvent(cause, subject)
         val startingEventCause = EventCause(startingEvent)
-
-        // Install modules.
-        val moduleContext = ModuleContext(this, this.subject, startingEventCause)
-        configuration.modules.forEach {
-            doModuleRelatedAction("install module ${it.subject}") {
-                it.onPlatformStart(ModuleContext(this, XiaomingSdkSubject, startingEventCause))
-            }
-        }
-
-        // Start plugins, etc.
-
-        // Notice modules.
-        configuration.modules.forEach {
-            doModuleRelatedAction("notice module ${it.subject}") {
-                it.onPlatformStarted(moduleContext)
-            }
-        }
-    }
-
-    private inline fun <reified T> doModuleRelatedAction(
-        description: String,
-        crossinline action: () -> T
-    ): T? {
-        try {
-            return withDurationLogging(logger, description) {
-                action()
-            }
-        } catch (e: Exception) {
-            if (configuration.failOnModuleError) {
-                throw e
-            } else {
-                logger.error(e) { "Failed to $description." }
-                return null
-            }
-        }
     }
 
     fun stop(cause: Cause, subject: Subject) {
