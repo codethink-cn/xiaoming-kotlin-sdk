@@ -24,6 +24,7 @@ import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
 import cn.codethink.xiaoming.io.data.setValue
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
@@ -214,8 +215,12 @@ class DefaultPluginSubjectMatcher(
     raw: Raw
 ) : AbstractData(raw), Matcher<Subject> {
     override val type: String by raw
-    override val targetType: Class<Subject>
-        get() = Subject::class.java
+
+    @JsonIgnore
+    override val targetType: Class<Subject> = Subject::class.java
+
+    @JsonIgnore
+    override val targetNullable: Boolean = false
 
     @Field(DEFAULT_PLUGIN_SUBJECT_MATCHER_FIELD_ID_MATCHER)
     val idMatcher: Matcher<SegmentId> by raw
@@ -246,8 +251,12 @@ class ProtocolSubjectMatcher @JvmOverloads constructor(
     raw: Raw = MapRaw()
 ) : AbstractData(raw), Matcher<ProtocolSubject> {
     override val type: String by raw
-    override val targetType: Class<ProtocolSubject>
-        get() = ProtocolSubject::class.java
+
+    @JsonIgnore
+    override val targetType: Class<ProtocolSubject> = ProtocolSubject::class.java
+
+    @JsonIgnore
+    override val targetNullable: Boolean = false
 
     init {
         raw[MATCHER_FIELD_TYPE] = SUBJECT_MATCHER_TYPE_DEFAULT_PROTOCOL

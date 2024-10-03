@@ -14,4 +14,4 @@
 # limitations under the License.
 #
 
-cn.codethink.xiaoming.internal.module.SqlLocalDataModule
+cn.codethink.xiaoming.io.LocalPlatformSqlDataPolymorphicDeserializerInitializer

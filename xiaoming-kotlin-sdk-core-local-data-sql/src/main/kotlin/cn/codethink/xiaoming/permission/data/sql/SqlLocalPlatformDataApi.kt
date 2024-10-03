@@ -22,10 +22,10 @@ import cn.codethink.xiaoming.common.NumericalId
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.data.LocalPlatformDataApi
 import cn.codethink.xiaoming.data.toId
-import cn.codethink.xiaoming.internal.Serialization
 import cn.codethink.xiaoming.permission.PermissionComparator
 import cn.codethink.xiaoming.permission.data.PermissionProfile
 import cn.codethink.xiaoming.permission.data.PermissionRecord
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Database
@@ -48,13 +48,12 @@ const val TYPE_VARCHAR_LENGTH = 255
  * @see LocalPlatformDataApi
  */
 class SqlLocalPlatformDataApi(
-    private val serialization: Serialization,
+    private val objectMapper: ObjectMapper,
     private val configuration: SqlLocalPlatformDataConfiguration
 ) : LocalPlatformDataApi {
 
     // Tools to use `internalApi.serializationApi.internalObjectMapper` to serialize and deserialize objects.
     private inline fun <reified T : Any> Table.json(name: String): Column<T> {
-        val objectMapper = serialization.objectMapper
         return json(name, { objectMapper.writeValueAsString(it) }, { objectMapper.readValue(it, T::class.java) })
     }
 

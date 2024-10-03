@@ -49,6 +49,7 @@ import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
@@ -180,8 +181,12 @@ class LiteralPermissionMatcher(
     raw: Raw
 ) : AbstractData(raw), LiteralMatcher<Permission> {
     override val type: String by raw
-    override val targetType: Class<Permission>
-        get() = Permission::class.java
+
+    @JsonIgnore
+    override val targetType: Class<Permission> = Permission::class.java
+
+    @JsonIgnore
+    override val targetNullable: Boolean = false
 
     override val value: Permission by raw
 
@@ -202,8 +207,12 @@ class DefaultPermissionMatcher(
     raw: Raw
 ) : AbstractData(raw), Matcher<Permission> {
     override val type: String by raw
-    override val targetType: Class<Permission>
-        get() = Permission::class.java
+
+    @JsonIgnore
+    override val targetType: Class<Permission> = Permission::class.java
+
+    @JsonIgnore
+    override val targetNullable: Boolean = false
 
     @Field(DEFAULT_PERMISSION_MATCHER_FIELD_NODE_MATCHER)
     val nodeMatcher: Matcher<SegmentId> by raw
@@ -222,7 +231,6 @@ class DefaultPermissionMatcher(
         raw[DEFAULT_PERMISSION_MATCHER_FIELD_ARGUMENT_MATCHERS] = contextMatchers
     }
 
-    @Suppress("UNCHECKED_CAST")
     override fun isMatched(target: Permission): Boolean {
         if (!nodeMatcher.isMatched(target.descriptor.node)) {
             return false

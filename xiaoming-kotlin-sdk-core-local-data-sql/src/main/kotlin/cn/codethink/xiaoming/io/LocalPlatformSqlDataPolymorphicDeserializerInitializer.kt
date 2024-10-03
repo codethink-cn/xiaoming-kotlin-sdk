@@ -21,6 +21,7 @@ import cn.codethink.xiaoming.common.FIELD_VERSION
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.data.LocalPlatformDataConfiguration
 import cn.codethink.xiaoming.io.data.HikariCpSqlDataSource
+import cn.codethink.xiaoming.io.data.PolymorphicDeserializerInitializer
 import cn.codethink.xiaoming.io.data.PolymorphicDeserializers
 import cn.codethink.xiaoming.io.data.SqlDataSource
 import cn.codethink.xiaoming.io.data.name
@@ -29,13 +30,17 @@ import cn.codethink.xiaoming.io.data.subject
 import cn.codethink.xiaoming.permission.data.sql.SqlLocalPlatformDataConfiguration
 import cn.codethink.xiaoming.permission.data.sql.v1.SqlLocalPlatformDataConfigurationV1
 
-fun PolymorphicDeserializers.registerLocalDataSqlDeserializers(subject: Subject) = subject(subject) {
-    names<LocalPlatformDataConfiguration>(FIELD_TYPE) {
-        names<SqlLocalPlatformDataConfiguration>(FIELD_VERSION) {
-            name<SqlLocalPlatformDataConfigurationV1>()
+class LocalPlatformSqlDataPolymorphicDeserializerInitializer : PolymorphicDeserializerInitializer {
+    override fun initialize(deserializers: PolymorphicDeserializers, subject: Subject) {
+        deserializers.subject(subject) {
+            names<LocalPlatformDataConfiguration>(FIELD_TYPE) {
+                names<SqlLocalPlatformDataConfiguration>(FIELD_VERSION) {
+                    name<SqlLocalPlatformDataConfigurationV1>()
+                }
+            }
+            names<SqlDataSource>(FIELD_TYPE) {
+                name<HikariCpSqlDataSource>()
+            }
         }
-    }
-    names<SqlDataSource>(FIELD_TYPE) {
-        name<HikariCpSqlDataSource>()
     }
 }

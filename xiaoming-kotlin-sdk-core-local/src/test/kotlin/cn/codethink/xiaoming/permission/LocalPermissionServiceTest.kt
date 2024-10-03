@@ -28,11 +28,10 @@ import cn.codethink.xiaoming.data.LocalPlatformData
 import cn.codethink.xiaoming.data.LocalPlatformDataConfiguration
 import cn.codethink.xiaoming.data.insertAndGetPermissionProfile
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
-import cn.codethink.xiaoming.internal.Serialization
 import cn.codethink.xiaoming.internal.configuration.DefaultLocalPlatformInternalConfiguration
-import cn.codethink.xiaoming.io.data.registerPlatformDeserializers
-import cn.codethink.xiaoming.io.registerLocalDataSqlDeserializers
-import cn.codethink.xiaoming.io.registerLocalPlatformDeserializers
+import cn.codethink.xiaoming.io.data.DeserializerModule
+import cn.codethink.xiaoming.io.data.XiaomingJacksonModuleVersion
+import cn.codethink.xiaoming.io.data.findAndApplyInitializers
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -43,28 +42,31 @@ import java.util.Locale
 
 class LocalPermissionServiceTest {
     private val logger = KotlinLogging.logger { }
-    private val serialization = Serialization(
-        logger = logger,
-        objectMapper = jacksonObjectMapper().apply {
-            propertyNamingStrategy = PropertyNamingStrategies.SNAKE_CASE
-            findAndRegisterModules()
-        }
+
+    private val deserializerModule = DeserializerModule(
+        version = XiaomingJacksonModuleVersion,
+        logger = logger
     ).apply {
-        deserializers.registerPlatformDeserializers(TEST_SUBJECT)
-        deserializers.registerLocalPlatformDeserializers(TEST_SUBJECT)
-        deserializers.registerLocalDataSqlDeserializers(TEST_SUBJECT)
+        findAndApplyInitializers(TEST_SUBJECT)
+    }
+
+    private val dataObjectMapper = jacksonObjectMapper().apply {
+        propertyNamingStrategy = PropertyNamingStrategies.SNAKE_CASE
+        findAndRegisterModules()
+        registerModule(deserializerModule)
     }
 
     private val api = LocalPlatformInternalApi(
         logger = logger,
         configuration = DefaultLocalPlatformInternalConfiguration(
             id = "Test".toId(),
-            serialization = serialization,
+            deserializerModule = deserializerModule,
+            dataObjectMapper = dataObjectMapper,
             locale = Locale.getDefault(),
             data = LocalPlatformData(
                 platformDataApi = getTestResourceAsStream("xiaoming/data.json").use {
-                    serialization.objectMapper.readValue(it, LocalPlatformDataConfiguration::class.java)
-                }.toDataApi(serialization)
+                    dataObjectMapper.readValue(it, LocalPlatformDataConfiguration::class.java)
+                }.toDataApi(dataObjectMapper)
             )
         ),
         subject = PlatformSubject("test".toId())

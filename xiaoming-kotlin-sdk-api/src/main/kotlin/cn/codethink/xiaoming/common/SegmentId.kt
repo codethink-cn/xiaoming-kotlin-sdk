@@ -17,6 +17,7 @@
 package cn.codethink.xiaoming.common
 
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
@@ -189,13 +190,15 @@ class WildcardStringMatcher private constructor(
         }
     }
 
-    override val type: String
-        get() = STRING_MATCHER_TYPE_WILDCARD
+    override val type: String = STRING_MATCHER_TYPE_WILDCARD
+
+    @JsonIgnore
+    override val targetType: Class<String> = String::class.java
+
+    @JsonIgnore
+    override val targetNullable: Boolean = false
 
     override fun isMatched(target: String): Boolean = true
-
-    override val targetType: Class<String>
-        get() = String::class.java
 
     override fun onDefaultStringListMatcherConstructing(context: DefaultStringListMatcherConstructingContext) {
         if (context.matcherIndex > 0) {
@@ -356,7 +359,7 @@ val MinorityRequiredOnceWildcardStringMatcher: WildcardStringMatcher
  * @see WildcardStringMatcher
  */
 @JsonTypeName(SEGMENT_ID_MATCHER_TYPE_DEFAULT)
-data class DefaultSegmentIdMatcher(
+class DefaultSegmentIdMatcher(
     val matchers: List<Matcher<String>>
 ) : Matcher<SegmentId> {
     init {
@@ -379,11 +382,14 @@ data class DefaultSegmentIdMatcher(
         }
     }
 
-    override val type: String
-        get() = SEGMENT_ID_MATCHER_TYPE_DEFAULT
+    override val type: String = SEGMENT_ID_MATCHER_TYPE_DEFAULT
 
-    override val targetType: Class<SegmentId>
-        get() = SegmentId::class.java
+    @JsonIgnore
+    override val targetType: Class<SegmentId> = SegmentId::class.java
+
+    @JsonIgnore
+    override val targetNullable: Boolean = false
+
 
     override fun isMatched(target: SegmentId): Boolean {
         val context = DefaultStringListMatchingContext(this, target, matchers)
@@ -462,6 +468,19 @@ data class DefaultSegmentIdMatcher(
     }
 
     override fun toString(): String = toStringCache
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as DefaultSegmentIdMatcher
+
+        return matchers == other.matchers
+    }
+
+    override fun hashCode(): Int {
+        return matchers.hashCode()
+    }
 }
 
 val MINORITY_REQUIRED_WILDCARD_STRING_MATCHER_REGEX = "(\\d+)?\\+{2}".toRegex()
@@ -624,16 +643,31 @@ fun compileSegmentIdMatcher(string: String): Matcher<SegmentId> {
 }
 
 @JsonTypeName(SEGMENT_ID_MATCHER_TYPE_LITERAL)
-data class LiteralSegmentIdMatcher(
+class LiteralSegmentIdMatcher(
     val id: SegmentId
 ) : Matcher<SegmentId> {
-    override val type: String
-        get() = SEGMENT_ID_MATCHER_TYPE_LITERAL
+    override val type: String = SEGMENT_ID_MATCHER_TYPE_LITERAL
 
-    override val targetType: Class<SegmentId>
-        get() = SegmentId::class.java
+    @JsonIgnore
+    override val targetType: Class<SegmentId> = SegmentId::class.java
+
+    @JsonIgnore
+    override val targetNullable: Boolean = false
 
     override fun isMatched(target: SegmentId): Boolean = target == id
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as LiteralSegmentIdMatcher
+
+        return id == other.id
+    }
+
+    override fun hashCode(): Int {
+        return id.hashCode()
+    }
 
     private val toStringCache: String by lazy {
         "LiteralStringListMatcher(" +

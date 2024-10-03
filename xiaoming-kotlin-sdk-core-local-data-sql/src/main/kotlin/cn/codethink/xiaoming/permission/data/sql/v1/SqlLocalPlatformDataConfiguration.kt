@@ -20,7 +20,6 @@ import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.FIELD_TYPE
 import cn.codethink.xiaoming.common.FIELD_VERSION
 import cn.codethink.xiaoming.data.LocalPlatformDataApi
-import cn.codethink.xiaoming.internal.Serialization
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.SqlDataSource
@@ -30,6 +29,7 @@ import cn.codethink.xiaoming.io.data.setValue
 import cn.codethink.xiaoming.permission.data.sql.SqlLocalPlatformDataApi
 import cn.codethink.xiaoming.permission.data.sql.SqlLocalPlatformDataConfiguration
 import com.fasterxml.jackson.annotation.JsonTypeName
+import com.fasterxml.jackson.databind.ObjectMapper
 
 const val LOCAL_PLATFORM_DATA_CONFIGURATION_TYPE_SQL = "sql"
 const val SQL_LOCAL_PLATFORM_DATA_CONFIGURATION_VERSION_1 = "1"
@@ -60,7 +60,7 @@ class SqlLocalPlatformDataConfigurationV1(
         this.tables = tables
     }
 
-    override fun toDataApi(serialization: Serialization): LocalPlatformDataApi {
-        return SqlLocalPlatformDataApi(serialization, this)
+    override fun toDataApi(objectMapper: ObjectMapper): LocalPlatformDataApi {
+        return SqlLocalPlatformDataApi(objectMapper, this)
     }
 }

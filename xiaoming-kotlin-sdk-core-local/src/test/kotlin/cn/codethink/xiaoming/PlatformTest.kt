@@ -25,14 +25,13 @@ import cn.codethink.xiaoming.common.toId
 import cn.codethink.xiaoming.data.LocalPlatformData
 import cn.codethink.xiaoming.data.LocalPlatformDataConfiguration
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
-import cn.codethink.xiaoming.internal.Serialization
 import cn.codethink.xiaoming.internal.configuration.DefaultLocalPlatformInternalConfiguration
 import cn.codethink.xiaoming.io.connection.DefaultWebSocketClientConfiguration
 import cn.codethink.xiaoming.io.connection.TextFrameConnectionApi
 import cn.codethink.xiaoming.io.connection.WebSocketClientConnectionInternalApi
-import cn.codethink.xiaoming.io.data.registerPlatformDeserializers
-import cn.codethink.xiaoming.io.registerLocalDataSqlDeserializers
-import cn.codethink.xiaoming.io.registerLocalPlatformDeserializers
+import cn.codethink.xiaoming.io.data.DeserializerModule
+import cn.codethink.xiaoming.io.data.XiaomingJacksonModuleVersion
+import cn.codethink.xiaoming.io.data.findAndApplyInitializers
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -49,37 +48,37 @@ val TEST_CAUSE = TextCause("Run test programs")
 val TEST_SUBJECT = XiaomingSdkSubject
 
 class PlatformTest {
-    companion object {
-        val logger = KotlinLogging.logger { }
+    private val logger = KotlinLogging.logger { }
 
-        val serialization = Serialization(
-            logger = logger,
-            objectMapper = jacksonObjectMapper().apply {
-                propertyNamingStrategy = PropertyNamingStrategies.SNAKE_CASE
-                findAndRegisterModules()
-            }
-        ).apply {
-            deserializers.registerPlatformDeserializers(TEST_SUBJECT)
-            deserializers.registerLocalPlatformDeserializers(TEST_SUBJECT)
-            deserializers.registerLocalDataSqlDeserializers(TEST_SUBJECT)
-        }
+    private val deserializerModule = DeserializerModule(
+        version = XiaomingJacksonModuleVersion,
+        logger = logger
+    ).apply {
+        findAndApplyInitializers(TEST_SUBJECT)
+    }
 
-        val api = LocalPlatformInternalApi(
-            logger = logger,
-            configuration = DefaultLocalPlatformInternalConfiguration(
-                id = "Test".toId(),
-                serialization = serialization,
-                locale = Locale.getDefault(),
-                data = LocalPlatformData(
-                    platformDataApi = getTestResourceAsStream("xiaoming/data.json").use {
-                        serialization.objectMapper.readValue(it, LocalPlatformDataConfiguration::class.java)
-                    }.toDataApi(serialization)
-                )
-            ),
-            subject = PlatformSubject("test".toId())
-        ).apply {
-            start(TEST_CAUSE, TEST_SUBJECT)
-        }
+    private val dataObjectMapper = jacksonObjectMapper().apply {
+        propertyNamingStrategy = PropertyNamingStrategies.SNAKE_CASE
+        findAndRegisterModules()
+        registerModule(deserializerModule)
+    }
+
+    private val api = LocalPlatformInternalApi(
+        logger = logger,
+        configuration = DefaultLocalPlatformInternalConfiguration(
+            id = "Test".toId(),
+            deserializerModule = deserializerModule,
+            dataObjectMapper = dataObjectMapper,
+            locale = Locale.getDefault(),
+            data = LocalPlatformData(
+                platformDataApi = getTestResourceAsStream("xiaoming/data.json").use {
+                    dataObjectMapper.readValue(it, LocalPlatformDataConfiguration::class.java)
+                }.toDataApi(dataObjectMapper)
+            )
+        ),
+        subject = PlatformSubject("test".toId())
+    ).apply {
+        start(TEST_CAUSE, TEST_SUBJECT)
     }
 
     @Test
@@ -100,7 +99,7 @@ class PlatformTest {
 
         val connectionApi = TextFrameConnectionApi(
             logger = logger,
-            objectMapper = serialization.objectMapper,
+            objectMapper = dataObjectMapper,
             connectionInternalApi = connectionInternalApi
         )
 

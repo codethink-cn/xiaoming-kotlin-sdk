@@ -30,11 +30,10 @@ import cn.codethink.xiaoming.common.toId
 import cn.codethink.xiaoming.data.LocalPlatformData
 import cn.codethink.xiaoming.data.LocalPlatformDataConfiguration
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
-import cn.codethink.xiaoming.internal.Serialization
 import cn.codethink.xiaoming.internal.configuration.DefaultLocalPlatformInternalConfiguration
-import cn.codethink.xiaoming.io.data.registerPlatformDeserializers
-import cn.codethink.xiaoming.io.registerLocalDataSqlDeserializers
-import cn.codethink.xiaoming.io.registerLocalPlatformDeserializers
+import cn.codethink.xiaoming.io.data.DeserializerModule
+import cn.codethink.xiaoming.io.data.XiaomingJacksonModuleVersion
+import cn.codethink.xiaoming.io.data.findAndApplyInitializers
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -53,7 +52,7 @@ const val TEST_PATH = "/1893/12/26"
 const val TEST_TOKEN = "ExampleAccessToken"
 
 class WebSocketClientConnectionInternalApiTest {
-    val logger = KotlinLogging.logger { }
+    private val logger = KotlinLogging.logger { }
 
     inner class TestAuthorizer : Authorizer {
         override fun authorize(token: String): Subject? {
@@ -66,36 +65,35 @@ class WebSocketClientConnectionInternalApiTest {
         }
     }
 
-    companion object {
-        val logger = KotlinLogging.logger { }
-        val serialization = Serialization(
-            logger = logger,
-            objectMapper = jacksonObjectMapper().apply {
-                propertyNamingStrategy = PropertyNamingStrategies.SNAKE_CASE
-                findAndRegisterModules()
-            }
-        ).apply {
-            deserializers.registerPlatformDeserializers(TEST_SUBJECT)
-            deserializers.registerLocalPlatformDeserializers(TEST_SUBJECT)
-            deserializers.registerLocalDataSqlDeserializers(TEST_SUBJECT)
-        }
+    private val deserializerModule = DeserializerModule(
+        version = XiaomingJacksonModuleVersion,
+        logger = logger
+    ).apply {
+        findAndApplyInitializers(TEST_SUBJECT)
+    }
 
-        val api = LocalPlatformInternalApi(
-            logger = logger,
-            configuration = DefaultLocalPlatformInternalConfiguration(
-                id = "Test".toId(),
-                serialization = serialization,
-                locale = Locale.getDefault(),
-                data = LocalPlatformData(
-                    platformDataApi = getTestResourceAsStream("xiaoming/data.json").use {
-                        serialization.objectMapper.readValue(it, LocalPlatformDataConfiguration::class.java)
-                    }.toDataApi(serialization)
-                )
-            ),
-            subject = PlatformSubject("test".toId())
-        ).apply {
-            start(TEST_CAUSE, TEST_SUBJECT)
-        }
+    private val dataObjectMapper = jacksonObjectMapper().apply {
+        propertyNamingStrategy = PropertyNamingStrategies.SNAKE_CASE
+        findAndRegisterModules()
+        registerModule(deserializerModule)
+    }
+
+    private val api = LocalPlatformInternalApi(
+        logger = logger,
+        configuration = DefaultLocalPlatformInternalConfiguration(
+            id = "Test".toId(),
+            deserializerModule = deserializerModule,
+            dataObjectMapper = dataObjectMapper,
+            locale = Locale.getDefault(),
+            data = LocalPlatformData(
+                platformDataApi = getTestResourceAsStream("xiaoming/data.json").use {
+                    dataObjectMapper.readValue(it, LocalPlatformDataConfiguration::class.java)
+                }.toDataApi(dataObjectMapper)
+            )
+        ),
+        subject = PlatformSubject("test".toId())
+    ).apply {
+        start(TEST_CAUSE, TEST_SUBJECT)
     }
 
     @Test

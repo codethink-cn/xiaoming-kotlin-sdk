@@ -93,9 +93,7 @@ class PolymorphicDeserializers(
 
     @DataDeserializer
     @Suppress("UNCHECKED_CAST")
-    private inner class DynamicDeserializer<T>(
-        private val type: Class<T>
-    ) : StdDeserializer<T>(type) {
+    private inner class DynamicDeserializer<T>(private val type: Class<T>) : StdDeserializer<T>(type) {
         private fun <U : T> findDeserializerNoLock(
             type: Class<U>,
             parser: JsonParser,

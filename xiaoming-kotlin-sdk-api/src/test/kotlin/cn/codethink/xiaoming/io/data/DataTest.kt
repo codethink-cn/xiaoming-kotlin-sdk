@@ -44,7 +44,7 @@ class DataTest {
     @Test
     fun testDeserializeData() {
         val deserializerModule = DeserializerModule().apply {
-            deserializers.registerPlatformDeserializers(XiaomingSdkSubject)
+            findAndApplyInitializers(XiaomingSdkSubject)
         }
         val mapper = jacksonObjectMapper().apply {
             registerModule(deserializerModule)

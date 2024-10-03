@@ -21,6 +21,7 @@ import cn.codethink.xiaoming.common.FIELD_VERSION
 import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.connection.ConnectionManagerConfiguration
 import cn.codethink.xiaoming.connection.ConnectionManagerConfigurationV1
+import cn.codethink.xiaoming.io.data.PolymorphicDeserializerInitializer
 import cn.codethink.xiaoming.io.data.PolymorphicDeserializers
 import cn.codethink.xiaoming.io.data.name
 import cn.codethink.xiaoming.io.data.names
@@ -31,16 +32,20 @@ import cn.codethink.xiaoming.permission.InheritancePermissionComparator
 import cn.codethink.xiaoming.permission.InheritancePermissionComparatorV1
 import cn.codethink.xiaoming.permission.PermissionComparator
 
-fun PolymorphicDeserializers.registerLocalPlatformDeserializers(subject: Subject) = subject(subject) {
-    names<PermissionComparator>(FIELD_TYPE) {
-        names<DefaultPermissionComparator>(FIELD_VERSION) {
-            name<DefaultPermissionComparatorV1>()
+class LocalPlatformPolymorphicDeserializerInitializer : PolymorphicDeserializerInitializer {
+    override fun initialize(deserializers: PolymorphicDeserializers, subject: Subject) {
+        deserializers.subject(subject) {
+            names<PermissionComparator>(FIELD_TYPE) {
+                names<DefaultPermissionComparator>(FIELD_VERSION) {
+                    name<DefaultPermissionComparatorV1>()
+                }
+                names<InheritancePermissionComparator>(FIELD_VERSION) {
+                    name<InheritancePermissionComparatorV1>()
+                }
+            }
+            names<ConnectionManagerConfiguration>(FIELD_VERSION) {
+                name<ConnectionManagerConfigurationV1>()
+            }
         }
-        names<InheritancePermissionComparator>(FIELD_VERSION) {
-            name<InheritancePermissionComparatorV1>()
-        }
-    }
-    names<ConnectionManagerConfiguration>(FIELD_VERSION) {
-        name<ConnectionManagerConfigurationV1>()
     }
 }

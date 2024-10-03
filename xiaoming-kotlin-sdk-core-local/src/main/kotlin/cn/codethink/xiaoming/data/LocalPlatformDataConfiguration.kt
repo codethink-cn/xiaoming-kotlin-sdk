@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.data
 
-import cn.codethink.xiaoming.internal.Serialization
+import com.fasterxml.jackson.databind.ObjectMapper
 
 /**
  * Configuration storing where to read and save data.
@@ -25,5 +25,5 @@ import cn.codethink.xiaoming.internal.Serialization
  */
 interface LocalPlatformDataConfiguration {
     val type: String
-    fun toDataApi(serialization: Serialization): LocalPlatformDataApi
+    fun toDataApi(objectMapper: ObjectMapper): LocalPlatformDataApi
 }

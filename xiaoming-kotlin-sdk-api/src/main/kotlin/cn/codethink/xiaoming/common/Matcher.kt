@@ -17,7 +17,6 @@
 package cn.codethink.xiaoming.common
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
@@ -25,16 +24,11 @@ import com.fasterxml.jackson.annotation.JsonTypeName
  *
  * @author Chuanwise
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
 interface Matcher<out T> {
     val type: String
 
-    @get:JsonIgnore
     val targetType: Class<@UnsafeVariance T>
-
-    @get:JsonIgnore
     val targetNullable: Boolean
-        get() = false
 
     fun isMatched(target: @UnsafeVariance T): Boolean
 }
@@ -68,8 +62,12 @@ interface LiteralMatcher<T> : Matcher<T> {
 @Suppress("UNCHECKED_CAST")
 object AnyMatcher : Matcher<Any?> {
     override val type: String = MATCHER_TYPE_ANY
-    override val targetType: Class<Any?>
-        get() = Any::class.java as Class<Any?>
+
+    @JsonIgnore
+    override val targetType: Class<Any?> = Any::class.java as Class<Any?>
+
+    @JsonIgnore
+    override val targetNullable: Boolean = true
 
     override fun isMatched(target: Any?): Boolean = true
 }
@@ -78,13 +76,16 @@ object AnyMatcher : Matcher<Any?> {
 inline fun <reified T : Any?> AnyMatcher(): Matcher<T> = AnyMatcher as Matcher<T>
 
 @JsonTypeName(STRING_MATCHER_TYPE_REGEX)
-data class RegexStringMatcher(
+class RegexStringMatcher(
     val regex: Regex
 ) : Matcher<String> {
-    override val type: String
-        get() = STRING_MATCHER_TYPE_REGEX
-    override val targetType: Class<String>
-        get() = String::class.java
+    override val type: String = STRING_MATCHER_TYPE_REGEX
+
+    @JsonIgnore
+    override val targetType: Class<String> = String::class.java
+
+    @JsonIgnore
+    override val targetNullable: Boolean = false
 
     override fun isMatched(target: String): Boolean = regex.matches(target)
 
@@ -100,14 +101,38 @@ data class RegexStringMatcher(
     override fun hashCode(): Int {
         return regex.pattern.hashCode()
     }
+
+    override fun toString(): String {
+        return "RegexStringMatcher(regex=$regex)"
+    }
 }
 
 @JsonTypeName(STRING_MATCHER_TYPE_LITERAL)
-data class LiteralStringMatcher(
+class LiteralStringMatcher(
     override val value: String
 ) : LiteralMatcher<String> {
-    override val type: String
-        get() = STRING_MATCHER_TYPE_LITERAL
-    override val targetType: Class<String>
-        get() = String::class.java
+    override val type: String = STRING_MATCHER_TYPE_LITERAL
+
+    @JsonIgnore
+    override val targetType: Class<String> = String::class.java
+
+    @JsonIgnore
+    override val targetNullable: Boolean = false
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as LiteralStringMatcher
+
+        return value == other.value
+    }
+
+    override fun hashCode(): Int {
+        return value.hashCode()
+    }
+
+    override fun toString(): String {
+        return "LiteralStringMatcher(value='$value')"
+    }
 }

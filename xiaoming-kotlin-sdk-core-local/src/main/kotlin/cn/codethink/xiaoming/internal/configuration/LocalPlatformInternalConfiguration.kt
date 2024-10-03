@@ -18,17 +18,23 @@ package cn.codethink.xiaoming.internal.configuration
 
 import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.data.LocalPlatformData
-import cn.codethink.xiaoming.internal.Serialization
 import cn.codethink.xiaoming.internal.module.Module
+import cn.codethink.xiaoming.io.data.DeserializerModule
+import com.fasterxml.jackson.databind.ObjectMapper
 import java.util.Locale
 
 interface LocalPlatformInternalConfiguration {
     val id: Id
 
     /**
-     * Serialization related APIs.
+     * Registry of deserializers.
      */
-    val serialization: Serialization
+    val deserializerModule: DeserializerModule
+
+    /**
+     * Object mapper to serialize and deserialize internal data.
+     */
+    val dataObjectMapper: ObjectMapper
 
     /**
      * Locale of the platform.
@@ -53,7 +59,8 @@ interface LocalPlatformInternalConfiguration {
 
 data class DefaultLocalPlatformInternalConfiguration(
     override val id: Id,
-    override val serialization: Serialization,
+    override val deserializerModule: DeserializerModule,
+    override val dataObjectMapper: ObjectMapper,
     override val locale: Locale,
     override val data: LocalPlatformData,
     override val modules: List<Module> = emptyList(),
