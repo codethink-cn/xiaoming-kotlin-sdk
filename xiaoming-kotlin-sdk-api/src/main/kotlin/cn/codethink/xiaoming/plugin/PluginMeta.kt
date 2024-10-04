@@ -24,4 +24,5 @@ interface PluginMeta {
     val id: NamespaceId
     val name: String
     val version: Version
+    val dependencies: List<PluginDependency>
 }

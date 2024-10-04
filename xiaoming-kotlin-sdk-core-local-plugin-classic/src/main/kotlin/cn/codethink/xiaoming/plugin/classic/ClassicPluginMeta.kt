@@ -18,6 +18,7 @@ package cn.codethink.xiaoming.plugin.classic
 
 import cn.codethink.xiaoming.common.NamespaceId
 import cn.codethink.xiaoming.common.Version
+import cn.codethink.xiaoming.plugin.PluginDependency
 import cn.codethink.xiaoming.plugin.PluginMeta
 import com.fasterxml.jackson.annotation.JsonTypeName
 
@@ -33,7 +34,8 @@ class ClassicPluginMeta(
     override val id: NamespaceId,
     override val name: String,
     override val version: Version,
-    val main: String
+    val main: String,
+    override val dependencies: List<PluginDependency>
 ) : PluginMeta {
     override val type: String = PLUGIN_META_TYPE_CLASSIC
 }
