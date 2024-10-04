@@ -38,7 +38,7 @@ const val TEST_PORT = 8080
 const val TEST_TOKEN = "ExampleAccessToken"
 
 val TEST_CAUSE = TextCause("Run test programs")
-val TEST_SUBJECT = XiaomingSdkSubject
+val TEST_SUBJECT_DESCRIPTOR = XiaomingSdkSubject
 
 class PlatformTest {
     private val logger = KotlinLogging.logger { }
@@ -47,7 +47,7 @@ class PlatformTest {
         version = XiaomingJacksonModuleVersion,
         logger = logger
     ).apply {
-        findAndApplyInitializers(javaClass.classLoader, TEST_SUBJECT)
+        findAndApplyInitializers(javaClass.classLoader, TEST_SUBJECT_DESCRIPTOR)
     }
 
     private val dataObjectMapper = jacksonObjectMapper().apply {
@@ -68,7 +68,7 @@ class PlatformTest {
                 reconnectIntervalMillis = null
             ),
             logger = logger,
-            subjectDescriptor = subject,
+            descriptor = subject,
             httpClient = HttpClient { install(WebSockets) }
         )
 
@@ -86,7 +86,7 @@ class PlatformTest {
 //                api = LocalPlatformApi(
 //                    platformInternalApi = platformInternalApi,
 //                    language =
-//                ).apply { start(TEST_CAUSE, TEST_SUBJECT) }
+//                ).apply { start(TEST_CAUSE, TEST_SUBJECT_DESCRIPTOR) }
 //            ),
 //            subject = subject,
 //            connectionApi = connectionApi

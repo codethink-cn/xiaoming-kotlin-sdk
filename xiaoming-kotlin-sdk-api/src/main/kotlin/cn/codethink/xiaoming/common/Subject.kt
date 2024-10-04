@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin.classic
+package cn.codethink.xiaoming.common
 
-import cn.codethink.xiaoming.plugin.PluginLevel
-
-interface ClassicPluginConfiguration {
-    val version: String
-
-    val level: PluginLevel
-
-    val distribution: String
-
-    val autoUpdate: Boolean
+/**
+ * A subject can register listeners, deserializers, commands, do something and so on.
+ *
+ * @author Chuanwise
+ */
+interface Subject {
+    val descriptor: SubjectDescriptor
 }
+
+interface AutoClosableSubject : Subject, AutoCloseable {
+    fun close(cause: Cause? = null, subject: SubjectDescriptor? = null)
+    override fun close() = close(currentThreadCauseSubjectPairOrFail())
+}
+
+fun <T : AutoClosableSubject> T.close(pair: CauseSubjectPair) = close(pair.cause, pair.subject)

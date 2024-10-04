@@ -16,9 +16,9 @@
 
 package cn.codethink.xiaoming.io.connection
 
+import cn.codethink.xiaoming.common.AutoClosableSubject
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.SubjectDescriptor
-import cn.codethink.xiaoming.common.TextCause
 import cn.codethink.xiaoming.common.currentTimeSeconds
 import cn.codethink.xiaoming.io.action.Action
 import kotlinx.coroutines.CoroutineScope
@@ -29,8 +29,7 @@ import kotlinx.coroutines.CoroutineScope
  * @author Chuanwise
  * @see PacketConnection
  */
-interface Connection<T> : AutoCloseable, CoroutineScope {
-    val subjectDescriptor: SubjectDescriptor
+interface Connection<T> : AutoClosableSubject, CoroutineScope {
     val session: String
     val isClosed: Boolean
 
@@ -39,13 +38,10 @@ interface Connection<T> : AutoCloseable, CoroutineScope {
         mode: String,
         timeout: Long,
         argument: P? = null,
-        subjectDescriptor: SubjectDescriptor? = null,
+        subject: SubjectDescriptor? = null,
         time: Long = currentTimeSeconds,
         cause: Cause? = null
     ) : Pair<Received<T>, R?>
-
-    fun close(cause: Cause, subjectDescriptor: SubjectDescriptor)
-    override fun close() = close(TextCause("Connection closed."), subjectDescriptor)
 }
 
 val Connection<*>.isNotClosed: Boolean

@@ -27,5 +27,5 @@ import cn.codethink.xiaoming.permission.PermissionComparator
 interface PermissionRecord {
     val profile: PermissionProfile
     val comparator: PermissionComparator
-    val contextMatchers: Map<String, Matcher<Any?>>
+    val context: Map<String, Matcher<Any?>>
 }

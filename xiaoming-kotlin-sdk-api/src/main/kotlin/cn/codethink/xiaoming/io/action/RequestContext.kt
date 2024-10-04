@@ -17,6 +17,7 @@
 package cn.codethink.xiaoming.io.action
 
 import cn.codethink.xiaoming.common.Cause
+import cn.codethink.xiaoming.common.CauseSubjectPair
 import cn.codethink.xiaoming.common.REQUEST_PACKET_FIELD_ARGUMENT
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.io.connection.Connection
@@ -35,28 +36,24 @@ interface RequestContext<P, R> {
     val mode: String
     val timeout: Long
     val argument: P?
-    val subjectDescriptor: SubjectDescriptor?
-    val subjectDescriptorOrDefault: SubjectDescriptor
+    val subject: SubjectDescriptor?
+    val subjectOrDefault: SubjectDescriptor
     val time: Long
     val cause: Cause?
     val raw: Raw
     val receipt: ReceiptPacket
     val connection: Connection<*>
 
-    var disconnect: Boolean
-    var disconnectCause: Cause?
-    var disconnectSubjectDescriptor: SubjectDescriptor?
+    var disconnect: CauseSubjectPair?
 }
 
 data class PacketRequestContext<P, R>(
     override val action: Action<P, R>,
     val request: RequestPacket,
-    private val defaultSubjectDescriptor: SubjectDescriptor,
+    private val defaultSubject: SubjectDescriptor,
     override val receipt: ReceiptPacket,
     override val connection: PacketConnection<*>,
-    override var disconnect: Boolean = false,
-    override var disconnectCause: Cause? = null,
-    override var disconnectSubjectDescriptor: SubjectDescriptor? = null
+    override var disconnect: CauseSubjectPair? = null
 ) : RequestContext<P, R> {
     override val mode: String by request::mode
     override val timeout: Long by request::timeout
@@ -64,14 +61,14 @@ data class PacketRequestContext<P, R>(
     @Suppress("UNCHECKED_CAST")
     override val argument: P? = request.raw.get(
         name = REQUEST_PACKET_FIELD_ARGUMENT,
-        type = action.requestArgument.type,
-        optional = action.requestArgument.optional,
-        nullable = action.requestArgument.nullable
+        type = action.requestPara.type,
+        optional = action.requestPara.optional,
+        nullable = action.requestPara.nullable
     ) as P?
 
-    override val subjectDescriptor: SubjectDescriptor? by request::subjectDescriptor
-    override val subjectDescriptorOrDefault: SubjectDescriptor
-        get() = subjectDescriptor ?: defaultSubjectDescriptor
+    override val subject: SubjectDescriptor? by request::subject
+    override val subjectOrDefault: SubjectDescriptor
+        get() = subject ?: defaultSubject
 
     override val time: Long by request::time
     override val cause: Cause? by request::cause

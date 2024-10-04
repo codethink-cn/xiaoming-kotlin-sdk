@@ -30,17 +30,17 @@ import cn.codethink.xiaoming.permission.data.PermissionRecord
  */
 interface LocalPlatformDataApi {
     // Subject.
-    fun getSubject(id: Id): SubjectDescriptor?
-    fun getSubjectId(subjectDescriptor: SubjectDescriptor): Id?
-    fun getOrInsertSubjectId(subjectDescriptor: SubjectDescriptor): Id
+    fun getSubjectDescriptor(id: Id): SubjectDescriptor?
+    fun getSubjectId(subject: SubjectDescriptor): Id?
+    fun getOrInsertSubjectId(subject: SubjectDescriptor): Id
 
     // Permission Profile.
     fun getPermissionProfiles(): List<PermissionProfile>
-    fun getPermissionProfiles(subjectDescriptor: SubjectDescriptor): List<PermissionProfile>
+    fun getPermissionProfiles(subject: SubjectDescriptor): List<PermissionProfile>
 
     fun getPermissionProfile(id: Id): PermissionProfile?
 
-    fun insertAndGetPermissionProfileId(subjectDescriptor: SubjectDescriptor): Id
+    fun insertAndGetPermissionProfileId(subject: SubjectDescriptor): Id
 
     // Permission Record.
     fun getPermissionRecordsByPermissionProfileId(id: Id, reverse: Boolean = true): List<PermissionRecord>
@@ -55,17 +55,17 @@ interface LocalPlatformDataApi {
     fun insertPermissionRecord(
         profile: PermissionProfile,
         comparator: PermissionComparator,
-        contextMatchers: Map<String, Matcher<Any?>> = emptyMap()
+        context: Map<String, Matcher<Any?>> = emptyMap()
     ): Id
 }
 
-fun LocalPlatformDataApi.insertAndGetPermissionProfile(subjectDescriptor: SubjectDescriptor): PermissionProfile =
+fun LocalPlatformDataApi.insertAndGetPermissionProfile(subject: SubjectDescriptor): PermissionProfile =
     getPermissionProfileOrFail(
-        insertAndGetPermissionProfileId(subjectDescriptor)
+        insertAndGetPermissionProfileId(subject)
     )
 
-fun LocalPlatformDataApi.getSubjectOrFail(id: Id) = getSubject(id)
-    ?: throw NoSuchElementException("No subject found by id: $id.")
+fun LocalPlatformDataApi.getSubjectDescriptorOrFail(id: Id) = getSubjectDescriptor(id)
+    ?: throw NoSuchElementException("No subject descriptor found by id: $id.")
 
 fun LocalPlatformDataApi.getPermissionProfileOrFail(id: Id) = getPermissionProfile(id)
     ?: throw NoSuchElementException("No permission profile found by id: $id.")

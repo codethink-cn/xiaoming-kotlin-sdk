@@ -47,7 +47,7 @@ class LocalPlatformInternalApi(
     val configuration: LocalPlatformInternalConfiguration,
 ) : CoroutineScope, AutoCloseable {
     val logger by configuration::logger
-    private val subject by configuration::subjectDescriptor
+    private val subject by configuration::descriptor
 
     // Coroutine related APIs.
     val supervisorJob = SupervisorJob(configuration.parentJob)
@@ -78,7 +78,7 @@ class LocalPlatformInternalApi(
     val permissionServiceApi = LocalPermissionServiceApi(this)
     val connectionManagerApi = ConnectionManagerApi(this)
 
-    fun start(cause: Cause, subjectDescriptor: SubjectDescriptor, context: ModuleContext) = lock.write {
+    fun start(cause: Cause, subject: SubjectDescriptor, context: ModuleContext) = lock.write {
         stateNoLock = when (stateNoLock) {
             LocalPlatformInternalState.INITIALIZED -> LocalPlatformInternalState.STARTING
             else -> throw IllegalStateException("Cannot start platform when it's not initialized.")
@@ -103,7 +103,7 @@ class LocalPlatformInternalApi(
         }
     }
 
-    fun stop(cause: Cause, subjectDescriptor: SubjectDescriptor) {
+    fun stop(cause: Cause, subject: SubjectDescriptor) {
         TODO()
     }
 

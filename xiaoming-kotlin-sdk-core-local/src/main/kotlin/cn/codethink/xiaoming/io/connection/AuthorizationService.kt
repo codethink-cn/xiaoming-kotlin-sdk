@@ -14,25 +14,21 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin
+package cn.codethink.xiaoming.io.connection
 
-import cn.codethink.xiaoming.Platform
-import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.PluginSubjectDescriptor
 import cn.codethink.xiaoming.common.SubjectDescriptor
 
 /**
- * Plugin is a set of functions that extend platform's abilities. It can service
- * platform locally and remotely.
+ * Authorize connection and return a connection subject.
  *
  * @author Chuanwise
  */
-interface Plugin {
-    val meta: PluginRuntimeMeta
-    val subject: PluginSubjectDescriptor
+interface AuthorizationService {
+    fun authorize(token: String): SubjectDescriptor?
+    fun onConnected(connection: ConnectionInternalApi<*>) = Unit
+    fun onDisconnected(connection: ConnectionInternalApi<*>) = Unit
+}
 
-    fun load(platform: Platform, cause: Cause, subject: SubjectDescriptor)
-    fun enable(platform: Platform, cause: Cause, subject: SubjectDescriptor)
-    fun disable(platform: Platform, cause: Cause, subject: SubjectDescriptor)
-    fun unload(platform: Platform, cause: Cause, subject: SubjectDescriptor)
+object EmptyAuthorizationService : AuthorizationService {
+    override fun authorize(token: String): SubjectDescriptor? = null
 }

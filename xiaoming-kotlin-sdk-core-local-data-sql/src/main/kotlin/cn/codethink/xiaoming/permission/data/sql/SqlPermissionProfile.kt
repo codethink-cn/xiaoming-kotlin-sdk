@@ -19,7 +19,7 @@ package cn.codethink.xiaoming.permission.data.sql
 import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.common.NumericalId
 import cn.codethink.xiaoming.common.SubjectDescriptor
-import cn.codethink.xiaoming.data.getSubjectOrFail
+import cn.codethink.xiaoming.data.getSubjectDescriptorOrFail
 import cn.codethink.xiaoming.permission.data.PermissionProfile
 
 data class SqlPermissionProfile(
@@ -27,5 +27,27 @@ data class SqlPermissionProfile(
     override val id: NumericalId,
     private val subjectId: Id
 ) : PermissionProfile {
-    override val subjectDescriptor: SubjectDescriptor by lazy { api.getSubjectOrFail(subjectId) }
+    override val subject: SubjectDescriptor by lazy { api.getSubjectDescriptorOrFail(subjectId) }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as SqlPermissionProfile
+
+        if (id != other.id) return false
+        if (subjectId != other.subjectId) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + subjectId.hashCode()
+        return result
+    }
+
+    override fun toString(): String {
+        return "SqlPermissionProfile(id=$id, subjectId=$subjectId)"
+    }
 }

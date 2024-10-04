@@ -28,7 +28,33 @@ class SqlPermissionRecord(
     val id: NumericalId,
     private val profileId: NumericalId,
     override val comparator: PermissionComparator,
-    override val contextMatchers: Map<String, Matcher<Any?>>
+    override val context: Map<String, Matcher<Any?>>
 ) : PermissionRecord {
     override val profile: PermissionProfile by lazy { api.getPermissionProfileOrFail(profileId) }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as SqlPermissionRecord
+
+        if (id != other.id) return false
+        if (profileId != other.profileId) return false
+        if (comparator != other.comparator) return false
+        if (context != other.context) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + profileId.hashCode()
+        result = 31 * result + comparator.hashCode()
+        result = 31 * result + context.hashCode()
+        return result
+    }
+
+    override fun toString(): String {
+        return "SqlPermissionRecord(id=$id, profileId=$profileId, comparator=$comparator, context=$context)"
+    }
 }

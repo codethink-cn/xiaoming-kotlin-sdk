@@ -16,10 +16,8 @@
 
 package cn.codethink.xiaoming.io.data
 
-import cn.codethink.xiaoming.common.Tristate
 import cn.codethink.xiaoming.common.defaultNullable
 import cn.codethink.xiaoming.common.defaultOptional
-import cn.codethink.xiaoming.common.getOrConstruct
 import cn.codethink.xiaoming.common.upgrade
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.type.TypeReference
@@ -34,110 +32,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.function.Supplier
 import kotlin.concurrent.read
 import kotlin.concurrent.write
-import kotlin.reflect.KProperty
-
-/**
- * Specify default value for field.
- *
- * @author Chuanwise
- */
-enum class DefaultValue {
-    /**
-     * The field is required and not-nullable, or exception will be thrown.
-     */
-    NULL,
-
-    /**
-     * Corresponding empty value as default value.
-     */
-    EMPTY,
-
-    /**
-     * No default value provided.
-     */
-    UNDEFINED
-}
-
-/**
- * An annotation to override some default settings of accessing and modifying
- * a delegated field in [Raw] class.
- *
- * @author Chuanwise
- */
-@MustBeDocumented
-@Target(AnnotationTarget.FIELD, AnnotationTarget.LOCAL_VARIABLE, AnnotationTarget.PROPERTY)
-@Retention(AnnotationRetention.RUNTIME)
-annotation class Field(
-    /**
-     * By default, the name of the field is the same as the name of the property.
-     * Use [Field.name] to override it like this:
-     *
-     * ```kt
-     * // read this field by "raw.get("field", String::class.java)"
-     * val field: String by raw
-     *
-     * // read this field by "raw.get("cn.codethink.xiaoming:extension-field", String::class.java)"
-     * @Field("cn.codethink.xiaoming:extension-field")
-     * val extensionField: String by raw
-     * ```
-     */
-    val name: String = "",
-
-    /**
-     * If the type of field `T` is nullable, the default value of [nullable] is `true`.
-     * If it's false, don't forget to provide a default value when calling [Raw.get].
-     */
-    val nullable: Tristate = Tristate.NULL,
-
-    /**
-     * If the field is optional, the default value of [optional] is `true`.
-     */
-    val optional: Tristate = Tristate.NULL,
-
-    /**
-     * @see DefaultValue
-     */
-    val defaultValue: DefaultValue = DefaultValue.UNDEFINED
-)
-
-fun Field?.nameOrDefault(defaultValue: String): String = this?.name?.takeIf { it.isNotBlank() } ?: defaultValue
-inline fun <reified T> Field?.nullableOrDefault(): Boolean = this?.nullable?.value ?: defaultNullable<T>()
-inline fun <reified T> Field?.optionalOrDefault(): Boolean = this?.optional?.value ?: defaultOptional<T>()
-inline fun <reified T> Field?.defaultValueFactoryOrNull(): Supplier<T?>? = when (this?.defaultValue) {
-    null -> null
-    DefaultValue.NULL -> {
-        null
-    }
-
-    DefaultValue.EMPTY, DefaultValue.UNDEFINED -> {
-        if (defaultValue == DefaultValue.UNDEFINED && (optional.value == false || (nullable.value == true))) {
-            null
-        } else {
-            Supplier {
-                if (T::class.java.isArray) {
-                    java.lang.reflect.Array.newInstance(T::class.java.componentType, 0) as T
-                }
-
-                @Suppress("IMPLICIT_CAST_TO_ANY")
-                when (T::class) {
-                    String::class -> ""
-                    Int::class -> 0
-                    Long::class -> 0L
-                    Short::class -> 0.toShort()
-                    Byte::class -> 0.toByte()
-                    Double::class -> 0.0
-                    Float::class -> 0.0f
-                    Char::class -> 0.toChar()
-                    Boolean::class -> false
-                    Map::class -> emptyMap<Nothing, Nothing>()
-                    List::class -> emptyList<Nothing>()
-                    Set::class -> emptySet<Nothing>()
-                    else -> getOrConstruct(T::class.java)
-                } as T
-            }
-        }
-    }
-}
 
 /**
  * Classes implementing this
@@ -177,27 +71,6 @@ inline operator fun <reified T : Any?> Raw.get(name: String): T = get(
 inline operator fun <reified T : Any?> Raw.set(name: String, value: T) = set(
     name, value, optional = defaultOptional<T>(), nullable = defaultNullable<T>()
 )
-
-inline operator fun <reified T : Any?> Raw.getValue(thisRef: Any?, property: KProperty<*>): T {
-    val annotation = property.annotations.firstOrNull { it is Field } as Field?
-    return get(
-        name = annotation.nameOrDefault(property.name),
-        type = object : TypeReference<T>() {}.type,
-        optional = annotation.optionalOrDefault<T>(),
-        nullable = annotation.nullableOrDefault<T>(),
-        defaultValueFactory = { annotation.defaultValueFactoryOrNull<T>() }
-    ) as T
-}
-
-inline operator fun <reified T : Any?> Raw.setValue(thisRef: Any?, property: KProperty<*>, value: T) {
-    val annotation = property.annotations.firstOrNull { it is Field } as Field?
-    return set(
-        name = annotation.nameOrDefault(property.name),
-        value = value,
-        optional = annotation.optionalOrDefault<T>(),
-        nullable = annotation.nullableOrDefault<T>()
-    )
-}
 
 private fun Iterable<String>.asSetEquals(keys: Iterable<String>): Boolean {
     val set = toSet()

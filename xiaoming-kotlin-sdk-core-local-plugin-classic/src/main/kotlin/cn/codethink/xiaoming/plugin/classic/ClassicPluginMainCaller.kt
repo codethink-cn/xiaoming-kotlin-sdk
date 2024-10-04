@@ -27,7 +27,7 @@ import cn.codethink.xiaoming.common.SubjectDescriptor
  * @see JavaClassicPluginMainCaller
  */
 interface ClassicPluginMainCaller {
-    fun onLoad(plugin: ClassicPlugin, cause: Cause, subjectDescriptor: SubjectDescriptor)
-    fun onEnable(plugin: ClassicPlugin, cause: Cause, subjectDescriptor: SubjectDescriptor)
-    fun onDisable(plugin: ClassicPlugin, cause: Cause, subjectDescriptor: SubjectDescriptor)
+    fun onLoad(plugin: ClassicPlugin, cause: Cause, subject: SubjectDescriptor)
+    fun onEnable(plugin: ClassicPlugin, cause: Cause, subject: SubjectDescriptor)
+    fun onDisable(plugin: ClassicPlugin, cause: Cause, subject: SubjectDescriptor)
 }

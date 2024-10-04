@@ -73,7 +73,7 @@ class DataTest {
         Assertions.assertEquals(PluginSubjectDescriptor(NodeRaw(mapper).apply {
             set("id", "cn.codethink:chat-commands")
             set("type", "plugin")
-        }), packet.subjectDescriptor)
+        }), packet.subject)
 
         // Extension field 1 read and write.
         Assertions.assertEquals("extension-field-1-value", packet.extensionField1)

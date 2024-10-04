@@ -50,11 +50,12 @@ import java.time.Duration
 /**
  * Handle the [RequestPacket]s.
  *
+ * @param subject subject used to register default action mode handlers.
  * @author Chuanwise
  */
 class RequestPacketHandler(
     private val language: ProtocolLanguageConfiguration,
-    subjectDescriptor: SubjectDescriptor
+    subject: SubjectDescriptor
 ) : PacketHandler {
     inner class SyncRequestPacketHandler : PacketHandler {
         override suspend fun handle(context: PacketContext) {
@@ -70,7 +71,7 @@ class RequestPacketHandler(
                 id = randomUuidString(),
                 target = context.received.packet.id,
                 state = RECEIPT_STATE_RECEIVED,
-                subjectDescriptor = context.connection.subjectDescriptor,
+                subject = context.connection.descriptor,
                 session = context.connection.session,
             ))
 
@@ -83,14 +84,14 @@ class RequestPacketHandler(
     inner class PacketActionHandlerRegistration<P, R>(
         val action: Action<P, R>,
         override val value: RequestHandler<P, R>,
-        override val subjectDescriptor: SubjectDescriptor
+        override val subject: SubjectDescriptor
     ) : Registration<RequestHandler<P, R>>
 
     private val actions = MapRegistrations<String, RequestHandler<Nothing, Nothing>, PacketActionHandlerRegistration<Nothing, Nothing>>()
 
     init {
-        registerModeHandler(REQUEST_MODE_SYNC, SyncRequestPacketHandler(), subjectDescriptor)
-        registerModeHandler(REQUEST_MODE_ASYNC, AsyncRequestPacketHandler(), subjectDescriptor)
+        registerModeHandler(REQUEST_MODE_SYNC, SyncRequestPacketHandler(), subject)
+        registerModeHandler(REQUEST_MODE_ASYNC, AsyncRequestPacketHandler(), subject)
     }
 
     override suspend fun handle(context: PacketContext) {
@@ -106,7 +107,7 @@ class RequestPacketHandler(
                     id = randomUuidString(),
                     target = packet.id,
                     state = RECEIPT_STATE_FAILED,
-                    subjectDescriptor = context.connection.subjectDescriptor,
+                    subject = context.connection.descriptor,
                     cause = StandardTextCause(
                         id = ERROR_UNSUPPORTED_REQUEST_MODE,
                         text = message,
@@ -137,7 +138,7 @@ class RequestPacketHandler(
                     id = randomUuidString(),
                     target = request.id,
                     state = RECEIPT_STATE_FAILED,
-                    subjectDescriptor = context.connection.subjectDescriptor,
+                    subject = context.connection.descriptor,
                     cause = StandardTextCause(
                         id = ERROR_UNSUPPORTED_REQUEST_MODE,
                         text = message,
@@ -155,7 +156,7 @@ class RequestPacketHandler(
             id = randomUuidString(),
             target = request.id,
             state = RECEIPT_STATE_UNDEFINED,
-            subjectDescriptor = context.connection.subjectDescriptor,
+            subject = context.connection.descriptor,
             session = context.connection.session
         )
 
@@ -171,7 +172,7 @@ class RequestPacketHandler(
                     PacketRequestContext(
                         action = registration.action,
                         request = request,
-                        defaultSubjectDescriptor = context.connection.subjectDescriptor,
+                        defaultSubject = context.connection.descriptor,
                         receipt = receipt,
                         connection = context.connection
                     )
@@ -213,7 +214,7 @@ class RequestPacketHandler(
             context.logger.warn {
                 "Timeout occurred while handling request action: $request " +
                         "after ${durationSeconds}s (${durationMillis}ms), expected: ${request.timeout}s. " +
-                        "The handler is registered by ${registration.subjectDescriptor}."
+                        "The handler is registered by ${registration.subject}."
             }
             receipt.apply {
                 state = RECEIPT_STATE_INTERRUPTED
@@ -233,7 +234,7 @@ class RequestPacketHandler(
             context.logger.error(exception) {
                 "Exception occurred while handling request action:$request " +
                         "after ${durationSeconds}s (${durationMillis}ms). " +
-                        "The handler is registered by ${registration.subjectDescriptor}."
+                        "The handler is registered by ${registration.subject}."
             }
 
             // Update receipt packet fields.
@@ -248,33 +249,40 @@ class RequestPacketHandler(
         }
     }
 
-    fun registerModeHandler(mode: String, handler: PacketHandler, subjectDescriptor: SubjectDescriptor) {
-        modes.register(mode, DefaultRegistration(handler, subjectDescriptor))
+    fun registerModeHandler(mode: String, handler: PacketHandler, subject: SubjectDescriptor) {
+        modes.register(mode, DefaultRegistration(handler, subject))
     }
 
     fun unregisterModeHandlerByMode(mode: String) {
         modes.unregisterByKey(mode)
     }
 
-    fun unregisterModeHandlerBySubject(subjectDescriptor: SubjectDescriptor) {
-        modes.unregisterBySubject(subjectDescriptor)
+    fun unregisterModeHandlerBySubject(subject: SubjectDescriptor) {
+        modes.unregisterBySubject(subject)
     }
 
     @Suppress("UNCHECKED_CAST")
-    fun <P, R> registerActionHandler(action: Action<P, R>, handler: RequestHandler<P, R>, subjectDescriptor: SubjectDescriptor) {
-        actions.register(action.name, PacketActionHandlerRegistration(action, handler, subjectDescriptor) as PacketActionHandlerRegistration<Nothing, Nothing>)
+    fun <P, R> registerActionHandler(action: Action<P, R>, handler: RequestHandler<P, R>, subject: SubjectDescriptor) {
+        actions.register(
+            action.name,
+            PacketActionHandlerRegistration(
+                action,
+                handler,
+                subject
+            ) as PacketActionHandlerRegistration<Nothing, Nothing>
+        )
     }
 
     fun unregisterActionHandlerByAction(action: String) {
         actions.unregisterByKey(action)
     }
 
-    fun unregisterActionHandlerBySubject(subjectDescriptor: SubjectDescriptor) {
-        actions.unregisterBySubject(subjectDescriptor)
+    fun unregisterActionHandlerBySubject(subject: SubjectDescriptor) {
+        actions.unregisterBySubject(subject)
     }
 
-    fun unregisterBySubject(subjectDescriptor: SubjectDescriptor) {
-        unregisterModeHandlerBySubject(subjectDescriptor)
-        unregisterActionHandlerBySubject(subjectDescriptor)
+    fun unregisterBySubject(subject: SubjectDescriptor) {
+        unregisterModeHandlerBySubject(subject)
+        unregisterActionHandlerBySubject(subject)
     }
 }

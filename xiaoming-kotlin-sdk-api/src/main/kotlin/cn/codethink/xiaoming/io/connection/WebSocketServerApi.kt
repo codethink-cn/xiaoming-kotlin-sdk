@@ -64,7 +64,7 @@ data class DefaultWebSocketServerConfiguration(
  */
 abstract class WebSocketServerApi(
     private val configuration: WebSocketServerConfiguration,
-    override val subjectDescriptor: SubjectDescriptor,
+    override val descriptor: SubjectDescriptor,
     private val logger: KLogger = KotlinLogging.logger { },
     applicationEngineFactory: ApplicationEngineFactory<*, *> = Netty,
     parentJob: Job? = null,
@@ -124,7 +124,7 @@ abstract class WebSocketServerApi(
         }
     }
 
-    override fun close(cause: Cause, subjectDescriptor: SubjectDescriptor) {
+    override fun close(cause: Cause, subject: SubjectDescriptor) {
         lock.write {
             stateNoLock = when (stateNoLock) {
                 State.INITIALIZED, State.STARTED -> State.CLOSING
@@ -134,7 +134,7 @@ abstract class WebSocketServerApi(
 
         connectionApis.forEach {
             if (!it.isClosed) {
-                it.close(cause, subjectDescriptor)
+                it.close(cause, subject)
             }
         }
 
@@ -147,7 +147,7 @@ abstract class WebSocketServerApi(
                 else -> throw IllegalStateException("Client internal error: unexpected state after closing: $stateNoLock.")
             }
         }
-        logger.debug { "Closed server with subject: $subjectDescriptor in ${configuration.address}." }
+        logger.debug { "Closed server with subject: $subject in ${configuration.address}." }
     }
 
     abstract suspend fun PipelineContext<Unit, ApplicationCall>.onConnect()

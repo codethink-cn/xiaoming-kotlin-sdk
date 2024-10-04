@@ -21,7 +21,6 @@ package cn.codethink.xiaoming.common
 const val FIELD_TYPE = "type"
 const val FIELD_VERSION = "version"
 
-const val PACKET_TYPE_REQUEST = "request"
 const val REQUEST_PACKET_FIELD_ARGUMENT = "argument"
 
 const val REQUEST_MODE_SYNC = "sync"
@@ -36,21 +35,16 @@ const val RECEIPT_STATE_FAILED = "failed"
 const val RECEIPT_STATE_RECEIVED = "received"
 const val RECEIPT_STATE_INTERRUPTED = "interrupted"
 
-const val SUBJECT_FIELD_TYPE = FIELD_TYPE
+const val SUBJECT_DESCRIPTOR_TYPE_SDK = "sdk"
+const val SDK_SUBJECT_DESCRIPTOR_FIELD_VERSION = "version"
+const val SDK_SUBJECT_DESCRIPTOR_FIELD_GROUP = "group"
+const val SDK_SUBJECT_DESCRIPTOR_FIELD_NAME = "name"
+const val SDK_SUBJECT_DESCRIPTOR_FIELD_PROTOCOL = "protocol"
 
-const val SUBJECT_TYPE_SDK = "sdk"
-const val SDK_SUBJECT_FIELD_VERSION = "version"
-const val SDK_SUBJECT_FIELD_GROUP = "group"
-const val SDK_SUBJECT_FIELD_NAME = "name"
-const val SDK_SUBJECT_FIELD_PROTOCOL = "protocol"
-
-const val SUBJECT_TYPE_MODULE = "module"
-const val MODULE_SUBJECT_FIELD_VERSION = "version"
-const val MODULE_SUBJECT_FIELD_GROUP = "group"
-const val MODULE_SUBJECT_FIELD_NAME = "name"
-
-const val SUBJECT_TYPE_PROTOCOL = "protocol"
-const val PROTOCOL_SUBJECT_FIELD_VERSION = "version"
+const val SUBJECT_DESCRIPTOR_TYPE_MODULE = "module"
+const val MODULE_SUBJECT_DESCRIPTOR_FIELD_VERSION = "version"
+const val MODULE_SUBJECT_DESCRIPTOR_FIELD_GROUP = "group"
+const val MODULE_SUBJECT_DESCRIPTOR_FIELD_NAME = "name"
 
 const val CAUSE_FIELD_CAUSE = "cause"
 
@@ -74,11 +68,8 @@ const val EVENT_SNAPSHOT_FIELD_CAUSE = "cause"
 
 const val PUBLISH_EVENT_RECEIPT_DATA_SNAPSHOTS = "snapshots"
 
-const val LISTENER_DESCRIPTOR_FIELD_ID = "id"
-const val LISTENER_DESCRIPTOR_FIELD_SUBJECT = "subject"
-
-const val PERMISSION_SUBJECT_FIELD_NODE = "node"
-const val PERMISSION_SUBJECT_FIELD_SUBJECT = "subject"
+const val PERMISSION_SUBJECT_DESCRIPTOR_FIELD_NODE = "node"
+const val PERMISSION_SUBJECT_DESCRIPTOR_FIELD_SUBJECT = "subject"
 
 const val PERMISSION_VARIABLE_META_FIELD_OPTIONAL = "optional"
 const val PERMISSION_VARIABLE_META_FIELD_NULLABLE = "nullable"
@@ -97,14 +88,11 @@ const val PERMISSION_FIELD_ARGUMENTS = "arguments"
 const val MATCHER_FIELD_TYPE = FIELD_TYPE
 const val MATCHER_TYPE_ANY = "any"
 
-const val SUBJECT_MATCHER_TYPE_DEFAULT_PLUGIN = "subject.plugin.default"
-const val DEFAULT_PLUGIN_SUBJECT_MATCHER_FIELD_ID_MATCHER = "id_matcher"
-
-const val SUBJECT_MATCHER_TYPE_DEFAULT_PROTOCOL = "subject.protocol"
+const val SUBJECT_DESCRIPTOR_MATCHER_TYPE_DEFAULT_PROTOCOL = "subject.protocol"
 
 const val PERMISSION_MATCHER_TYPE_DEFAULT = "permission.default"
 const val DEFAULT_PERMISSION_MATCHER_FIELD_NODE_MATCHER = "node_matcher"
-const val DEFAULT_PERMISSION_MATCHER_FIELD_ARGUMENT_MATCHERS = "context_matchers"
+const val DEFAULT_PERMISSION_MATCHER_FIELD_ARGUMENT_MATCHERS = "arguments"
 
 const val PERMISSION_MATCHER_TYPE_LITERAL = "permission.literal"
 const val LITERAL_PERMISSION_MATCHER_FIELD_VALUE = "value"

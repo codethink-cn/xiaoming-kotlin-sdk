@@ -53,7 +53,7 @@ interface LocalPlatformApi : PlatformApi {
 }
 
 data class DefaultLocalPlatformConfiguration(
-    val subjectDescriptor: SubjectDescriptor,
+    val descriptor: SubjectDescriptor,
     val language: ProtocolLanguageConfiguration,
     val dataObjectMapper: ObjectMapper,
     val deserializerModule: DeserializerModule,
@@ -74,7 +74,7 @@ class DefaultLocalPlatformApi(
     private val logger: KLogger by configuration::logger
 
     // Forward to configuration.
-    override val subjectDescriptor: SubjectDescriptor by configuration::subjectDescriptor
+    override val descriptor: SubjectDescriptor by configuration::descriptor
     override val modules: List<Module> by configuration::modules
     override val deserializerModule: DeserializerModule by configuration::deserializerModule
     override val dataObjectMapper: ObjectMapper by configuration::dataObjectMapper
@@ -103,18 +103,18 @@ class DefaultLocalPlatformApi(
 
     override lateinit var internalApi: LocalPlatformInternalApi
 
-    fun start(cause: Cause, subjectDescriptor: SubjectDescriptor): Unit = lock.write {
+    fun start(cause: Cause, subject: SubjectDescriptor): Unit = lock.write {
         stateNoLock = when (stateNoLock) {
             State.INITIALIZED -> State.STARTING
             else -> throw IllegalStateException("Cannot start platform when it's in $stateNoLock state.")
         }
 
         try {
-            val platformStartEvent = PlatformStartEvent(cause, subjectDescriptor)
+            val platformStartEvent = PlatformStartEvent(cause, subject)
             val platformStartEventCause = EventCause(platformStartEvent)
 
             logger.info { "Starting default local platform API, SDK version: $SdkVersionString." }
-            val context = ModuleContext(this, this.subjectDescriptor, platformStartEventCause)
+            val context = ModuleContext(this, this.descriptor, platformStartEventCause)
 
             // Appreciate to contributors!
             // If there are too many contributors, select randomly and appreciate them.
@@ -152,7 +152,7 @@ class DefaultLocalPlatformApi(
                     dataObjectMapper = configuration.dataObjectMapper,
                     locale = configuration.locale,
                     data = LocalPlatformData(dataApi),
-                    subjectDescriptor = configuration.subjectDescriptor,
+                    descriptor = configuration.descriptor,
                     modules = modules,
                     failOnModuleError = configuration.failOnModuleError,
                     parentJob = supervisorJob,
@@ -161,7 +161,7 @@ class DefaultLocalPlatformApi(
             )
 
             // 2. Start internal API.
-            internalApi.start(cause, subjectDescriptor, context)
+            internalApi.start(cause, subject, context)
 
             // 3. Callback module
             modules.forEach {

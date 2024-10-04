@@ -61,7 +61,10 @@ interface LocalPlatformInternalConfiguration {
 
     val logger: KLogger
 
-    val subjectDescriptor: SubjectDescriptor
+    /**
+     * The subject that represents this platform.
+     */
+    val descriptor: SubjectDescriptor
 
     val parentJob: Job?
 
@@ -72,7 +75,7 @@ data class DefaultLocalPlatformInternalConfiguration(
     override val deserializerModule: DeserializerModule,
     override val dataObjectMapper: ObjectMapper,
     override val data: LocalPlatformData,
-    override val subjectDescriptor: SubjectDescriptor,
+    override val descriptor: SubjectDescriptor,
     override val locale: Locale = Locale.getDefault(),
     override val modules: List<Module> = emptyList(),
     override val failOnModuleError: Boolean = true,

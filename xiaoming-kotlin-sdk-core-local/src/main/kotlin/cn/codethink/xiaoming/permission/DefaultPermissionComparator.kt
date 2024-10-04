@@ -24,7 +24,6 @@ import cn.codethink.xiaoming.common.SegmentId
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.Tristate
 import cn.codethink.xiaoming.common.tristateOf
-import cn.codethink.xiaoming.io.data.Field
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
@@ -45,53 +44,52 @@ const val PERMISSION_COMPARATOR_TYPE_DEFAULT = "default"
  */
 @JsonTypeName(PERMISSION_COMPARATOR_TYPE_DEFAULT)
 interface DefaultPermissionComparator : PermissionComparator {
-    override val type: String
-        get() = PERMISSION_COMPARATOR_TYPE_DEFAULT
     val version: String
-    val subjectDescriptorMatcher: Matcher<SubjectDescriptor>
-    val nodeMatcher: Matcher<SegmentId>
+    val subject: Matcher<SubjectDescriptor>
+    val node: Matcher<SegmentId>
     val value: Boolean?
 }
 
 const val DEFAULT_PERMISSION_COMPARATOR_VERSION_1 = "1"
 const val DEFAULT_PERMISSION_COMPARATOR_FIELD_VALUE = "value"
 
-const val PERMISSION_COMPARATOR_FIELD_SUBJECT_MATCHER = "subject_matcher"
-const val PERMISSION_COMPARATOR_FIELD_NODE_MATCHER = "node_matcher"
+const val PERMISSION_COMPARATOR_FIELD_SUBJECT = "subject"
+const val PERMISSION_COMPARATOR_FIELD_NODE = "node"
 
 @JsonTypeName(DEFAULT_PERMISSION_COMPARATOR_VERSION_1)
 class DefaultPermissionComparatorV1(
     raw: Raw
 ) : AbstractData(raw), DefaultPermissionComparator {
+    override val type: String by raw
+
     override val version: String by raw
     override val value: Boolean? by raw
 
-    @Field(PERMISSION_COMPARATOR_FIELD_SUBJECT_MATCHER)
-    override val subjectDescriptorMatcher: Matcher<SubjectDescriptor> by raw
-
-    @Field(PERMISSION_COMPARATOR_FIELD_NODE_MATCHER)
-    override val nodeMatcher: Matcher<SegmentId> by raw
+    override val subject: Matcher<SubjectDescriptor> by raw
+    override val node: Matcher<SegmentId> by raw
 
     @JvmOverloads
     constructor(
-        subjectDescriptorMatcher: Matcher<SubjectDescriptor>,
-        nodeMatcher: Matcher<SegmentId>,
+        subject: Matcher<SubjectDescriptor>,
+        node: Matcher<SegmentId>,
         value: Boolean?,
         raw: Raw = MapRaw()
     ) : this(raw) {
         raw[FIELD_TYPE] = PERMISSION_COMPARATOR_TYPE_DEFAULT
         raw[FIELD_VERSION] = DEFAULT_PERMISSION_COMPARATOR_VERSION_1
 
-        raw[PERMISSION_COMPARATOR_FIELD_SUBJECT_MATCHER] = subjectDescriptorMatcher
-        raw[PERMISSION_COMPARATOR_FIELD_NODE_MATCHER] = nodeMatcher
+        raw[PERMISSION_COMPARATOR_FIELD_SUBJECT] = subject
+        raw[PERMISSION_COMPARATOR_FIELD_NODE] = node
         raw[DEFAULT_PERMISSION_COMPARATOR_FIELD_VALUE] = value
     }
 
     override fun compare(context: PermissionComparingContext): Tristate? {
-        if (!subjectDescriptorMatcher.isMatched(context.permission.descriptor.subjectDescriptor)) {
+        if (!subject.isMatched(context.permission.descriptor.subject)) {
             return null
         }
-        if (!nodeMatcher.isMatched(context.permission.descriptor.node)) {
+        context.permission.descriptor.subject
+
+        if (!node.isMatched(context.permission.descriptor.node)) {
             return null
         }
         return tristateOf(value)

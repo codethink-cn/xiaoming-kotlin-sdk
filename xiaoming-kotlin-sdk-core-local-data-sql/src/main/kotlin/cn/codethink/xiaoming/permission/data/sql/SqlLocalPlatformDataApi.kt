@@ -65,7 +65,7 @@ class SqlLocalPlatformDataApi(
         configuration.tables.prefix + configuration.tables.names.subjects
     ) {
         val type = varchar("type", TYPE_VARCHAR_LENGTH).index()
-        val subjectDescriptor = json<SubjectDescriptor>("subject")
+        val descriptor = json<SubjectDescriptor>("descriptor")
         val remove = bool("remove").default(false).index()
     }
 
@@ -89,9 +89,9 @@ class SqlLocalPlatformDataApi(
     private inner class PermissionRecordTable : IntIdTable(
         configuration.tables.prefix + configuration.tables.names.permissionRecords
     ) {
-        val permissionProfileId = reference("permission_profile_id", permissionProfiles)
-        val permissionComparator = json<PermissionComparator>("permission_comparator")
-        val contextMatchers = json<Map<String, Matcher<Any?>>>("context_matchers")
+        val profileId = reference("permission_profile_id", permissionProfiles)
+        val comparator = json<PermissionComparator>("comparator")
+        val context = json<Map<String, Matcher<Any?>>>("context")
         val remove = bool("remove").default(false).index()
     }
 
@@ -99,9 +99,9 @@ class SqlLocalPlatformDataApi(
     private fun ResultRow.toPermissionRecord(): PermissionRecord = SqlPermissionRecord(
         api = this@SqlLocalPlatformDataApi,
         id = this[permissionRecords.id].toId(),
-        profileId = this[permissionRecords.permissionProfileId].toId(),
-        comparator = this[permissionRecords.permissionComparator],
-        contextMatchers = this[permissionRecords.contextMatchers]
+        profileId = this[permissionRecords.profileId].toId(),
+        comparator = this[permissionRecords.comparator],
+        context = this[permissionRecords.context]
     )
 
     init {
@@ -112,28 +112,28 @@ class SqlLocalPlatformDataApi(
         }
     }
 
-    override fun getSubject(id: Id): SubjectDescriptor? {
+    override fun getSubjectDescriptor(id: Id): SubjectDescriptor? {
         id as NumericalId
         return transaction(database) {
-            subjects.select(subjects.subjectDescriptor)
+            subjects.select(subjects.descriptor)
                 .where { not(subjects.remove) and (subjects.id eq id.toInt()) }
-                .map { it[subjects.subjectDescriptor] }
+                .map { it[subjects.descriptor] }
                 .singleOrNull()
         }
     }
 
-    override fun getSubjectId(subjectDescriptor: SubjectDescriptor): NumericalId? = transaction(database) {
+    override fun getSubjectId(subject: SubjectDescriptor): NumericalId? = transaction(database) {
         subjects.select(subjects.id)
-            .where { not(subjects.remove) and (subjects.type eq subjectDescriptor.type) and (subjects.subjectDescriptor eq subjectDescriptor) }
+            .where { not(subjects.remove) and (subjects.type eq subject.type) and (subjects.descriptor eq subject) }
             .map { it[subjects.id] }
             .singleOrNull()
             ?.toId()
     }
 
-    override fun getOrInsertSubjectId(subjectDescriptor: SubjectDescriptor): NumericalId = transaction(database) {
+    override fun getOrInsertSubjectId(subject: SubjectDescriptor): NumericalId = transaction(database) {
         subjects.insertAndGetId {
-            it[type] = subjectDescriptor.type
-            it[this.subjectDescriptor] = subjectDescriptor
+            it[type] = subject.type
+            it[this.descriptor] = subject
         }.toId()
     }
 
@@ -159,18 +159,18 @@ class SqlLocalPlatformDataApi(
         }
     }
 
-    override fun getPermissionProfiles(subjectDescriptor: SubjectDescriptor): List<PermissionProfile> = transaction(database) {
+    override fun getPermissionProfiles(subject: SubjectDescriptor): List<PermissionProfile> = transaction(database) {
         permissionProfiles.innerJoin(subjects)
             .selectAll()
             .where {
-                not(permissionProfiles.remove) and not(subjects.remove) and (subjects.type eq subjectDescriptor.type) and (subjects.subjectDescriptor eq subjectDescriptor)
+                not(permissionProfiles.remove) and not(subjects.remove) and (subjects.type eq subject.type) and (subjects.descriptor eq subject)
             }
             .map { it.toPermissionProfile() }
     }
 
-    override fun insertAndGetPermissionProfileId(subjectDescriptor: SubjectDescriptor): Id = transaction(database) {
+    override fun insertAndGetPermissionProfileId(subject: SubjectDescriptor): Id = transaction(database) {
         permissionProfiles.insertAndGetId {
-            it[subjectId] = getOrInsertSubjectId(subjectDescriptor).toInt()
+            it[subjectId] = getOrInsertSubjectId(subject).toInt()
         }.toId()
     }
 
@@ -178,7 +178,7 @@ class SqlLocalPlatformDataApi(
         id as NumericalId
         return transaction(database) {
             permissionRecords.selectAll()
-                .where { not(permissionRecords.remove) and (permissionRecords.permissionProfileId eq id.toInt()) }
+                .where { not(permissionRecords.remove) and (permissionRecords.profileId eq id.toInt()) }
                 .map { it.toPermissionRecord() }
                 .let { if (reverse) it.reversed() else it }
         }
@@ -211,14 +211,14 @@ class SqlLocalPlatformDataApi(
     override fun insertPermissionRecord(
         profile: PermissionProfile,
         comparator: PermissionComparator,
-        contextMatchers: Map<String, Matcher<Any?>>
+        context: Map<String, Matcher<Any?>>
     ): NumericalId {
         profile as SqlPermissionProfile
         return transaction(database) {
             permissionRecords.insertAndGetId {
-                it[permissionProfileId] = profile.id.toInt()
-                it[permissionRecords.permissionComparator] = comparator
-                it[permissionRecords.contextMatchers] = contextMatchers
+                it[profileId] = profile.id.toInt()
+                it[permissionRecords.comparator] = comparator
+                it[permissionRecords.context] = context
             }.toId()
         }
     }

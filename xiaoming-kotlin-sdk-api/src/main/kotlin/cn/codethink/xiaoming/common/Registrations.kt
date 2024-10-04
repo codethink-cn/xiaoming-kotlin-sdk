@@ -27,7 +27,7 @@ import java.util.concurrent.CopyOnWriteArrayList
  */
 interface Registration<T> {
     val value: T
-    val subjectDescriptor: SubjectDescriptor
+    val subject: SubjectDescriptor
 }
 
 /**
@@ -37,7 +37,7 @@ interface Registration<T> {
  */
 class DefaultRegistration<T>(
     override val value: T,
-    override val subjectDescriptor: SubjectDescriptor
+    override val subject: SubjectDescriptor
 ) : Registration<T>
 
 
@@ -47,7 +47,7 @@ class DefaultRegistration<T>(
  * @author Chuanwise
  */
 interface Registrations {
-    fun unregisterBySubject(subjectDescriptor: SubjectDescriptor): Boolean
+    fun unregisterBySubject(subject: SubjectDescriptor): Boolean
 }
 
 /**
@@ -70,7 +70,8 @@ class MapRegistrations<K, T, R : Registration<T>> : Registrations {
         mutableMap[key] = registration
     }
     fun unregisterByKey(key: K): R? = mutableMap.remove(key)
-    override fun unregisterBySubject(subjectDescriptor: SubjectDescriptor): Boolean = mutableMap.values.removeIf { it.subjectDescriptor == subjectDescriptor }
+    override fun unregisterBySubject(subject: SubjectDescriptor): Boolean =
+        mutableMap.values.removeIf { it.subject == subject }
 }
 
 inline fun <reified K, reified T> DefaultMapRegistrations() = MapRegistrations<K, T, DefaultRegistration<T>>()
@@ -93,7 +94,8 @@ class ListRegistrations<T, R : Registration<T>> : Registrations {
     }
 
     fun unregisterByValue(value: T) = mutableList.removeIf { it.value == value }
-    override fun unregisterBySubject(subjectDescriptor: SubjectDescriptor): Boolean = mutableList.removeIf { it.subjectDescriptor == subjectDescriptor }
+    override fun unregisterBySubject(subject: SubjectDescriptor): Boolean =
+        mutableList.removeIf { it.subject == subject }
 }
 
 inline fun <reified T> DefaultListRegistrations() = ListRegistrations<T, DefaultRegistration<T>>()

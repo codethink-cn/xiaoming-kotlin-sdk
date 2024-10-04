@@ -26,8 +26,8 @@ data class PermissionSettingContext(
     val profile: PermissionProfile,
     val comparator: PermissionComparator,
     val context: Map<String, Any?> = emptyMap(),
-    val caller: SubjectDescriptor? = null,
-    val cause: Cause? = null
+    val cause: Cause,
+    val subject: SubjectDescriptor
 ) {
     val internalApi by permissionServiceApi::internalApi
 }

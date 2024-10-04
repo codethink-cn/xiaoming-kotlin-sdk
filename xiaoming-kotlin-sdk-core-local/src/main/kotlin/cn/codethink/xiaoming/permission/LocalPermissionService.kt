@@ -17,6 +17,7 @@
 package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.common.Cause
+import cn.codethink.xiaoming.common.IdSubjectDescriptor
 import cn.codethink.xiaoming.common.SubjectDescriptor
 
 /**
@@ -30,10 +31,10 @@ class LocalPermissionService(
     val permissionServiceApi: LocalPermissionServiceApi
 ) : PermissionService {
     override suspend fun hasPermission(
-        subjectDescriptor: SubjectDescriptor,
+        target: IdSubjectDescriptor,
         permission: Permission,
         context: Map<String, Any?>,
-        caller: SubjectDescriptor?,
-        cause: Cause?
-    ): Boolean? = permissionServiceApi.hasPermission(subjectDescriptor, permission, context, caller, cause)
+        cause: Cause?,
+        subject: SubjectDescriptor?
+    ): Boolean? = permissionServiceApi.hasPermission(target, permission, context, cause, subject)
 }

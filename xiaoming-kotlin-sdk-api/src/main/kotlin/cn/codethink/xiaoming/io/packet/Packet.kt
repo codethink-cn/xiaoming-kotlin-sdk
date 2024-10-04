@@ -19,7 +19,6 @@ package cn.codethink.xiaoming.io.packet
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.PACKET_TYPE_RECEIPT
-import cn.codethink.xiaoming.common.PACKET_TYPE_REQUEST
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.currentTimeSeconds
 import cn.codethink.xiaoming.io.data.MapRaw
@@ -42,14 +41,14 @@ abstract class Packet(
     var type: String by raw
     var time: Long by raw
     var cause: Cause? by raw
-    var subjectDescriptor: SubjectDescriptor by raw
+    var subject: SubjectDescriptor by raw
     var session: String? by raw
 
     @JvmOverloads
     constructor(
         id: String,
         type: String,
-        subjectDescriptor: SubjectDescriptor,
+        subject: SubjectDescriptor,
         time: Long = currentTimeSeconds,
         cause: Cause? = null,
         session: String? = null,
@@ -59,7 +58,7 @@ abstract class Packet(
         this.type = type
         this.time = time
         this.cause = cause
-        this.subjectDescriptor = subjectDescriptor
+        this.subject = subject
         this.session = session
     }
 }
@@ -84,7 +83,7 @@ class RequestPacket(
         action: String,
         mode: String,
         timeout: Long,
-        subjectDescriptor: SubjectDescriptor,
+        subject: SubjectDescriptor,
         argument: Any? = null,
         time: Long = currentTimeSeconds,
         cause: Cause? = null,
@@ -95,7 +94,7 @@ class RequestPacket(
         this.type = PACKET_TYPE_REQUEST
         this.time = time
         this.cause = cause
-        this.subjectDescriptor = subjectDescriptor
+        this.subject = subject
         this.session = session
 
         this.action = action
@@ -104,6 +103,8 @@ class RequestPacket(
         this.timeout = timeout
     }
 }
+
+const val PACKET_TYPE_REQUEST = "request"
 
 /**
  * Receipt packet represents a response of a request packet.
@@ -123,7 +124,7 @@ class ReceiptPacket(
         id: String,
         target: String,
         state: String,
-        subjectDescriptor: SubjectDescriptor,
+        subject: SubjectDescriptor,
         data: Any? = null,
         time: Long = currentTimeSeconds,
         cause: Cause? = null,
@@ -134,7 +135,7 @@ class ReceiptPacket(
         this.type = PACKET_TYPE_REQUEST
         this.time = time
         this.cause = cause
-        this.subjectDescriptor = subjectDescriptor
+        this.subject = subject
         this.session = session
 
         this.target = target

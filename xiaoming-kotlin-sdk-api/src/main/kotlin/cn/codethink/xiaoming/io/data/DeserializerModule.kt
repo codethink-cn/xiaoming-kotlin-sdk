@@ -58,15 +58,15 @@ val XiaomingJacksonModuleVersion = XiaomingSdkSubject.let {
  * @see findAndApplyInitializers
  */
 interface PolymorphicDeserializerInitializer {
-    fun initialize(deserializers: PolymorphicDeserializers, subjectDescriptor: SubjectDescriptor)
+    fun initialize(deserializers: PolymorphicDeserializers, subject: SubjectDescriptor)
 }
 
-fun DeserializerModule.findAndApplyInitializers(classLoader: ClassLoader, subjectDescriptor: SubjectDescriptor) = apply {
+fun DeserializerModule.findAndApplyInitializers(classLoader: ClassLoader, subject: SubjectDescriptor) = apply {
     ServiceLoader.load(PolymorphicDeserializerInitializer::class.java, classLoader)
-        .forEach { it.initialize(deserializers, subjectDescriptor) }
+        .forEach { it.initialize(deserializers, subject) }
 }
 
-fun DeserializerModule.findAndApplyInitializers(subjectDescriptor: SubjectDescriptor) = apply {
+fun DeserializerModule.findAndApplyInitializers(subject: SubjectDescriptor) = apply {
     ServiceLoader.load(PolymorphicDeserializerInitializer::class.java)
-        .forEach { it.initialize(deserializers, subjectDescriptor) }
+        .forEach { it.initialize(deserializers, subject) }
 }

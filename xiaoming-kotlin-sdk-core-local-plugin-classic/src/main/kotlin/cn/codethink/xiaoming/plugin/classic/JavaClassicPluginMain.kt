@@ -30,15 +30,15 @@ interface JavaClassicPluginMain {
 class JavaClassicPluginMainCaller(
     private val main: JavaClassicPluginMain
 ) : ClassicPluginMainCaller {
-    override fun onLoad(plugin: ClassicPlugin, cause: Cause, subjectDescriptor: SubjectDescriptor) {
+    override fun onLoad(plugin: ClassicPlugin, cause: Cause, subject: SubjectDescriptor) {
         TODO("Not yet implemented")
     }
 
-    override fun onEnable(plugin: ClassicPlugin, cause: Cause, subjectDescriptor: SubjectDescriptor) {
+    override fun onEnable(plugin: ClassicPlugin, cause: Cause, subject: SubjectDescriptor) {
         TODO("Not yet implemented")
     }
 
-    override fun onDisable(plugin: ClassicPlugin, cause: Cause, subjectDescriptor: SubjectDescriptor) {
+    override fun onDisable(plugin: ClassicPlugin, cause: Cause, subject: SubjectDescriptor) {
         TODO("Not yet implemented")
     }
 }

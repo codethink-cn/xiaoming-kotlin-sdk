@@ -19,11 +19,14 @@ package cn.codethink.xiaoming.permission
 import cn.codethink.xiaoming.DefaultLocalPlatformApi
 import cn.codethink.xiaoming.DefaultLocalPlatformConfiguration
 import cn.codethink.xiaoming.TEST_CAUSE
-import cn.codethink.xiaoming.TEST_SUBJECT
+import cn.codethink.xiaoming.TEST_SUBJECT_DESCRIPTOR
+import cn.codethink.xiaoming.common.CauseSubjectPair
 import cn.codethink.xiaoming.common.PluginSubjectDescriptor
 import cn.codethink.xiaoming.common.getTestResourceAsStream
 import cn.codethink.xiaoming.common.segmentIdOf
+import cn.codethink.xiaoming.common.threadLocalCause
 import cn.codethink.xiaoming.common.toLiteralMatcher
+import cn.codethink.xiaoming.common.toSegmentId
 import cn.codethink.xiaoming.data.LocalPlatformDataConfiguration
 import cn.codethink.xiaoming.data.insertAndGetPermissionProfile
 import cn.codethink.xiaoming.io.DefaultProtocolLanguageConfiguration
@@ -37,6 +40,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.util.Locale
@@ -48,7 +52,7 @@ class LocalPermissionServiceTest {
         version = XiaomingJacksonModuleVersion,
         logger = logger
     ).apply {
-        findAndApplyInitializers(javaClass.classLoader, TEST_SUBJECT)
+        findAndApplyInitializers(javaClass.classLoader, TEST_SUBJECT_DESCRIPTOR)
     }
 
     private val dataObjectMapper = jacksonObjectMapper().apply {
@@ -66,7 +70,7 @@ class LocalPermissionServiceTest {
 
     private val platformApi = DefaultLocalPlatformApi(
         configuration = DefaultLocalPlatformConfiguration(
-            subjectDescriptor = TEST_SUBJECT,
+            descriptor = TEST_SUBJECT_DESCRIPTOR,
             language = getTestResourceAsStream("xiaoming/languages/${Locale.getDefault()}/protocol.yml").use {
                 fileObjectMapper.readValue<DefaultProtocolLanguageConfiguration>(it)
             },
@@ -77,20 +81,26 @@ class LocalPermissionServiceTest {
             }
         ),
     ).apply {
-        start(TEST_CAUSE, TEST_SUBJECT)
+        start(TEST_CAUSE, TEST_SUBJECT_DESCRIPTOR)
     }
     private val api = platformApi.internalApi
 
-    private val subject = PluginSubjectDescriptor(segmentIdOf("cn.codethink.xiaoming.demo"))
+    private val subjectId = "cn.codethink.xiaoming.demo".toSegmentId()
+    private val subject = PluginSubjectDescriptor(subjectId)
     private val subjectMatcher = subject.toLiteralMatcher()
 
     private val profile = api.data.insertAndGetPermissionProfile(subject)
+
+    @BeforeEach
+    fun beforeEach() {
+        threadLocalCause.set(CauseSubjectPair(TEST_CAUSE, TEST_SUBJECT_DESCRIPTOR))
+    }
 
     @Test
     fun testSetSimplePermission() {
         val permission = Permission(
             descriptor = PermissionDescriptor(
-                subjectDescriptor = subject,
+                subject = subject,
                 node = segmentIdOf("a.b.c.d")
             )
         )
@@ -102,8 +112,8 @@ class LocalPermissionServiceTest {
         api.permissionServiceApi.setPermission(
             profile = profile,
             comparator = DefaultPermissionComparatorV1(
-                subjectDescriptorMatcher = subjectMatcher,
-                nodeMatcher = segmentIdOf("a.b.c").toLiteralMatcher(),
+                subject = subjectMatcher,
+                node = segmentIdOf("a.b.c").toLiteralMatcher(),
                 value = false
             )
         )
@@ -113,8 +123,8 @@ class LocalPermissionServiceTest {
         api.permissionServiceApi.setPermission(
             profile = profile,
             comparator = DefaultPermissionComparatorV1(
-                subjectDescriptorMatcher = subjectMatcher,
-                nodeMatcher = segmentIdOf("a.b.c.d").toLiteralMatcher(),
+                subject = subjectMatcher,
+                node = segmentIdOf("a.b.c.d").toLiteralMatcher(),
                 value = false
             )
         )
@@ -124,8 +134,8 @@ class LocalPermissionServiceTest {
         api.permissionServiceApi.setPermission(
             profile = profile,
             comparator = DefaultPermissionComparatorV1(
-                subjectDescriptorMatcher = subjectMatcher,
-                nodeMatcher = segmentIdOf("a.b.c.d").toLiteralMatcher(),
+                subject = subjectMatcher,
+                node = segmentIdOf("a.b.c.d").toLiteralMatcher(),
                 value = true
             )
         )
@@ -135,8 +145,8 @@ class LocalPermissionServiceTest {
         api.permissionServiceApi.setPermission(
             profile = profile,
             comparator = DefaultPermissionComparatorV1(
-                subjectDescriptorMatcher = subjectMatcher,
-                nodeMatcher = segmentIdOf("a.b.c.d").toLiteralMatcher(),
+                subject = subjectMatcher,
+                node = segmentIdOf("a.b.c.d").toLiteralMatcher(),
                 value = null
             )
         )
@@ -160,13 +170,13 @@ class LocalPermissionServiceTest {
         val permissionASegmentId = segmentIdOf("a.b")
         val permissionA = Permission(
             descriptor = PermissionDescriptor(
-                subjectDescriptor = subjectA,
+                subject = subjectA,
                 node = permissionASegmentId
             )
         )
         val permissionAComparatorTrue = DefaultPermissionComparatorV1(
-            subjectDescriptorMatcher = subjectAMatcher,
-            nodeMatcher = permissionASegmentId.toLiteralMatcher(),
+            subject = subjectA.toLiteralMatcher(),
+            node = permissionASegmentId.toLiteralMatcher(),
             value = true
         )
 

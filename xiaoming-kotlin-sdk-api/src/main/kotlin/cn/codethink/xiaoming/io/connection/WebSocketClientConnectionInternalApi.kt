@@ -70,7 +70,7 @@ data class DefaultWebSocketClientConfiguration(
 class WebSocketClientConnectionInternalApi(
     private val configuration: WebSocketClientConfiguration,
     private val logger: KLogger,
-    subjectDescriptor: SubjectDescriptor,
+    override val descriptor: SubjectDescriptor,
     httpClient: HttpClient,
     parentJob: Job? = null,
     parentCoroutineContext: CoroutineContext = Dispatchers.IO,
@@ -101,11 +101,6 @@ class WebSocketClientConnectionInternalApi(
     private val state: State
         get() = lock.read { stateNoLock }
 
-    private var subjectDescriptorNoLock: SubjectDescriptor = subjectDescriptor
-    override var subjectDescriptor: SubjectDescriptor
-        get() = lock.read { subjectDescriptorNoLock }
-        set(value) = lock.write { subjectDescriptorNoLock = value }
-
     override val isClosed: Boolean
         get() = state == State.CLOSED
 
@@ -127,7 +122,7 @@ class WebSocketClientConnectionInternalApi(
         for (attempt in connectAttempts) {
             val address = configuration.address
 
-            logger.info { "Connecting to $address with subject: $subjectDescriptor (attempt: $attempt)." }
+            logger.info { "Connecting to $address with subject: $descriptor (attempt: $attempt)." }
             lock.write {
                 stateNoLock = when (stateNoLock) {
                     State.INITIALIZED, State.WAITING, State.DISCONNECTED -> {
@@ -204,7 +199,7 @@ class WebSocketClientConnectionInternalApi(
             }
 
             val reconnectIntervalMillis = configuration.reconnectIntervalMillis ?: break
-            logger.info { "Disconnected from $address with subject: $subjectDescriptor (attempt: $attempt), waiting for reconnecting." }
+            logger.info { "Disconnected from $address with subject: $descriptor (attempt: $attempt), waiting for reconnecting." }
             delay(reconnectIntervalMillis)
         }
 
@@ -215,7 +210,7 @@ class WebSocketClientConnectionInternalApi(
                 } else {
                     "Disconnected and reconnect is disabled."
                 }
-            ), subjectDescriptor
+            ), descriptor
         )
     }
 
@@ -261,10 +256,10 @@ class WebSocketClientConnectionInternalApi(
     }
 
     override fun close() {
-        close(TextCause("Client closed."), subjectDescriptor)
+        close(TextCause("Client closed."), this.descriptor)
     }
 
-    override fun close(cause: Cause, subjectDescriptor: SubjectDescriptor) = lock.write {
+    override fun close(cause: Cause, subject: SubjectDescriptor) = lock.write {
         stateNoLock = when (stateNoLock) {
             State.INITIALIZED, State.CONNECTING, State.CONNECTED, State.DISCONNECTED, State.WAITING -> State.CLOSING
             else -> throw IllegalStateException("Client internal error: unexpected state before closing: $stateNoLock.")
@@ -276,6 +271,6 @@ class WebSocketClientConnectionInternalApi(
         stateNoLock = State.CLOSED
         condition.signalAll()
 
-        logger.debug { "Client with subject: $subjectDescriptorNoLock closed by $subjectDescriptor caused by $cause." }
+        logger.debug { "Client with subject: ${this.descriptor} closed by $subject caused by $cause." }
     }
 }

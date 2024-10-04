@@ -21,11 +21,11 @@ import cn.codethink.xiaoming.common.SubjectDescriptor
 
 data class PermissionCalculatingContext<T : SubjectDescriptor>(
     val permissionServiceApi: LocalPermissionServiceApi,
-    val subject: T,
+    val target: T,
     val permission: Permission,
     val context: Map<String, Any?> = emptyMap(),
-    val caller: SubjectDescriptor? = null,
-    val cause: Cause? = null
+    val cause: Cause,
+    val subject: SubjectDescriptor
 ) {
     val internalApi by permissionServiceApi::internalApi
 }

@@ -19,8 +19,7 @@
 package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.common.AbstractData
-import cn.codethink.xiaoming.common.DEFAULT_PERMISSION_MATCHER_FIELD_ARGUMENT_MATCHERS
-import cn.codethink.xiaoming.common.DEFAULT_PERMISSION_MATCHER_FIELD_NODE_MATCHER
+import cn.codethink.xiaoming.common.IdSubjectDescriptor
 import cn.codethink.xiaoming.common.LITERAL_PERMISSION_MATCHER_FIELD_VALUE
 import cn.codethink.xiaoming.common.LiteralMatcher
 import cn.codethink.xiaoming.common.MATCHER_FIELD_TYPE
@@ -34,8 +33,8 @@ import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_DESCRIPTOR
 import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_NODE
 import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_PARAMETERS
 import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_SUBJECT
-import cn.codethink.xiaoming.common.PERMISSION_SUBJECT_FIELD_NODE
-import cn.codethink.xiaoming.common.PERMISSION_SUBJECT_FIELD_SUBJECT
+import cn.codethink.xiaoming.common.PERMISSION_SUBJECT_DESCRIPTOR_FIELD_NODE
+import cn.codethink.xiaoming.common.PERMISSION_SUBJECT_DESCRIPTOR_FIELD_SUBJECT
 import cn.codethink.xiaoming.common.PERMISSION_VARIABLE_META_FIELD_DEFAULT_MATCHER_OR_VALUE
 import cn.codethink.xiaoming.common.PERMISSION_VARIABLE_META_FIELD_DESCRIPTION
 import cn.codethink.xiaoming.common.PERMISSION_VARIABLE_META_FIELD_NULLABLE
@@ -49,6 +48,7 @@ import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
+import cn.codethink.xiaoming.io.data.setValue
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonTypeName
 
@@ -61,16 +61,16 @@ class PermissionDescriptor(
     raw: Raw
 ) : AbstractData(raw) {
     val node: SegmentId by raw
-    val subjectDescriptor: SubjectDescriptor by raw
+    val subject: IdSubjectDescriptor by raw
 
     @JvmOverloads
     constructor(
         node: SegmentId,
-        subjectDescriptor: SubjectDescriptor,
+        subject: IdSubjectDescriptor,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[PERMISSION_SUBJECT_FIELD_NODE] = node
-        raw[PERMISSION_SUBJECT_FIELD_SUBJECT] = subjectDescriptor
+        raw[PERMISSION_SUBJECT_DESCRIPTOR_FIELD_NODE] = node
+        raw[PERMISSION_SUBJECT_DESCRIPTOR_FIELD_SUBJECT] = subject
     }
 }
 
@@ -127,7 +127,7 @@ class PermissionMeta(
     raw: Raw
 ) : AbstractData(raw) {
     val node: SegmentId by raw
-    val subjectDescriptor: SubjectDescriptor by raw
+    val subject: IdSubjectDescriptor by raw
     val parameters: Map<String, PermissionParameterMeta> by raw
     val description: String? by raw
     val descriptor: PermissionDescriptor by raw
@@ -135,14 +135,14 @@ class PermissionMeta(
     @JvmOverloads
     constructor(
         node: SegmentId,
-        subjectDescriptor: SubjectDescriptor,
+        subject: IdSubjectDescriptor,
         parameters: Map<String, PermissionParameterMeta> = emptyMap(),
         description: String? = null,
-        descriptor: PermissionDescriptor = PermissionDescriptor(node, subjectDescriptor),
+        descriptor: PermissionDescriptor = PermissionDescriptor(node, subject),
         raw: Raw = MapRaw()
     ) : this(raw) {
         raw[PERMISSION_META_FIELD_NODE] = node
-        raw[PERMISSION_META_FIELD_SUBJECT] = subjectDescriptor
+        raw[PERMISSION_META_FIELD_SUBJECT] = subject
         raw[PERMISSION_META_FIELD_DESCRIPTION] = description
         raw[PERMISSION_META_FIELD_PARAMETERS] = parameters
         raw[PERMISSION_META_FIELD_DESCRIPTOR] = descriptor
@@ -214,29 +214,26 @@ class DefaultPermissionMatcher(
     @JsonIgnore
     override val targetNullable: Boolean = false
 
-    @Field(DEFAULT_PERMISSION_MATCHER_FIELD_NODE_MATCHER)
-    val nodeMatcher: Matcher<SegmentId> by raw
-
-    @Field(DEFAULT_PERMISSION_MATCHER_FIELD_ARGUMENT_MATCHERS)
-    val argumentMatchers: Map<String, Matcher<*>> by raw
+    var node: Matcher<SegmentId> by raw
+    var arguments: Map<String, Matcher<*>> by raw
 
     @JvmOverloads
     constructor(
-        nodeMatcher: Matcher<SegmentId>,
-        contextMatchers: Map<String, Matcher<*>> = emptyMap(),
+        node: Matcher<SegmentId>,
+        arguments: Map<String, Matcher<*>> = emptyMap(),
         raw: Raw = MapRaw()
     ) : this(raw) {
         raw[MATCHER_FIELD_TYPE] = PERMISSION_MATCHER_TYPE_DEFAULT
-        raw[DEFAULT_PERMISSION_MATCHER_FIELD_NODE_MATCHER] = nodeMatcher
-        raw[DEFAULT_PERMISSION_MATCHER_FIELD_ARGUMENT_MATCHERS] = contextMatchers
+        this.node = node
+        this.arguments = arguments
     }
 
     override fun isMatched(target: Permission): Boolean {
-        if (!nodeMatcher.isMatched(target.descriptor.node)) {
+        if (!node.isMatched(target.descriptor.node)) {
             return false
         }
 
-        for ((key, matcher) in argumentMatchers) {
+        for ((key, matcher) in arguments) {
             val value = target.arguments[key] ?: return false
             if (!(matcher as Matcher<Any?>).isMatched(value)) {
                 return false

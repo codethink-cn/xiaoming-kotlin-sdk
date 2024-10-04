@@ -31,8 +31,8 @@ class PermissionComparingContext(
     val permission: Permission,
     val record: PermissionRecord,
     val context: Map<String, Any?> = emptyMap(),
-    val caller: SubjectDescriptor? = null,
-    val cause: Cause? = null
+    val cause: Cause,
+    val subject: SubjectDescriptor
 ) {
     val internalApi by permissionServiceApi::internalApi
     val profile: PermissionProfile by lazy {

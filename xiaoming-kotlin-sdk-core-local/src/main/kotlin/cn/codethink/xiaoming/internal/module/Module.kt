@@ -23,7 +23,7 @@ import cn.codethink.xiaoming.common.SubjectDescriptor
 
 data class ModuleContext(
     val platformApi: LocalPlatformApi,
-    val subjectDescriptor: SubjectDescriptor,
+    val subject: SubjectDescriptor,
     val cause: Cause
 )
 

@@ -26,19 +26,19 @@ import cn.codethink.xiaoming.common.TextCause
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import cn.codethink.xiaoming.io.action.ConnectRequestPara
 import cn.codethink.xiaoming.io.action.RequestHandler
-import cn.codethink.xiaoming.io.connection.Authorizer
-import cn.codethink.xiaoming.io.connection.EmptyAuthorizer
+import cn.codethink.xiaoming.io.connection.AuthorizationService
+import cn.codethink.xiaoming.io.connection.EmptyAuthorizationService
 import cn.codethink.xiaoming.io.connection.ServerApi
 
 class ConnectionManagerApi(
     private val internalApi: LocalPlatformInternalApi
 ) {
-    var authorizer: Authorizer = EmptyAuthorizer
+    var authorizationService: AuthorizationService = EmptyAuthorizationService
 
     data class ServerRegistration(
         val keepOnConfigurationReload: Boolean,
         val keepOnNoAdapter: Boolean,
-        override val subjectDescriptor: SubjectDescriptor,
+        override val subject: SubjectDescriptor,
         override val value: ServerApi
     ) : Registration<ServerApi>
 
@@ -51,8 +51,12 @@ class ConnectionManagerApi(
         return connectRequestHandlers[type]?.value
     }
 
-    fun registerConnectRequestHandler(type: String, handler: RequestHandler<ConnectRequestPara, Any?>, subjectDescriptor: SubjectDescriptor) {
-        connectRequestHandlers.register(type, DefaultRegistration(handler, subjectDescriptor))
+    fun registerConnectRequestHandler(
+        type: String,
+        handler: RequestHandler<ConnectRequestPara, Any?>,
+        subject: SubjectDescriptor
+    ) {
+        connectRequestHandlers.register(type, DefaultRegistration(handler, subject))
     }
 
     fun unregisterConnectRequestHandlerByType(type: String) {
@@ -60,12 +64,12 @@ class ConnectionManagerApi(
         if (effected) {
             // Find if there are some server need to be stopped.
             ArrayList(servers.toMap().entries).forEach {
-                if (it.value.subjectDescriptor.type == type && !it.value.keepOnNoAdapter) {
+                if (it.value.subject.type == type && !it.value.keepOnNoAdapter) {
                     val registration = servers.unregisterByKey(it.key)
                     if (registration != null) {
-                        registration.value.close(TextCause("Adapter unregistered."), it.value.subjectDescriptor)
+                        registration.value.close(TextCause("Adapter unregistered."), it.value.subject)
                         internalApi.logger.info {
-                            "Stopped server ${it.key} with subject ${it.value.subjectDescriptor} and type ${it.value.subjectDescriptor.type} due to adapter unregistered."
+                            "Stopped server ${it.key} with subject ${it.value.subject} and type ${it.value.subject.type} due to adapter unregistered."
                         }
                     }
                 }

@@ -45,8 +45,8 @@ import com.fasterxml.jackson.core.JsonToken
  * @author Chuanwise
  */
 class PlatformPolymorphicDeserializerInitializer : PolymorphicDeserializerInitializer {
-    override fun initialize(deserializers: PolymorphicDeserializers, subjectDescriptor: SubjectDescriptor) {
-        deserializers.subject(subjectDescriptor) {
+    override fun initialize(deserializers: PolymorphicDeserializers, subject: SubjectDescriptor) {
+        deserializers.subject(subject) {
             names<Packet>(FIELD_TYPE) {
                 name<RequestPacket>()
                 name<ReceiptPacket>()

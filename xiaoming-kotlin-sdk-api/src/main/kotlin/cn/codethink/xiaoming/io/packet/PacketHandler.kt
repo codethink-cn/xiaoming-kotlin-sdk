@@ -17,6 +17,7 @@
 package cn.codethink.xiaoming.io.packet
 
 import cn.codethink.xiaoming.common.Cause
+import cn.codethink.xiaoming.common.CauseSubjectPair
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.io.ProtocolLanguageConfiguration
 import cn.codethink.xiaoming.io.connection.ConnectionApi
@@ -24,6 +25,16 @@ import cn.codethink.xiaoming.io.connection.PacketConnection
 import cn.codethink.xiaoming.io.connection.Received
 import io.github.oshai.kotlinlogging.KLogger
 
+data class DisconnectSetting(
+    val cause: Cause,
+    val subject: SubjectDescriptor
+)
+
+/**
+ * The context of a packet.
+ *
+ * @author Chuanwise
+ */
 data class PacketContext(
     val logger: KLogger,
     val connection: PacketConnection<*>,
@@ -32,9 +43,7 @@ data class PacketContext(
     val received: Received<*>,
     val language: ProtocolLanguageConfiguration,
 
-    var disconnect: Boolean = false,
-    var disconnectCause: Cause? = null,
-    var disconnectSubjectDescriptor: SubjectDescriptor? = null
+    var disconnect: CauseSubjectPair? = null
 ) {
     suspend fun send(packet: Packet) {
         connectionApi.send(packet)

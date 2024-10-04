@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.io.connection
 
-import cn.codethink.xiaoming.TEST_SUBJECT
+import cn.codethink.xiaoming.TEST_SUBJECT_DESCRIPTOR
 import cn.codethink.xiaoming.common.PluginSubjectDescriptor
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.XiaomingProtocolSubject
@@ -44,7 +44,7 @@ const val TEST_TOKEN = "ExampleAccessToken"
 class WebSocketClientConnectionInternalApiTest {
     private val logger = KotlinLogging.logger { }
 
-    inner class TestAuthorizer : Authorizer {
+    inner class TestAuthorizationService : AuthorizationService {
         override fun authorize(token: String): SubjectDescriptor? {
             if (token == TEST_TOKEN) {
                 logger.info { "Authorized" }
@@ -59,7 +59,7 @@ class WebSocketClientConnectionInternalApiTest {
         version = XiaomingJacksonModuleVersion,
         logger = logger
     ).apply {
-        findAndApplyInitializers(javaClass.classLoader, TEST_SUBJECT)
+        findAndApplyInitializers(javaClass.classLoader, TEST_SUBJECT_DESCRIPTOR)
     }
 
     private val dataObjectMapper = jacksonObjectMapper().apply {
@@ -79,8 +79,8 @@ class WebSocketClientConnectionInternalApiTest {
                 host = TEST_HOST,
                 path = TEST_PATH
             ),
-            subjectDescriptor = TEST_SUBJECT,
-            authorizer = TestAuthorizer(),
+            descriptor = TEST_SUBJECT_DESCRIPTOR,
+            authorizationService = TestAuthorizationService(),
             parentJob = supervisorJob
         )
 
@@ -95,7 +95,7 @@ class WebSocketClientConnectionInternalApiTest {
             configuration = clientConfiguration,
             logger = logger,
             httpClient = HttpClient { install(WebSockets) },
-            subjectDescriptor = demoPluginSubject,
+            descriptor = demoPluginSubject,
             parentJob = supervisorJob,
         )
 
@@ -130,8 +130,8 @@ class WebSocketClientConnectionInternalApiTest {
                 host = TEST_HOST,
                 path = TEST_PATH
             ),
-            subjectDescriptor = TEST_SUBJECT,
-            authorizer = TestAuthorizer()
+            descriptor = TEST_SUBJECT_DESCRIPTOR,
+            authorizationService = TestAuthorizationService()
         )
 
         val clientConfiguration = DefaultWebSocketClientConfiguration(
@@ -145,7 +145,7 @@ class WebSocketClientConnectionInternalApiTest {
             configuration = clientConfiguration,
             logger = logger,
             httpClient = HttpClient { install(WebSockets) },
-            subjectDescriptor = TEST_SUBJECT
+            descriptor = TEST_SUBJECT_DESCRIPTOR
         )
 
         var durationMillis = currentTimeMillis

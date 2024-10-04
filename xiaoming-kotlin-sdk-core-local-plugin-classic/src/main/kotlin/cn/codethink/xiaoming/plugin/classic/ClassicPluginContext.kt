@@ -22,5 +22,5 @@ import cn.codethink.xiaoming.common.SubjectDescriptor
 interface ClassicPluginContext {
     val plugin: ClassicPlugin
     val cause: Cause
-    val subjectDescriptor: SubjectDescriptor
+    val descriptor: SubjectDescriptor
 }

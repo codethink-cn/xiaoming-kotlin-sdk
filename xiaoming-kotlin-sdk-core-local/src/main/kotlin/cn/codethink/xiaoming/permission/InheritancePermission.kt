@@ -115,7 +115,7 @@ class InheritancePermissionComparatorV1(
 
             val inheritedContext = toInheritedContext(context)
             val result = context.permissionServiceApi.hasPermission(
-                profile, context.permission, inheritedContext, context.caller, context.cause
+                profile, context.permission, inheritedContext, context.cause, context.subject
             )
             return tristateOf(resultMapping.getOrDefault(result, result))
         } finally {

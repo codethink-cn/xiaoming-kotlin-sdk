@@ -16,6 +16,8 @@
 
 package cn.codethink.xiaoming.common
 
+import cn.codethink.xiaoming.io.data.DefaultFieldNamingPolicy
+import cn.codethink.xiaoming.io.data.NamingPolicy
 import cn.codethink.xiaoming.io.data.NodeRaw
 import cn.codethink.xiaoming.io.data.Raw
 import com.fasterxml.jackson.core.JsonGenerator
@@ -26,7 +28,9 @@ import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.SerializerProvider
+import com.fasterxml.jackson.databind.annotation.JsonNaming
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
@@ -41,6 +45,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode
  * @see Raw
  * @see AbstractData
  */
+@NamingPolicy(policy = DefaultFieldNamingPolicy.SNAKE_CASE)
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonSerialize(using = DefaultDataSerializer::class)
 interface Data {
     val raw: Raw

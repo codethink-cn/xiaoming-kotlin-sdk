@@ -28,7 +28,7 @@ class LocalPluginManagerApi(
     val lock = ReentrantReadWriteLock()
 
     @InternalApi
-    internal fun start(cause: Cause, subjectDescriptor: SubjectDescriptor) {
+    internal fun start(cause: Cause, subject: SubjectDescriptor) {
 
     }
 }

@@ -31,8 +31,8 @@ import cn.codethink.xiaoming.permission.data.sql.SqlLocalPlatformDataConfigurati
 import cn.codethink.xiaoming.permission.data.sql.v1.SqlLocalPlatformDataConfigurationV1
 
 class LocalPlatformSqlDataPolymorphicDeserializerInitializer : PolymorphicDeserializerInitializer {
-    override fun initialize(deserializers: PolymorphicDeserializers, subjectDescriptor: SubjectDescriptor) {
-        deserializers.subject(subjectDescriptor) {
+    override fun initialize(deserializers: PolymorphicDeserializers, subject: SubjectDescriptor) {
+        deserializers.subject(subject) {
             names<LocalPlatformDataConfiguration>(FIELD_TYPE) {
                 names<SqlLocalPlatformDataConfiguration>(FIELD_VERSION) {
                     name<SqlLocalPlatformDataConfigurationV1>()

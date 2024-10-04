@@ -29,6 +29,6 @@ import cn.codethink.xiaoming.io.connection.ConnectionInternalApi
  */
 interface ConnectionConfiguration {
     val type: String
-    val subjectDescriptor: SubjectDescriptor
+    val subject: SubjectDescriptor
     fun toConnection(api: LocalPlatformInternalApi): ConnectionInternalApi<*>
 }

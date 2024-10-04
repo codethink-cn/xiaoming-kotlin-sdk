@@ -27,5 +27,9 @@ import cn.codethink.xiaoming.common.SubjectDescriptor
  */
 interface PermissionProfile {
     val id: Id
-    val subjectDescriptor: SubjectDescriptor
+
+    /**
+     * The subject that this permission profile belongs to.
+     */
+    val subject: SubjectDescriptor
 }

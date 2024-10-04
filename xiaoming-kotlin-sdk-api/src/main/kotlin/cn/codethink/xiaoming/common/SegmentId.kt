@@ -681,6 +681,8 @@ class LiteralSegmentIdMatcher(
                 "type=$SEGMENT_ID_MATCHER_TYPE_LITERAL," +
                 "list=$id)"
     }
+
+    override fun toString(): String = toStringCache
 }
 
 fun SegmentId.toLiteralMatcher() = LiteralSegmentIdMatcher(this)

@@ -26,13 +26,13 @@ import cn.codethink.xiaoming.io.data.setValue
 class ConnectRequestPara(
     raw: Raw
 ) : AbstractData(raw) {
-    var subjectDescriptor: SubjectDescriptor by raw
+    var subject: SubjectDescriptor by raw
 
     @JvmOverloads
     constructor(
-        subjectDescriptor: SubjectDescriptor,
+        subject: SubjectDescriptor,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        this.subjectDescriptor = subjectDescriptor
+        this.subject = subject
     }
 }

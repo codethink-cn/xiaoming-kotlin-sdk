@@ -33,12 +33,12 @@ interface RemoteWebSocketServerConfiguration : WebSocketServerConfiguration
 abstract class RemoteWebSocketServerApi(
     private val configuration: WebSocketServerConfiguration,
     private val logger: KLogger,
-    override val subjectDescriptor: SubjectDescriptor,
+    override val descriptor: SubjectDescriptor,
     applicationEngineFactory: ApplicationEngineFactory<*, *> = Netty,
     parentJob: Job? = null,
     parentCoroutineContext: CoroutineContext = Dispatchers.IO
 ) : WebSocketServerApi(
-    configuration, subjectDescriptor, logger, applicationEngineFactory, parentJob, parentCoroutineContext
+    configuration, descriptor, logger, applicationEngineFactory, parentJob, parentCoroutineContext
 ) {
 //    private val mutableConnections: MutableList<LongConnectionInternalApi> = CopyOnWriteArrayList()
 //    override val connectionApis: List<LongConnectionInternalApi> = mutableConnections.toList()

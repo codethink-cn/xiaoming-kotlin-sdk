@@ -14,21 +14,7 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.io.connection
+package cn.codethink.xiaoming.common
 
-import cn.codethink.xiaoming.common.SubjectDescriptor
+sealed interface VersionMatcher : Matcher<Version>
 
-/**
- * Authorize connection and return a connection subject.
- *
- * @author Chuanwise
- */
-interface Authorizer {
-    fun authorize(token: String): SubjectDescriptor?
-    fun onConnected(subjectDescriptor: SubjectDescriptor) = Unit
-    fun onDisconnected(subjectDescriptor: SubjectDescriptor) = Unit
-}
-
-object EmptyAuthorizer : Authorizer {
-    override fun authorize(token: String): SubjectDescriptor? = null
-}

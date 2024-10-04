@@ -63,7 +63,7 @@ class ClassicPlugin(
     private val state: ClassicalPluginState
         get() = lock.read { stateNoLock }
 
-    override fun load(platform: Platform, cause: Cause, subjectDescriptor: SubjectDescriptor) = lock.write {
+    override fun load(platform: Platform, cause: Cause, subject: SubjectDescriptor) = lock.write {
         stateNoLock = when (stateNoLock) {
             ClassicalPluginState.INITIALIZED -> ClassicalPluginState.LOADING
             ClassicalPluginState.LOADING -> throw IllegalStateException("Concurrent loading plugin.")
@@ -71,7 +71,7 @@ class ClassicPlugin(
         }
 
         try {
-            mainCaller.onLoad(this, cause, subjectDescriptor)
+            mainCaller.onLoad(this, cause, subject)
             stateNoLock = ClassicalPluginState.LOADED
         } catch (e: Throwable) {
             stateNoLock = ClassicalPluginState.LOADING_ERROR
@@ -79,7 +79,7 @@ class ClassicPlugin(
         }
     }
 
-    override fun enable(platform: Platform, cause: Cause, subjectDescriptor: SubjectDescriptor) = lock.write {
+    override fun enable(platform: Platform, cause: Cause, subject: SubjectDescriptor) = lock.write {
         stateNoLock = when (stateNoLock) {
             ClassicalPluginState.LOADED -> ClassicalPluginState.ENABLING
             ClassicalPluginState.ENABLING -> throw IllegalStateException("Concurrent enabling plugin.")
@@ -87,7 +87,7 @@ class ClassicPlugin(
         }
 
         try {
-            mainCaller.onEnable(this, cause, subjectDescriptor)
+            mainCaller.onEnable(this, cause, subject)
             stateNoLock = ClassicalPluginState.ENABLED
         } catch (e: Throwable) {
             stateNoLock = ClassicalPluginState.ENABLING_ERROR
@@ -95,7 +95,7 @@ class ClassicPlugin(
         }
     }
 
-    override fun disable(platform: Platform, cause: Cause, subjectDescriptor: SubjectDescriptor) = lock.write {
+    override fun disable(platform: Platform, cause: Cause, subject: SubjectDescriptor) = lock.write {
         stateNoLock = when (stateNoLock) {
             ClassicalPluginState.ENABLED -> ClassicalPluginState.DISABLING
             ClassicalPluginState.DISABLING -> throw IllegalStateException("Concurrent disabling plugin.")
@@ -103,7 +103,7 @@ class ClassicPlugin(
         }
 
         try {
-            mainCaller.onDisable(this, cause, subjectDescriptor)
+            mainCaller.onDisable(this, cause, subject)
             stateNoLock = ClassicalPluginState.DISABLED
         } catch (e: Throwable) {
             stateNoLock = ClassicalPluginState.DISABLING_ERROR
@@ -111,7 +111,7 @@ class ClassicPlugin(
         }
     }
 
-    override fun unload(platform: Platform, cause: Cause, subjectDescriptor: SubjectDescriptor) = lock.write {
+    override fun unload(platform: Platform, cause: Cause, subject: SubjectDescriptor) = lock.write {
         stateNoLock = when (stateNoLock) {
             ClassicalPluginState.DISABLED -> ClassicalPluginState.INITIALIZED
             ClassicalPluginState.INITIALIZED -> throw IllegalStateException("Concurrent unloading plugin.")

@@ -38,16 +38,16 @@ class PlatformStartEvent(
     raw: Raw,
 ) : Event(raw) {
     var cause: Cause by raw
-    var subjectDescriptor: SubjectDescriptor by raw
+    var subject: SubjectDescriptor by raw
 
     @JvmOverloads
     constructor(
         cause: Cause,
-        subjectDescriptor: SubjectDescriptor,
+        subject: SubjectDescriptor,
         raw: Raw = MapRaw()
     ) : this(raw) {
         this.type = EVENT_TYPE_PLATFORM_STARTING
         this.cause = cause
-        this.subjectDescriptor = subjectDescriptor
+        this.subject = subject
     }
 }

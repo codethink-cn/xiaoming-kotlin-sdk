@@ -50,4 +50,24 @@ class HikariCpSqlDataSource(
     override fun toDataSource(): DataSource = HikariDataSource(
         HikariConfig(properties)
     )
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        if (!super.equals(other)) return false
+
+        other as HikariCpSqlDataSource
+
+        return properties == other.properties
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + properties.hashCode()
+        return result
+    }
+
+    override fun toString(): String {
+        return "HikariCpSqlDataSource(properties=$properties)"
+    }
 }

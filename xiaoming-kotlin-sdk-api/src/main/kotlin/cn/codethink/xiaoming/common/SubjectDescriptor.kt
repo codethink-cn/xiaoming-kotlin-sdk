@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-@file:JvmName("Subjects")
-
 package cn.codethink.xiaoming.common
 
-import cn.codethink.xiaoming.io.data.Field
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
@@ -42,16 +39,38 @@ abstract class SubjectDescriptor(
         type: String,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[SUBJECT_FIELD_TYPE] = type
+        raw[FIELD_TYPE] = type
     }
 }
+
+const val ID_SUBJECT_DESCRIPTOR_DESCRIPTOR_FIELD_ID = "id"
+
+abstract class IdSubjectDescriptor(
+    raw: Raw
+) : SubjectDescriptor(raw) {
+    open val id: Id by raw
+
+    @JvmOverloads
+    constructor(
+        type: String,
+        id: Id,
+        raw: Raw = MapRaw()
+    ) : this(raw) {
+        raw[FIELD_TYPE] = type
+        raw[ID_SUBJECT_DESCRIPTOR_DESCRIPTOR_FIELD_ID] = id
+    }
+}
+
+
+const val SUBJECT_DESCRIPTOR_TYPE_PROTOCOL = "protocol"
+const val PROTOCOL_SUBJECT_DESCRIPTOR_FIELD_VERSION = "version"
 
 /**
  * Represent a subject that is a xiaoming SDK.
  *
  * @author Chuanwise
  */
-@JsonTypeName(SUBJECT_TYPE_PROTOCOL)
+@JsonTypeName(SUBJECT_DESCRIPTOR_TYPE_PROTOCOL)
 class SdkSubjectDescriptor(
     raw: Raw
 ) : SubjectDescriptor(raw) {
@@ -68,11 +87,11 @@ class SdkSubjectDescriptor(
         protocol: Version,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[SUBJECT_FIELD_TYPE] = SUBJECT_TYPE_SDK
-        raw[SDK_SUBJECT_FIELD_GROUP] = group
-        raw[SDK_SUBJECT_FIELD_NAME] = name
-        raw[SDK_SUBJECT_FIELD_VERSION] = version
-        raw[SDK_SUBJECT_FIELD_PROTOCOL] = protocol
+        raw[FIELD_TYPE] = SUBJECT_DESCRIPTOR_TYPE_SDK
+        raw[SDK_SUBJECT_DESCRIPTOR_FIELD_GROUP] = group
+        raw[SDK_SUBJECT_DESCRIPTOR_FIELD_NAME] = name
+        raw[SDK_SUBJECT_DESCRIPTOR_FIELD_VERSION] = version
+        raw[SDK_SUBJECT_DESCRIPTOR_FIELD_PROTOCOL] = protocol
     }
 }
 
@@ -80,11 +99,11 @@ class SdkSubjectDescriptor(
  * The current SDK subject.
  */
 val XiaomingSdkSubject: SdkSubjectDescriptor = SdkSubjectDescriptor(MapRaw().apply {
-    this[SUBJECT_FIELD_TYPE] = SUBJECT_TYPE_SDK
-    this[SDK_SUBJECT_FIELD_GROUP] = SdkGroup
-    this[SDK_SUBJECT_FIELD_NAME] = SdkName
-    this[SDK_SUBJECT_FIELD_VERSION] = SdkVersionString.toVersion()
-    this[SDK_SUBJECT_FIELD_PROTOCOL] = SdkProtocolString.toVersion()
+    this[FIELD_TYPE] = SUBJECT_DESCRIPTOR_TYPE_SDK
+    this[SDK_SUBJECT_DESCRIPTOR_FIELD_GROUP] = SdkGroup
+    this[SDK_SUBJECT_DESCRIPTOR_FIELD_NAME] = SdkName
+    this[SDK_SUBJECT_DESCRIPTOR_FIELD_VERSION] = SdkVersionString.toVersion()
+    this[SDK_SUBJECT_DESCRIPTOR_FIELD_PROTOCOL] = SdkProtocolString.toVersion()
 })
 
 class ProtocolSubjectDescriptor(
@@ -98,13 +117,13 @@ class ProtocolSubjectDescriptor(
         version: Version,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[SUBJECT_FIELD_TYPE] = SUBJECT_TYPE_PROTOCOL
-        raw[PROTOCOL_SUBJECT_FIELD_VERSION] = version
+        raw[FIELD_TYPE] = SUBJECT_DESCRIPTOR_TYPE_PROTOCOL
+        raw[PROTOCOL_SUBJECT_DESCRIPTOR_FIELD_VERSION] = version
     }
 }
 
 /**
- * Represent a subject that is a module. Type is [SUBJECT_TYPE_MODULE].
+ * Represent a subject that is a module. Type is [SUBJECT_DESCRIPTOR_TYPE_MODULE].
  *
  * @author Chuanwise
  */
@@ -122,10 +141,10 @@ class ModuleSubjectDescriptor(
         version: Version,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[SUBJECT_FIELD_TYPE] = SUBJECT_TYPE_MODULE
-        raw[MODULE_SUBJECT_FIELD_GROUP] = group
-        raw[MODULE_SUBJECT_FIELD_NAME] = name
-        raw[MODULE_SUBJECT_FIELD_VERSION] = version
+        raw[FIELD_TYPE] = SUBJECT_DESCRIPTOR_TYPE_MODULE
+        raw[MODULE_SUBJECT_DESCRIPTOR_FIELD_GROUP] = group
+        raw[MODULE_SUBJECT_DESCRIPTOR_FIELD_NAME] = name
+        raw[MODULE_SUBJECT_DESCRIPTOR_FIELD_VERSION] = version
     }
 }
 
@@ -134,38 +153,37 @@ class ModuleSubjectDescriptor(
  */
 val XiaomingProtocolSubject: ProtocolSubjectDescriptor = ProtocolSubjectDescriptor(XiaomingSdkSubject.protocol)
 
-const val SUBJECT_TYPE_PLUGIN = "plugin"
-const val PLUGIN_SUBJECT_FIELD_ID = "id"
+const val SUBJECT_DESCRIPTOR_TYPE_PLUGIN = "plugin"
 
 /**
- * Represent a subject that is a plugin. Type is [SUBJECT_TYPE_PLUGIN].
+ * Represent a subject that is a plugin. Type is [SUBJECT_DESCRIPTOR_TYPE_PLUGIN].
  *
  * @author Chuanwise
  */
-@JsonTypeName(SUBJECT_TYPE_PLUGIN)
+@JsonTypeName(SUBJECT_DESCRIPTOR_TYPE_PLUGIN)
 class PluginSubjectDescriptor(
     raw: Raw
-) : SubjectDescriptor(raw) {
-    val id: SegmentId by raw
+) : IdSubjectDescriptor(raw) {
+    override val id: SegmentId by raw
 
     @JvmOverloads
     constructor(
         id: SegmentId,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[FIELD_TYPE] = SUBJECT_TYPE_PLUGIN
-        raw[PLUGIN_SUBJECT_FIELD_ID] = id
+        raw[FIELD_TYPE] = SUBJECT_DESCRIPTOR_TYPE_PLUGIN
+        raw[ID_SUBJECT_DESCRIPTOR_DESCRIPTOR_FIELD_ID] = id
     }
 }
 
-const val SUBJECT_TYPE_PLATFORM = "platform"
+const val SUBJECT_DESCRIPTOR_TYPE_PLATFORM = "platform"
 
 /**
- * Represent a subject that is a platform. Type is [SUBJECT_TYPE_PLATFORM].
+ * Represent a subject that is a platform. Type is [SUBJECT_DESCRIPTOR_TYPE_PLATFORM].
  *
  * @author Chuanwise
  */
-@JsonTypeName(SUBJECT_TYPE_PLATFORM)
+@JsonTypeName(SUBJECT_DESCRIPTOR_TYPE_PLATFORM)
 class PlatformSubjectDescriptor(
     raw: Raw
 ) : SubjectDescriptor(raw) {
@@ -176,19 +194,19 @@ class PlatformSubjectDescriptor(
         id: Id,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[FIELD_TYPE] = SUBJECT_TYPE_PLATFORM
+        raw[FIELD_TYPE] = SUBJECT_DESCRIPTOR_TYPE_PLATFORM
         this.id = id
     }
 }
 
-const val SUBJECT_TYPE_CONNECTION = "connection"
+const val SUBJECT_DESCRIPTOR_TYPE_CONNECTION = "connection"
 
 /**
- * Represent a subject that is a platform. Type is [SUBJECT_TYPE_CONNECTION].
+ * Represent a subject that is a platform. Type is [SUBJECT_DESCRIPTOR_TYPE_CONNECTION].
  *
  * @author Chuanwise
  */
-@JsonTypeName(SUBJECT_TYPE_CONNECTION)
+@JsonTypeName(SUBJECT_DESCRIPTOR_TYPE_CONNECTION)
 class ConnectionSubjectDescriptor(
     raw: Raw
 ) : SubjectDescriptor(raw) {
@@ -199,18 +217,21 @@ class ConnectionSubjectDescriptor(
         id: Id,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[FIELD_TYPE] = SUBJECT_TYPE_CONNECTION
+        raw[FIELD_TYPE] = SUBJECT_DESCRIPTOR_TYPE_CONNECTION
         this.id = id
     }
 }
 
+const val SUBJECT_DESCRIPTOR_MATCHER_TYPE_DEFAULT_PLUGIN = "subject.plugin.default"
+const val DEFAULT_PLUGIN_SUBJECT_DESCRIPTOR_MATCHER_FIELD_ID = "id"
+
 /**
  * Used to match plugin subject from [SubjectDescriptor]. Type is
- * [DEFAULT_PLUGIN_SUBJECT_MATCHER_FIELD_ID_MATCHER].
+ * [DEFAULT_PLUGIN_SUBJECT_DESCRIPTOR_MATCHER_FIELD_ID].
  *
  * @author Chuanwise
  */
-@JsonTypeName(SUBJECT_MATCHER_TYPE_DEFAULT_PLUGIN)
+@JsonTypeName(SUBJECT_DESCRIPTOR_MATCHER_TYPE_DEFAULT_PLUGIN)
 class DefaultPluginSubjectMatcher(
     raw: Raw
 ) : AbstractData(raw), Matcher<SubjectDescriptor> {
@@ -222,25 +243,25 @@ class DefaultPluginSubjectMatcher(
     @JsonIgnore
     override val targetNullable: Boolean = false
 
-    @Field(DEFAULT_PLUGIN_SUBJECT_MATCHER_FIELD_ID_MATCHER)
-    val idMatcher: Matcher<SegmentId> by raw
+    //    @Field(DEFAULT_PLUGIN_SUBJECT_DESCRIPTOR_MATCHER_FIELD_ID_MATCHER)
+    val id: Matcher<SegmentId> by raw
 
     @JvmOverloads
     constructor(
-        idMatcher: Matcher<SegmentId>,
+        id: Matcher<SegmentId>,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        raw[MATCHER_FIELD_TYPE] = SUBJECT_MATCHER_TYPE_DEFAULT_PLUGIN
-        raw[DEFAULT_PLUGIN_SUBJECT_MATCHER_FIELD_ID_MATCHER] = idMatcher
+        raw[MATCHER_FIELD_TYPE] = SUBJECT_DESCRIPTOR_MATCHER_TYPE_DEFAULT_PLUGIN
+        raw[DEFAULT_PLUGIN_SUBJECT_DESCRIPTOR_MATCHER_FIELD_ID] = id
     }
 
     override fun isMatched(target: SubjectDescriptor): Boolean {
-        if (target.type != SUBJECT_TYPE_PLUGIN) {
+        if (target.type != SUBJECT_DESCRIPTOR_TYPE_PLUGIN) {
             return false
         }
         val pluginSubject = target as PluginSubjectDescriptor
 
-        return idMatcher.isMatched(pluginSubject.id)
+        return id.isMatched(pluginSubject.id)
     }
 }
 
@@ -259,7 +280,7 @@ class ProtocolSubjectMatcher @JvmOverloads constructor(
     override val targetNullable: Boolean = false
 
     init {
-        raw[MATCHER_FIELD_TYPE] = SUBJECT_MATCHER_TYPE_DEFAULT_PROTOCOL
+        raw[MATCHER_FIELD_TYPE] = SUBJECT_DESCRIPTOR_MATCHER_TYPE_DEFAULT_PROTOCOL
     }
 
     override fun isMatched(target: ProtocolSubjectDescriptor): Boolean {

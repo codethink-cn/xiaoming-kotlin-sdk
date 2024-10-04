@@ -70,11 +70,11 @@ interface ConnectionApi<T> : AutoCloseable, CoroutineScope {
     val isClosed: Boolean
     val isShared: Boolean
 
-    operator fun get(subjectDescriptor: SubjectDescriptor) : Channel<Received<T>>
+    operator fun get(subject: SubjectDescriptor): Channel<Received<T>>
 
     suspend fun send(packet: Packet)
     suspend fun receive(packet: Packet, origin: T? = null)
-    fun remove(subjectDescriptor: SubjectDescriptor) : Boolean
+    fun remove(subject: SubjectDescriptor): Boolean
 }
 
 val ConnectionApi<*>.isNotShared: Boolean
@@ -116,8 +116,8 @@ class TextFrameConnectionApi(
     override val isShared: Boolean
         get() = lock.read { channels.size > 1 }
 
-    override operator fun get(subjectDescriptor: SubjectDescriptor) : Channel<Received<Frame.Text>> {
-        return channels.computeIfAbsent(subjectDescriptor) { Channel(Channel.UNLIMITED) }
+    override operator fun get(subject: SubjectDescriptor): Channel<Received<Frame.Text>> {
+        return channels.computeIfAbsent(subject) { Channel(Channel.UNLIMITED) }
     }
 
     override suspend fun send(packet: Packet) {
@@ -132,7 +132,7 @@ class TextFrameConnectionApi(
     override suspend fun receive(packet: Packet, origin: Frame.Text?) {
         assertNotClosed()
 
-        val session = packet.subjectDescriptor
+        val session = packet.subject
         val channel = getChannelOrNull(session) ?: return
 
         val received = DefaultReceived(origin, packet, this)
@@ -184,7 +184,7 @@ class TextFrameConnectionApi(
         }
     }
 
-    override fun remove(subjectDescriptor: SubjectDescriptor) = lock.write { channels.remove(subjectDescriptor) != null }
+    override fun remove(subject: SubjectDescriptor) = lock.write { channels.remove(subject) != null }
 
     override fun close() {
         onBeClosed()

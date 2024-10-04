@@ -30,8 +30,8 @@ import cn.codethink.xiaoming.plugin.PluginMeta
  * @author Chuanwise
  */
 class ClassicPluginPolymorphicDeserializerInitializer : PolymorphicDeserializerInitializer {
-    override fun initialize(deserializers: PolymorphicDeserializers, subjectDescriptor: SubjectDescriptor) {
-        deserializers.subject(subjectDescriptor) {
+    override fun initialize(deserializers: PolymorphicDeserializers, subject: SubjectDescriptor) {
+        deserializers.subject(subject) {
             names<PluginMeta>(FIELD_TYPE) {
                 name<ClassicPluginMeta>()
             }

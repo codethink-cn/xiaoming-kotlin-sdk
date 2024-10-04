@@ -45,17 +45,17 @@ data class ActionValue<T>(
  */
 data class Action<P, R>(
     val name: String,
-    val requestArgument: ActionValue<P>,
+    val requestPara: ActionValue<P>,
     val receiptData: ActionValue<R>,
-    val subjectDescriptor: SubjectDescriptor
+    val subject: SubjectDescriptor
 )
 
 inline fun <reified P, reified R> Action(
     name: String,
-    subjectDescriptor: SubjectDescriptor
+    subject: SubjectDescriptor
 ): Action<P, R> = Action(
     name = name,
-    requestArgument = ActionValue(
+    requestPara = ActionValue(
         object : TypeReference<P>() {}.type,
         optional = defaultOptional<P>(),
         nullable = defaultNullable<P>()
@@ -65,7 +65,7 @@ inline fun <reified P, reified R> Action(
         optional = defaultOptional<R>(),
         nullable = defaultNullable<R>()
     ),
-    subjectDescriptor = subjectDescriptor
+    subject = subject
 )
 
 inline fun <reified P, reified R> StandardAction(

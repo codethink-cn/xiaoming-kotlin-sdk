@@ -26,6 +26,8 @@ import cn.codethink.xiaoming.common.Registrations
 import cn.codethink.xiaoming.common.SegmentId
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.XiaomingSdkSubject
+import cn.codethink.xiaoming.common.isMatchedOrEqualsTo
+import cn.codethink.xiaoming.common.providedOrFromCurrentThread
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import cn.codethink.xiaoming.permission.data.PermissionProfile
 import java.util.concurrent.CopyOnWriteArrayList
@@ -69,19 +71,26 @@ class LocalPermissionServiceApi(
     fun setPermission(
         profile: PermissionProfile,
         comparator: PermissionComparator,
-        contextMatchers: Map<String, Matcher<Any?>> = emptyMap(),
-        caller: SubjectDescriptor? = null, cause: Cause? = null
+        context: Map<String, Matcher<Any?>> = emptyMap(),
+        cause: Cause? = null, subject: SubjectDescriptor? = null
     ) {
+        val (causeOrDefault, subjectOrDefault) = providedOrFromCurrentThread(cause, subject)
+        logger.trace {
+            "Setting permission for profile $profile: $comparator, context: $context " +
+                    "(by $subjectOrDefault for $causeOrDefault)."
+        }
+
         // Check if operation valid.
         permissionSettingCheckerRegistrations[comparator.type]?.let {
-            val addingContext = PermissionSettingContext(this, profile, comparator, contextMatchers, caller, cause)
+            val addingContext =
+                PermissionSettingContext(this, profile, comparator, context, causeOrDefault, subjectOrDefault)
             it.value.check(addingContext)
         }
 
         // Do operation.
         val records = internalApi.data.getPermissionRecordsByPermissionProfileId(profile.id)
 
-        val previousRecords = records.filter { it.comparator == comparator && it.contextMatchers == contextMatchers }
+        val previousRecords = records.filter { it.comparator == comparator && it.context == context }
         if (previousRecords.isNotEmpty()) {
             if (previousRecords.size == 1) {
                 val thatOne = previousRecords.first()
@@ -92,17 +101,17 @@ class LocalPermissionServiceApi(
         }
 
         // Add new record.
-        internalApi.data.insertPermissionRecord(profile, comparator, contextMatchers)
+        internalApi.data.insertPermissionRecord(profile, comparator, context)
     }
 
     fun unsetPermission(
         profile: PermissionProfile,
         comparator: PermissionComparator,
-        contextMatchers: Map<String, Matcher<Any?>> = emptyMap(),
-        caller: SubjectDescriptor? = null, cause: Cause? = null
+        context: Map<String, Matcher<Any?>> = emptyMap(),
+        cause: Cause? = null, subject: SubjectDescriptor? = null
     ): Boolean {
         val records = internalApi.data.getPermissionRecordsByPermissionProfileId(profile.id)
-            .filter { it.comparator == comparator && it.contextMatchers == contextMatchers }
+            .filter { it.comparator == comparator && it.context == context }
 
         if (records.isNotEmpty()) {
             internalApi.data.deletePermissionRecords(records)
@@ -112,92 +121,129 @@ class LocalPermissionServiceApi(
     }
 
     fun hasPermission(
-        profileId: Id, permission: Permission,
+        profile: Id, permission: Permission,
         context: Map<String, Any?> = emptyMap(),
-        caller: SubjectDescriptor? = null, cause: Cause? = null
+        cause: Cause? = null, subject: SubjectDescriptor? = null
     ): Boolean? {
-        internalApi.data.getPermissionRecordsByPermissionProfileId(profileId).forEach {
-            val comparingContext = PermissionComparingContext(
-                this, profileId, permission, it, context, caller, cause
-            )
-            it.comparator.compare(comparingContext)?.let { result -> return result.value }
+        val (causeOrDefault, subjectOrDefault) = providedOrFromCurrentThread(cause, subject)
+        logger.trace {
+            "Checking for profile $profile permission: $permission, context: $context " +
+                    "(by $subjectOrDefault for $causeOrDefault)."
         }
-        return null
-    }
 
-    fun hasPermission(
-        profile: PermissionProfile, permission: Permission,
-        context: Map<String, Any?> = emptyMap(),
-        caller: SubjectDescriptor? = null, cause: Cause? = null
-    ): Boolean? {
-        internalApi.data.getPermissionRecordsByPermissionProfileId(profile.id).forEach {
+        val records = internalApi.data.getPermissionRecordsByPermissionProfileId(profile)
+        for (record in records) {
+            // 1. Check context. Extra context matcher provided is allowed.
+            val allContextMatched = record.context.all { (contextKey, contextMatcher) ->
+                val contextValue = context[contextKey]
+                return (contextValue.isMatchedOrEqualsTo(contextMatcher) == true).apply {
+                    logger.trace { "Checking record: $record, context $contextKey: $contextValue matched $contextMatcher: $this." }
+                }
+            }
+            if (!allContextMatched) {
+                continue
+            }
+
+            // 2. Use permission comparator.
             val comparingContext = PermissionComparingContext(
-                this, profile.id, permission, it, context, caller, cause
+                this, profile, permission, record, context, causeOrDefault, subjectOrDefault
             )
-            it.comparator.compare(comparingContext)?.let { result -> return result.value }
+            record.comparator.compare(comparingContext)?.let { result ->
+                logger.trace { "Permission record $record compare result: $result." }
+                return result.value
+            }
         }
+
+        logger.trace { "No permission record found for profile $profile." }
         return null
     }
 
     @Suppress("UNCHECKED_CAST")
     suspend fun hasPermission(
-        subjectDescriptor: SubjectDescriptor, permission: Permission,
-        context: Map<String, Any?> = emptyMap(), caller: SubjectDescriptor? = null, cause: Cause? = null
+        target: SubjectDescriptor, permission: Permission,
+        context: Map<String, Any?> = emptyMap(),
+        cause: Cause? = null, subject: SubjectDescriptor? = null
     ): Boolean? {
+        val (causeOrDefault, subjectOrDefault) = providedOrFromCurrentThread(cause, subject)
+        logger.trace {
+            "Checking for target $target permission: $permission, context: $context " +
+                    "(by $subjectOrDefault for $causeOrDefault)."
+        }
+
         val calculator =
-            permissionCalculatorRegistrations[subjectDescriptor.type]?.value as PermissionCalculator<SubjectDescriptor>? ?: return null
-        val calculatingContext = PermissionCalculatingContext(this, subjectDescriptor, permission, context, caller, cause)
+            permissionCalculatorRegistrations[target.type]?.value as PermissionCalculator<SubjectDescriptor>?
+        if (calculator == null) {
+            logger.warn { "No permission calculator found for target $target." }
+            return null
+        }
+
+        val calculatingContext = PermissionCalculatingContext(
+            this, target, permission, context, causeOrDefault, subjectOrDefault
+        )
 
         return calculator.hasPermission(calculatingContext)
     }
 
     fun registerPermissionCalculator(
-        type: String, calculator: PermissionCalculator<*>, subjectDescriptor: SubjectDescriptor
-    ) = permissionCalculatorRegistrations.register(type, DefaultRegistration(calculator, subjectDescriptor))
+        type: String, calculator: PermissionCalculator<*>, subject: SubjectDescriptor
+    ) = permissionCalculatorRegistrations.register(type, DefaultRegistration(calculator, subject))
 
     fun unregisterPermissionCalculatorByType(type: String) = permissionCalculatorRegistrations.unregisterByKey(type)
-    fun unregisterPermissionCalculatorBySubject(subjectDescriptor: SubjectDescriptor) =
-        permissionCalculatorRegistrations.unregisterBySubject(subjectDescriptor)
+    fun unregisterPermissionCalculatorBySubject(subject: SubjectDescriptor) =
+        permissionCalculatorRegistrations.unregisterBySubject(subject)
 
-    fun registerPermissionMeta(id: SegmentId, meta: PermissionMeta, subjectDescriptor: SubjectDescriptor) =
-        permissionMetaRegistrations.register(id, meta, subjectDescriptor)
+    fun registerPermissionMeta(id: SegmentId, meta: PermissionMeta, subject: SubjectDescriptor) =
+        permissionMetaRegistrations.register(id, meta, subject)
 
     fun unregisterPermissionMetaById(id: SegmentId) = permissionMetaRegistrations.unregisterById(id)
-    fun unregisterPermissionMetaBySubject(subjectDescriptor: SubjectDescriptor) = permissionMetaRegistrations.unregisterBySubject(subjectDescriptor)
-    fun unregisterPermissionMetaByIdAndSubject(id: SegmentId, subjectDescriptor: SubjectDescriptor) =
-        permissionMetaRegistrations.unregisterByIdAndSubject(id, subjectDescriptor)
+    fun unregisterPermissionMetaBySubject(subject: SubjectDescriptor) =
+        permissionMetaRegistrations.unregisterBySubject(subject)
 
-    fun registerPermissionSettingChecker(type: String, checker: PermissionSettingChecker, subjectDescriptor: SubjectDescriptor) =
-        permissionSettingCheckerRegistrations.register(type, DefaultRegistration(checker, subjectDescriptor))
+    fun unregisterPermissionMetaByIdAndSubject(id: SegmentId, subject: SubjectDescriptor) =
+        permissionMetaRegistrations.unregisterByIdAndSubject(id, subject)
+
+    fun registerPermissionSettingChecker(
+        type: String,
+        checker: PermissionSettingChecker,
+        subject: SubjectDescriptor
+    ) = permissionSettingCheckerRegistrations.register(type, DefaultRegistration(checker, subject))
 
     fun unregisterPermissionSettingCheckerByType(type: String) =
         permissionSettingCheckerRegistrations.unregisterByKey(type)
 
-    fun unregisterPermissionSettingCheckerBySubject(subjectDescriptor: SubjectDescriptor) =
-        permissionSettingCheckerRegistrations.unregisterBySubject(subjectDescriptor)
+    fun unregisterPermissionSettingCheckerBySubject(subject: SubjectDescriptor) =
+        permissionSettingCheckerRegistrations.unregisterBySubject(subject)
 
-    fun unregisterBySubject(subjectDescriptor: SubjectDescriptor) {
-        unregisterPermissionCalculatorBySubject(subjectDescriptor)
-        unregisterPermissionMetaBySubject(subjectDescriptor)
-        unregisterPermissionSettingCheckerBySubject(subjectDescriptor)
+    fun unregisterBySubject(subject: SubjectDescriptor) {
+        unregisterPermissionCalculatorBySubject(subject)
+        unregisterPermissionMetaBySubject(subject)
+        unregisterPermissionSettingCheckerBySubject(subject)
     }
 }
+
+fun LocalPermissionServiceApi.hasPermission(
+    profile: PermissionProfile, permission: Permission,
+    context: Map<String, Any?> = emptyMap(),
+    cause: Cause? = null, subject: SubjectDescriptor? = null
+): Boolean? = hasPermission(profile.id, permission, context, cause, subject)
 
 class PermissionComparatorRegistrations : Registrations {
     data class PermissionComparatorRegistration(
         val matcher: Matcher<SegmentId>,
         override val value: PermissionComparator,
-        override val subjectDescriptor: SubjectDescriptor
+        override val subject: SubjectDescriptor
     ) : Registration<PermissionComparator>
 
     private val comparators = CopyOnWriteArrayList<PermissionComparatorRegistration>()
     operator fun get(id: SegmentId) = comparators.filter { it.matcher.isMatched(id) }
 
-    fun register(matcher: Matcher<SegmentId>, comparator: PermissionComparator, subjectDescriptor: SubjectDescriptor) {
-        comparators.add(PermissionComparatorRegistration(matcher, comparator, subjectDescriptor))
+    fun register(matcher: Matcher<SegmentId>, comparator: PermissionComparator, subject: SubjectDescriptor) {
+        comparators.add(PermissionComparatorRegistration(matcher, comparator, subject))
     }
 
-    override fun unregisterBySubject(subjectDescriptor: SubjectDescriptor): Boolean = comparators.removeAll { it.subjectDescriptor == subjectDescriptor }
+    override fun unregisterBySubject(subject: SubjectDescriptor): Boolean =
+        comparators.removeAll { it.subject == subject }
+
     fun unregisterIfMatched(id: SegmentId): Boolean = comparators.removeAll { it.matcher.isMatched(id) }
 }
 
@@ -205,39 +251,40 @@ class PermissionMetaRegistrations : Registrations {
     class PermissionMetaRegistration(
         val id: SegmentId,
         override val value: PermissionMeta,
-        override val subjectDescriptor: SubjectDescriptor
+        override val subject: SubjectDescriptor
     ) : Registration<PermissionMeta>
 
     private val lock = ReentrantReadWriteLock()
 
     private val metaBySegmentId = mutableMapOf<SegmentId, MutableMap<SubjectDescriptor, PermissionMetaRegistration>>()
-    private val metaBySubjectDescriptor = mutableMapOf<SubjectDescriptor, MutableMap<SegmentId, PermissionMetaRegistration>>()
+    private val metaBySubjectDescriptor =
+        mutableMapOf<SubjectDescriptor, MutableMap<SegmentId, PermissionMetaRegistration>>()
 
     operator fun get(id: SegmentId): Map<SubjectDescriptor, PermissionMetaRegistration>? = lock.read {
         metaBySegmentId[id]
     }
 
-    operator fun get(subjectDescriptor: SubjectDescriptor): Map<SegmentId, PermissionMetaRegistration>? = lock.read {
-        metaBySubjectDescriptor[subjectDescriptor]
+    operator fun get(subject: SubjectDescriptor): Map<SegmentId, PermissionMetaRegistration>? = lock.read {
+        metaBySubjectDescriptor[subject]
     }
 
-    operator fun get(id: SegmentId, subjectDescriptor: SubjectDescriptor): PermissionMetaRegistration? = lock.read {
-        metaBySegmentId[id]?.get(subjectDescriptor)
+    operator fun get(id: SegmentId, subject: SubjectDescriptor): PermissionMetaRegistration? = lock.read {
+        metaBySegmentId[id]?.get(subject)
     }
 
-    fun register(id: SegmentId, meta: PermissionMeta, subjectDescriptor: SubjectDescriptor) {
-        val registration = PermissionMetaRegistration(id, meta, subjectDescriptor)
+    fun register(id: SegmentId, meta: PermissionMeta, subject: SubjectDescriptor) {
+        val registration = PermissionMetaRegistration(id, meta, subject)
 
         lock.write {
-            metaBySegmentId.getOrPut(id) { mutableMapOf() }[subjectDescriptor] = registration
-            metaBySubjectDescriptor.getOrPut(subjectDescriptor) { mutableMapOf() }[id] = registration
+            metaBySegmentId.getOrPut(id) { mutableMapOf() }[subject] = registration
+            metaBySubjectDescriptor.getOrPut(subject) { mutableMapOf() }[id] = registration
         }
     }
 
-    override fun unregisterBySubject(subjectDescriptor: SubjectDescriptor): Boolean = lock.write {
-        val registrations = metaBySubjectDescriptor.remove(subjectDescriptor) ?: return false
+    override fun unregisterBySubject(subject: SubjectDescriptor): Boolean = lock.write {
+        val registrations = metaBySubjectDescriptor.remove(subject) ?: return false
         registrations.values.forEach { registration ->
-            metaBySegmentId[registration.id]?.remove(subjectDescriptor)
+            metaBySegmentId[registration.id]?.remove(subject)
         }
         return true
     }
@@ -245,14 +292,14 @@ class PermissionMetaRegistrations : Registrations {
     fun unregisterById(id: SegmentId): Boolean = lock.write {
         val registrations = metaBySegmentId.remove(id) ?: return false
         registrations.values.forEach { registration ->
-            metaBySubjectDescriptor[registration.subjectDescriptor]?.remove(id)
+            metaBySubjectDescriptor[registration.subject]?.remove(id)
         }
         return true
     }
 
-    fun unregisterByIdAndSubject(id: SegmentId, subjectDescriptor: SubjectDescriptor): Boolean = lock.write {
-        val registration = metaBySegmentId[id]?.remove(subjectDescriptor) ?: return false
-        metaBySubjectDescriptor[subjectDescriptor]?.remove(id)
+    fun unregisterByIdAndSubject(id: SegmentId, subject: SubjectDescriptor): Boolean = lock.write {
+        val registration = metaBySegmentId[id]?.remove(subject) ?: return false
+        metaBySubjectDescriptor[subject]?.remove(id)
         return true
     }
 }
