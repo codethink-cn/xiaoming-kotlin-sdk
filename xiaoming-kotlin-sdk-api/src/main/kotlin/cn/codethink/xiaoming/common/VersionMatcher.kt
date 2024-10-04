@@ -17,6 +17,14 @@
 package cn.codethink.xiaoming.common
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.core.JsonGenerator
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.SerializerProvider
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer
+import com.fasterxml.jackson.databind.ser.std.StdSerializer
 
 const val VERSION_MATCHER_TYPE = "version"
 
@@ -24,6 +32,8 @@ const val VERSION_MATCHER_TYPE = "version"
  * @author Chuanwise
  * @see toVersionMatcher
  */
+@JsonSerialize(using = VersionMatcherSerializer::class)
+@JsonDeserialize(using = VersionMatcherDeserializer::class)
 sealed interface VersionMatcher : Matcher<Version> {
     companion object {
         @JvmStatic
@@ -42,6 +52,20 @@ sealed interface VersionMatcher : Matcher<Version> {
     @get:JsonIgnore
     override val targetType: Class<Version>
         get() = Version::class.java
+}
+
+object VersionMatcherSerializer : StdSerializer<VersionMatcher>(VersionMatcher::class.java) {
+    private fun readResolve(): Any = VersionMatcherSerializer
+    override fun serialize(value: VersionMatcher, generator: JsonGenerator, provider: SerializerProvider) {
+        generator.writeString(value.toString())
+    }
+}
+
+object VersionMatcherDeserializer : StdDeserializer<VersionMatcher>(VersionMatcher::class.java) {
+    private fun readResolve(): Any = VersionMatcherDeserializer
+    override fun deserialize(parser: JsonParser, context: DeserializationContext): VersionMatcher {
+        return parser.text.toVersionMatcher()
+    }
 }
 
 /**
