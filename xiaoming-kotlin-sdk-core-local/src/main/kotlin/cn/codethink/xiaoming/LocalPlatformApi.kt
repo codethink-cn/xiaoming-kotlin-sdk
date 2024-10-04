@@ -61,7 +61,7 @@ data class DefaultLocalPlatformConfiguration(
     val parentJob: Job? = null,
     val parentCoroutineContext: CoroutineContext = EmptyCoroutineContext,
     val contributorsDisplayingLimits: Int? = null,
-    val additionalContributors: List<String> = emptyList(),
+    val additionalContributors: Iterable<String> = emptyList(),
     val locale: Locale = Locale.getDefault(),
     val modules: List<Module> = emptyList(),
     val failOnModuleError: Boolean = true,
