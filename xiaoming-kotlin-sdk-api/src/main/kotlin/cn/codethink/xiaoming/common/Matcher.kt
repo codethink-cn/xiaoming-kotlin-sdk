@@ -48,14 +48,6 @@ fun <T> Matcher<T>.isMatchedOrNull(target: Any?): Boolean? {
     }
 }
 
-fun Any?.isMatchedOrEqualsTo(matcherOrValue: Any?): Boolean? {
-    return if (matcherOrValue is Matcher<*>) {
-        matcherOrValue.isMatchedOrNull(this)
-    } else {
-        this == matcherOrValue
-    }
-}
-
 interface LiteralMatcher<T> : Matcher<T> {
     val value: T
     override fun isMatched(target: T): Boolean = value == target

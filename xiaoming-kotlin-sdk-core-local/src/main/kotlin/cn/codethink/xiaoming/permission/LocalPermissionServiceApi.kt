@@ -26,7 +26,7 @@ import cn.codethink.xiaoming.common.Registrations
 import cn.codethink.xiaoming.common.SegmentId
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.XiaomingSdkSubject
-import cn.codethink.xiaoming.common.isMatchedOrEqualsTo
+import cn.codethink.xiaoming.common.isMatchedOrNull
 import cn.codethink.xiaoming.common.providedOrFromCurrentThread
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import cn.codethink.xiaoming.permission.data.PermissionProfile
@@ -136,7 +136,7 @@ class LocalPermissionServiceApi(
             // 1. Check context. Extra context matcher provided is allowed.
             val allContextMatched = record.context.all { (contextKey, contextMatcher) ->
                 val contextValue = context[contextKey]
-                return (contextValue.isMatchedOrEqualsTo(contextMatcher) == true).apply {
+                return (contextMatcher.isMatchedOrNull(contextValue) == true).apply {
                     logger.trace { "Checking record: $record, context $contextKey: $contextValue matched $contextMatcher: $this." }
                 }
             }
