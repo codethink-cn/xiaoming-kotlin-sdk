@@ -18,15 +18,19 @@ package cn.codethink.xiaoming.plugin.classic
 
 import cn.codethink.xiaoming.plugin.PluginState
 
-enum class ClassicalPluginState : PluginState {
+enum class ClassicalPluginState(
+    val loaded: Boolean = false,
+    val enabled: Boolean = false,
+    val errored: Boolean = false
+) : PluginState {
     INITIALIZED,
     LOADING,
-    LOADING_ERROR,
-    LOADED,
-    ENABLING,
-    ENABLING_ERROR,
-    ENABLED,
-    DISABLING,
-    DISABLING_ERROR,
-    DISABLED,
+    LOADING_ERROR(errored = true),
+    LOADED(loaded = true),
+    ENABLING(loaded = true),
+    ENABLING_ERROR(loaded = true, errored = true),
+    ENABLED(loaded = true, enabled = true),
+    DISABLING(loaded = true),
+    DISABLING_ERROR(loaded = true, errored = true),
+    DISABLED(loaded = true),
 }

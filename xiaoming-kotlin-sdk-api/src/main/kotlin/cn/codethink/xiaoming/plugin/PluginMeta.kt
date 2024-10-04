@@ -18,11 +18,61 @@ package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.common.NamespaceId
 import cn.codethink.xiaoming.common.Version
+import cn.codethink.xiaoming.common.VersionMatcher
+import cn.codethink.xiaoming.common.toLiteralVersionMatcher
 
 interface PluginMeta {
+    /**
+     * Plugin type, such as "classic".
+     */
     val type: String
+
+    /**
+     * Plugin universal id, such as "cn.codethink:user".
+     */
     val id: NamespaceId
+
+    /**
+     * Plugin name to display, such as "User".
+     */
     val name: String
+
+    /**
+     * Plugin version.
+     */
     val version: Version
+
+    /**
+     * Plugin channel, such as "release".
+     */
+    val channel: String
+
+    /**
+     * A brief description of the plugin.
+     */
+    val description: String?
+
+    /**
+     * Protocol version matcher.
+     */
+    val protocol: VersionMatcher?
+
+    /**
+     * Plugin provisions.
+     */
+    val provisions: List<PluginRequirement>
+
+    /**
+     * Plugin dependencies.
+     */
     val dependencies: List<PluginDependency>
 }
+
+fun PluginMeta.toExactRequirement() = PluginRequirement(
+    id = id, version = version.toLiteralVersionMatcher(), channel = channel
+)
+
+@JvmOverloads
+fun PluginMeta.toExactDependency(optional: Boolean = false) = PluginDependency(
+    requirement = toExactRequirement(), optional = optional
+)

@@ -53,8 +53,8 @@ val Plugin.group: SegmentId
 val Plugin.version: Version
     get() = meta.meta.version
 
-val Plugin.isError: Boolean
-    get() = meta.isError
+val Plugin.isErrored: Boolean
+    get() = meta.isErrored
 
 val Plugin.isEnabled: Boolean
     get() = meta.isEnabled
@@ -70,3 +70,8 @@ val Plugin.isNotEnabled: Boolean
 
 val Plugin.isNotLoaded: Boolean
     get() = meta.isNotLoaded
+
+fun Plugin.toExactRequirement() = meta.meta.toExactRequirement()
+
+@JvmOverloads
+fun Plugin.toExactDependency(optional: Boolean = false) = meta.meta.toExactDependency(optional)

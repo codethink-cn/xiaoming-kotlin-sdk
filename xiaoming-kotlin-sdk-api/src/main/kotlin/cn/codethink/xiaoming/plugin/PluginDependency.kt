@@ -16,17 +16,13 @@
 
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.common.AnyVersionMatcher
 import cn.codethink.xiaoming.common.JavaFriendlyApi
-import cn.codethink.xiaoming.common.NamespaceId
-import cn.codethink.xiaoming.common.Requirement
-import cn.codethink.xiaoming.common.VersionMatcher
-import cn.codethink.xiaoming.common.toSegmentId
-import cn.codethink.xiaoming.common.toVersionMatcher
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.SerializerProvider
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
 
@@ -36,12 +32,16 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer
  * @author Chuanwise
  * @see toPluginDependency
  */
+@JsonSerialize(using = PluginDependencySerializer::class)
+@JsonDeserialize(using = PluginDependencyDeserializer::class)
 class PluginDependency(
-    override val id: NamespaceId,
-    override val version: VersionMatcher,
-    val optional: Boolean,
-    val status: String? = null
-) : Requirement {
+    val requirement: PluginRequirement,
+    val optional: Boolean = false
+) {
+    val id by requirement::id
+    val version by requirement::version
+    val channel by requirement::channel
+
     companion object {
         @JvmStatic
         @JavaFriendlyApi
@@ -71,15 +71,9 @@ class PluginDependency(
     override fun hashCode() = hashCodeCache
 
     private val toStringCache: String = buildString {
-        append(id)
-        append(':')
-        append(version)
-        if (status != null) {
-            append('@')
-            append(status)
-        }
+        append(requirement)
         if (optional) {
-            append('?')
+            append("?")
         }
     }
 
@@ -101,72 +95,10 @@ object PluginDependencyDeserializer : StdDeserializer<PluginDependency>(PluginDe
 }
 
 /**
- * Parse a string to a plugin dependency.
- *
- * Example:
- *
- * ```
- * cn.codethink.xiaoming:lexicons                   // Any version of this plugin is allowed.
- * cn.codethink.xiaoming:lexicons@beta              // Any version, but only beta version is allowed.
- * cn.codethink.xiaoming:lexicons@beta?             // Any version, but only beta version is allowed. And it's optional.
- * cn.codethink.xiaoming:lexicons:1.0.0             // Only version 1.0.0 of this plugin is allowed.
- * cn.codethink.xiaoming:lexicons:1.0.0@release     // Only version 1.0.0 of this plugin is allowed. And it's release.
- * ```
- *
- * BNF patterns:
- *
- * ```bnf
- * dependency := requiredDependency | optionalDependency;
- *
- * optionalDependency := requiredDependency "?";
- *
- * requiredDependency := baseDependency              // See `baseDependency`.
- *                     | baseDependency "@" status   // Additionally specify the status.
- *                     ;
- *
- * baseDependency := id                    // Just need plugin with specified ID.
- *                | id ":" versionMatcher  // Plugin with specified ID and version matched.
- *                ;
- * ```
- *
- * @see VersionMatcher
+ * Parse a string to a [PluginDependency].
  */
 fun String.toPluginDependency(): PluginDependency {
-    require(isNotEmpty()) {
-        "Plugin dependency string should not be empty."
-    }
-
     val optional = endsWith("?")
-    val length = if (optional) length - 1 else length
-
-    val colonIndexAfterGroup = indexOf(':', 0)
-    require(colonIndexAfterGroup != -1) {
-        "Plugin dependency string should contain a colon."
-    }
-    val group = substring(0, colonIndexAfterGroup).toSegmentId()
-
-    val colonIndexAfterName = indexOf(':', colonIndexAfterGroup + 1)
-    val name = if (colonIndexAfterName == -1) {
-        substring(colonIndexAfterGroup + 1)
-    } else {
-        substring(colonIndexAfterGroup + 1, colonIndexAfterName)
-    }
-
-    val pluginId = NamespaceId(group, name)
-
-    val atIndex = lastIndexOf('@', length)
-    val status = if (atIndex == -1) {
-        null
-    } else {
-        substring(atIndex + 1, length)
-    }
-
-    val atIndexOrLength = if (atIndex == -1) length else atIndex
-    val versionMatcher = if (atIndexOrLength == colonIndexAfterName + 1) {
-        AnyVersionMatcher
-    } else {
-        substring(colonIndexAfterName + 1, atIndexOrLength).toVersionMatcher()
-    }
-
-    return PluginDependency(pluginId, versionMatcher, optional, status)
+    val requirement = substringBeforeLast("?").toPluginRequirement()
+    return PluginDependency(requirement, optional)
 }

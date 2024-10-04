@@ -133,6 +133,8 @@ data class Version(
     }
 }
 
+fun Version.toLiteralVersionMatcher() = IncludeVersionMatcher(this)
+
 /**
  * Parse a version from a string, extract elements by index.
  * This regexp is from [Semantic Versioning 2.0.0](https://semver.org/lang/zh-CN/).

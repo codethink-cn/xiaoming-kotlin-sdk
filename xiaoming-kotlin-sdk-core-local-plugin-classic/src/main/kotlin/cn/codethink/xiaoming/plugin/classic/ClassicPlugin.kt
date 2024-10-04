@@ -54,6 +54,13 @@ class ClassicPlugin(
         private val plugin: ClassicPlugin
     ) : PluginRuntimeMeta {
         override val state by plugin::state
+
+        override val isLoaded: Boolean
+            get() = state.loaded
+        override val isEnabled: Boolean
+            get() = state.enabled
+        override val isErrored: Boolean
+            get() = state.errored
     }
 
     override val meta = ClassicPluginRuntimeMeta(meta, level, this)
