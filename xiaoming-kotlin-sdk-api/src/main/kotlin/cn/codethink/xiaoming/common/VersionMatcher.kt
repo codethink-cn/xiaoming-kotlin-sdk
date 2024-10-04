@@ -107,11 +107,11 @@ object VersionMatcherDeserializer : StdDeserializer<VersionMatcher>(VersionMatch
  *
  * greaterThan := ">" | ")";
  *
- * greaterThanOrEqual := ">=" | "]";
+ * greaterThanOrEqual := ">=" | "=>" | "]";
  *
  * lessThan := "<" | ")";
  *
- * lessThanOrEqual := "<=" | "]";
+ * lessThanOrEqual := "<=" | "" | "]";
  * ```
  */
 fun String.toVersionMatcher(): VersionMatcher {
@@ -159,17 +159,29 @@ fun String.toSingleStringMatcher(): SingleVersionMatcher {
 
     return when {
         // Not equal.
-        startsWith("!") || startsWith("^") -> ExcludeVersionMatcher(substring(1).toVersion())
+        startsWith('!') || startsWith('^') -> ExcludeVersionMatcher(substring(1).toVersion())
 
         // Greater than or equal.
-        startsWith(">=") -> GreaterThanOrEqualVersionMatcher(substring(2).toVersion())
-        startsWith("]") -> GreaterThanOrEqualVersionMatcher(substring(1).toVersion())
-        startsWith(">") || startsWith(")") -> GreaterThanVersionMatcher(substring(1).toVersion())
+        startsWith(">=") || startsWith("=>") -> GreaterThanOrEqualVersionMatcher(substring(2).toVersion())
+        startsWith(']') -> GreaterThanOrEqualVersionMatcher(substring(1).toVersion())
+
+        endsWith("<=") || endsWith("=<") -> GreaterThanOrEqualVersionMatcher(substring(0, length - 2).toVersion())
+        endsWith('[') -> GreaterThanOrEqualVersionMatcher(substring(0, length - 1).toVersion())
+
+        // Greater than.
+        startsWith('>') || startsWith(')') -> GreaterThanVersionMatcher(substring(1).toVersion())
+        endsWith('<') || endsWith('(') -> GreaterThanVersionMatcher(substring(0, length - 1).toVersion())
 
         // Less than or equal.
-        startsWith("<=") -> LessThanOrEqualVersionMatcher(substring(2).toVersion())
-        startsWith("[") -> LessThanOrEqualVersionMatcher(substring(1).toVersion())
-        startsWith("<") || startsWith("(") -> LessThanVersionMatcher(substring(1).toVersion())
+        startsWith("<=") || startsWith("=<") -> LessThanOrEqualVersionMatcher(substring(2).toVersion())
+        startsWith('[') -> LessThanOrEqualVersionMatcher(substring(1).toVersion())
+
+        endsWith(">=") || endsWith("=>") -> LessThanOrEqualVersionMatcher(substring(0, length - 2).toVersion())
+        endsWith(']') -> LessThanOrEqualVersionMatcher(substring(0, length - 1).toVersion())
+
+        // Less than.
+        startsWith('<') || startsWith('(') -> LessThanVersionMatcher(substring(1).toVersion())
+        endsWith('>') || endsWith(')') -> LessThanVersionMatcher(substring(0, length - 1).toVersion())
 
         // Prefix matcher.
         endsWith(".+") -> when {
