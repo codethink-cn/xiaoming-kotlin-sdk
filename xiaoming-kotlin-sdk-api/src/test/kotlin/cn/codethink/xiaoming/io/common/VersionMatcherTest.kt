@@ -25,7 +25,6 @@ import cn.codethink.xiaoming.common.LessThanOrEqualVersionMatcher
 import cn.codethink.xiaoming.common.LessThanVersionMatcher
 import cn.codethink.xiaoming.common.MajorMinorVersionPrefixMatcher
 import cn.codethink.xiaoming.common.MajorVersionPrefixMatcher
-import cn.codethink.xiaoming.common.VersionMatcher
 import cn.codethink.xiaoming.common.toVersion
 import cn.codethink.xiaoming.common.toVersionMatcher
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -78,5 +77,21 @@ class VersionMatcherTest {
     fun testExtractMatched() {
         assertTrue(isMatched("0.1.0", "0.1.0"))
         assertFalse(isMatched("0.2.0", "2.0.0"))
+
+        assertTrue(isMatched(">=0.1.0", "0.1.0"))
+        assertTrue(isMatched(">=0.1.0", "0.1.1"))
+        assertFalse(isMatched(">=0.1.0", "0.0.9"))
+
+        assertTrue(isMatched(">0.1.0", "0.1.1"))
+        assertFalse(isMatched(">0.1.0", "0.1.0"))
+        assertFalse(isMatched(">0.1.0", "0.0.9"))
+
+        assertTrue(isMatched("<=0.1.0", "0.1.0"))
+        assertTrue(isMatched("<=0.1.0", "0.0.9"))
+        assertFalse(isMatched("<=0.1.0", "0.1.1"))
+
+        assertTrue(isMatched("<0.1.0", "0.0.9"))
+        assertFalse(isMatched("<0.1.0", "0.1.0"))
+        assertFalse(isMatched("<0.1.0", "0.1.1"))
     }
 }
