@@ -16,11 +16,17 @@
 
 package cn.codethink.xiaoming.internal.configuration
 
+import cn.codethink.xiaoming.common.Subject
 import cn.codethink.xiaoming.data.LocalPlatformData
 import cn.codethink.xiaoming.internal.module.Module
 import cn.codethink.xiaoming.io.data.DeserializerModule
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.Job
 import java.util.Locale
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 interface LocalPlatformInternalConfiguration {
     /**
@@ -52,13 +58,25 @@ interface LocalPlatformInternalConfiguration {
      * Data accessing API.
      */
     val data: LocalPlatformData
+
+    val logger: KLogger
+
+    val subject: Subject
+
+    val parentJob: Job?
+
+    val parentCoroutineContext: CoroutineContext
 }
 
 data class DefaultLocalPlatformInternalConfiguration(
     override val deserializerModule: DeserializerModule,
     override val dataObjectMapper: ObjectMapper,
     override val data: LocalPlatformData,
+    override val subject: Subject,
     override val locale: Locale = Locale.getDefault(),
     override val modules: List<Module> = emptyList(),
-    override val failOnModuleError: Boolean = true
+    override val failOnModuleError: Boolean = true,
+    override val logger: KLogger = KotlinLogging.logger { },
+    override val parentJob: Job? = null,
+    override val parentCoroutineContext: CoroutineContext = EmptyCoroutineContext
 ) : LocalPlatformInternalConfiguration

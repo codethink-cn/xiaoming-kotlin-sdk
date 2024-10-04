@@ -27,15 +27,12 @@ import cn.codethink.xiaoming.internal.configuration.LocalPlatformInternalConfigu
 import cn.codethink.xiaoming.internal.module.ModuleContext
 import cn.codethink.xiaoming.language.LanguageConfiguration
 import cn.codethink.xiaoming.permission.LocalPermissionServiceApi
-import io.github.oshai.kotlinlogging.KLogger
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.EmptyCoroutineContext
 
 /**
  * Internal API for local platform. Including all the core algorithms and APIs
@@ -45,16 +42,15 @@ import kotlin.coroutines.EmptyCoroutineContext
  *
  * @author Chuanwise
  */
-class LocalPlatformInternalApi @JvmOverloads constructor(
-    val logger: KLogger,
+class LocalPlatformInternalApi(
     val configuration: LocalPlatformInternalConfiguration,
-    val subject: Subject,
-    parentJob: Job? = null,
-    parentCoroutineContext: CoroutineContext = EmptyCoroutineContext
 ) : CoroutineScope, AutoCloseable {
+    val logger by configuration::logger
+    private val subject by configuration::subject
+
     // Coroutine related APIs.
-    val supervisorJob = SupervisorJob(parentJob)
-    private val coroutineScope = CoroutineScope(parentCoroutineContext + supervisorJob)
+    val supervisorJob = SupervisorJob(configuration.parentJob)
+    private val coroutineScope = CoroutineScope(configuration.parentCoroutineContext + supervisorJob)
     override val coroutineContext: CoroutineContext by coroutineScope::coroutineContext
 
     /**

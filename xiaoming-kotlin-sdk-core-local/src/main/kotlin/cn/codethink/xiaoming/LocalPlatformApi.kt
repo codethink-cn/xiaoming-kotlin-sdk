@@ -141,18 +141,18 @@ class DefaultLocalPlatformApi(
 
             // 1. Construct internal API.
             internalApi = LocalPlatformInternalApi(
-                logger = logger,
                 configuration = DefaultLocalPlatformInternalConfiguration(
+                    logger = logger,
                     deserializerModule = deserializerModule,
                     dataObjectMapper = configuration.dataObjectMapper,
                     locale = configuration.locale,
                     data = LocalPlatformData(configuration.data.toDataApi(this)),
+                    subject = configuration.subject,
                     modules = modules,
-                    failOnModuleError = configuration.failOnModuleError
-                ),
-                subject = configuration.subject,
-                parentJob = supervisorJob,
-                parentCoroutineContext = coroutineContext
+                    failOnModuleError = configuration.failOnModuleError,
+                    parentJob = supervisorJob,
+                    parentCoroutineContext = coroutineContext
+                )
             )
 
             // 2. Start internal API.
