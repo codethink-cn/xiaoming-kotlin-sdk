@@ -150,7 +150,7 @@ val VERSION_STRING_REGEX: Regex = ("(0|[1-9]\\d*)\\" +
  *
  * @author Chuanwise
  */
-fun versionOf(version: String): Version = VERSION_STRING_REGEX.find(version)?.let { it ->
+fun versionOf(version: String): Version = VERSION_STRING_REGEX.matchEntire(version)?.let { it ->
     val (major, minor, patch, preRelease, build) = it.destructured
     Version(
         major.toInt(), minor.toInt(), patch.toInt(),
