@@ -26,7 +26,7 @@ import cn.codethink.xiaoming.common.getTestResourceAsStream
 import cn.codethink.xiaoming.common.segmentIdOf
 import cn.codethink.xiaoming.common.threadLocalCause
 import cn.codethink.xiaoming.common.toLiteralMatcher
-import cn.codethink.xiaoming.common.toSegmentId
+import cn.codethink.xiaoming.common.toNamespaceId
 import cn.codethink.xiaoming.data.LocalPlatformDataConfiguration
 import cn.codethink.xiaoming.data.insertAndGetPermissionProfile
 import cn.codethink.xiaoming.io.DefaultProtocolLanguageConfiguration
@@ -85,7 +85,7 @@ class LocalPermissionServiceTest {
     }
     private val api = platformApi.internalApi
 
-    private val subjectId = "cn.codethink.xiaoming.demo".toSegmentId()
+    private val subjectId = "cn.codethink.xiaoming:demo".toNamespaceId()
     private val subject = PluginSubjectDescriptor(subjectId)
     private val subjectMatcher = subject.toLiteralMatcher()
 
@@ -155,15 +155,15 @@ class LocalPermissionServiceTest {
 
     @Test
     fun testInheritancePermission() {
-        val subjectA = PluginSubjectDescriptor(segmentIdOf("cn.codethink.xiaoming.demo.a"))
+        val subjectA = PluginSubjectDescriptor("cn.codethink.xiaoming.demo:a".toNamespaceId())
         val subjectAMatcher = subjectA.toLiteralMatcher()
         val subjectAProfile = api.data.insertAndGetPermissionProfile(subjectA)
 
-        val subjectB = PluginSubjectDescriptor(segmentIdOf("cn.codethink.xiaoming.demo.b"))
+        val subjectB = PluginSubjectDescriptor("cn.codethink.xiaoming.demo:b".toNamespaceId())
         val subjectBMatcher = subjectB.toLiteralMatcher()
         val subjectBProfile = api.data.insertAndGetPermissionProfile(subjectB)
 
-        val subjectC = PluginSubjectDescriptor(segmentIdOf("cn.codethink.xiaoming.demo.c"))
+        val subjectC = PluginSubjectDescriptor("cn.codethink.xiaoming.demo:c".toNamespaceId())
         val subjectCMatcher = subjectB.toLiteralMatcher()
         val subjectCProfile = api.data.insertAndGetPermissionProfile(subjectB)
 

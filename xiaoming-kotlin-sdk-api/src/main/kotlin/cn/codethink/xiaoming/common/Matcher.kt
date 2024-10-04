@@ -25,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName
  * @author Chuanwise
  */
 interface Matcher<out T> {
-    @get:JsonIgnore
     val type: String
 
     @get:JsonIgnore

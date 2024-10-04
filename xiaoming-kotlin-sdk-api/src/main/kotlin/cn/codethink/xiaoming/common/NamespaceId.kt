@@ -16,6 +16,7 @@
 
 package cn.codethink.xiaoming.common
 
+import com.fasterxml.jackson.annotation.JsonTypeName
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
@@ -40,13 +41,7 @@ class NamespaceId(
         assert(name.matches(SEGMENT_REGEX)) { "Name should match the regexp: $SEGMENT_REGEX." }
     }
 
-    private val toStringCache by lazy { "$group.$name" }
-
-    private val hashCodeCache by lazy {
-        var result = group.hashCode()
-        result = 31 * result + name.hashCode()
-        result
-    }
+    private val toStringCache = "$group:$name"
 
     override fun toString(): String = toStringCache
 
@@ -62,8 +57,42 @@ class NamespaceId(
         return true
     }
 
-    override fun hashCode(): Int = hashCodeCache
+    override fun hashCode(): Int = toStringCache.hashCode()
 }
+
+const val NAMESPACE_ID_MATCHER_TYPE = "namespace_id"
+
+@JsonTypeName(NAMESPACE_ID_MATCHER_TYPE)
+class LiteralNamespaceIdMatcher(
+    override val value: NamespaceId
+) : LiteralMatcher<NamespaceId> {
+    override val type: String = NAMESPACE_ID_MATCHER_TYPE
+
+    override val targetType: Class<NamespaceId>
+        get() = NamespaceId::class.java
+
+    override val targetNullable: Boolean
+        get() = false
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as LiteralNamespaceIdMatcher
+
+        return value == other.value
+    }
+
+    override fun hashCode(): Int {
+        return value.hashCode()
+    }
+
+    override fun toString(): String {
+        return "LiteralNamespaceIdMatcher(value=$value)"
+    }
+}
+
+fun NamespaceId.toLiteralMatcher() = LiteralNamespaceIdMatcher(this)
 
 fun String.toNamespaceId(): NamespaceId {
     val split = split(':')

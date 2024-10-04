@@ -21,6 +21,7 @@ import cn.codethink.xiaoming.common.DefaultPluginSubjectMatcher
 import cn.codethink.xiaoming.common.DefaultSegmentIdMatcher
 import cn.codethink.xiaoming.common.FIELD_TYPE
 import cn.codethink.xiaoming.common.Id
+import cn.codethink.xiaoming.common.LiteralNamespaceIdMatcher
 import cn.codethink.xiaoming.common.LiteralSegmentIdMatcher
 import cn.codethink.xiaoming.common.LiteralStringMatcher
 import cn.codethink.xiaoming.common.LongId
@@ -74,6 +75,9 @@ class PlatformPolymorphicDeserializerInitializer : PolymorphicDeserializerInitia
                 // Permission matchers.
                 name<LiteralPermissionMatcher>()
                 name<DefaultPermissionMatcher>()
+
+                // Namespace Id.
+                name<LiteralNamespaceIdMatcher>()
             }
             tokens<Id> {
                 token<LongId>(JsonToken.VALUE_NUMBER_INT)

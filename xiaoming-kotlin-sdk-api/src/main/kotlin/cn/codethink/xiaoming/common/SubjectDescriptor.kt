@@ -163,11 +163,11 @@ const val SUBJECT_DESCRIPTOR_TYPE_PLUGIN = "plugin"
 class PluginSubjectDescriptor(
     raw: Raw
 ) : IdSubjectDescriptor(raw) {
-    override val id: SegmentId by raw
+    override val id: NamespaceId by raw
 
     @JvmOverloads
     constructor(
-        id: SegmentId,
+        id: NamespaceId,
         raw: Raw = MapRaw()
     ) : this(raw) {
         raw[FIELD_TYPE] = SUBJECT_DESCRIPTOR_TYPE_PLUGIN
@@ -240,12 +240,11 @@ class DefaultPluginSubjectMatcher(
 
     override val targetNullable: Boolean = false
 
-    //    @Field(DEFAULT_PLUGIN_SUBJECT_DESCRIPTOR_MATCHER_FIELD_ID_MATCHER)
-    val id: Matcher<SegmentId> by raw
+    val id: Matcher<NamespaceId> by raw
 
     @JvmOverloads
     constructor(
-        id: Matcher<SegmentId>,
+        id: Matcher<NamespaceId>,
         raw: Raw = MapRaw()
     ) : this(raw) {
         raw[MATCHER_FIELD_TYPE] = SUBJECT_DESCRIPTOR_MATCHER_TYPE_DEFAULT_PLUGIN
