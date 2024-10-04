@@ -19,8 +19,10 @@ package cn.codethink.xiaoming.plugin
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.SubjectDescriptor
+import cn.codethink.xiaoming.common.providedOrFromCurrentThread
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.write
 
 class LocalPluginManagerApi(
     val internalApi: LocalPlatformInternalApi
@@ -30,5 +32,16 @@ class LocalPluginManagerApi(
     @InternalApi
     internal fun start(cause: Cause, subject: SubjectDescriptor) {
 
+    }
+
+    fun enablePlugin(plugin: Plugin, cause: Cause, subject: SubjectDescriptor) = enablePlugins(
+        listOf(plugin), cause, subject
+    )
+
+    fun enablePlugins(plugins: Iterable<Plugin>, cause: Cause, subject: SubjectDescriptor): Unit = lock.write {
+        val (causeOrDefault, subjectOrDefault) = providedOrFromCurrentThread(cause, subject)
+        val pluginsById = plugins.associateBy { it.subject.id }
+
+        TODO()
     }
 }
