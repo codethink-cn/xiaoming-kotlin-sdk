@@ -25,9 +25,13 @@ import com.fasterxml.jackson.annotation.JsonTypeName
  * @author Chuanwise
  */
 interface Matcher<out T> {
+    @get:JsonIgnore
     val type: String
 
+    @get:JsonIgnore
     val targetType: Class<@UnsafeVariance T>
+
+    @get:JsonIgnore
     val targetNullable: Boolean
 
     fun isMatched(target: @UnsafeVariance T): Boolean
@@ -63,10 +67,8 @@ interface LiteralMatcher<T> : Matcher<T> {
 object AnyMatcher : Matcher<Any?> {
     override val type: String = MATCHER_TYPE_ANY
 
-    @JsonIgnore
     override val targetType: Class<Any?> = Any::class.java as Class<Any?>
 
-    @JsonIgnore
     override val targetNullable: Boolean = true
 
     override fun isMatched(target: Any?): Boolean = true
@@ -81,10 +83,8 @@ class RegexStringMatcher(
 ) : Matcher<String> {
     override val type: String = STRING_MATCHER_TYPE_REGEX
 
-    @JsonIgnore
     override val targetType: Class<String> = String::class.java
 
-    @JsonIgnore
     override val targetNullable: Boolean = false
 
     override fun isMatched(target: String): Boolean = regex.matches(target)
@@ -113,10 +113,8 @@ class LiteralStringMatcher(
 ) : LiteralMatcher<String> {
     override val type: String = STRING_MATCHER_TYPE_LITERAL
 
-    @JsonIgnore
     override val targetType: Class<String> = String::class.java
 
-    @JsonIgnore
     override val targetNullable: Boolean = false
 
     override fun equals(other: Any?): Boolean {

@@ -49,7 +49,6 @@ import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
 import cn.codethink.xiaoming.io.data.setValue
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
@@ -182,10 +181,8 @@ class LiteralPermissionMatcher(
 ) : AbstractData(raw), LiteralMatcher<Permission> {
     override val type: String by raw
 
-    @JsonIgnore
     override val targetType: Class<Permission> = Permission::class.java
 
-    @JsonIgnore
     override val targetNullable: Boolean = false
 
     override val value: Permission by raw
@@ -208,10 +205,8 @@ class DefaultPermissionMatcher(
 ) : AbstractData(raw), Matcher<Permission> {
     override val type: String by raw
 
-    @JsonIgnore
     override val targetType: Class<Permission> = Permission::class.java
 
-    @JsonIgnore
     override val targetNullable: Boolean = false
 
     var node: Matcher<SegmentId> by raw

@@ -17,7 +17,6 @@
 package cn.codethink.xiaoming.common
 
 import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
@@ -199,10 +198,8 @@ class WildcardStringMatcher private constructor(
 
     override val type: String = STRING_MATCHER_TYPE_WILDCARD
 
-    @JsonIgnore
     override val targetType: Class<String> = String::class.java
 
-    @JsonIgnore
     override val targetNullable: Boolean = false
 
     override fun isMatched(target: String): Boolean = true
@@ -391,10 +388,8 @@ class DefaultSegmentIdMatcher(
 
     override val type: String = SEGMENT_ID_MATCHER_TYPE_DEFAULT
 
-    @JsonIgnore
     override val targetType: Class<SegmentId> = SegmentId::class.java
 
-    @JsonIgnore
     override val targetNullable: Boolean = false
 
 
@@ -655,10 +650,8 @@ class LiteralSegmentIdMatcher(
 ) : Matcher<SegmentId> {
     override val type: String = SEGMENT_ID_MATCHER_TYPE_LITERAL
 
-    @JsonIgnore
     override val targetType: Class<SegmentId> = SegmentId::class.java
 
-    @JsonIgnore
     override val targetNullable: Boolean = false
 
     override fun isMatched(target: SegmentId): Boolean = target == id

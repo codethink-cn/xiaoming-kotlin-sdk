@@ -21,7 +21,6 @@ import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
 import cn.codethink.xiaoming.io.data.setValue
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
@@ -237,10 +236,8 @@ class DefaultPluginSubjectMatcher(
 ) : AbstractData(raw), Matcher<SubjectDescriptor> {
     override val type: String by raw
 
-    @JsonIgnore
     override val targetType: Class<SubjectDescriptor> = SubjectDescriptor::class.java
 
-    @JsonIgnore
     override val targetNullable: Boolean = false
 
     //    @Field(DEFAULT_PLUGIN_SUBJECT_DESCRIPTOR_MATCHER_FIELD_ID_MATCHER)
@@ -273,10 +270,8 @@ class ProtocolSubjectMatcher @JvmOverloads constructor(
 ) : AbstractData(raw), Matcher<ProtocolSubjectDescriptor> {
     override val type: String by raw
 
-    @JsonIgnore
     override val targetType: Class<ProtocolSubjectDescriptor> = ProtocolSubjectDescriptor::class.java
 
-    @JsonIgnore
     override val targetNullable: Boolean = false
 
     init {
