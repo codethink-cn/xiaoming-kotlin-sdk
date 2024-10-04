@@ -41,7 +41,7 @@ class ClassicPlugin(
     val dataDirectoryFile: File,
     level: PluginLevel,
     meta: ClassicPluginMeta,
-    override val subject: PluginSubjectDescriptor,
+    override val descriptor: PluginSubjectDescriptor,
     private val mainCaller: ClassicPluginMainCaller
 ) : Plugin {
     private val lock = ReentrantReadWriteLock()

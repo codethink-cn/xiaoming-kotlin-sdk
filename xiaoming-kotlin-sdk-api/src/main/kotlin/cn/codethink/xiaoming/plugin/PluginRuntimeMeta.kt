@@ -25,4 +25,17 @@ interface PluginRuntimeMeta {
     val meta: PluginMeta
     val state: PluginState
     val level: PluginLevel
+
+    val isLoaded: Boolean
+    val isEnabled: Boolean
+    val isError: Boolean
 }
+
+val PluginRuntimeMeta.isNotLoaded: Boolean
+    get() = !isLoaded
+
+val PluginRuntimeMeta.isNotEnabled: Boolean
+    get() = !isEnabled
+
+val PluginRuntimeMeta.isNotError: Boolean
+    get() = !isError
