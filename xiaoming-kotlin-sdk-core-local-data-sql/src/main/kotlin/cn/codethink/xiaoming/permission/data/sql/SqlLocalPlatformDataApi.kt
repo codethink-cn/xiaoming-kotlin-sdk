@@ -19,7 +19,7 @@ package cn.codethink.xiaoming.permission.data.sql
 import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.common.Matcher
 import cn.codethink.xiaoming.common.NumericalId
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.data.LocalPlatformDataApi
 import cn.codethink.xiaoming.data.toId
 import cn.codethink.xiaoming.permission.PermissionComparator
@@ -65,7 +65,7 @@ class SqlLocalPlatformDataApi(
         configuration.tables.prefix + configuration.tables.names.subjects
     ) {
         val type = varchar("type", TYPE_VARCHAR_LENGTH).index()
-        val subject = json<Subject>("subject")
+        val subjectDescriptor = json<SubjectDescriptor>("subject")
         val remove = bool("remove").default(false).index()
     }
 
@@ -112,28 +112,28 @@ class SqlLocalPlatformDataApi(
         }
     }
 
-    override fun getSubject(id: Id): Subject? {
+    override fun getSubject(id: Id): SubjectDescriptor? {
         id as NumericalId
         return transaction(database) {
-            subjects.select(subjects.subject)
+            subjects.select(subjects.subjectDescriptor)
                 .where { not(subjects.remove) and (subjects.id eq id.toInt()) }
-                .map { it[subjects.subject] }
+                .map { it[subjects.subjectDescriptor] }
                 .singleOrNull()
         }
     }
 
-    override fun getSubjectId(subject: Subject): NumericalId? = transaction(database) {
+    override fun getSubjectId(subjectDescriptor: SubjectDescriptor): NumericalId? = transaction(database) {
         subjects.select(subjects.id)
-            .where { not(subjects.remove) and (subjects.type eq subject.type) and (subjects.subject eq subject) }
+            .where { not(subjects.remove) and (subjects.type eq subjectDescriptor.type) and (subjects.subjectDescriptor eq subjectDescriptor) }
             .map { it[subjects.id] }
             .singleOrNull()
             ?.toId()
     }
 
-    override fun getOrInsertSubjectId(subject: Subject): NumericalId = transaction(database) {
+    override fun getOrInsertSubjectId(subjectDescriptor: SubjectDescriptor): NumericalId = transaction(database) {
         subjects.insertAndGetId {
-            it[type] = subject.type
-            it[this.subject] = subject
+            it[type] = subjectDescriptor.type
+            it[this.subjectDescriptor] = subjectDescriptor
         }.toId()
     }
 
@@ -159,18 +159,18 @@ class SqlLocalPlatformDataApi(
         }
     }
 
-    override fun getPermissionProfiles(subject: Subject): List<PermissionProfile> = transaction(database) {
+    override fun getPermissionProfiles(subjectDescriptor: SubjectDescriptor): List<PermissionProfile> = transaction(database) {
         permissionProfiles.innerJoin(subjects)
             .selectAll()
             .where {
-                not(permissionProfiles.remove) and not(subjects.remove) and (subjects.type eq subject.type) and (subjects.subject eq subject)
+                not(permissionProfiles.remove) and not(subjects.remove) and (subjects.type eq subjectDescriptor.type) and (subjects.subjectDescriptor eq subjectDescriptor)
             }
             .map { it.toPermissionProfile() }
     }
 
-    override fun insertAndGetPermissionProfileId(subject: Subject): Id = transaction(database) {
+    override fun insertAndGetPermissionProfileId(subjectDescriptor: SubjectDescriptor): Id = transaction(database) {
         permissionProfiles.insertAndGetId {
-            it[subjectId] = getOrInsertSubjectId(subject).toInt()
+            it[subjectId] = getOrInsertSubjectId(subjectDescriptor).toInt()
         }.toId()
     }
 

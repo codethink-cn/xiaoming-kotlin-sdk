@@ -41,7 +41,7 @@ import cn.codethink.xiaoming.common.PERMISSION_VARIABLE_META_FIELD_DESCRIPTION
 import cn.codethink.xiaoming.common.PERMISSION_VARIABLE_META_FIELD_NULLABLE
 import cn.codethink.xiaoming.common.PERMISSION_VARIABLE_META_FIELD_OPTIONAL
 import cn.codethink.xiaoming.common.SegmentId
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.defaultNullable
 import cn.codethink.xiaoming.common.defaultOptional
 import cn.codethink.xiaoming.io.data.Field
@@ -61,16 +61,16 @@ class PermissionDescriptor(
     raw: Raw
 ) : AbstractData(raw) {
     val node: SegmentId by raw
-    val subject: Subject by raw
+    val subjectDescriptor: SubjectDescriptor by raw
 
     @JvmOverloads
     constructor(
         node: SegmentId,
-        subject: Subject,
+        subjectDescriptor: SubjectDescriptor,
         raw: Raw = MapRaw()
     ) : this(raw) {
         raw[PERMISSION_SUBJECT_FIELD_NODE] = node
-        raw[PERMISSION_SUBJECT_FIELD_SUBJECT] = subject
+        raw[PERMISSION_SUBJECT_FIELD_SUBJECT] = subjectDescriptor
     }
 }
 
@@ -127,7 +127,7 @@ class PermissionMeta(
     raw: Raw
 ) : AbstractData(raw) {
     val node: SegmentId by raw
-    val subject: Subject by raw
+    val subjectDescriptor: SubjectDescriptor by raw
     val parameters: Map<String, PermissionParameterMeta> by raw
     val description: String? by raw
     val descriptor: PermissionDescriptor by raw
@@ -135,14 +135,14 @@ class PermissionMeta(
     @JvmOverloads
     constructor(
         node: SegmentId,
-        subject: Subject,
+        subjectDescriptor: SubjectDescriptor,
         parameters: Map<String, PermissionParameterMeta> = emptyMap(),
         description: String? = null,
-        descriptor: PermissionDescriptor = PermissionDescriptor(node, subject),
+        descriptor: PermissionDescriptor = PermissionDescriptor(node, subjectDescriptor),
         raw: Raw = MapRaw()
     ) : this(raw) {
         raw[PERMISSION_META_FIELD_NODE] = node
-        raw[PERMISSION_META_FIELD_SUBJECT] = subject
+        raw[PERMISSION_META_FIELD_SUBJECT] = subjectDescriptor
         raw[PERMISSION_META_FIELD_DESCRIPTION] = description
         raw[PERMISSION_META_FIELD_PARAMETERS] = parameters
         raw[PERMISSION_META_FIELD_DESCRIPTOR] = descriptor
@@ -150,7 +150,7 @@ class PermissionMeta(
 }
 
 /**
- * Permission is a specific permission node that can be used to test if an [Subject].
+ * Permission is a specific permission node that can be used to test if an [SubjectDescriptor].
  *
  * @author Chuanwise
  */

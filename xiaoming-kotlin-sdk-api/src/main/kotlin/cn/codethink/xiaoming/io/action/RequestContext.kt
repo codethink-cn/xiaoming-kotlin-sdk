@@ -18,7 +18,7 @@ package cn.codethink.xiaoming.io.action
 
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.REQUEST_PACKET_FIELD_ARGUMENT
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.io.connection.Connection
 import cn.codethink.xiaoming.io.connection.PacketConnection
 import cn.codethink.xiaoming.io.data.Raw
@@ -35,8 +35,8 @@ interface RequestContext<P, R> {
     val mode: String
     val timeout: Long
     val argument: P?
-    val subject: Subject?
-    val subjectOrDefault: Subject
+    val subjectDescriptor: SubjectDescriptor?
+    val subjectDescriptorOrDefault: SubjectDescriptor
     val time: Long
     val cause: Cause?
     val raw: Raw
@@ -45,18 +45,18 @@ interface RequestContext<P, R> {
 
     var disconnect: Boolean
     var disconnectCause: Cause?
-    var disconnectSubject: Subject?
+    var disconnectSubjectDescriptor: SubjectDescriptor?
 }
 
 data class PacketRequestContext<P, R>(
     override val action: Action<P, R>,
     val request: RequestPacket,
-    private val defaultSubject: Subject,
+    private val defaultSubjectDescriptor: SubjectDescriptor,
     override val receipt: ReceiptPacket,
     override val connection: PacketConnection<*>,
     override var disconnect: Boolean = false,
     override var disconnectCause: Cause? = null,
-    override var disconnectSubject: Subject? = null
+    override var disconnectSubjectDescriptor: SubjectDescriptor? = null
 ) : RequestContext<P, R> {
     override val mode: String by request::mode
     override val timeout: Long by request::timeout
@@ -69,9 +69,9 @@ data class PacketRequestContext<P, R>(
         nullable = action.requestArgument.nullable
     ) as P?
 
-    override val subject: Subject? by request::subject
-    override val subjectOrDefault: Subject
-        get() = subject ?: defaultSubject
+    override val subjectDescriptor: SubjectDescriptor? by request::subjectDescriptor
+    override val subjectDescriptorOrDefault: SubjectDescriptor
+        get() = subjectDescriptor ?: defaultSubjectDescriptor
 
     override val time: Long by request::time
     override val cause: Cause? by request::cause

@@ -16,6 +16,9 @@
 
 package cn.codethink.xiaoming.plugin
 
+import cn.codethink.xiaoming.common.Cause
+import cn.codethink.xiaoming.common.InternalApi
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
@@ -23,4 +26,9 @@ class LocalPluginManagerApi(
     val internalApi: LocalPlatformInternalApi
 ) {
     val lock = ReentrantReadWriteLock()
+
+    @InternalApi
+    internal fun start(cause: Cause, subjectDescriptor: SubjectDescriptor) {
+
+    }
 }

@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.connection
 
-import cn.codethink.xiaoming.common.ConnectionSubject
+import cn.codethink.xiaoming.common.ConnectionSubjectDescriptor
 import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import cn.codethink.xiaoming.io.connection.LocalPlatformWebSocketServerApi
@@ -38,7 +38,7 @@ class WebSocketServerConfiguration(
         return LocalPlatformWebSocketServerApi(
             configuration = this,
             authorizer = api.connectionManagerApi.authorizer,
-            subject = ConnectionSubject(id),
+            subjectDescriptor = ConnectionSubjectDescriptor(id),
             parentJob = api.supervisorJob,
             parentCoroutineContext = api.coroutineContext
         )

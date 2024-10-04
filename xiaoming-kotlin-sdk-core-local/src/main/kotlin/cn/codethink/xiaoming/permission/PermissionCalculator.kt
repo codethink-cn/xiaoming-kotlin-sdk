@@ -17,14 +17,14 @@
 package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 
-data class PermissionCalculatingContext<T : Subject>(
+data class PermissionCalculatingContext<T : SubjectDescriptor>(
     val permissionServiceApi: LocalPermissionServiceApi,
     val subject: T,
     val permission: Permission,
     val context: Map<String, Any?> = emptyMap(),
-    val caller: Subject? = null,
+    val caller: SubjectDescriptor? = null,
     val cause: Cause? = null
 ) {
     val internalApi by permissionServiceApi::internalApi
@@ -37,6 +37,6 @@ data class PermissionCalculatingContext<T : Subject>(
  *
  * @author Chuanwise
  */
-interface PermissionCalculator<T : Subject> {
+interface PermissionCalculator<T : SubjectDescriptor> {
     suspend fun hasPermission(context: PermissionCalculatingContext<T>): Boolean?
 }

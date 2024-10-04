@@ -17,10 +17,10 @@
 package cn.codethink.xiaoming.plugin.classic
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 
 interface ClassicPluginContext {
     val plugin: ClassicPlugin
     val cause: Cause
-    val subject: Subject
+    val subjectDescriptor: SubjectDescriptor
 }

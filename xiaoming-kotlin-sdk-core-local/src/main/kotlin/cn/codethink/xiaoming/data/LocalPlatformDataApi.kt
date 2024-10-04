@@ -18,7 +18,7 @@ package cn.codethink.xiaoming.data
 
 import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.common.Matcher
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.permission.PermissionComparator
 import cn.codethink.xiaoming.permission.data.PermissionProfile
 import cn.codethink.xiaoming.permission.data.PermissionRecord
@@ -30,17 +30,17 @@ import cn.codethink.xiaoming.permission.data.PermissionRecord
  */
 interface LocalPlatformDataApi {
     // Subject.
-    fun getSubject(id: Id): Subject?
-    fun getSubjectId(subject: Subject): Id?
-    fun getOrInsertSubjectId(subject: Subject): Id
+    fun getSubject(id: Id): SubjectDescriptor?
+    fun getSubjectId(subjectDescriptor: SubjectDescriptor): Id?
+    fun getOrInsertSubjectId(subjectDescriptor: SubjectDescriptor): Id
 
     // Permission Profile.
     fun getPermissionProfiles(): List<PermissionProfile>
-    fun getPermissionProfiles(subject: Subject): List<PermissionProfile>
+    fun getPermissionProfiles(subjectDescriptor: SubjectDescriptor): List<PermissionProfile>
 
     fun getPermissionProfile(id: Id): PermissionProfile?
 
-    fun insertAndGetPermissionProfileId(subject: Subject): Id
+    fun insertAndGetPermissionProfileId(subjectDescriptor: SubjectDescriptor): Id
 
     // Permission Record.
     fun getPermissionRecordsByPermissionProfileId(id: Id, reverse: Boolean = true): List<PermissionRecord>
@@ -59,9 +59,9 @@ interface LocalPlatformDataApi {
     ): Id
 }
 
-fun LocalPlatformDataApi.insertAndGetPermissionProfile(subject: Subject): PermissionProfile =
+fun LocalPlatformDataApi.insertAndGetPermissionProfile(subjectDescriptor: SubjectDescriptor): PermissionProfile =
     getPermissionProfileOrFail(
-        insertAndGetPermissionProfileId(subject)
+        insertAndGetPermissionProfileId(subjectDescriptor)
     )
 
 fun LocalPlatformDataApi.getSubjectOrFail(id: Id) = getSubject(id)

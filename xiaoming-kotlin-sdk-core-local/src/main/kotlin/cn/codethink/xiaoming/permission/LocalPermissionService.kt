@@ -17,7 +17,7 @@
 package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 
 /**
  * Provides permission related operations by forwarding calling to
@@ -30,10 +30,10 @@ class LocalPermissionService(
     val permissionServiceApi: LocalPermissionServiceApi
 ) : PermissionService {
     override suspend fun hasPermission(
-        subject: Subject,
+        subjectDescriptor: SubjectDescriptor,
         permission: Permission,
         context: Map<String, Any?>,
-        caller: Subject?,
+        caller: SubjectDescriptor?,
         cause: Cause?
-    ): Boolean? = permissionServiceApi.hasPermission(subject, permission, context, caller, cause)
+    ): Boolean? = permissionServiceApi.hasPermission(subjectDescriptor, permission, context, caller, cause)
 }

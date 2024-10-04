@@ -18,7 +18,7 @@
 
 package cn.codethink.xiaoming.io.action
 
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.XiaomingProtocolSubject
 import cn.codethink.xiaoming.common.defaultNullable
 import cn.codethink.xiaoming.common.defaultOptional
@@ -47,12 +47,12 @@ data class Action<P, R>(
     val name: String,
     val requestArgument: ActionValue<P>,
     val receiptData: ActionValue<R>,
-    val subject: Subject
+    val subjectDescriptor: SubjectDescriptor
 )
 
 inline fun <reified P, reified R> Action(
     name: String,
-    subject: Subject
+    subjectDescriptor: SubjectDescriptor
 ): Action<P, R> = Action(
     name = name,
     requestArgument = ActionValue(
@@ -65,7 +65,7 @@ inline fun <reified P, reified R> Action(
         optional = defaultOptional<R>(),
         nullable = defaultNullable<R>()
     ),
-    subject = subject
+    subjectDescriptor = subjectDescriptor
 )
 
 inline fun <reified P, reified R> StandardAction(

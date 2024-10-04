@@ -21,7 +21,7 @@ import cn.codethink.xiaoming.common.DataDeserializer
 import cn.codethink.xiaoming.common.DefaultDataDeserializer
 import cn.codethink.xiaoming.common.DefaultDeserializer
 import cn.codethink.xiaoming.common.Registration
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonToken
@@ -74,7 +74,7 @@ class PolymorphicDeserializers(
         val typeNameVisible: Boolean = DEFAULT_TYPE_NAME_VISIBLE,
         val targetClass: Class<T>,
         override val value: JsonDeserializer<out T>,
-        override val subject: Subject
+        override val subjectDescriptor: SubjectDescriptor
     ) : Registration<JsonDeserializer<out T>>
 
     // Class -> Type Name Field -> Type Name
@@ -85,7 +85,7 @@ class PolymorphicDeserializers(
         val token: JsonToken,
         val targetClass: Class<*>,
         override val value: JsonDeserializer<T>,
-        override val subject: Subject
+        override val subjectDescriptor: SubjectDescriptor
     ) : Registration<JsonDeserializer<T>>
 
     private val tokenBasedDeserializerRegistrations =
@@ -250,7 +250,7 @@ class PolymorphicDeserializers(
         typeNameField: String,
         typeName: String,
         deserializer: JsonDeserializer<out T>,
-        subject: Subject,
+        subjectDescriptor: SubjectDescriptor,
         typeNameVisible: Boolean = DEFAULT_TYPE_NAME_VISIBLE,
         replacePrevious: Boolean = DEFAULT_REPLACE_PREVIOUS
     ): Boolean = lock.write {
@@ -263,13 +263,13 @@ class PolymorphicDeserializers(
 
         val registration = registrations.put(
             typeName,
-            NameBasedDeserializerRegistration(typeName, typeNameField, typeNameVisible, type, deserializer, subject)
+            NameBasedDeserializerRegistration(typeName, typeNameField, typeNameVisible, type, deserializer, subjectDescriptor)
         )
 
         if (registration != null) {
             logger.warn {
                 "Overriding deserializer for type $type (type name $typeName, type name field $typeNameField) " +
-                        "previous registered by ${registration.subject} by $subject."
+                        "previous registered by ${registration.subjectDescriptor} by $subjectDescriptor."
             }
         }
         return@write true
@@ -279,7 +279,7 @@ class PolymorphicDeserializers(
         type: Class<T>,
         token: JsonToken,
         deserializer: JsonDeserializer<out T>,
-        subject: Subject,
+        subjectDescriptor: SubjectDescriptor,
         replacePrevious: Boolean = DEFAULT_REPLACE_PREVIOUS
     ): Boolean = lock.write {
         val registrations = tokenBasedDeserializerRegistrations.computeIfAbsent(type) { mutableMapOf() }
@@ -288,12 +288,12 @@ class PolymorphicDeserializers(
         }
 
         val registration =
-            registrations.put(token, TokenBasedDeserializerRegistration(token, type, deserializer, subject))
+            registrations.put(token, TokenBasedDeserializerRegistration(token, type, deserializer, subjectDescriptor))
 
         if (registration != null) {
             logger.warn {
                 "Overriding deserializer for type $type (token $token) " +
-                        "previous registered by ${registration.subject} by $subject."
+                        "previous registered by ${registration.subjectDescriptor} by $subjectDescriptor."
             }
         }
         return@write true
@@ -387,11 +387,11 @@ inline fun <reified T> typeNameFromAnnotationOrFail() = T::class.java.getAnnotat
  */
 class PolymorphicDeserializersRegisterer(
     val deserializers: PolymorphicDeserializers,
-    val subject: Subject
+    val subjectDescriptor: SubjectDescriptor
 )
 
-fun PolymorphicDeserializers.subject(subject: Subject, register: PolymorphicDeserializersRegisterer.() -> Unit) {
-    PolymorphicDeserializersRegisterer(this, subject).apply(register)
+fun PolymorphicDeserializers.subject(subjectDescriptor: SubjectDescriptor, register: PolymorphicDeserializersRegisterer.() -> Unit) {
+    PolymorphicDeserializersRegisterer(this, subjectDescriptor).apply(register)
 }
 
 /**
@@ -440,7 +440,7 @@ inline fun <reified T> NameBasedPolymorphicDeserializersRegisterer<in T>.name(
     typeNameVisible: Boolean = DEFAULT_TYPE_NAME_VISIBLE,
     replacePrevious: Boolean = DEFAULT_REPLACE_PREVIOUS
 ): Boolean = registerer.deserializers.registerNameBasedDeserializer(
-    type, typeNameField, typeName, deserializer, registerer.subject, typeNameVisible, replacePrevious
+    type, typeNameField, typeName, deserializer, registerer.subjectDescriptor, typeNameVisible, replacePrevious
 )
 
 /**
@@ -474,5 +474,5 @@ inline fun <reified T> TokenBasedPolymorphicDeserializersRegisterer<in T>.token(
     deserializer: JsonDeserializer<T> = defaultDeserializer(),
     replacePrevious: Boolean = DEFAULT_REPLACE_PREVIOUS
 ): Boolean = registerer.deserializers.registerTokenBasedDeserializer(
-    type, token, deserializer, registerer.subject, replacePrevious
+    type, token, deserializer, registerer.subjectDescriptor, replacePrevious
 )

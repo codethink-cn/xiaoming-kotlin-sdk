@@ -21,7 +21,7 @@ import cn.codethink.xiaoming.common.FIELD_TYPE
 import cn.codethink.xiaoming.common.FIELD_VERSION
 import cn.codethink.xiaoming.common.Matcher
 import cn.codethink.xiaoming.common.SegmentId
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.Tristate
 import cn.codethink.xiaoming.common.tristateOf
 import cn.codethink.xiaoming.io.data.Field
@@ -48,7 +48,7 @@ interface DefaultPermissionComparator : PermissionComparator {
     override val type: String
         get() = PERMISSION_COMPARATOR_TYPE_DEFAULT
     val version: String
-    val subjectMatcher: Matcher<Subject>
+    val subjectDescriptorMatcher: Matcher<SubjectDescriptor>
     val nodeMatcher: Matcher<SegmentId>
     val value: Boolean?
 }
@@ -67,14 +67,14 @@ class DefaultPermissionComparatorV1(
     override val value: Boolean? by raw
 
     @Field(PERMISSION_COMPARATOR_FIELD_SUBJECT_MATCHER)
-    override val subjectMatcher: Matcher<Subject> by raw
+    override val subjectDescriptorMatcher: Matcher<SubjectDescriptor> by raw
 
     @Field(PERMISSION_COMPARATOR_FIELD_NODE_MATCHER)
     override val nodeMatcher: Matcher<SegmentId> by raw
 
     @JvmOverloads
     constructor(
-        subjectMatcher: Matcher<Subject>,
+        subjectDescriptorMatcher: Matcher<SubjectDescriptor>,
         nodeMatcher: Matcher<SegmentId>,
         value: Boolean?,
         raw: Raw = MapRaw()
@@ -82,13 +82,13 @@ class DefaultPermissionComparatorV1(
         raw[FIELD_TYPE] = PERMISSION_COMPARATOR_TYPE_DEFAULT
         raw[FIELD_VERSION] = DEFAULT_PERMISSION_COMPARATOR_VERSION_1
 
-        raw[PERMISSION_COMPARATOR_FIELD_SUBJECT_MATCHER] = subjectMatcher
+        raw[PERMISSION_COMPARATOR_FIELD_SUBJECT_MATCHER] = subjectDescriptorMatcher
         raw[PERMISSION_COMPARATOR_FIELD_NODE_MATCHER] = nodeMatcher
         raw[DEFAULT_PERMISSION_COMPARATOR_FIELD_VALUE] = value
     }
 
     override fun compare(context: PermissionComparingContext): Tristate? {
-        if (!subjectMatcher.isMatched(context.permission.descriptor.subject)) {
+        if (!subjectDescriptorMatcher.isMatched(context.permission.descriptor.subjectDescriptor)) {
             return null
         }
         if (!nodeMatcher.isMatched(context.permission.descriptor.node)) {

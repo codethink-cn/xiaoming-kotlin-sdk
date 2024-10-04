@@ -32,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
  *
  * @author Chuanwise
  */
-abstract class Subject(
+abstract class SubjectDescriptor(
     raw: Raw
 ) : AbstractData(raw) {
     val type: String by raw
@@ -52,9 +52,9 @@ abstract class Subject(
  * @author Chuanwise
  */
 @JsonTypeName(SUBJECT_TYPE_PROTOCOL)
-class SdkSubject(
+class SdkSubjectDescriptor(
     raw: Raw
-) : Subject(raw) {
+) : SubjectDescriptor(raw) {
     val group: String by raw
     val name: String by raw
     val version: Version by raw
@@ -79,7 +79,7 @@ class SdkSubject(
 /**
  * The current SDK subject.
  */
-val XiaomingSdkSubject: SdkSubject = SdkSubject(MapRaw().apply {
+val XiaomingSdkSubject: SdkSubjectDescriptor = SdkSubjectDescriptor(MapRaw().apply {
     this[SUBJECT_FIELD_TYPE] = SUBJECT_TYPE_SDK
     this[SDK_SUBJECT_FIELD_GROUP] = SdkGroup
     this[SDK_SUBJECT_FIELD_NAME] = SdkName
@@ -87,9 +87,9 @@ val XiaomingSdkSubject: SdkSubject = SdkSubject(MapRaw().apply {
     this[SDK_SUBJECT_FIELD_PROTOCOL] = SdkProtocolString.toVersion()
 })
 
-class ProtocolSubject(
+class ProtocolSubjectDescriptor(
     raw: Raw
-) : Subject(raw) {
+) : SubjectDescriptor(raw) {
     val version: Version by raw
     val matcher = ProtocolSubjectMatcher()
 
@@ -108,9 +108,9 @@ class ProtocolSubject(
  *
  * @author Chuanwise
  */
-class ModuleSubject(
+class ModuleSubjectDescriptor(
     raw: Raw
-) : Subject(raw) {
+) : SubjectDescriptor(raw) {
     val group: String by raw
     val name: String by raw
     val version: Version by raw
@@ -132,7 +132,7 @@ class ModuleSubject(
 /**
  * The current protocol subject.
  */
-val XiaomingProtocolSubject: ProtocolSubject = ProtocolSubject(XiaomingSdkSubject.protocol)
+val XiaomingProtocolSubject: ProtocolSubjectDescriptor = ProtocolSubjectDescriptor(XiaomingSdkSubject.protocol)
 
 const val SUBJECT_TYPE_PLUGIN = "plugin"
 const val PLUGIN_SUBJECT_FIELD_ID = "id"
@@ -143,9 +143,9 @@ const val PLUGIN_SUBJECT_FIELD_ID = "id"
  * @author Chuanwise
  */
 @JsonTypeName(SUBJECT_TYPE_PLUGIN)
-class PluginSubject(
+class PluginSubjectDescriptor(
     raw: Raw
-) : Subject(raw) {
+) : SubjectDescriptor(raw) {
     val id: SegmentId by raw
 
     @JvmOverloads
@@ -166,9 +166,9 @@ const val SUBJECT_TYPE_PLATFORM = "platform"
  * @author Chuanwise
  */
 @JsonTypeName(SUBJECT_TYPE_PLATFORM)
-class PlatformSubject(
+class PlatformSubjectDescriptor(
     raw: Raw
-) : Subject(raw) {
+) : SubjectDescriptor(raw) {
     var id: Id by raw
 
     @JvmOverloads
@@ -189,9 +189,9 @@ const val SUBJECT_TYPE_CONNECTION = "connection"
  * @author Chuanwise
  */
 @JsonTypeName(SUBJECT_TYPE_CONNECTION)
-class ConnectionSubject(
+class ConnectionSubjectDescriptor(
     raw: Raw
-) : Subject(raw) {
+) : SubjectDescriptor(raw) {
     var id: Id by raw
 
     @JvmOverloads
@@ -205,7 +205,7 @@ class ConnectionSubject(
 }
 
 /**
- * Used to match plugin subject from [Subject]. Type is
+ * Used to match plugin subject from [SubjectDescriptor]. Type is
  * [DEFAULT_PLUGIN_SUBJECT_MATCHER_FIELD_ID_MATCHER].
  *
  * @author Chuanwise
@@ -213,11 +213,11 @@ class ConnectionSubject(
 @JsonTypeName(SUBJECT_MATCHER_TYPE_DEFAULT_PLUGIN)
 class DefaultPluginSubjectMatcher(
     raw: Raw
-) : AbstractData(raw), Matcher<Subject> {
+) : AbstractData(raw), Matcher<SubjectDescriptor> {
     override val type: String by raw
 
     @JsonIgnore
-    override val targetType: Class<Subject> = Subject::class.java
+    override val targetType: Class<SubjectDescriptor> = SubjectDescriptor::class.java
 
     @JsonIgnore
     override val targetNullable: Boolean = false
@@ -234,26 +234,26 @@ class DefaultPluginSubjectMatcher(
         raw[DEFAULT_PLUGIN_SUBJECT_MATCHER_FIELD_ID_MATCHER] = idMatcher
     }
 
-    override fun isMatched(target: Subject): Boolean {
+    override fun isMatched(target: SubjectDescriptor): Boolean {
         if (target.type != SUBJECT_TYPE_PLUGIN) {
             return false
         }
-        val pluginSubject = target as PluginSubject
+        val pluginSubject = target as PluginSubjectDescriptor
 
         return idMatcher.isMatched(pluginSubject.id)
     }
 }
 
-fun PluginSubject.toLiteralMatcher() = DefaultPluginSubjectMatcher(id.toLiteralMatcher())
+fun PluginSubjectDescriptor.toLiteralMatcher() = DefaultPluginSubjectMatcher(id.toLiteralMatcher())
 
 
 class ProtocolSubjectMatcher @JvmOverloads constructor(
     raw: Raw = MapRaw()
-) : AbstractData(raw), Matcher<ProtocolSubject> {
+) : AbstractData(raw), Matcher<ProtocolSubjectDescriptor> {
     override val type: String by raw
 
     @JsonIgnore
-    override val targetType: Class<ProtocolSubject> = ProtocolSubject::class.java
+    override val targetType: Class<ProtocolSubjectDescriptor> = ProtocolSubjectDescriptor::class.java
 
     @JsonIgnore
     override val targetNullable: Boolean = false
@@ -262,7 +262,7 @@ class ProtocolSubjectMatcher @JvmOverloads constructor(
         raw[MATCHER_FIELD_TYPE] = SUBJECT_MATCHER_TYPE_DEFAULT_PROTOCOL
     }
 
-    override fun isMatched(target: ProtocolSubject): Boolean {
+    override fun isMatched(target: ProtocolSubjectDescriptor): Boolean {
         return true
     }
 }

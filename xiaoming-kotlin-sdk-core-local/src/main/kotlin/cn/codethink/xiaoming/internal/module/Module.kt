@@ -18,12 +18,12 @@ package cn.codethink.xiaoming.internal.module
 
 import cn.codethink.xiaoming.LocalPlatformApi
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.ModuleSubject
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.ModuleSubjectDescriptor
+import cn.codethink.xiaoming.common.SubjectDescriptor
 
 data class ModuleContext(
     val platformApi: LocalPlatformApi,
-    val subject: Subject,
+    val subjectDescriptor: SubjectDescriptor,
     val cause: Cause
 )
 
@@ -34,7 +34,7 @@ data class ModuleContext(
  * @author Chuanwise
  */
 interface Module {
-    val subject: ModuleSubject
+    val subject: ModuleSubjectDescriptor
 
     /**
      * Called when the module is installed, platform is start.

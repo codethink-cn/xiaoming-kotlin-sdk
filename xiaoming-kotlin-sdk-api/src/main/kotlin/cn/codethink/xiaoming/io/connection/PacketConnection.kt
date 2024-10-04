@@ -23,7 +23,7 @@ import cn.codethink.xiaoming.common.PACKET_TYPE_RECEIPT
 import cn.codethink.xiaoming.common.PACKET_TYPE_REQUEST
 import cn.codethink.xiaoming.common.RECEIPT_PACKET_FIELD_DATA
 import cn.codethink.xiaoming.common.RECEIPT_STATE_SUCCEED
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.TextCause
 import cn.codethink.xiaoming.io.ProtocolLanguageConfiguration
 import cn.codethink.xiaoming.io.action.Action
@@ -61,7 +61,7 @@ class PacketConnection<T>(
     private val logger: KLogger,
     override val session: String,
     private val language: ProtocolLanguageConfiguration,
-    override val subject: Subject,
+    override val subjectDescriptor: SubjectDescriptor,
     private val connectionApi: ConnectionApi<T>,
     parentJob: Job? = null,
     parentCoroutineContext: CoroutineContext = Dispatchers.IO,
@@ -78,13 +78,13 @@ class PacketConnection<T>(
         get() = lock.read { closedNoLock }
 
     // Packet receiving channel.
-    private val channel = connectionApi[subject]
+    private val channel = connectionApi[subjectDescriptor]
     private val receivingJob = launch {
         for (received in channel) {
             onReceiveAsync(received)
         }
         if (isNotClosed) {
-            close(TextCause("Channel closed."), subject)
+            close(TextCause("Channel closed."), subjectDescriptor)
         }
     }
 
@@ -96,8 +96,8 @@ class PacketConnection<T>(
             ?: throw IllegalStateException("No receipt packet handler.")
 
     init {
-        registerTypeHandler(PACKET_TYPE_REQUEST, RequestPacketHandler(language, subject), subject)
-        registerTypeHandler(PACKET_TYPE_REQUEST, ReceiptPacketHandler<T>(), subject)
+        registerTypeHandler(PACKET_TYPE_REQUEST, RequestPacketHandler(language, subjectDescriptor), subjectDescriptor)
+        registerTypeHandler(PACKET_TYPE_REQUEST, ReceiptPacketHandler<T>(), subjectDescriptor)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -106,7 +106,7 @@ class PacketConnection<T>(
         mode: String,
         timeout: Long,
         argument: P?,
-        subject: Subject?,
+        subjectDescriptor: SubjectDescriptor?,
         time: Long,
         cause: Cause?
     ): Pair<Received<T>, R?> {
@@ -116,7 +116,7 @@ class PacketConnection<T>(
             action = action.name,
             mode = mode,
             timeout = timeout,
-            subject = subject ?: this.subject,
+            subjectDescriptor = subjectDescriptor ?: this.subjectDescriptor,
             argument = argument,
             time = time,
             cause = cause,
@@ -161,7 +161,7 @@ class PacketConnection<T>(
         if (context.disconnect) {
             close(
                 cause = context.disconnectCause ?: TextCause("Disconnect by packet handler."),
-                subject = context.disconnectSubject ?: subject
+                subjectDescriptor = context.disconnectSubjectDescriptor ?: subjectDescriptor
             )
         }
     }
@@ -170,18 +170,18 @@ class PacketConnection<T>(
         onReceive(received)
     }
 
-    fun registerTypeHandler(type: String, handler: PacketHandler, subject: Subject) {
-        types.register(type, DefaultRegistration(handler, subject))
+    fun registerTypeHandler(type: String, handler: PacketHandler, subjectDescriptor: SubjectDescriptor) {
+        types.register(type, DefaultRegistration(handler, subjectDescriptor))
     }
 
-    override fun close(cause: Cause, subject: Subject): Unit = lock.write {
+    override fun close(cause: Cause, subjectDescriptor: SubjectDescriptor): Unit = lock.write {
         if (closedNoLock) {
             throw IllegalStateException("Connection has been closed.")
         }
         closedNoLock = true
 
         // 1. Remove channel from connection API.
-        if (!connectionApi.remove(subject)) {
+        if (!connectionApi.remove(subjectDescriptor)) {
             throw IllegalStateException("Failed to remove the subject from the connection.")
         }
 

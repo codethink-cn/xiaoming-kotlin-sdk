@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming
 
-import cn.codethink.xiaoming.common.ConnectionSubject
+import cn.codethink.xiaoming.common.ConnectionSubjectDescriptor
 import cn.codethink.xiaoming.common.TextCause
 import cn.codethink.xiaoming.common.XiaomingSdkSubject
 import cn.codethink.xiaoming.common.toId
@@ -58,7 +58,7 @@ class PlatformTest {
 
     @Test
     fun testConnectAsPlugin() {
-        val subject = ConnectionSubject("demo-client".toId())
+        val subject = ConnectionSubjectDescriptor("demo-client".toId())
         val connectionInternalApi = WebSocketClientConnectionInternalApi(
             configuration = DefaultWebSocketClientConfiguration(
                 host = "localhost",
@@ -68,7 +68,7 @@ class PlatformTest {
                 reconnectIntervalMillis = null
             ),
             logger = logger,
-            subject = subject,
+            subjectDescriptor = subject,
             httpClient = HttpClient { install(WebSockets) }
         )
 

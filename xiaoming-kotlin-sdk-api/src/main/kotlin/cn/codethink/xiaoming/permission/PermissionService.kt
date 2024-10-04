@@ -18,7 +18,7 @@
 package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 
 /**
  * Operations related to [Permission] and [PermissionMeta].
@@ -27,10 +27,10 @@ import cn.codethink.xiaoming.common.Subject
  */
 interface PermissionService {
     suspend fun hasPermission(
-        subject: Subject,
+        subjectDescriptor: SubjectDescriptor,
         permission: Permission,
         context: Map<String, Any?> = emptyMap(),
-        caller: Subject? = null,
+        caller: SubjectDescriptor? = null,
         cause: Cause? = null
     ): Boolean?
 }

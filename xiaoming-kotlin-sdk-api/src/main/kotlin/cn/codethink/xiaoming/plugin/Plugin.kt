@@ -18,8 +18,8 @@ package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.Platform
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.PluginSubject
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.PluginSubjectDescriptor
+import cn.codethink.xiaoming.common.SubjectDescriptor
 
 /**
  * Plugin is a set of functions that extend platform's abilities. It can service
@@ -29,10 +29,10 @@ import cn.codethink.xiaoming.common.Subject
  */
 interface Plugin {
     val meta: PluginRuntimeMeta
-    val subject: PluginSubject
+    val subject: PluginSubjectDescriptor
 
-    fun load(platform: Platform, cause: Cause, subject: Subject)
-    fun enable(platform: Platform, cause: Cause, subject: Subject)
-    fun disable(platform: Platform, cause: Cause, subject: Subject)
-    fun unload(platform: Platform, cause: Cause, subject: Subject)
+    fun load(platform: Platform, cause: Cause, subjectDescriptor: SubjectDescriptor)
+    fun enable(platform: Platform, cause: Cause, subjectDescriptor: SubjectDescriptor)
+    fun disable(platform: Platform, cause: Cause, subjectDescriptor: SubjectDescriptor)
+    fun unload(platform: Platform, cause: Cause, subjectDescriptor: SubjectDescriptor)
 }

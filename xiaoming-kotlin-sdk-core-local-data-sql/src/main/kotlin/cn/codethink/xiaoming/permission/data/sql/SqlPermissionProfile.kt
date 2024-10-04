@@ -18,7 +18,7 @@ package cn.codethink.xiaoming.permission.data.sql
 
 import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.common.NumericalId
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.data.getSubjectOrFail
 import cn.codethink.xiaoming.permission.data.PermissionProfile
 
@@ -27,5 +27,5 @@ data class SqlPermissionProfile(
     override val id: NumericalId,
     private val subjectId: Id
 ) : PermissionProfile {
-    override val subject: Subject by lazy { api.getSubjectOrFail(subjectId) }
+    override val subjectDescriptor: SubjectDescriptor by lazy { api.getSubjectOrFail(subjectId) }
 }

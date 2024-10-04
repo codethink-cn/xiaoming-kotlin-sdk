@@ -19,7 +19,7 @@
 package cn.codethink.xiaoming.io.data
 
 import cn.codethink.xiaoming.common.DataDeserializerModifier
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.XiaomingSdkSubject
 import cn.codethink.xiaoming.common.prependOrNull
 import com.fasterxml.jackson.core.Version
@@ -58,15 +58,15 @@ val XiaomingJacksonModuleVersion = XiaomingSdkSubject.let {
  * @see findAndApplyInitializers
  */
 interface PolymorphicDeserializerInitializer {
-    fun initialize(deserializers: PolymorphicDeserializers, subject: Subject)
+    fun initialize(deserializers: PolymorphicDeserializers, subjectDescriptor: SubjectDescriptor)
 }
 
-fun DeserializerModule.findAndApplyInitializers(classLoader: ClassLoader, subject: Subject) = apply {
+fun DeserializerModule.findAndApplyInitializers(classLoader: ClassLoader, subjectDescriptor: SubjectDescriptor) = apply {
     ServiceLoader.load(PolymorphicDeserializerInitializer::class.java, classLoader)
-        .forEach { it.initialize(deserializers, subject) }
+        .forEach { it.initialize(deserializers, subjectDescriptor) }
 }
 
-fun DeserializerModule.findAndApplyInitializers(subject: Subject) = apply {
+fun DeserializerModule.findAndApplyInitializers(subjectDescriptor: SubjectDescriptor) = apply {
     ServiceLoader.load(PolymorphicDeserializerInitializer::class.java)
-        .forEach { it.initialize(deserializers, subject) }
+        .forEach { it.initialize(deserializers, subjectDescriptor) }
 }

@@ -17,7 +17,7 @@
 package cn.codethink.xiaoming.io.connection
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.TextCause
 import kotlinx.coroutines.CoroutineScope
 
@@ -30,8 +30,8 @@ import kotlinx.coroutines.CoroutineScope
 interface ServerApi : AutoCloseable, CoroutineScope {
     val isStarted: Boolean
     val isClosed: Boolean
-    val subject: Subject
+    val subjectDescriptor: SubjectDescriptor
 
-    fun close(cause: Cause, subject: Subject)
-    override fun close() = close(TextCause("Server closed."), subject)
+    fun close(cause: Cause, subjectDescriptor: SubjectDescriptor)
+    override fun close() = close(TextCause("Server closed."), subjectDescriptor)
 }

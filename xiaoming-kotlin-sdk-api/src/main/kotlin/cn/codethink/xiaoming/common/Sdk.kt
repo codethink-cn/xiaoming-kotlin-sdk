@@ -23,7 +23,7 @@ import java.util.Properties
 const val SDK_PROPERTIES_PATH = "xiaoming/sdk.properties"
 
 val SdkProperties = Properties().apply {
-    load(SdkSubject::class.java.classLoader.getResourceAsStream(SDK_PROPERTIES_PATH))
+    load(SdkSubjectDescriptor::class.java.classLoader.getResourceAsStream(SDK_PROPERTIES_PATH))
 }
 
 val SdkName: String

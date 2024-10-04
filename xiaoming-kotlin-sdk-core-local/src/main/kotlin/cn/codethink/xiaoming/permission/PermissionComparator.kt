@@ -19,7 +19,7 @@ package cn.codethink.xiaoming.permission
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.Data
 import cn.codethink.xiaoming.common.Id
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.Tristate
 import cn.codethink.xiaoming.data.getPermissionProfileOrFail
 import cn.codethink.xiaoming.permission.data.PermissionProfile
@@ -31,7 +31,7 @@ class PermissionComparingContext(
     val permission: Permission,
     val record: PermissionRecord,
     val context: Map<String, Any?> = emptyMap(),
-    val caller: Subject? = null,
+    val caller: SubjectDescriptor? = null,
     val cause: Cause? = null
 ) {
     val internalApi by permissionServiceApi::internalApi

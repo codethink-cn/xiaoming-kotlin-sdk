@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.io.data
 
-import cn.codethink.xiaoming.common.PluginSubject
+import cn.codethink.xiaoming.common.PluginSubjectDescriptor
 import cn.codethink.xiaoming.common.XiaomingSdkSubject
 import cn.codethink.xiaoming.common.assertJsonContentEquals
 import cn.codethink.xiaoming.io.packet.Packet
@@ -70,10 +70,10 @@ class DataTest {
 
         // Deserialized from string.
         Assertions.assertEquals("c4d038b4-bed0-3fdb-9471-ef51ec3a32cd", packet.id)
-        Assertions.assertEquals(PluginSubject(NodeRaw(mapper).apply {
+        Assertions.assertEquals(PluginSubjectDescriptor(NodeRaw(mapper).apply {
             set("id", "cn.codethink:chat-commands")
             set("type", "plugin")
-        }), packet.subject)
+        }), packet.subjectDescriptor)
 
         // Extension field 1 read and write.
         Assertions.assertEquals("extension-field-1-value", packet.extensionField1)

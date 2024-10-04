@@ -17,8 +17,8 @@
 package cn.codethink.xiaoming.io.connection
 
 import cn.codethink.xiaoming.TEST_SUBJECT
-import cn.codethink.xiaoming.common.PluginSubject
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.PluginSubjectDescriptor
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.XiaomingProtocolSubject
 import cn.codethink.xiaoming.common.currentTimeMillis
 import cn.codethink.xiaoming.common.segmentIdOf
@@ -45,7 +45,7 @@ class WebSocketClientConnectionInternalApiTest {
     private val logger = KotlinLogging.logger { }
 
     inner class TestAuthorizer : Authorizer {
-        override fun authorize(token: String): Subject? {
+        override fun authorize(token: String): SubjectDescriptor? {
             if (token == TEST_TOKEN) {
                 logger.info { "Authorized" }
                 return XiaomingProtocolSubject
@@ -70,7 +70,7 @@ class WebSocketClientConnectionInternalApiTest {
 
     @Test
     fun testConnect(): Unit = runBlocking {
-        val demoPluginSubject = PluginSubject(segmentIdOf("cn.codethink.xiaoming.demo"))
+        val demoPluginSubject = PluginSubjectDescriptor(segmentIdOf("cn.codethink.xiaoming.demo"))
         val supervisorJob = SupervisorJob()
 
         val server = LocalPlatformWebSocketServerApi(
@@ -79,7 +79,7 @@ class WebSocketClientConnectionInternalApiTest {
                 host = TEST_HOST,
                 path = TEST_PATH
             ),
-            subject = TEST_SUBJECT,
+            subjectDescriptor = TEST_SUBJECT,
             authorizer = TestAuthorizer(),
             parentJob = supervisorJob
         )
@@ -95,7 +95,7 @@ class WebSocketClientConnectionInternalApiTest {
             configuration = clientConfiguration,
             logger = logger,
             httpClient = HttpClient { install(WebSockets) },
-            subject = demoPluginSubject,
+            subjectDescriptor = demoPluginSubject,
             parentJob = supervisorJob,
         )
 
@@ -130,7 +130,7 @@ class WebSocketClientConnectionInternalApiTest {
                 host = TEST_HOST,
                 path = TEST_PATH
             ),
-            subject = TEST_SUBJECT,
+            subjectDescriptor = TEST_SUBJECT,
             authorizer = TestAuthorizer()
         )
 
@@ -145,7 +145,7 @@ class WebSocketClientConnectionInternalApiTest {
             configuration = clientConfiguration,
             logger = logger,
             httpClient = HttpClient { install(WebSockets) },
-            subject = TEST_SUBJECT
+            subjectDescriptor = TEST_SUBJECT
         )
 
         var durationMillis = currentTimeMillis

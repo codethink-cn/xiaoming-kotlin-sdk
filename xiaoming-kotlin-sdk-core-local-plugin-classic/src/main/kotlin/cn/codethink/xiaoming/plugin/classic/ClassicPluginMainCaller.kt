@@ -17,7 +17,7 @@
 package cn.codethink.xiaoming.plugin.classic
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 
 /**
  * Used to call methods in classic plugin main.
@@ -27,7 +27,7 @@ import cn.codethink.xiaoming.common.Subject
  * @see JavaClassicPluginMainCaller
  */
 interface ClassicPluginMainCaller {
-    fun onLoad(plugin: ClassicPlugin, cause: Cause, subject: Subject)
-    fun onEnable(plugin: ClassicPlugin, cause: Cause, subject: Subject)
-    fun onDisable(plugin: ClassicPlugin, cause: Cause, subject: Subject)
+    fun onLoad(plugin: ClassicPlugin, cause: Cause, subjectDescriptor: SubjectDescriptor)
+    fun onEnable(plugin: ClassicPlugin, cause: Cause, subjectDescriptor: SubjectDescriptor)
+    fun onDisable(plugin: ClassicPlugin, cause: Cause, subjectDescriptor: SubjectDescriptor)
 }

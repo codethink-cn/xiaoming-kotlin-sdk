@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.connection
 
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import cn.codethink.xiaoming.io.connection.ConnectionInternalApi
 
@@ -29,6 +29,6 @@ import cn.codethink.xiaoming.io.connection.ConnectionInternalApi
  */
 interface ConnectionConfiguration {
     val type: String
-    val subject: Subject
+    val subjectDescriptor: SubjectDescriptor
     fun toConnection(api: LocalPlatformInternalApi): ConnectionInternalApi<*>
 }

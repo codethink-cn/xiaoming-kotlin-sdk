@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.io.connection
 
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 
 /**
  * Authorize connection and return a connection subject.
@@ -24,11 +24,11 @@ import cn.codethink.xiaoming.common.Subject
  * @author Chuanwise
  */
 interface Authorizer {
-    fun authorize(token: String): Subject?
-    fun onConnected(subject: Subject) = Unit
-    fun onDisconnected(subject: Subject) = Unit
+    fun authorize(token: String): SubjectDescriptor?
+    fun onConnected(subjectDescriptor: SubjectDescriptor) = Unit
+    fun onDisconnected(subjectDescriptor: SubjectDescriptor) = Unit
 }
 
 object EmptyAuthorizer : Authorizer {
-    override fun authorize(token: String): Subject? = null
+    override fun authorize(token: String): SubjectDescriptor? = null
 }

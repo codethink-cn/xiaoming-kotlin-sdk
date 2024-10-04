@@ -20,7 +20,7 @@ import cn.codethink.xiaoming.DefaultLocalPlatformApi
 import cn.codethink.xiaoming.DefaultLocalPlatformConfiguration
 import cn.codethink.xiaoming.TEST_CAUSE
 import cn.codethink.xiaoming.TEST_SUBJECT
-import cn.codethink.xiaoming.common.PluginSubject
+import cn.codethink.xiaoming.common.PluginSubjectDescriptor
 import cn.codethink.xiaoming.common.getTestResourceAsStream
 import cn.codethink.xiaoming.common.segmentIdOf
 import cn.codethink.xiaoming.common.toLiteralMatcher
@@ -66,7 +66,7 @@ class LocalPermissionServiceTest {
 
     private val platformApi = DefaultLocalPlatformApi(
         configuration = DefaultLocalPlatformConfiguration(
-            subject = TEST_SUBJECT,
+            subjectDescriptor = TEST_SUBJECT,
             language = getTestResourceAsStream("xiaoming/languages/${Locale.getDefault()}/protocol.yml").use {
                 fileObjectMapper.readValue<DefaultProtocolLanguageConfiguration>(it)
             },
@@ -81,7 +81,7 @@ class LocalPermissionServiceTest {
     }
     private val api = platformApi.internalApi
 
-    private val subject = PluginSubject(segmentIdOf("cn.codethink.xiaoming.demo"))
+    private val subject = PluginSubjectDescriptor(segmentIdOf("cn.codethink.xiaoming.demo"))
     private val subjectMatcher = subject.toLiteralMatcher()
 
     private val profile = api.data.insertAndGetPermissionProfile(subject)
@@ -90,7 +90,7 @@ class LocalPermissionServiceTest {
     fun testSetSimplePermission() {
         val permission = Permission(
             descriptor = PermissionDescriptor(
-                subject = subject,
+                subjectDescriptor = subject,
                 node = segmentIdOf("a.b.c.d")
             )
         )
@@ -102,7 +102,7 @@ class LocalPermissionServiceTest {
         api.permissionServiceApi.setPermission(
             profile = profile,
             comparator = DefaultPermissionComparatorV1(
-                subjectMatcher = subjectMatcher,
+                subjectDescriptorMatcher = subjectMatcher,
                 nodeMatcher = segmentIdOf("a.b.c").toLiteralMatcher(),
                 value = false
             )
@@ -113,7 +113,7 @@ class LocalPermissionServiceTest {
         api.permissionServiceApi.setPermission(
             profile = profile,
             comparator = DefaultPermissionComparatorV1(
-                subjectMatcher = subjectMatcher,
+                subjectDescriptorMatcher = subjectMatcher,
                 nodeMatcher = segmentIdOf("a.b.c.d").toLiteralMatcher(),
                 value = false
             )
@@ -124,7 +124,7 @@ class LocalPermissionServiceTest {
         api.permissionServiceApi.setPermission(
             profile = profile,
             comparator = DefaultPermissionComparatorV1(
-                subjectMatcher = subjectMatcher,
+                subjectDescriptorMatcher = subjectMatcher,
                 nodeMatcher = segmentIdOf("a.b.c.d").toLiteralMatcher(),
                 value = true
             )
@@ -135,7 +135,7 @@ class LocalPermissionServiceTest {
         api.permissionServiceApi.setPermission(
             profile = profile,
             comparator = DefaultPermissionComparatorV1(
-                subjectMatcher = subjectMatcher,
+                subjectDescriptorMatcher = subjectMatcher,
                 nodeMatcher = segmentIdOf("a.b.c.d").toLiteralMatcher(),
                 value = null
             )
@@ -145,27 +145,27 @@ class LocalPermissionServiceTest {
 
     @Test
     fun testInheritancePermission() {
-        val subjectA = PluginSubject(segmentIdOf("cn.codethink.xiaoming.demo.a"))
+        val subjectA = PluginSubjectDescriptor(segmentIdOf("cn.codethink.xiaoming.demo.a"))
         val subjectAMatcher = subjectA.toLiteralMatcher()
         val subjectAProfile = api.data.insertAndGetPermissionProfile(subjectA)
 
-        val subjectB = PluginSubject(segmentIdOf("cn.codethink.xiaoming.demo.b"))
+        val subjectB = PluginSubjectDescriptor(segmentIdOf("cn.codethink.xiaoming.demo.b"))
         val subjectBMatcher = subjectB.toLiteralMatcher()
         val subjectBProfile = api.data.insertAndGetPermissionProfile(subjectB)
 
-        val subjectC = PluginSubject(segmentIdOf("cn.codethink.xiaoming.demo.c"))
+        val subjectC = PluginSubjectDescriptor(segmentIdOf("cn.codethink.xiaoming.demo.c"))
         val subjectCMatcher = subjectB.toLiteralMatcher()
         val subjectCProfile = api.data.insertAndGetPermissionProfile(subjectB)
 
         val permissionASegmentId = segmentIdOf("a.b")
         val permissionA = Permission(
             descriptor = PermissionDescriptor(
-                subject = subjectA,
+                subjectDescriptor = subjectA,
                 node = permissionASegmentId
             )
         )
         val permissionAComparatorTrue = DefaultPermissionComparatorV1(
-            subjectMatcher = subjectAMatcher,
+            subjectDescriptorMatcher = subjectAMatcher,
             nodeMatcher = permissionASegmentId.toLiteralMatcher(),
             value = true
         )

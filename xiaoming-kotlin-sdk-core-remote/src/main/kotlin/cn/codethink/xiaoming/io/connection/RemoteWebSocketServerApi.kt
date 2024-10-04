@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.io.connection
 
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.engine.ApplicationEngineFactory
@@ -33,12 +33,12 @@ interface RemoteWebSocketServerConfiguration : WebSocketServerConfiguration
 abstract class RemoteWebSocketServerApi(
     private val configuration: WebSocketServerConfiguration,
     private val logger: KLogger,
-    override val subject: Subject,
+    override val subjectDescriptor: SubjectDescriptor,
     applicationEngineFactory: ApplicationEngineFactory<*, *> = Netty,
     parentJob: Job? = null,
     parentCoroutineContext: CoroutineContext = Dispatchers.IO
 ) : WebSocketServerApi(
-    configuration, subject, logger, applicationEngineFactory, parentJob, parentCoroutineContext
+    configuration, subjectDescriptor, logger, applicationEngineFactory, parentJob, parentCoroutineContext
 ) {
 //    private val mutableConnections: MutableList<LongConnectionInternalApi> = CopyOnWriteArrayList()
 //    override val connectionApis: List<LongConnectionInternalApi> = mutableConnections.toList()

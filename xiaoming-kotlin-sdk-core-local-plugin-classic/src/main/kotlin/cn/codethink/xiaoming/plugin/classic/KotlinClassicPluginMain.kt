@@ -17,7 +17,7 @@
 package cn.codethink.xiaoming.plugin.classic
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 
 interface KotlinClassicPluginMain {
     fun onLoad(context: ClassicPluginContext)
@@ -27,15 +27,15 @@ interface KotlinClassicPluginMain {
 class KotlinClassicPluginMainCaller(
     val main: KotlinClassicPluginMain
 ) : ClassicPluginMainCaller {
-    override fun onLoad(plugin: ClassicPlugin, cause: Cause, subject: Subject) {
+    override fun onLoad(plugin: ClassicPlugin, cause: Cause, subjectDescriptor: SubjectDescriptor) {
         TODO("Not yet implemented")
     }
 
-    override fun onEnable(plugin: ClassicPlugin, cause: Cause, subject: Subject) {
+    override fun onEnable(plugin: ClassicPlugin, cause: Cause, subjectDescriptor: SubjectDescriptor) {
         TODO("Not yet implemented")
     }
 
-    override fun onDisable(plugin: ClassicPlugin, cause: Cause, subject: Subject) {
+    override fun onDisable(plugin: ClassicPlugin, cause: Cause, subjectDescriptor: SubjectDescriptor) {
         TODO("Not yet implemented")
     }
 }

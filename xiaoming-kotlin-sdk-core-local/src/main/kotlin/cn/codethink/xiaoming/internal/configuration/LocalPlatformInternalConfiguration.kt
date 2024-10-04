@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.internal.configuration
 
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.data.LocalPlatformData
 import cn.codethink.xiaoming.internal.module.Module
 import cn.codethink.xiaoming.io.data.DeserializerModule
@@ -61,7 +61,7 @@ interface LocalPlatformInternalConfiguration {
 
     val logger: KLogger
 
-    val subject: Subject
+    val subjectDescriptor: SubjectDescriptor
 
     val parentJob: Job?
 
@@ -72,7 +72,7 @@ data class DefaultLocalPlatformInternalConfiguration(
     override val deserializerModule: DeserializerModule,
     override val dataObjectMapper: ObjectMapper,
     override val data: LocalPlatformData,
-    override val subject: Subject,
+    override val subjectDescriptor: SubjectDescriptor,
     override val locale: Locale = Locale.getDefault(),
     override val modules: List<Module> = emptyList(),
     override val failOnModuleError: Boolean = true,

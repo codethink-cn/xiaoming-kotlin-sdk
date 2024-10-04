@@ -17,7 +17,7 @@
 package cn.codethink.xiaoming.permission.data
 
 import cn.codethink.xiaoming.common.Id
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 
 /**
  * Permission profile is a set of permissions that a subject has. It can be an external user,
@@ -27,5 +27,5 @@ import cn.codethink.xiaoming.common.Subject
  */
 interface PermissionProfile {
     val id: Id
-    val subject: Subject
+    val subjectDescriptor: SubjectDescriptor
 }

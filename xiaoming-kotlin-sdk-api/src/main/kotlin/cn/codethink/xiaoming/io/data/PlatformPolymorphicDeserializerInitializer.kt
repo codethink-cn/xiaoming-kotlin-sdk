@@ -25,12 +25,12 @@ import cn.codethink.xiaoming.common.LiteralSegmentIdMatcher
 import cn.codethink.xiaoming.common.LiteralStringMatcher
 import cn.codethink.xiaoming.common.LongId
 import cn.codethink.xiaoming.common.Matcher
-import cn.codethink.xiaoming.common.PlatformSubject
-import cn.codethink.xiaoming.common.PluginSubject
+import cn.codethink.xiaoming.common.PlatformSubjectDescriptor
+import cn.codethink.xiaoming.common.PluginSubjectDescriptor
 import cn.codethink.xiaoming.common.RegexStringMatcher
-import cn.codethink.xiaoming.common.SdkSubject
+import cn.codethink.xiaoming.common.SdkSubjectDescriptor
 import cn.codethink.xiaoming.common.StringId
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.WildcardStringMatcher
 import cn.codethink.xiaoming.io.packet.Packet
 import cn.codethink.xiaoming.io.packet.ReceiptPacket
@@ -45,16 +45,16 @@ import com.fasterxml.jackson.core.JsonToken
  * @author Chuanwise
  */
 class PlatformPolymorphicDeserializerInitializer : PolymorphicDeserializerInitializer {
-    override fun initialize(deserializers: PolymorphicDeserializers, subject: Subject) {
-        deserializers.subject(subject) {
+    override fun initialize(deserializers: PolymorphicDeserializers, subjectDescriptor: SubjectDescriptor) {
+        deserializers.subject(subjectDescriptor) {
             names<Packet>(FIELD_TYPE) {
                 name<RequestPacket>()
                 name<ReceiptPacket>()
             }
-            names<Subject>(FIELD_TYPE) {
-                name<SdkSubject>()
-                name<PluginSubject>()
-                name<PlatformSubject>()
+            names<SubjectDescriptor>(FIELD_TYPE) {
+                name<SdkSubjectDescriptor>()
+                name<PluginSubjectDescriptor>()
+                name<PlatformSubjectDescriptor>()
             }
             names<Matcher<Any?>>(FIELD_TYPE) {
                 name<AnyMatcher>()

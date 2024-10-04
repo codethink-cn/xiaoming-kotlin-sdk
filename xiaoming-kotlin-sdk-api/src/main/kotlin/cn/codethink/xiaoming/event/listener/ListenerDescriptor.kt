@@ -19,7 +19,7 @@ package cn.codethink.xiaoming.event.listener
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.LISTENER_DESCRIPTOR_FIELD_ID
 import cn.codethink.xiaoming.common.LISTENER_DESCRIPTOR_FIELD_SUBJECT
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
@@ -34,14 +34,14 @@ class ListenerDescriptor(
     raw: Raw
 ) : AbstractData(raw) {
     val id: String by raw
-    val subject: Subject by raw
+    val subjectDescriptor: SubjectDescriptor by raw
 
     constructor(
         id: String,
-        subject: Subject,
+        subjectDescriptor: SubjectDescriptor,
         raw: Raw = MapRaw()
     ) : this(raw) {
         raw[LISTENER_DESCRIPTOR_FIELD_ID] = id
-        raw[LISTENER_DESCRIPTOR_FIELD_SUBJECT] = subject
+        raw[LISTENER_DESCRIPTOR_FIELD_SUBJECT] = subjectDescriptor
     }
 }

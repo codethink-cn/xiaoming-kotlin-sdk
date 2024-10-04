@@ -17,7 +17,7 @@
 package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.permission.data.PermissionProfile
 
 
@@ -26,7 +26,7 @@ data class PermissionSettingContext(
     val profile: PermissionProfile,
     val comparator: PermissionComparator,
     val context: Map<String, Any?> = emptyMap(),
-    val caller: Subject? = null,
+    val caller: SubjectDescriptor? = null,
     val cause: Cause? = null
 ) {
     val internalApi by permissionServiceApi::internalApi

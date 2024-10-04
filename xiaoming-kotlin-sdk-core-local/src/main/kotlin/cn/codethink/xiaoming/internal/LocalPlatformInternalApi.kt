@@ -17,7 +17,7 @@
 package cn.codethink.xiaoming.internal
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.TextCause
 import cn.codethink.xiaoming.common.doModuleRelatedAction
 import cn.codethink.xiaoming.configuration.LocalPlatformConfiguration
@@ -27,6 +27,7 @@ import cn.codethink.xiaoming.internal.configuration.LocalPlatformInternalConfigu
 import cn.codethink.xiaoming.internal.module.ModuleContext
 import cn.codethink.xiaoming.language.LanguageConfiguration
 import cn.codethink.xiaoming.permission.LocalPermissionServiceApi
+import cn.codethink.xiaoming.plugin.LocalPluginManagerApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import java.util.concurrent.locks.ReentrantReadWriteLock
@@ -46,7 +47,7 @@ class LocalPlatformInternalApi(
     val configuration: LocalPlatformInternalConfiguration,
 ) : CoroutineScope, AutoCloseable {
     val logger by configuration::logger
-    private val subject by configuration::subject
+    private val subject by configuration::subjectDescriptor
 
     // Coroutine related APIs.
     val supervisorJob = SupervisorJob(configuration.parentJob)
@@ -73,16 +74,19 @@ class LocalPlatformInternalApi(
 
     val data: LocalPlatformData by configuration::data
 
+    val pluginManagerApi = LocalPluginManagerApi(this)
     val permissionServiceApi = LocalPermissionServiceApi(this)
     val connectionManagerApi = ConnectionManagerApi(this)
 
-    fun start(cause: Cause, subject: Subject, context: ModuleContext) = lock.write {
+    fun start(cause: Cause, subjectDescriptor: SubjectDescriptor, context: ModuleContext) = lock.write {
         stateNoLock = when (stateNoLock) {
             LocalPlatformInternalState.INITIALIZED -> LocalPlatformInternalState.STARTING
             else -> throw IllegalStateException("Cannot start platform when it's not initialized.")
         }
 
         try {
+            logger.info { "Starting platform internal API." }
+
             // Call module lifecycle methods.
             configuration.modules.forEach {
                 doModuleRelatedAction(
@@ -99,7 +103,7 @@ class LocalPlatformInternalApi(
         }
     }
 
-    fun stop(cause: Cause, subject: Subject) {
+    fun stop(cause: Cause, subjectDescriptor: SubjectDescriptor) {
         TODO()
     }
 

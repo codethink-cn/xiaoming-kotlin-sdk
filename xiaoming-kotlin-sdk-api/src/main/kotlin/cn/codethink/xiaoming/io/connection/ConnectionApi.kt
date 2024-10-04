@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.io.connection
 
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.io.packet.Packet
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -70,11 +70,11 @@ interface ConnectionApi<T> : AutoCloseable, CoroutineScope {
     val isClosed: Boolean
     val isShared: Boolean
 
-    operator fun get(subject: Subject) : Channel<Received<T>>
+    operator fun get(subjectDescriptor: SubjectDescriptor) : Channel<Received<T>>
 
     suspend fun send(packet: Packet)
     suspend fun receive(packet: Packet, origin: T? = null)
-    fun remove(subject: Subject) : Boolean
+    fun remove(subjectDescriptor: SubjectDescriptor) : Boolean
 }
 
 val ConnectionApi<*>.isNotShared: Boolean
@@ -103,7 +103,7 @@ class TextFrameConnectionApi(
     private val lock = ReentrantReadWriteLock()
     private var closedNoLock: Boolean = false
 
-    private val channels: MutableMap<Subject, Channel<Received<Frame.Text>>> = HashMap()
+    private val channels: MutableMap<SubjectDescriptor, Channel<Received<Frame.Text>>> = HashMap()
     private val receivingJob = launch {
         for (frame in connectionInternalApi.channel) {
             onReceiveFrameAsync(frame)
@@ -116,8 +116,8 @@ class TextFrameConnectionApi(
     override val isShared: Boolean
         get() = lock.read { channels.size > 1 }
 
-    override operator fun get(subject: Subject) : Channel<Received<Frame.Text>> {
-        return channels.computeIfAbsent(subject) { Channel(Channel.UNLIMITED) }
+    override operator fun get(subjectDescriptor: SubjectDescriptor) : Channel<Received<Frame.Text>> {
+        return channels.computeIfAbsent(subjectDescriptor) { Channel(Channel.UNLIMITED) }
     }
 
     override suspend fun send(packet: Packet) {
@@ -132,7 +132,7 @@ class TextFrameConnectionApi(
     override suspend fun receive(packet: Packet, origin: Frame.Text?) {
         assertNotClosed()
 
-        val session = packet.subject
+        val session = packet.subjectDescriptor
         val channel = getChannelOrNull(session) ?: return
 
         val received = DefaultReceived(origin, packet, this)
@@ -161,7 +161,7 @@ class TextFrameConnectionApi(
         receive(packet, frame)
     }
 
-    private fun getChannelOrNull(target: Subject?) : Channel<Received<Frame.Text>>? = lock.read {
+    private fun getChannelOrNull(target: SubjectDescriptor?) : Channel<Received<Frame.Text>>? = lock.read {
         if (target == null) {
             val exclusiveChannel = channels.values.singleOrNull()
             if (exclusiveChannel == null) {
@@ -184,7 +184,7 @@ class TextFrameConnectionApi(
         }
     }
 
-    override fun remove(subject: Subject) = lock.write { channels.remove(subject) != null }
+    override fun remove(subjectDescriptor: SubjectDescriptor) = lock.write { channels.remove(subjectDescriptor) != null }
 
     override fun close() {
         onBeClosed()

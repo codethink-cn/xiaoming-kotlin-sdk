@@ -17,7 +17,7 @@
 package cn.codethink.xiaoming.io.connection
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.Application
@@ -64,7 +64,7 @@ data class DefaultWebSocketServerConfiguration(
  */
 abstract class WebSocketServerApi(
     private val configuration: WebSocketServerConfiguration,
-    override val subject: Subject,
+    override val subjectDescriptor: SubjectDescriptor,
     private val logger: KLogger = KotlinLogging.logger { },
     applicationEngineFactory: ApplicationEngineFactory<*, *> = Netty,
     parentJob: Job? = null,
@@ -124,7 +124,7 @@ abstract class WebSocketServerApi(
         }
     }
 
-    override fun close(cause: Cause, subject: Subject) {
+    override fun close(cause: Cause, subjectDescriptor: SubjectDescriptor) {
         lock.write {
             stateNoLock = when (stateNoLock) {
                 State.INITIALIZED, State.STARTED -> State.CLOSING
@@ -134,7 +134,7 @@ abstract class WebSocketServerApi(
 
         connectionApis.forEach {
             if (!it.isClosed) {
-                it.close(cause, subject)
+                it.close(cause, subjectDescriptor)
             }
         }
 
@@ -147,7 +147,7 @@ abstract class WebSocketServerApi(
                 else -> throw IllegalStateException("Client internal error: unexpected state after closing: $stateNoLock.")
             }
         }
-        logger.debug { "Closed server with subject: $subject in ${configuration.address}." }
+        logger.debug { "Closed server with subject: $subjectDescriptor in ${configuration.address}." }
     }
 
     abstract suspend fun PipelineContext<Unit, ApplicationCall>.onConnect()

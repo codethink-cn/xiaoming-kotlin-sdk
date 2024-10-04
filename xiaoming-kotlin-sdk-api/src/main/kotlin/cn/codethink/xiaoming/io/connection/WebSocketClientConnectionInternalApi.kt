@@ -19,7 +19,7 @@ package cn.codethink.xiaoming.io.connection
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.HEADER_KEY_AUTHORIZATION
 import cn.codethink.xiaoming.common.HEADER_VALUE_AUTHORIZATION_BEARER_WITH_SPACE
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.TextCause
 import cn.codethink.xiaoming.common.rootCause
 import io.github.oshai.kotlinlogging.KLogger
@@ -70,7 +70,7 @@ data class DefaultWebSocketClientConfiguration(
 class WebSocketClientConnectionInternalApi(
     private val configuration: WebSocketClientConfiguration,
     private val logger: KLogger,
-    subject: Subject,
+    subjectDescriptor: SubjectDescriptor,
     httpClient: HttpClient,
     parentJob: Job? = null,
     parentCoroutineContext: CoroutineContext = Dispatchers.IO,
@@ -101,10 +101,10 @@ class WebSocketClientConnectionInternalApi(
     private val state: State
         get() = lock.read { stateNoLock }
 
-    private var subjectNoLock: Subject = subject
-    override var subject: Subject
-        get() = lock.read { subjectNoLock }
-        set(value) = lock.write { subjectNoLock = value }
+    private var subjectDescriptorNoLock: SubjectDescriptor = subjectDescriptor
+    override var subjectDescriptor: SubjectDescriptor
+        get() = lock.read { subjectDescriptorNoLock }
+        set(value) = lock.write { subjectDescriptorNoLock = value }
 
     override val isClosed: Boolean
         get() = state == State.CLOSED
@@ -127,7 +127,7 @@ class WebSocketClientConnectionInternalApi(
         for (attempt in connectAttempts) {
             val address = configuration.address
 
-            logger.info { "Connecting to $address with subject: $subject (attempt: $attempt)." }
+            logger.info { "Connecting to $address with subject: $subjectDescriptor (attempt: $attempt)." }
             lock.write {
                 stateNoLock = when (stateNoLock) {
                     State.INITIALIZED, State.WAITING, State.DISCONNECTED -> {
@@ -204,7 +204,7 @@ class WebSocketClientConnectionInternalApi(
             }
 
             val reconnectIntervalMillis = configuration.reconnectIntervalMillis ?: break
-            logger.info { "Disconnected from $address with subject: $subject (attempt: $attempt), waiting for reconnecting." }
+            logger.info { "Disconnected from $address with subject: $subjectDescriptor (attempt: $attempt), waiting for reconnecting." }
             delay(reconnectIntervalMillis)
         }
 
@@ -215,7 +215,7 @@ class WebSocketClientConnectionInternalApi(
                 } else {
                     "Disconnected and reconnect is disabled."
                 }
-            ), subject
+            ), subjectDescriptor
         )
     }
 
@@ -261,10 +261,10 @@ class WebSocketClientConnectionInternalApi(
     }
 
     override fun close() {
-        close(TextCause("Client closed."), subject)
+        close(TextCause("Client closed."), subjectDescriptor)
     }
 
-    override fun close(cause: Cause, subject: Subject) = lock.write {
+    override fun close(cause: Cause, subjectDescriptor: SubjectDescriptor) = lock.write {
         stateNoLock = when (stateNoLock) {
             State.INITIALIZED, State.CONNECTING, State.CONNECTED, State.DISCONNECTED, State.WAITING -> State.CLOSING
             else -> throw IllegalStateException("Client internal error: unexpected state before closing: $stateNoLock.")
@@ -276,6 +276,6 @@ class WebSocketClientConnectionInternalApi(
         stateNoLock = State.CLOSED
         condition.signalAll()
 
-        logger.debug { "Client with subject: $subjectNoLock closed by $subject caused by $cause." }
+        logger.debug { "Client with subject: $subjectDescriptorNoLock closed by $subjectDescriptor caused by $cause." }
     }
 }

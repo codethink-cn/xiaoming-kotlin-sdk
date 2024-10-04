@@ -17,7 +17,7 @@
 package cn.codethink.xiaoming.io.connection
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.TextCause
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
@@ -37,7 +37,7 @@ sealed interface ConnectionInternalApi<T> : CoroutineScope, AutoCloseable {
     /**
      * Represent the connection internal API itself.
      */
-    val subject: Subject
+    val subjectDescriptor: SubjectDescriptor
 
     /**
      * Whether the connection is closed.
@@ -62,9 +62,9 @@ sealed interface ConnectionInternalApi<T> : CoroutineScope, AutoCloseable {
     /**
      * Close the connection.
      */
-    fun close(cause: Cause, subject: Subject)
+    fun close(cause: Cause, subjectDescriptor: SubjectDescriptor)
 
-    override fun close() = close(TextCause("Connection internal API closed."), subject)
+    override fun close() = close(TextCause("Connection internal API closed."), subjectDescriptor)
 
     /**
      * Await for state change.

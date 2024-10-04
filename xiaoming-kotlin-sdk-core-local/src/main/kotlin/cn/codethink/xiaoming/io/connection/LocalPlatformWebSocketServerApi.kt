@@ -18,7 +18,7 @@ package cn.codethink.xiaoming.io.connection
 
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.HEADER_VALUE_AUTHORIZATION_BEARER_WITH_SPACE
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.TextCause
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -51,7 +51,7 @@ import kotlin.concurrent.read
 import kotlin.concurrent.write
 import kotlin.coroutines.CoroutineContext
 
-val CONNECTION_SUBJECT_ATTRIBUTE_KEY = AttributeKey<Subject>("Connection Subject")
+val CONNECTION_SUBJECT_Descriptor_ATTRIBUTE_KEY = AttributeKey<SubjectDescriptor>("Connection Subject")
 
 /**
  * WebSocket server for local platform.
@@ -65,14 +65,14 @@ val CONNECTION_SUBJECT_ATTRIBUTE_KEY = AttributeKey<Subject>("Connection Subject
  */
 class LocalPlatformWebSocketServerApi(
     val configuration: WebSocketServerConfiguration,
-    subject: Subject,
+    subjectDescriptor: SubjectDescriptor,
     val authorizer: Authorizer,
     private val logger: KLogger = KotlinLogging.logger { },
     applicationEngineFactory: ApplicationEngineFactory<*, *> = Netty,
     parentJob: Job? = null,
     parentCoroutineContext: CoroutineContext = Dispatchers.IO
 ) : WebSocketServerApi(
-    configuration, subject, logger, applicationEngineFactory, parentJob, parentCoroutineContext
+    configuration, subjectDescriptor, logger, applicationEngineFactory, parentJob, parentCoroutineContext
 ) {
     private val mutableConnections = mutableListOf<OnlineConnectionInternalApi>()
     override val connectionApis: List<OnlineConnectionInternalApi>
@@ -89,7 +89,7 @@ class LocalPlatformWebSocketServerApi(
 
     inner class OnlineConnectionInternalApi(
         override val session: WebSocketServerSession,
-        override val subject: Subject,
+        override val subjectDescriptor: SubjectDescriptor,
         parentJob: Job,
         parentCoroutineContext: CoroutineContext
     ) : WebSocketConnectionInternalApi {
@@ -136,7 +136,7 @@ class LocalPlatformWebSocketServerApi(
         }
 
         internal suspend fun receiving() {
-            authorizer.onConnected(subject)
+            authorizer.onConnected(subjectDescriptor)
             val address = "${session.call.request.host()}:${session.call.request.port()}${session.call.request.path()}"
             try {
                 for (frame in session.incoming) {
@@ -149,7 +149,7 @@ class LocalPlatformWebSocketServerApi(
             } finally {
                 try {
                     lock.write { mutableConnections.remove(this) }
-                    authorizer.onDisconnected(subject)
+                    authorizer.onDisconnected(subjectDescriptor)
                 } finally {
                     onlineLock.write {
                         stateNoLock = OnlineState.DISCONNECTED
@@ -158,9 +158,9 @@ class LocalPlatformWebSocketServerApi(
             }
         }
 
-        override fun close() = close(TextCause("Server closed."), subject)
+        override fun close() = close(TextCause("Server closed."), subjectDescriptor)
 
-        override fun close(cause: Cause, subject: Subject) = onlineLock.write {
+        override fun close(cause: Cause, subjectDescriptor: SubjectDescriptor) = onlineLock.write {
             stateNoLock = when (stateNoLock) {
                 OnlineState.INITIALIZING, OnlineState.CONNECTED, OnlineState.DISCONNECTING, OnlineState.DISCONNECTED -> OnlineState.CLOSING
                 else -> throw IllegalStateException("Online connection internal error: unexpected state before close: $stateNoLock.")
@@ -171,7 +171,7 @@ class LocalPlatformWebSocketServerApi(
             supervisorJob.cancel()
             stateNoLock = OnlineState.CLOSED
 
-            logger.debug { "Online connection with subject: ${this.subject} closed by $subject caused by $cause." }
+            logger.debug { "Online connection with subject: ${this.subjectDescriptor} closed by $subjectDescriptor caused by $cause." }
         }
 
         override fun await() = onlineLock.write {
@@ -208,7 +208,7 @@ class LocalPlatformWebSocketServerApi(
         }
 
         // 3. Record connection subject in call attributes.
-        call.attributes.computeIfAbsent(CONNECTION_SUBJECT_ATTRIBUTE_KEY) { connectionSubject }
+        call.attributes.computeIfAbsent(CONNECTION_SUBJECT_Descriptor_ATTRIBUTE_KEY) { connectionSubject }
     }
 
     override suspend fun WebSocketServerSession.onConnected(
@@ -216,7 +216,7 @@ class LocalPlatformWebSocketServerApi(
     ) {
         // 1. Create and add connection.
         val connection = lock.write {
-            val connectionSubject = call.attributes[CONNECTION_SUBJECT_ATTRIBUTE_KEY]
+            val connectionSubject = call.attributes[CONNECTION_SUBJECT_Descriptor_ATTRIBUTE_KEY]
             OnlineConnectionInternalApi(this, connectionSubject, parentJob, parentCoroutineContext).apply {
                 mutableConnections.add(this)
             }

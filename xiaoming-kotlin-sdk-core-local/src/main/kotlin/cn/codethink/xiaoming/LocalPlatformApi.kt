@@ -19,7 +19,7 @@ package cn.codethink.xiaoming
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.EventCause
 import cn.codethink.xiaoming.common.SdkVersionString
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.doModuleRelatedAction
 import cn.codethink.xiaoming.data.LocalPlatformData
 import cn.codethink.xiaoming.data.LocalPlatformDataConfiguration
@@ -53,7 +53,7 @@ interface LocalPlatformApi : PlatformApi {
 }
 
 data class DefaultLocalPlatformConfiguration(
-    val subject: Subject,
+    val subjectDescriptor: SubjectDescriptor,
     val language: ProtocolLanguageConfiguration,
     val dataObjectMapper: ObjectMapper,
     val deserializerModule: DeserializerModule,
@@ -74,7 +74,7 @@ class DefaultLocalPlatformApi(
     private val logger: KLogger by configuration::logger
 
     // Forward to configuration.
-    override val subject: Subject by configuration::subject
+    override val subjectDescriptor: SubjectDescriptor by configuration::subjectDescriptor
     override val modules: List<Module> by configuration::modules
     override val deserializerModule: DeserializerModule by configuration::deserializerModule
     override val dataObjectMapper: ObjectMapper by configuration::dataObjectMapper
@@ -103,18 +103,18 @@ class DefaultLocalPlatformApi(
 
     override lateinit var internalApi: LocalPlatformInternalApi
 
-    fun start(cause: Cause, subject: Subject): Unit = lock.write {
+    fun start(cause: Cause, subjectDescriptor: SubjectDescriptor): Unit = lock.write {
         stateNoLock = when (stateNoLock) {
             State.INITIALIZED -> State.STARTING
             else -> throw IllegalStateException("Cannot start platform when it's in $stateNoLock state.")
         }
 
         try {
-            val platformStartEvent = PlatformStartEvent(cause, subject)
+            val platformStartEvent = PlatformStartEvent(cause, subjectDescriptor)
             val platformStartEventCause = EventCause(platformStartEvent)
 
-            logger.info { "Starting default platform ($SdkVersionString)." }
-            val context = ModuleContext(this, this.subject, platformStartEventCause)
+            logger.info { "Starting default local platform API, SDK version: $SdkVersionString." }
+            val context = ModuleContext(this, this.subjectDescriptor, platformStartEventCause)
 
             // Appreciate to contributors!
             // If there are too many contributors, select randomly and appreciate them.
@@ -142,14 +142,17 @@ class DefaultLocalPlatformApi(
             }
 
             // 1. Construct internal API.
+            logger.info { "Preparing Data API." }
+            val dataApi = configuration.data.toDataApi(this)
+
             internalApi = LocalPlatformInternalApi(
                 configuration = DefaultLocalPlatformInternalConfiguration(
                     logger = logger,
                     deserializerModule = deserializerModule,
                     dataObjectMapper = configuration.dataObjectMapper,
                     locale = configuration.locale,
-                    data = LocalPlatformData(configuration.data.toDataApi(this)),
-                    subject = configuration.subject,
+                    data = LocalPlatformData(dataApi),
+                    subjectDescriptor = configuration.subjectDescriptor,
                     modules = modules,
                     failOnModuleError = configuration.failOnModuleError,
                     parentJob = supervisorJob,
@@ -158,7 +161,7 @@ class DefaultLocalPlatformApi(
             )
 
             // 2. Start internal API.
-            internalApi.start(cause, subject, context)
+            internalApi.start(cause, subjectDescriptor, context)
 
             // 3. Callback module
             modules.forEach {
