@@ -25,6 +25,12 @@ const val VERSION_MATCHER_TYPE = "version"
  * @see toVersionMatcher
  */
 sealed interface VersionMatcher : Matcher<Version> {
+    companion object {
+        @JvmStatic
+        @JavaFriendlyApi
+        fun parse(string: String) = string.toVersionMatcher()
+    }
+
     @get:JsonIgnore
     override val type: String
         get() = VERSION_MATCHER_TYPE
@@ -158,6 +164,12 @@ fun String.toSingleStringMatcher(): SingleVersionMatcher {
 
         else -> IncludeVersionMatcher(toVersion())
     }
+}
+
+data object AnyVersionMatcher : VersionMatcher {
+    override fun isMatched(target: Version): Boolean = true
+
+    override fun toString(): String = ""
 }
 
 sealed interface SingleVersionMatcher : VersionMatcher
