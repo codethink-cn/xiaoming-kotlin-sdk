@@ -33,19 +33,19 @@ import kotlin.coroutines.CoroutineContext
  * @see currentCoroutineSubject
  * @see currentCoroutineSubjectOrFail
  */
-data class CauseSubjectContextElement(
+data class CauseSubjectPairElement(
     val cause: Cause,
     val subject: SubjectDescriptor
-) : AbstractCoroutineContextElement(CauseSubjectContextElement) {
-    companion object Key : CoroutineContext.Key<CauseSubjectContextElement>
+) : AbstractCoroutineContextElement(CauseSubjectPairElement) {
+    companion object Key : CoroutineContext.Key<CauseSubjectPairElement>
 }
 
 fun CoroutineScope.launchBy(
     cause: Cause, subject: SubjectDescriptor, block: suspend CoroutineScope.() -> Unit
-) = launch(CauseSubjectContextElement(cause, subject), block = block)
+) = launch(CauseSubjectPairElement(cause, subject), block = block)
 
 suspend fun currentCoroutineCause(): Cause? {
-    return currentCoroutineContext()[CauseSubjectContextElement]?.cause
+    return currentCoroutineContext()[CauseSubjectPairElement]?.cause
 }
 
 suspend fun currentCoroutineCauseOrFail(): Cause = currentCoroutineCause()
@@ -56,7 +56,7 @@ suspend fun currentCoroutineCauseOrFail(): Cause = currentCoroutineCause()
     )
 
 suspend fun currentCoroutineSubject(): SubjectDescriptor? {
-    return currentCoroutineContext()[CauseSubjectContextElement]?.subject
+    return currentCoroutineContext()[CauseSubjectPairElement]?.subject
 }
 
 suspend fun currentCoroutineSubjectOrFail(): SubjectDescriptor = currentCoroutineSubject()
