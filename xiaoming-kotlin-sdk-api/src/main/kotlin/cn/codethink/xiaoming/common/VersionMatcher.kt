@@ -64,7 +64,7 @@ object VersionMatcherSerializer : StdSerializer<VersionMatcher>(VersionMatcher::
 object VersionMatcherDeserializer : StdDeserializer<VersionMatcher>(VersionMatcher::class.java) {
     private fun readResolve(): Any = VersionMatcherDeserializer
     override fun deserialize(parser: JsonParser, context: DeserializationContext): VersionMatcher {
-        return parser.text.toVersionMatcher()
+        return parser.valueAsString.toVersionMatcher()
     }
 }
 

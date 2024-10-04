@@ -173,6 +173,6 @@ object VersionStringSerializer : StdSerializer<Version>(Version::class.java) {
 object VersionStringDeserializer : StdDeserializer<Version>(Version::class.java) {
     private fun readResolve(): Any = VersionStringDeserializer
     override fun deserialize(parser: JsonParser, context: DeserializationContext): Version {
-        return versionOf(parser.text)
+        return versionOf(parser.valueAsString)
     }
 }

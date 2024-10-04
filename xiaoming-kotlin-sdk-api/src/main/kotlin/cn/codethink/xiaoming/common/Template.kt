@@ -59,6 +59,6 @@ object TemplateSerializer : StdSerializer<Template>(Template::class.java) {
 object TemplateDeserializer : StdDeserializer<Template>(Template::class.java) {
     private fun readResolve(): Any = TemplateDeserializer
     override fun deserialize(parser: JsonParser, context: DeserializationContext): Template {
-        return Template(parser.text)
+        return Template(parser.valueAsString)
     }
 }
