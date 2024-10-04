@@ -64,13 +64,15 @@ data class DefaultLocalPlatformConfiguration(
     val additionalContributors: List<String> = emptyList(),
     val locale: Locale = Locale.getDefault(),
     val modules: List<Module> = emptyList(),
-    val failOnModuleError: Boolean = true
+    val failOnModuleError: Boolean = true,
+    val logger: KLogger = KotlinLogging.logger { },
 )
 
 class DefaultLocalPlatformApi(
     private val configuration: DefaultLocalPlatformConfiguration,
-    private val logger: KLogger = KotlinLogging.logger { },
 ) : LocalPlatformApi {
+    private val logger: KLogger by configuration::logger
+
     // Forward to configuration.
     override val subject: Subject by configuration::subject
     override val modules: List<Module> by configuration::modules
