@@ -21,7 +21,7 @@ import cn.codethink.xiaoming.common.PluginSubjectDescriptor
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.XiaomingProtocolSubject
 import cn.codethink.xiaoming.common.currentTimeMillis
-import cn.codethink.xiaoming.common.segmentIdOf
+import cn.codethink.xiaoming.common.toNamespaceId
 import cn.codethink.xiaoming.io.data.DeserializerModule
 import cn.codethink.xiaoming.io.data.XiaomingJacksonModuleVersion
 import cn.codethink.xiaoming.io.data.findAndApplyInitializers
@@ -70,7 +70,7 @@ class WebSocketClientConnectionInternalApiTest {
 
     @Test
     fun testConnect(): Unit = runBlocking {
-        val demoPluginSubject = PluginSubjectDescriptor(segmentIdOf("cn.codethink.xiaoming.demo"))
+        val demoPluginSubject = PluginSubjectDescriptor("cn.codethink.xiaoming:demo".toNamespaceId())
         val supervisorJob = SupervisorJob()
 
         val server = LocalPlatformWebSocketServerApi(
