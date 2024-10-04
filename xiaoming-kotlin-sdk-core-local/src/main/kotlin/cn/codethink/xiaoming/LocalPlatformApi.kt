@@ -61,6 +61,7 @@ data class DefaultLocalPlatformConfiguration(
     val parentJob: Job? = null,
     val parentCoroutineContext: CoroutineContext = EmptyCoroutineContext,
     val contributorsDisplayingLimits: Int? = null,
+    val additionalContributors: List<String> = emptyList(),
     val locale: Locale = Locale.getDefault(),
     val modules: List<Module> = emptyList(),
     val failOnModuleError: Boolean = true
@@ -122,21 +123,19 @@ class DefaultLocalPlatformApi(
                 return@write
             }
 
+            val contributors = contributors + configuration.additionalContributors
+            logger.info { "We are deeply grateful to all our contributors! " }
+            logger.info { "Without your hard work and wisdom, there would be no thriving XiaoMing today! " }
+
             if (contributorsDisplayingLimits != null && contributors.size > contributorsDisplayingLimits) {
                 val randomContributors = contributors.shuffled().take(contributorsDisplayingLimits)
                 logger.info {
-                    "We are deeply grateful to all our contributors! Without your hard work and wisdom, " +
-                            "there would be no thriving XiaoMing today. " +
                             "But we are sorry because configuration item `contributorsDisplayingLimits` set, " +
-                            "we randomly select a part of contributors' names to display, " +
-                            "notice that we also have another ${contributors.size - contributorsDisplayingLimits} contributors!"
+                                    "we can only randomly select a part of contributors' names to display. "
                 }
+                logger.info { "Notice that we also have another ${contributors.size - contributorsDisplayingLimits} contributors!" }
                 logger.info { "Contributors: ${randomContributors.joinToString(", ")}. (Randomly selected)" }
             } else {
-                logger.info {
-                    "We are deeply grateful to all our contributors! Without your hard work and wisdom, " +
-                            "there would be no thriving XiaoMing today. "
-                }
                 logger.info { "Contributors: ${contributors.joinToString(", ")}." }
             }
 
