@@ -72,7 +72,7 @@ class LocalPluginManagerApi(
                     // Then load and enable the new one.
 
                     if (presented.isErrored) {
-                        check(!force) {
+                        check(force) {
                             "The plugins to enabled contains '${plugin.toExactRequirement()}', " +
                                     "but there is a same plugin with a another version '${presented.version}', " +
                                     "platform needs to unload it first. " +
