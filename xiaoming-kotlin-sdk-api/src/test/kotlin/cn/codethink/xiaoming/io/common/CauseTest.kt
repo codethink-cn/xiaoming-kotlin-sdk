@@ -17,8 +17,10 @@
 package cn.codethink.xiaoming.io.common
 
 import cn.codethink.xiaoming.common.PacketIdCause
+import cn.codethink.xiaoming.common.TestSubjectDescriptor
 import cn.codethink.xiaoming.common.TextCause
 import cn.codethink.xiaoming.common.assertJsonContentEquals
+import cn.codethink.xiaoming.common.toId
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -32,15 +34,18 @@ class CauseTest {
             setSerializationInclusion(JsonInclude.Include.NON_NULL)
         }
 
-        val textCause = TextCause("Reason message here.")
-        val packetCause = PacketIdCause("packet-id")
+        val textCause = TextCause("Reason message here.", TestSubjectDescriptor)
+        val packetCause = PacketIdCause("packet-id".toId(), TestSubjectDescriptor)
 
         mapper.assertJsonContentEquals(
             """
             {
-              "type": "text",
-              "text": "Reason message here."
-            }`
+              "subject" : {
+                "type" : "test"
+              },
+              "text" : "Reason message here.",
+              "type" : "text"
+            }
             """.trimIndent(), textCause
         )
 
@@ -48,7 +53,10 @@ class CauseTest {
             """
             {
               "type": "packet_id",
-              "id": "packet-id"
+              "id": "packet-id",
+              "subject" : {
+                "type" : "test"
+              }
             }
             """.trimIndent(), packetCause
         )

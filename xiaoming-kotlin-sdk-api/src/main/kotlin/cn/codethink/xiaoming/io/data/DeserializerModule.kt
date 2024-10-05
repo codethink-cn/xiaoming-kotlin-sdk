@@ -19,8 +19,10 @@
 package cn.codethink.xiaoming.io.data
 
 import cn.codethink.xiaoming.common.DataDeserializerModifier
+import cn.codethink.xiaoming.common.SdkGroup
+import cn.codethink.xiaoming.common.SdkName
+import cn.codethink.xiaoming.common.SdkVersion
 import cn.codethink.xiaoming.common.SubjectDescriptor
-import cn.codethink.xiaoming.common.XiaomingSdkSubject
 import cn.codethink.xiaoming.common.prependOrNull
 import com.fasterxml.jackson.core.Version
 import com.fasterxml.jackson.databind.Module
@@ -45,10 +47,9 @@ class DeserializerModule(
     }
 }
 
-val XiaomingJacksonModuleVersion = XiaomingSdkSubject.let {
-    val version = it.version
-    val snapshotInfo = version.preRelease.orEmpty() + version.build.prependOrNull("+").orEmpty()
-    Version(version.major, version.minor, version.patch, snapshotInfo, it.group, it.name)
+val JacksonModuleVersion = SdkVersion.let {
+    val snapshotInfo = it.preRelease.orEmpty() + it.build.prependOrNull("+").orEmpty()
+    Version(it.major, it.minor, it.patch, snapshotInfo, SdkGroup, SdkName)
 }
 
 /**

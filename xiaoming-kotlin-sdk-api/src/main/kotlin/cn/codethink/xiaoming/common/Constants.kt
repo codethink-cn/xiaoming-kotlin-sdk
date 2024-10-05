@@ -20,6 +20,8 @@ package cn.codethink.xiaoming.common
 
 const val FIELD_TYPE = "type"
 const val FIELD_VERSION = "version"
+const val FIELD_CAUSE = "cause"
+const val FIELD_SUBJECT = "subject"
 
 const val REQUEST_PACKET_FIELD_ARGUMENT = "argument"
 
@@ -46,17 +48,8 @@ const val MODULE_SUBJECT_DESCRIPTOR_FIELD_VERSION = "version"
 const val MODULE_SUBJECT_DESCRIPTOR_FIELD_GROUP = "group"
 const val MODULE_SUBJECT_DESCRIPTOR_FIELD_NAME = "name"
 
-const val CAUSE_FIELD_CAUSE = "cause"
-
-const val CAUSE_TYPE_TEXT = "text"
-const val TEXT_CAUSE_FIELD_TEXT = "text"
-
 const val CAUSE_TYPE_STANDARD_TEXT = "standard_text"
 
-const val CAUSE_TYPE_PACKET_DATA = "packet_data"
-const val CAUSE_TYPE_PACKET_ID = "packet_id"
-const val PACKET_DATA_CAUSE_FIELD_PACKET = "packet"
-const val PACKET_CAUSE_FIELD_ID = "id"
 
 const val PUBLISH_EVENT_REQUEST_PARA_TYPE = "type"
 const val PUBLISH_EVENT_REQUEST_PARA_EVENT = "event"

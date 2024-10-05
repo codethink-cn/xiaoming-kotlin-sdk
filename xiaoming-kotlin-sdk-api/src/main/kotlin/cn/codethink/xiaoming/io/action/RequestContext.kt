@@ -17,7 +17,6 @@
 package cn.codethink.xiaoming.io.action
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.CauseSubjectPair
 import cn.codethink.xiaoming.common.REQUEST_PACKET_FIELD_ARGUMENT
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.io.connection.Connection
@@ -44,7 +43,7 @@ interface RequestContext<P, R> {
     val receipt: ReceiptPacket
     val connection: Connection<*>
 
-    var disconnect: CauseSubjectPair?
+    var disconnect: Cause?
 }
 
 data class PacketRequestContext<P, R>(
@@ -53,7 +52,7 @@ data class PacketRequestContext<P, R>(
     private val defaultSubject: SubjectDescriptor,
     override val receipt: ReceiptPacket,
     override val connection: PacketConnection<*>,
-    override var disconnect: CauseSubjectPair? = null
+    override var disconnect: Cause? = null
 ) : RequestContext<P, R> {
     override val mode: String by request::mode
     override val timeout: Long by request::timeout
@@ -66,7 +65,7 @@ data class PacketRequestContext<P, R>(
         nullable = action.requestPara.nullable
     ) as P?
 
-    override val subject: SubjectDescriptor? by request::subject
+    override val subject: SubjectDescriptor? by request.cause::subject
     override val subjectOrDefault: SubjectDescriptor
         get() = subject ?: defaultSubject
 

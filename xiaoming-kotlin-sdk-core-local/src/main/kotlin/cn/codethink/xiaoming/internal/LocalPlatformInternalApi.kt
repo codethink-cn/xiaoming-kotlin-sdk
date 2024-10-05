@@ -16,6 +16,7 @@
 
 package cn.codethink.xiaoming.internal
 
+import cn.codethink.xiaoming.common.AutoClosableSubject
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.TextCause
@@ -45,9 +46,9 @@ import kotlin.coroutines.CoroutineContext
  */
 class LocalPlatformInternalApi(
     val configuration: LocalPlatformInternalConfiguration,
-) : CoroutineScope, AutoCloseable {
+) : CoroutineScope, AutoClosableSubject {
     val logger by configuration::logger
-    private val subject by configuration::descriptor
+    override val descriptor by configuration::descriptor
 
     // Coroutine related APIs.
     val supervisorJob = SupervisorJob(configuration.parentJob)
@@ -78,7 +79,7 @@ class LocalPlatformInternalApi(
     val permissionServiceApi = LocalPermissionServiceApi(this)
     val connectionManagerApi = ConnectionManagerApi(this)
 
-    fun start(cause: Cause, subject: SubjectDescriptor, context: ModuleContext) = lock.write {
+    fun start(cause: Cause, context: ModuleContext) = lock.write {
         stateNoLock = when (stateNoLock) {
             LocalPlatformInternalState.INITIALIZED -> LocalPlatformInternalState.STARTING
             else -> throw IllegalStateException("Cannot start platform when it's not initialized.")
@@ -107,8 +108,12 @@ class LocalPlatformInternalApi(
         TODO()
     }
 
+    override fun close(cause: Cause?) {
+        TODO("Not yet implemented")
+    }
+
     override fun close() {
-        stop(TextCause("Local platform internal API closed."), subject)
+        close(TextCause("Local platform internal API closed.", descriptor))
     }
 }
 

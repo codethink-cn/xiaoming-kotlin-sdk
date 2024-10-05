@@ -20,7 +20,7 @@ import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.SubjectDescriptor
-import cn.codethink.xiaoming.common.providedOrFromCurrentThread
+import cn.codethink.xiaoming.common.currentThreadCauseOrFail
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.write
@@ -42,10 +42,9 @@ class LocalPluginManagerApi(
     fun enablePlugins(
         plugins: Iterable<Plugin>,
         force: Boolean = false,
-        cause: Cause? = null,
-        subject: SubjectDescriptor? = null
+        cause: Cause? = null
     ): Unit = lock.write {
-        val (causeOrDefault, subjectOrDefault) = providedOrFromCurrentThread(cause, subject)
+        val finalCause = cause ?: currentThreadCauseOrFail()
         val pluginsById = plugins.associateBy { it.descriptor.id }
 
         // Build dependency graph.

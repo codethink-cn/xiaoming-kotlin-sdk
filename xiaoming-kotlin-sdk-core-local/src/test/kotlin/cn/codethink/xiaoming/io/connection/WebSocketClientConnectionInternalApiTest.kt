@@ -16,14 +16,13 @@
 
 package cn.codethink.xiaoming.io.connection
 
-import cn.codethink.xiaoming.TEST_SUBJECT_DESCRIPTOR
 import cn.codethink.xiaoming.common.PluginSubjectDescriptor
 import cn.codethink.xiaoming.common.SubjectDescriptor
-import cn.codethink.xiaoming.common.XiaomingProtocolSubject
+import cn.codethink.xiaoming.common.TestSubjectDescriptor
 import cn.codethink.xiaoming.common.currentTimeMillis
 import cn.codethink.xiaoming.common.toNamespaceId
 import cn.codethink.xiaoming.io.data.DeserializerModule
-import cn.codethink.xiaoming.io.data.XiaomingJacksonModuleVersion
+import cn.codethink.xiaoming.io.data.JacksonModuleVersion
 import cn.codethink.xiaoming.io.data.findAndApplyInitializers
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -48,7 +47,7 @@ class WebSocketClientConnectionInternalApiTest {
         override fun authorize(token: String): SubjectDescriptor? {
             if (token == TEST_TOKEN) {
                 logger.info { "Authorized" }
-                return XiaomingProtocolSubject
+                return TestSubjectDescriptor
             } else {
                 return null
             }
@@ -56,10 +55,10 @@ class WebSocketClientConnectionInternalApiTest {
     }
 
     private val deserializerModule = DeserializerModule(
-        version = XiaomingJacksonModuleVersion,
+        version = JacksonModuleVersion,
         logger = logger
     ).apply {
-        findAndApplyInitializers(javaClass.classLoader, TEST_SUBJECT_DESCRIPTOR)
+        findAndApplyInitializers(javaClass.classLoader, TestSubjectDescriptor)
     }
 
     private val dataObjectMapper = jacksonObjectMapper().apply {
@@ -79,7 +78,7 @@ class WebSocketClientConnectionInternalApiTest {
                 host = TEST_HOST,
                 path = TEST_PATH
             ),
-            descriptor = TEST_SUBJECT_DESCRIPTOR,
+            descriptor = TestSubjectDescriptor,
             authorizationService = TestAuthorizationService(),
             parentJob = supervisorJob
         )
@@ -130,7 +129,7 @@ class WebSocketClientConnectionInternalApiTest {
                 host = TEST_HOST,
                 path = TEST_PATH
             ),
-            descriptor = TEST_SUBJECT_DESCRIPTOR,
+            descriptor = TestSubjectDescriptor,
             authorizationService = TestAuthorizationService()
         )
 
@@ -145,7 +144,7 @@ class WebSocketClientConnectionInternalApiTest {
             configuration = clientConfiguration,
             logger = logger,
             httpClient = HttpClient { install(WebSockets) },
-            descriptor = TEST_SUBJECT_DESCRIPTOR
+            descriptor = TestSubjectDescriptor
         )
 
         var durationMillis = currentTimeMillis

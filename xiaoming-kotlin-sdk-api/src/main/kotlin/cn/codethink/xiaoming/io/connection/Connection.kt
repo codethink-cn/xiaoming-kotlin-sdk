@@ -30,17 +30,16 @@ import kotlinx.coroutines.CoroutineScope
  * @see PacketConnection
  */
 interface Connection<T> : AutoClosableSubject, CoroutineScope {
-    val session: String
+    val session: SubjectDescriptor
     val isClosed: Boolean
 
     suspend fun <P, R> request(
         action: Action<P, R>,
         mode: String,
         timeout: Long,
+        cause: Cause? = null,
         argument: P? = null,
-        subject: SubjectDescriptor? = null,
         time: Long = currentTimeSeconds,
-        cause: Cause? = null
     ) : Pair<Received<T>, R?>
 }
 

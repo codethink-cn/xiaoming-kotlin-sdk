@@ -17,7 +17,6 @@
 package cn.codethink.xiaoming.io.packet
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.CauseSubjectPair
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.io.ProtocolLanguageConfiguration
 import cn.codethink.xiaoming.io.connection.ConnectionApi
@@ -43,7 +42,7 @@ data class PacketContext(
     val received: Received<*>,
     val language: ProtocolLanguageConfiguration,
 
-    var disconnect: CauseSubjectPair? = null
+    var disconnect: Cause? = null
 ) {
     suspend fun send(packet: Packet) {
         connectionApi.send(packet)

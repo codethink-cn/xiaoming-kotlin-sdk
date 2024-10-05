@@ -14,22 +14,19 @@
  * limitations under the License.
  */
 
-@file:JvmName("PermissionServices")
-package cn.codethink.xiaoming.permission
+package cn.codethink.xiaoming.common
 
-import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.IdSubjectDescriptor
+import cn.codethink.xiaoming.io.data.EmptyRaw
 
-/**
- * Operations related to [Permission] and [PermissionMeta].
- *
- * @author Chuanwise
- */
-interface PermissionService {
-    suspend fun hasPermission(
-        target: IdSubjectDescriptor,
-        permission: Permission,
-        context: Map<String, Any?> = emptyMap(),
-        cause: Cause? = null
-    ): Boolean?
+const val SUBJECT_TYPE_TEST = "test"
+const val CAUSE_TYPE_TEST = "test"
+
+@InternalApi
+data object TestSubjectDescriptor : SubjectDescriptor(SUBJECT_TYPE_TEST)
+
+@InternalApi
+data object TestCause : Cause(EmptyRaw) {
+    override val type: String = CAUSE_TYPE_TEST
+    override val cause: Cause? = null
+    override val subject: SubjectDescriptor = TestSubjectDescriptor
 }

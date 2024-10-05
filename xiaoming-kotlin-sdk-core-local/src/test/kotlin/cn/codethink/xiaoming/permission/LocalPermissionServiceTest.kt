@@ -18,10 +18,9 @@ package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.DefaultLocalPlatformApi
 import cn.codethink.xiaoming.DefaultLocalPlatformConfiguration
-import cn.codethink.xiaoming.TEST_CAUSE
-import cn.codethink.xiaoming.TEST_SUBJECT_DESCRIPTOR
-import cn.codethink.xiaoming.common.CauseSubjectPair
 import cn.codethink.xiaoming.common.PluginSubjectDescriptor
+import cn.codethink.xiaoming.common.TestCause
+import cn.codethink.xiaoming.common.TestSubjectDescriptor
 import cn.codethink.xiaoming.common.getTestResourceAsStream
 import cn.codethink.xiaoming.common.segmentIdOf
 import cn.codethink.xiaoming.common.threadLocalCause
@@ -31,7 +30,7 @@ import cn.codethink.xiaoming.data.LocalPlatformDataConfiguration
 import cn.codethink.xiaoming.data.insertAndGetPermissionProfile
 import cn.codethink.xiaoming.io.DefaultProtocolLanguageConfiguration
 import cn.codethink.xiaoming.io.data.DeserializerModule
-import cn.codethink.xiaoming.io.data.XiaomingJacksonModuleVersion
+import cn.codethink.xiaoming.io.data.JacksonModuleVersion
 import cn.codethink.xiaoming.io.data.findAndApplyInitializers
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
@@ -49,10 +48,10 @@ class LocalPermissionServiceTest {
     private val logger = KotlinLogging.logger { }
 
     private val deserializerModule = DeserializerModule(
-        version = XiaomingJacksonModuleVersion,
+        version = JacksonModuleVersion,
         logger = logger
     ).apply {
-        findAndApplyInitializers(javaClass.classLoader, TEST_SUBJECT_DESCRIPTOR)
+        findAndApplyInitializers(javaClass.classLoader, TestSubjectDescriptor)
     }
 
     private val dataObjectMapper = jacksonObjectMapper().apply {
@@ -70,7 +69,7 @@ class LocalPermissionServiceTest {
 
     private val platformApi = DefaultLocalPlatformApi(
         configuration = DefaultLocalPlatformConfiguration(
-            descriptor = TEST_SUBJECT_DESCRIPTOR,
+            descriptor = TestSubjectDescriptor,
             language = getTestResourceAsStream("xiaoming/languages/${Locale.getDefault()}/protocol.yml").use {
                 fileObjectMapper.readValue<DefaultProtocolLanguageConfiguration>(it)
             },
@@ -81,7 +80,7 @@ class LocalPermissionServiceTest {
             }
         ),
     ).apply {
-        start(TEST_CAUSE, TEST_SUBJECT_DESCRIPTOR)
+        start(TestCause)
     }
     private val api = platformApi.internalApi
 
@@ -93,7 +92,7 @@ class LocalPermissionServiceTest {
 
     @BeforeEach
     fun beforeEach() {
-        threadLocalCause.set(CauseSubjectPair(TEST_CAUSE, TEST_SUBJECT_DESCRIPTOR))
+        threadLocalCause.set(TestCause)
     }
 
     @Test

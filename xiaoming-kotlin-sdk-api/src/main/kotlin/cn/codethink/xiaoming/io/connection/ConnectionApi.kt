@@ -132,7 +132,7 @@ class TextFrameConnectionApi(
     override suspend fun receive(packet: Packet, origin: Frame.Text?) {
         assertNotClosed()
 
-        val session = packet.subject
+        val session = packet.session
         val channel = getChannelOrNull(session) ?: return
 
         val received = DefaultReceived(origin, packet, this)
@@ -161,8 +161,8 @@ class TextFrameConnectionApi(
         receive(packet, frame)
     }
 
-    private fun getChannelOrNull(target: SubjectDescriptor?) : Channel<Received<Frame.Text>>? = lock.read {
-        if (target == null) {
+    private fun getChannelOrNull(session: SubjectDescriptor?): Channel<Received<Frame.Text>>? = lock.read {
+        if (session == null) {
             val exclusiveChannel = channels.values.singleOrNull()
             if (exclusiveChannel == null) {
                 if (channels.values.isNotEmpty()) {
@@ -175,9 +175,9 @@ class TextFrameConnectionApi(
             }
             exclusiveChannel
         } else {
-            val sharedChannel = channels[target]
+            val sharedChannel = channels[session]
             if (sharedChannel == null) {
-                logger.error { "Received a packet with target $target, but there's no channel for it." }
+                logger.error { "Received a packet with target $session, but there's no channel for it." }
                 return@read null
             }
             sharedChannel

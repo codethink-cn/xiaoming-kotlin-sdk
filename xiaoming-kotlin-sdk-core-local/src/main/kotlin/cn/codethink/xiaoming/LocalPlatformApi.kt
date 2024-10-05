@@ -20,6 +20,7 @@ import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.EventCause
 import cn.codethink.xiaoming.common.SdkVersionString
 import cn.codethink.xiaoming.common.SubjectDescriptor
+import cn.codethink.xiaoming.common.currentThreadCauseOrFail
 import cn.codethink.xiaoming.common.doModuleRelatedAction
 import cn.codethink.xiaoming.data.LocalPlatformData
 import cn.codethink.xiaoming.data.LocalPlatformDataConfiguration
@@ -103,14 +104,17 @@ class DefaultLocalPlatformApi(
 
     override lateinit var internalApi: LocalPlatformInternalApi
 
-    fun start(cause: Cause, subject: SubjectDescriptor): Unit = lock.write {
+    @JvmOverloads
+    fun start(cause: Cause? = null): Unit = lock.write {
+        val finalCause = cause ?: currentThreadCauseOrFail()
+
         stateNoLock = when (stateNoLock) {
             State.INITIALIZED -> State.STARTING
             else -> throw IllegalStateException("Cannot start platform when it's in $stateNoLock state.")
         }
 
         try {
-            val platformStartEvent = PlatformStartEvent(cause, subject)
+            val platformStartEvent = PlatformStartEvent(finalCause)
             val platformStartEventCause = EventCause(platformStartEvent)
 
             logger.info { "Starting default local platform API, SDK version: $SdkVersionString." }
@@ -161,7 +165,7 @@ class DefaultLocalPlatformApi(
             )
 
             // 2. Start internal API.
-            internalApi.start(cause, subject, context)
+            internalApi.start(finalCause, context)
 
             // 3. Callback module
             modules.forEach {

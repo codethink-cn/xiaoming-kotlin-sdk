@@ -24,8 +24,7 @@ import cn.codethink.xiaoming.common.RECEIPT_PACKET_FIELD_DATA
 import cn.codethink.xiaoming.common.RECEIPT_STATE_SUCCEED
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.TextCause
-import cn.codethink.xiaoming.common.close
-import cn.codethink.xiaoming.common.providedOrFromCurrentThread
+import cn.codethink.xiaoming.common.currentThreadCauseOrFail
 import cn.codethink.xiaoming.io.ProtocolLanguageConfiguration
 import cn.codethink.xiaoming.io.action.Action
 import cn.codethink.xiaoming.io.packet.PACKET_TYPE_REQUEST
@@ -61,7 +60,7 @@ import kotlin.time.Duration.Companion.milliseconds
  */
 class PacketConnection<T>(
     private val logger: KLogger,
-    override val session: String,
+    override val session: SubjectDescriptor,
     private val language: ProtocolLanguageConfiguration,
     override val descriptor: SubjectDescriptor,
     private val connectionApi: ConnectionApi<T>,
@@ -86,7 +85,7 @@ class PacketConnection<T>(
             onReceiveAsync(received)
         }
         if (isNotClosed) {
-            close(TextCause("Channel closed."), descriptor)
+            close(TextCause("Channel closed.", descriptor))
         }
     }
 
@@ -107,10 +106,9 @@ class PacketConnection<T>(
         action: Action<P, R>,
         mode: String,
         timeout: Long,
+        cause: Cause?,
         argument: P?,
-        subject: SubjectDescriptor?,
-        time: Long,
-        cause: Cause?
+        time: Long
     ): Pair<Received<T>, R?> {
         val (id, channel) = receiptPacketHandler.allocate()
         val packet = RequestPacket(
@@ -118,10 +116,9 @@ class PacketConnection<T>(
             action = action.name,
             mode = mode,
             timeout = timeout,
-            subject = subject ?: descriptor,
+            cause = cause ?: currentThreadCauseOrFail(),
             argument = argument,
             time = time,
-            cause = cause,
             session = session
         )
 
@@ -171,8 +168,8 @@ class PacketConnection<T>(
         types.register(type, DefaultRegistration(handler, subject))
     }
 
-    override fun close(cause: Cause?, subject: SubjectDescriptor?): Unit = lock.write {
-        val (causeOrDefault, subjectOrDefault) = providedOrFromCurrentThread(cause, subject)
+    override fun close(cause: Cause?): Unit = lock.write {
+        val finalCause = cause ?: currentThreadCauseOrFail()
 
         if (closedNoLock) {
             throw IllegalStateException("Connection has been closed.")
@@ -180,7 +177,7 @@ class PacketConnection<T>(
         closedNoLock = true
 
         // 1. Remove channel from connection API.
-        if (!connectionApi.remove(subjectOrDefault)) {
+        if (!connectionApi.remove(finalCause.subject)) {
             throw IllegalStateException("Failed to remove the subject from the connection.")
         }
 

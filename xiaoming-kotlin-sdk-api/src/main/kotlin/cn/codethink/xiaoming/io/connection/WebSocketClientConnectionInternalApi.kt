@@ -209,8 +209,9 @@ class WebSocketClientConnectionInternalApi(
                     "Max reconnect attempts reached or disconnected and reconnect is disabled."
                 } else {
                     "Disconnected and reconnect is disabled."
-                }
-            ), descriptor
+                },
+                descriptor
+            )
         )
     }
 
@@ -256,10 +257,10 @@ class WebSocketClientConnectionInternalApi(
     }
 
     override fun close() {
-        close(TextCause("Client closed."), this.descriptor)
+        close(TextCause("Client closed.", descriptor))
     }
 
-    override fun close(cause: Cause, subject: SubjectDescriptor) = lock.write {
+    override fun close(cause: Cause?) = lock.write {
         stateNoLock = when (stateNoLock) {
             State.INITIALIZED, State.CONNECTING, State.CONNECTED, State.DISCONNECTED, State.WAITING -> State.CLOSING
             else -> throw IllegalStateException("Client internal error: unexpected state before closing: $stateNoLock.")
@@ -271,6 +272,6 @@ class WebSocketClientConnectionInternalApi(
         stateNoLock = State.CLOSED
         condition.signalAll()
 
-        logger.debug { "Client with subject: ${this.descriptor} closed by $subject caused by $cause." }
+        logger.debug { "Client with subject: ${this.descriptor} caused by $cause." }
     }
 }

@@ -18,6 +18,7 @@ package cn.codethink.xiaoming.io.packet
 
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.Cause
+import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.common.PACKET_TYPE_RECEIPT
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.currentTimeSeconds
@@ -37,30 +38,11 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 abstract class Packet(
     raw: Raw
 ) : AbstractData(raw) {
-    var id: String by raw
-    var type: String by raw
-    var time: Long by raw
-    var cause: Cause? by raw
-    var subject: SubjectDescriptor by raw
-    var session: String? by raw
-
-    @JvmOverloads
-    constructor(
-        id: String,
-        type: String,
-        subject: SubjectDescriptor,
-        time: Long = currentTimeSeconds,
-        cause: Cause? = null,
-        session: String? = null,
-        raw: Raw = MapRaw()
-    ) : this(raw) {
-        this.id = id
-        this.type = type
-        this.time = time
-        this.cause = cause
-        this.subject = subject
-        this.session = session
-    }
+    abstract val id: Id
+    abstract val type: String
+    abstract val time: Long
+    abstract val cause: Cause?
+    abstract val session: SubjectDescriptor?
 }
 
 /**
@@ -72,6 +54,12 @@ abstract class Packet(
 class RequestPacket(
     raw: Raw
 ) : Packet(raw) {
+    override var id: Id by raw
+    override var type: String by raw
+    override var time: Long by raw
+    override var cause: Cause by raw
+    override var session: SubjectDescriptor? by raw
+
     var action: String by raw
     var mode: String by raw
     var argument: Any? by raw
@@ -79,22 +67,20 @@ class RequestPacket(
 
     @JvmOverloads
     constructor(
-        id: String,
+        id: Id,
         action: String,
         mode: String,
         timeout: Long,
-        subject: SubjectDescriptor,
+        cause: Cause,
         argument: Any? = null,
         time: Long = currentTimeSeconds,
-        cause: Cause? = null,
-        session: String? = null,
+        session: SubjectDescriptor? = null,
         raw: Raw = MapRaw()
     ) : this(raw) {
         this.id = id
         this.type = PACKET_TYPE_REQUEST
         this.time = time
         this.cause = cause
-        this.subject = subject
         this.session = session
 
         this.action = action
@@ -115,27 +101,31 @@ const val PACKET_TYPE_REQUEST = "request"
 class ReceiptPacket(
     raw: Raw
 ) : Packet(raw) {
-    var target: String by raw
+    override var id: Id by raw
+    override var type: String by raw
+    override var time: Long by raw
+    override var cause: Cause? by raw
+    override var session: SubjectDescriptor? by raw
+
+    var target: Id by raw
     var state: String by raw
     var data: Any? by raw
 
     @JvmOverloads
     constructor(
-        id: String,
-        target: String,
+        id: Id,
+        target: Id,
         state: String,
-        subject: SubjectDescriptor,
+        cause: Cause? = null,
         data: Any? = null,
         time: Long = currentTimeSeconds,
-        cause: Cause? = null,
-        session: String? = null,
+        session: SubjectDescriptor? = null,
         raw: Raw = MapRaw()
     ) : this(raw) {
         this.id = id
         this.type = PACKET_TYPE_REQUEST
         this.time = time
         this.cause = cause
-        this.subject = subject
         this.session = session
 
         this.target = target

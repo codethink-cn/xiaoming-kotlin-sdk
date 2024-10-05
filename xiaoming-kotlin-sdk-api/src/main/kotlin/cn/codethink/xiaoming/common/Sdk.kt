@@ -18,12 +18,13 @@
 
 package cn.codethink.xiaoming.common
 
+import cn.codethink.xiaoming.Platform
 import java.util.Properties
 
 const val SDK_PROPERTIES_PATH = "xiaoming/sdk.properties"
 
 val SdkProperties = Properties().apply {
-    load(SdkSubjectDescriptor::class.java.classLoader.getResourceAsStream(SDK_PROPERTIES_PATH))
+    load(Platform::class.java.classLoader.getResourceAsStream(SDK_PROPERTIES_PATH))
 }
 
 val SdkName: String
@@ -35,5 +36,9 @@ val SdkGroup: String
 val SdkVersionString: String
     get() = SdkProperties["version"] as String
 
+val SdkVersion: Version = SdkVersionString.toVersion()
+
 val SdkProtocolString: String
     get() = SdkProperties["protocol"] as String
+
+val SdkProtocol: Version = SdkProtocolString.toVersion()

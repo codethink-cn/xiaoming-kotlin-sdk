@@ -18,7 +18,6 @@ package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.IdSubjectDescriptor
-import cn.codethink.xiaoming.common.SubjectDescriptor
 
 /**
  * Provides permission related operations by forwarding calling to
@@ -34,7 +33,6 @@ class LocalPermissionService(
         target: IdSubjectDescriptor,
         permission: Permission,
         context: Map<String, Any?>,
-        cause: Cause?,
-        subject: SubjectDescriptor?
-    ): Boolean? = permissionServiceApi.hasPermission(target, permission, context, cause, subject)
+        cause: Cause?
+    ): Boolean? = permissionServiceApi.hasPermission(target, permission, context, cause)
 }

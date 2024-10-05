@@ -67,7 +67,7 @@ class ConnectionManagerApi(
                 if (it.value.subject.type == type && !it.value.keepOnNoAdapter) {
                     val registration = servers.unregisterByKey(it.key)
                     if (registration != null) {
-                        registration.value.close(TextCause("Adapter unregistered."), it.value.subject)
+                        registration.value.close(TextCause("Adapter unregistered.", it.value.subject))
                         internalApi.logger.info {
                             "Stopped server ${it.key} with subject ${it.value.subject} and type ${it.value.subject.type} due to adapter unregistered."
                         }

@@ -17,14 +17,13 @@
 package cn.codethink.xiaoming
 
 import cn.codethink.xiaoming.common.ConnectionSubjectDescriptor
-import cn.codethink.xiaoming.common.TextCause
-import cn.codethink.xiaoming.common.XiaomingSdkSubject
+import cn.codethink.xiaoming.common.TestSubjectDescriptor
 import cn.codethink.xiaoming.common.toId
 import cn.codethink.xiaoming.io.connection.DefaultWebSocketClientConfiguration
 import cn.codethink.xiaoming.io.connection.TextFrameConnectionApi
 import cn.codethink.xiaoming.io.connection.WebSocketClientConnectionInternalApi
 import cn.codethink.xiaoming.io.data.DeserializerModule
-import cn.codethink.xiaoming.io.data.XiaomingJacksonModuleVersion
+import cn.codethink.xiaoming.io.data.JacksonModuleVersion
 import cn.codethink.xiaoming.io.data.findAndApplyInitializers
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -37,17 +36,14 @@ const val TEST_PATH = "/"
 const val TEST_PORT = 8080
 const val TEST_TOKEN = "ExampleAccessToken"
 
-val TEST_CAUSE = TextCause("Run test programs")
-val TEST_SUBJECT_DESCRIPTOR = XiaomingSdkSubject
-
 class PlatformTest {
     private val logger = KotlinLogging.logger { }
 
     private val deserializerModule = DeserializerModule(
-        version = XiaomingJacksonModuleVersion,
+        version = JacksonModuleVersion,
         logger = logger
     ).apply {
-        findAndApplyInitializers(javaClass.classLoader, TEST_SUBJECT_DESCRIPTOR)
+        findAndApplyInitializers(javaClass.classLoader, TestSubjectDescriptor)
     }
 
     private val dataObjectMapper = jacksonObjectMapper().apply {

@@ -18,12 +18,14 @@
 
 package cn.codethink.xiaoming.io
 
-const val ERROR_ADAPTER_NOT_FOUND = "adapter_not_found"
+import cn.codethink.xiaoming.common.toId
 
-const val ERROR_UNSUPPORTED_PACKET_TYPE = "unsupported_packet_type"
+val ERROR_ADAPTER_NOT_FOUND = "adapter_not_found".toId()
 
-const val ERROR_UNSUPPORTED_REQUEST_MODE = "unsupported_request_mode"
-const val ERROR_UNSUPPORTED_REQUEST_ACTION = "unsupported_request_action"
+val ERROR_UNSUPPORTED_PACKET_TYPE = "unsupported_packet_type".toId()
 
-const val ERROR_INTERNAL_ACTION_HANDLER_ERROR = "internal_action_handler_error"
-const val ERROR_ACTION_HANDLER_TIMEOUT = "action_handler_timeout"
+val ERROR_UNSUPPORTED_REQUEST_MODE = "unsupported_request_mode".toId()
+val ERROR_UNSUPPORTED_REQUEST_ACTION = "unsupported_request_action".toId()
+
+val ERROR_INTERNAL_ACTION_HANDLER_ERROR = "internal_action_handler_error".toId()
+val ERROR_ACTION_HANDLER_TIMEOUT = "action_handler_timeout".toId()

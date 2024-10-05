@@ -29,7 +29,6 @@ import cn.codethink.xiaoming.common.Matcher
 import cn.codethink.xiaoming.common.PlatformSubjectDescriptor
 import cn.codethink.xiaoming.common.PluginSubjectDescriptor
 import cn.codethink.xiaoming.common.RegexStringMatcher
-import cn.codethink.xiaoming.common.SdkSubjectDescriptor
 import cn.codethink.xiaoming.common.StringId
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.WildcardStringMatcher
@@ -53,7 +52,6 @@ class PlatformPolymorphicDeserializerInitializer : PolymorphicDeserializerInitia
                 name<ReceiptPacket>()
             }
             names<SubjectDescriptor>(FIELD_TYPE) {
-                name<SdkSubjectDescriptor>()
                 name<PluginSubjectDescriptor>()
                 name<PlatformSubjectDescriptor>()
             }

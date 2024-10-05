@@ -16,6 +16,8 @@
 
 package cn.codethink.xiaoming.io.packet
 
+import cn.codethink.xiaoming.common.Id
+import cn.codethink.xiaoming.common.randomUniversalUniqueId
 import cn.codethink.xiaoming.io.connection.Received
 import kotlinx.coroutines.channels.Channel
 import java.util.concurrent.locks.ReentrantReadWriteLock
@@ -28,7 +30,7 @@ import kotlin.concurrent.write
  */
 class ReceiptPacketHandler<T> : PacketHandler {
     private val lock = ReentrantReadWriteLock()
-    private val channels: MutableMap<String, Channel<Received<T>>> = HashMap()
+    private val channels: MutableMap<Id, Channel<Received<T>>> = HashMap()
 
     @Suppress("UNCHECKED_CAST")
     override suspend fun handle(context: PacketContext) {
@@ -46,11 +48,8 @@ class ReceiptPacketHandler<T> : PacketHandler {
 
     fun allocate(
         factory: () -> Channel<Received<T>> = { Channel(Channel.UNLIMITED) }
-    ) : Pair<String, Channel<Received<T>>> = lock.write {
-        var id: String
-        do {
-            id = randomUuidString()
-        } while (channels.containsKey(id))
+    ): Pair<Id, Channel<Received<T>>> = lock.write {
+        val id = randomUniversalUniqueId()
 
         val channel = factory()
         channels[id] = channel

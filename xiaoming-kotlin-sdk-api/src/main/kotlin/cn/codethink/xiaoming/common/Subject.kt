@@ -26,8 +26,6 @@ interface Subject {
 }
 
 interface AutoClosableSubject : Subject, AutoCloseable {
-    fun close(cause: Cause? = null, subject: SubjectDescriptor? = null)
-    override fun close() = close(currentThreadCauseSubjectPairOrFail())
+    fun close(cause: Cause? = null)
+    override fun close() = close(currentThreadCauseOrFail())
 }
-
-fun <T : AutoClosableSubject> T.close(pair: CauseSubjectPair) = close(pair.cause, pair.subject)

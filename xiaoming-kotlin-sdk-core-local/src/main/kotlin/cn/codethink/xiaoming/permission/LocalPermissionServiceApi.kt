@@ -25,9 +25,8 @@ import cn.codethink.xiaoming.common.Registration
 import cn.codethink.xiaoming.common.Registrations
 import cn.codethink.xiaoming.common.SegmentId
 import cn.codethink.xiaoming.common.SubjectDescriptor
-import cn.codethink.xiaoming.common.XiaomingSdkSubject
+import cn.codethink.xiaoming.common.currentThreadCauseOrFail
 import cn.codethink.xiaoming.common.isMatchedOrNull
-import cn.codethink.xiaoming.common.providedOrFromCurrentThread
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import cn.codethink.xiaoming.permission.data.PermissionProfile
 import java.util.concurrent.CopyOnWriteArrayList
@@ -64,7 +63,7 @@ class LocalPermissionServiceApi(
 
     init {
         registerPermissionSettingChecker(
-            PERMISSION_COMPARATOR_TYPE_INHERITANCE, InheritancePermissionSettingChecker, XiaomingSdkSubject
+            PERMISSION_COMPARATOR_TYPE_INHERITANCE, InheritancePermissionSettingChecker, internalApi.descriptor
         )
     }
 
@@ -72,18 +71,15 @@ class LocalPermissionServiceApi(
         profile: PermissionProfile,
         comparator: PermissionComparator,
         context: Map<String, Matcher<Any?>> = emptyMap(),
-        cause: Cause? = null, subject: SubjectDescriptor? = null
+        cause: Cause? = null
     ) {
-        val (causeOrDefault, subjectOrDefault) = providedOrFromCurrentThread(cause, subject)
-        logger.trace {
-            "Setting permission for profile $profile: $comparator, context: $context " +
-                    "(by $subjectOrDefault for $causeOrDefault)."
-        }
+        val finalCause = cause ?: currentThreadCauseOrFail()
+        logger.trace { "Setting permission for profile $profile: $comparator, context: $context caused by $finalCause." }
 
         // Check if operation valid.
         permissionSettingCheckerRegistrations[comparator.type]?.let {
             val addingContext =
-                PermissionSettingContext(this, profile, comparator, context, causeOrDefault, subjectOrDefault)
+                PermissionSettingContext(this, profile, comparator, context, finalCause)
             it.value.check(addingContext)
         }
 
@@ -123,13 +119,11 @@ class LocalPermissionServiceApi(
     fun hasPermission(
         profile: Id, permission: Permission,
         context: Map<String, Any?> = emptyMap(),
-        cause: Cause? = null, subject: SubjectDescriptor? = null
+        cause: Cause? = null
     ): Boolean? {
-        val (causeOrDefault, subjectOrDefault) = providedOrFromCurrentThread(cause, subject)
-        logger.trace {
-            "Checking for profile $profile permission: $permission, context: $context " +
-                    "(by $subjectOrDefault for $causeOrDefault)."
-        }
+        val finalCause = cause ?: currentThreadCauseOrFail()
+        logger.trace { "Checking for profile $profile permission: $permission, context: $context caused by $finalCause." }
+
 
         val records = internalApi.data.getPermissionRecordsByPermissionProfileId(profile)
         for (record in records) {
@@ -146,7 +140,7 @@ class LocalPermissionServiceApi(
 
             // 2. Use permission comparator.
             val comparingContext = PermissionComparingContext(
-                this, profile, permission, record, context, causeOrDefault, subjectOrDefault
+                this, profile, permission, record, context, finalCause
             )
             record.comparator.compare(comparingContext)?.let { result ->
                 logger.trace { "Permission record $record compare result: $result." }
@@ -162,13 +156,10 @@ class LocalPermissionServiceApi(
     suspend fun hasPermission(
         target: SubjectDescriptor, permission: Permission,
         context: Map<String, Any?> = emptyMap(),
-        cause: Cause? = null, subject: SubjectDescriptor? = null
+        cause: Cause? = null
     ): Boolean? {
-        val (causeOrDefault, subjectOrDefault) = providedOrFromCurrentThread(cause, subject)
-        logger.trace {
-            "Checking for target $target permission: $permission, context: $context " +
-                    "(by $subjectOrDefault for $causeOrDefault)."
-        }
+        val finalCause = cause ?: currentThreadCauseOrFail()
+        logger.trace { "Checking for target $target permission: $permission, context: $context caused by $finalCause." }
 
         val calculator =
             permissionCalculatorRegistrations[target.type]?.value as PermissionCalculator<SubjectDescriptor>?
@@ -178,7 +169,7 @@ class LocalPermissionServiceApi(
         }
 
         val calculatingContext = PermissionCalculatingContext(
-            this, target, permission, context, causeOrDefault, subjectOrDefault
+            this, target, permission, context, finalCause
         )
 
         return calculator.hasPermission(calculatingContext)
@@ -224,8 +215,8 @@ class LocalPermissionServiceApi(
 fun LocalPermissionServiceApi.hasPermission(
     profile: PermissionProfile, permission: Permission,
     context: Map<String, Any?> = emptyMap(),
-    cause: Cause? = null, subject: SubjectDescriptor? = null
-): Boolean? = hasPermission(profile.id, permission, context, cause, subject)
+    cause: Cause? = null
+): Boolean? = hasPermission(profile.id, permission, context, cause)
 
 class PermissionComparatorRegistrations : Registrations {
     data class PermissionComparatorRegistration(

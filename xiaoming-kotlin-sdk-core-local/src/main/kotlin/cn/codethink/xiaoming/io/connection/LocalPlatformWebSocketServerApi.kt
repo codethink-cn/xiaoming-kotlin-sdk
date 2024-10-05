@@ -158,9 +158,9 @@ class LocalPlatformWebSocketServerApi(
             }
         }
 
-        override fun close() = close(TextCause("Server closed."), descriptor)
+        override fun close() = close(TextCause("Server closed.", descriptor))
 
-        override fun close(cause: Cause, subject: SubjectDescriptor) = onlineLock.write {
+        override fun close(cause: Cause?) = onlineLock.write {
             stateNoLock = when (stateNoLock) {
                 OnlineState.INITIALIZING, OnlineState.CONNECTED, OnlineState.DISCONNECTING, OnlineState.DISCONNECTED -> OnlineState.CLOSING
                 else -> throw IllegalStateException("Online connection internal error: unexpected state before close: $stateNoLock.")
@@ -171,7 +171,7 @@ class LocalPlatformWebSocketServerApi(
             supervisorJob.cancel()
             stateNoLock = OnlineState.CLOSED
 
-            logger.debug { "Online connection with subject: ${descriptor} closed by $subject caused by $cause." }
+            logger.debug { "Online connection with subject: $descriptor caused by $cause." }
         }
 
         override fun await() = onlineLock.write {

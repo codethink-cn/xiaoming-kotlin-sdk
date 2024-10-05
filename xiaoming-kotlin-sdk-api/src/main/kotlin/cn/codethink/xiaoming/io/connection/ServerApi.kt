@@ -16,9 +16,7 @@
 
 package cn.codethink.xiaoming.io.connection
 
-import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.Subject
-import cn.codethink.xiaoming.common.SubjectDescriptor
+import cn.codethink.xiaoming.common.AutoClosableSubject
 import cn.codethink.xiaoming.common.TextCause
 import kotlinx.coroutines.CoroutineScope
 
@@ -28,10 +26,9 @@ import kotlinx.coroutines.CoroutineScope
  * @author Chuanwise
  * @see WebSocketServerApi
  */
-interface ServerApi : Subject, AutoCloseable, CoroutineScope {
+interface ServerApi : AutoClosableSubject, CoroutineScope {
     val isStarted: Boolean
     val isClosed: Boolean
 
-    fun close(cause: Cause, subject: SubjectDescriptor)
-    override fun close() = close(TextCause("Server closed."), descriptor)
+    override fun close() = close(TextCause("Server closed.", descriptor))
 }

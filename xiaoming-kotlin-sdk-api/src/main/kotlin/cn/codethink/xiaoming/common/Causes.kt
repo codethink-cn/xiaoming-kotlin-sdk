@@ -30,19 +30,17 @@ import kotlin.coroutines.CoroutineContext
  * @author Chuanwise
  * @see currentCoroutineCause
  * @see currentCoroutineCauseOrFail
- * @see currentCoroutineSubject
- * @see currentCoroutineSubjectOrFail
+ * @see launchBy
  */
 data class CauseSubjectPairElement(
-    val cause: Cause,
-    val subject: SubjectDescriptor
+    val cause: Cause
 ) : AbstractCoroutineContextElement(CauseSubjectPairElement) {
     companion object Key : CoroutineContext.Key<CauseSubjectPairElement>
 }
 
 fun CoroutineScope.launchBy(
-    cause: Cause, subject: SubjectDescriptor, block: suspend CoroutineScope.() -> Unit
-) = launch(CauseSubjectPairElement(cause, subject), block = block)
+    cause: Cause, block: suspend CoroutineScope.() -> Unit
+) = launch(CauseSubjectPairElement(cause), block = block)
 
 suspend fun currentCoroutineCause(): Cause? {
     return currentCoroutineContext()[CauseSubjectPairElement]?.cause
@@ -52,24 +50,8 @@ suspend fun currentCoroutineCauseOrFail(): Cause = currentCoroutineCause()
     ?: throw NoSuchElementException(
         "No default cause set in current coroutine! " +
                 "Provide it explicitly by passing argument " +
-                "or run codes in block `launchBy(cause, subject) { ... }` please. "
+                "or run codes in block `launchBy(cause) { ... }` please. "
     )
-
-suspend fun currentCoroutineSubject(): SubjectDescriptor? {
-    return currentCoroutineContext()[CauseSubjectPairElement]?.subject
-}
-
-suspend fun currentCoroutineSubjectOrFail(): SubjectDescriptor = currentCoroutineSubject()
-    ?: throw NoSuchElementException(
-        "No default subject set in current coroutine! " +
-                "Provide it explicitly by passing argument " +
-                "or run codes in block `launchBy(cause, subject) { ... }` please. "
-    )
-
-data class CauseSubjectPair(
-    val cause: Cause,
-    val subject: SubjectDescriptor
-)
 
 /**
  * Element used to store the cause in thread local.
@@ -77,23 +59,12 @@ data class CauseSubjectPair(
  * @author Chuanwise
  * @see currentThreadCause
  * @see currentThreadCauseOrFail
- * @see currentThreadSubject
- * @see currentThreadSubjectOrFail
  * @see runBy
  * @see runInlineBy
  */
-val threadLocalCause: ThreadLocal<CauseSubjectPair> = ThreadLocal()
+val threadLocalCause: ThreadLocal<Cause> = ThreadLocal()
 
-fun currentThreadCauseSubjectPair() = threadLocalCause.get()
-
-fun currentThreadCauseSubjectPairOrFail() = currentThreadCauseSubjectPair()
-    ?: throw NoSuchElementException(
-        "No default cause set in current thread! " +
-                "Provide it explicitly by passing argument " +
-                "or run codes in block `runBy(cause) { ... }` or `runInlineBy(cause) { ... }` please. "
-    )
-
-fun currentThreadCause(): Cause? = threadLocalCause.get()?.cause
+fun currentThreadCause(): Cause? = threadLocalCause.get()
 
 fun currentThreadCauseOrFail() = currentThreadCause()
     ?: throw NoSuchElementException(
@@ -102,17 +73,9 @@ fun currentThreadCauseOrFail() = currentThreadCause()
                 "or run codes in block `runBy(cause) { ... }` or `runInlineBy(cause) { ... }` please. "
     )
 
-fun currentThreadSubject(): SubjectDescriptor? = threadLocalCause.get()?.subject
-
-fun currentThreadSubjectOrFail() = currentThreadSubject()
-    ?: throw NoSuchElementException(
-        "No default subject set in current thread! " +
-                "Provide it explicitly by passing argument " +
-                "or run codes in block `runBy(cause) { ... }` or `runInlineBy(cause) { ... }` please. "
-    )
-
-fun runBy(cause: Cause, subject: SubjectDescriptor, block: () -> Unit) {
-    threadLocalCause.set(CauseSubjectPair(cause, subject))
+@JavaFriendlyApi
+fun runBy(cause: Cause, block: () -> Unit) {
+    threadLocalCause.set(cause)
     try {
         block()
     } finally {
@@ -123,20 +86,10 @@ fun runBy(cause: Cause, subject: SubjectDescriptor, block: () -> Unit) {
 inline fun <reified T> runInlineBy(
     cause: Cause, subject: SubjectDescriptor, crossinline block: () -> T
 ): T {
-    threadLocalCause.set(CauseSubjectPair(cause, subject))
+    threadLocalCause.set(cause)
     try {
         return block()
     } finally {
         threadLocalCause.remove()
     }
-}
-
-fun providedOrFromCurrentThread(cause: Cause?, subject: SubjectDescriptor?): CauseSubjectPair {
-    if (cause == null && subject == null) {
-        return currentThreadCauseSubjectPairOrFail()
-    }
-    return CauseSubjectPair(
-        cause ?: currentThreadCauseOrFail(),
-        subject ?: currentThreadSubjectOrFail()
-    )
 }

@@ -124,7 +124,7 @@ abstract class WebSocketServerApi(
         }
     }
 
-    override fun close(cause: Cause, subject: SubjectDescriptor) {
+    override fun close(cause: Cause?) {
         lock.write {
             stateNoLock = when (stateNoLock) {
                 State.INITIALIZED, State.STARTED -> State.CLOSING
@@ -134,7 +134,7 @@ abstract class WebSocketServerApi(
 
         connectionApis.forEach {
             if (!it.isClosed) {
-                it.close(cause, subject)
+                it.close(cause)
             }
         }
 
@@ -147,7 +147,7 @@ abstract class WebSocketServerApi(
                 else -> throw IllegalStateException("Client internal error: unexpected state after closing: $stateNoLock.")
             }
         }
-        logger.debug { "Closed server with subject: $subject in ${configuration.address}." }
+        logger.debug { "Closed server with subject: $descriptor in ${configuration.address} caused by $cause." }
     }
 
     abstract suspend fun PipelineContext<Unit, ApplicationCall>.onConnect()

@@ -17,10 +17,14 @@
 package cn.codethink.xiaoming.event
 
 import cn.codethink.xiaoming.common.AbstractData
+import cn.codethink.xiaoming.common.Cause
+import cn.codethink.xiaoming.common.EventCause
+import cn.codethink.xiaoming.common.FIELD_CAUSE
+import cn.codethink.xiaoming.common.FIELD_TYPE
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
-import cn.codethink.xiaoming.io.data.setValue
+import cn.codethink.xiaoming.io.data.set
 
 /**
  * Represent an event that can be listened by listeners and published by subjects.
@@ -30,13 +34,21 @@ import cn.codethink.xiaoming.io.data.setValue
 abstract class Event(
     raw: Raw
 ) : AbstractData(raw) {
-    var type: String by raw
+    val type: String by raw
+    val cause: Cause by raw
 
     @JvmOverloads
     constructor(
         type: String,
+        cause: Cause,
         raw: Raw = MapRaw()
     ) : this(raw) {
-        this.type = type
+        raw[FIELD_TYPE] = type
+        raw[FIELD_CAUSE] = cause
     }
 }
+
+val Event.subject
+    get() = cause.subject
+
+fun Event.toCause() = EventCause(this)

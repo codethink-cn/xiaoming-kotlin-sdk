@@ -30,6 +30,7 @@ import cn.codethink.xiaoming.common.StandardTextCause
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.currentTimeMillis
 import cn.codethink.xiaoming.common.currentTimeSeconds
+import cn.codethink.xiaoming.common.randomUniversalUniqueId
 import cn.codethink.xiaoming.io.ERROR_ACTION_HANDLER_TIMEOUT
 import cn.codethink.xiaoming.io.ERROR_INTERNAL_ACTION_HANDLER_ERROR
 import cn.codethink.xiaoming.io.ERROR_UNSUPPORTED_REQUEST_MODE
@@ -68,10 +69,9 @@ class RequestPacketHandler(
     inner class AsyncRequestPacketHandler : PacketHandler {
         override suspend fun handle(context: PacketContext) {
             context.send(ReceiptPacket(
-                id = randomUuidString(),
+                id = randomUniversalUniqueId(),
                 target = context.received.packet.id,
                 state = RECEIPT_STATE_RECEIVED,
-                subject = context.connection.descriptor,
                 session = context.connection.session,
             ))
 
@@ -104,13 +104,13 @@ class RequestPacketHandler(
 
             context.send(
                 ReceiptPacket(
-                    id = randomUuidString(),
+                    id = randomUniversalUniqueId(),
                     target = packet.id,
                     state = RECEIPT_STATE_FAILED,
-                    subject = context.connection.descriptor,
                     cause = StandardTextCause(
                         id = ERROR_UNSUPPORTED_REQUEST_MODE,
                         text = message,
+                        subject = context.connection.descriptor,
                         arguments = arguments
                     ),
                     session = context.connection.session
@@ -135,13 +135,13 @@ class RequestPacketHandler(
 
             context.send(
                 ReceiptPacket(
-                    id = randomUuidString(),
+                    id = randomUniversalUniqueId(),
                     target = request.id,
                     state = RECEIPT_STATE_FAILED,
-                    subject = context.connection.descriptor,
                     cause = StandardTextCause(
                         id = ERROR_UNSUPPORTED_REQUEST_MODE,
                         text = message,
+                        subject = context.connection.descriptor,
                         arguments = arguments
                     ),
                     session = context.connection.session
@@ -153,10 +153,9 @@ class RequestPacketHandler(
 
         // Create receipt packet for action handler to extend fields.
         val receipt = ReceiptPacket(
-            id = randomUuidString(),
+            id = randomUniversalUniqueId(),
             target = request.id,
             state = RECEIPT_STATE_UNDEFINED,
-            subject = context.connection.descriptor,
             session = context.connection.session
         )
 
@@ -221,6 +220,7 @@ class RequestPacketHandler(
                 data = StandardTextCause(
                     id = ERROR_ACTION_HANDLER_TIMEOUT,
                     text = message,
+                    subject = context.connection.descriptor,
                     arguments = arguments
                 )
             }
@@ -243,6 +243,7 @@ class RequestPacketHandler(
                 data = StandardTextCause(
                     id = ERROR_INTERNAL_ACTION_HANDLER_ERROR,
                     text = message,
+                    subject = context.connection.descriptor,
                     arguments = emptyMap()
                 )
             }

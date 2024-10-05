@@ -24,8 +24,7 @@ data class PermissionCalculatingContext<T : SubjectDescriptor>(
     val target: T,
     val permission: Permission,
     val context: Map<String, Any?> = emptyMap(),
-    val cause: Cause,
-    val subject: SubjectDescriptor
+    val cause: Cause
 ) {
     val internalApi by permissionServiceApi::internalApi
 }

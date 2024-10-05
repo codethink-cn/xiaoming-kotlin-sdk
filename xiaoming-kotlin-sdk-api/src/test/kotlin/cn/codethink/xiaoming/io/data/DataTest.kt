@@ -16,9 +16,9 @@
 
 package cn.codethink.xiaoming.io.data
 
-import cn.codethink.xiaoming.common.PluginSubjectDescriptor
-import cn.codethink.xiaoming.common.XiaomingSdkSubject
+import cn.codethink.xiaoming.common.TestSubjectDescriptor
 import cn.codethink.xiaoming.common.assertJsonContentEquals
+import cn.codethink.xiaoming.common.toId
 import cn.codethink.xiaoming.io.packet.Packet
 import cn.codethink.xiaoming.io.packet.RequestPacket
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -44,7 +44,7 @@ class DataTest {
     @Test
     fun testDeserializeData() {
         val deserializerModule = DeserializerModule().apply {
-            findAndApplyInitializers(javaClass.classLoader, XiaomingSdkSubject)
+            findAndApplyInitializers(javaClass.classLoader, TestSubjectDescriptor)
         }
         val mapper = jacksonObjectMapper().apply {
             registerModule(deserializerModule)
@@ -56,9 +56,11 @@ class DataTest {
               "id": "c4d038b4-bed0-3fdb-9471-ef51ec3a32cd",
               "type": "request",
               "action": "api-name",
-              "subject": {
-                "id": "cn.codethink:chat-commands",
-                "type": "plugin"
+              "cause": {
+                "type": "test",
+                "subject": {
+                  "type": "test"
+                }
               },
               "cn.chuanwise.xiaoming:extension-field-1": "extension-field-1-value",
               "cn.chuanwise.xiaoming:extension-field-2": {
@@ -69,11 +71,7 @@ class DataTest {
         ) as RequestPacket
 
         // Deserialized from string.
-        Assertions.assertEquals("c4d038b4-bed0-3fdb-9471-ef51ec3a32cd", packet.id)
-        Assertions.assertEquals(PluginSubjectDescriptor(NodeRaw(mapper).apply {
-            set("id", "cn.codethink:chat-commands")
-            set("type", "plugin")
-        }), packet.subject)
+        Assertions.assertEquals("c4d038b4-bed0-3fdb-9471-ef51ec3a32cd".toId(), packet.id)
 
         // Extension field 1 read and write.
         Assertions.assertEquals("extension-field-1-value", packet.extensionField1)
@@ -94,9 +92,11 @@ class DataTest {
                   "id" : "c4d038b4-bed0-3fdb-9471-ef51ec3a32cd",
                   "type" : "request",
                   "action" : "api-name",
-                  "subject" : {
-                    "id" : "cn.codethink:chat-commands",
-                    "type" : "plugin"
+                  "cause": {
+                    "type": "test",
+                    "subject": {
+                      "type": "test"
+                    }
                   },
                   "cn.chuanwise.xiaoming:extension-field-1" : "extension-field-1-value-modified",
                   "cn.chuanwise.xiaoming:extension-field-2" : {

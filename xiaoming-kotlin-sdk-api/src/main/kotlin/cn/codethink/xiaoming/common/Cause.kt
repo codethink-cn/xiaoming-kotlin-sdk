@@ -25,6 +25,9 @@ import cn.codethink.xiaoming.io.data.setValue
 import cn.codethink.xiaoming.io.packet.Packet
 import com.fasterxml.jackson.annotation.JsonTypeName
 
+const val CAUSE_FIELD_SUBJECT = "subject"
+const val CAUSE_FIELD_CAUSE = "cause"
+
 /**
  * Cause is the reason of an operation, an error, an event, etc.
  *
@@ -33,19 +36,12 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 abstract class Cause(
     raw: Raw
 ) : AbstractData(raw) {
-    val type: String by raw
-    open var cause: Cause? by raw
-
-    @JvmOverloads
-    constructor(
-        type: String,
-        cause: Cause? = null,
-        raw: Raw = MapRaw()
-    ) : this(raw) {
-        raw[FIELD_TYPE] = type
-        raw[CAUSE_FIELD_CAUSE] = cause
-    }
+    abstract val type: String
+    abstract val cause: Cause?
+    abstract val subject: SubjectDescriptor
 }
+
+const val CAUSE_TYPE_TEXT = "text"
 
 /**
  * Represent a cause that is a text.
@@ -57,19 +53,26 @@ open class TextCause(
 ) : Cause(raw) {
     var text: String by raw
 
+    override val type: String by raw
+    override val cause: Cause? by raw
+    override val subject: SubjectDescriptor by raw
+
     @JvmOverloads
     constructor(
         text: String,
+        subject: SubjectDescriptor,
         cause: Cause? = null,
         raw: Raw = MapRaw()
     ) : this(raw) {
         raw[FIELD_TYPE] = CAUSE_TYPE_TEXT
-
-        this.cause = cause
         raw[CAUSE_FIELD_CAUSE] = cause
-        raw[TEXT_CAUSE_FIELD_TEXT] = text
+        raw[CAUSE_FIELD_SUBJECT] = subject
+
+        this.text = text
     }
 }
+
+const val PACKET_CAUSE_FIELD_ID = "id"
 
 /**
  * Represent a cause that is a known packet.
@@ -79,20 +82,10 @@ open class TextCause(
 abstract class PacketCause(
     raw: Raw
 ) : Cause(raw) {
-    open val id: String by raw
-
-    @JvmOverloads
-    constructor(
-        id: String,
-        type: String,
-        cause: Cause? = null,
-        raw: Raw = MapRaw()
-    ) : this(raw) {
-        raw[FIELD_TYPE] = type
-        raw[CAUSE_FIELD_CAUSE] = cause
-        raw[PACKET_CAUSE_FIELD_ID] = id
-    }
+    abstract val id: Id
 }
+
+const val CAUSE_TYPE_PACKET_ID = "packet_id"
 
 /**
  * Represent a packet referenced by its id. Receiver should find the recent packet
@@ -103,17 +96,29 @@ abstract class PacketCause(
 class PacketIdCause(
     raw: Raw
 ) : PacketCause(raw) {
+    override val id: Id by raw
+
+    override val type: String by raw
+    override val cause: Cause? by raw
+    override val subject: SubjectDescriptor by raw
+
     @JvmOverloads
     constructor(
-        id: String,
+        id: Id,
+        subject: SubjectDescriptor,
         cause: Cause? = null,
         raw: Raw = MapRaw()
     ) : this(raw) {
         raw[FIELD_TYPE] = CAUSE_TYPE_PACKET_ID
         raw[CAUSE_FIELD_CAUSE] = cause
+        raw[CAUSE_FIELD_SUBJECT] = subject
+
         raw[PACKET_CAUSE_FIELD_ID] = id
     }
 }
+
+const val CAUSE_TYPE_PACKET_DATA = "packet_data"
+const val PACKET_DATA_CAUSE_FIELD_PACKET = "packet"
 
 /**
  * Represent a packet that is the cause of the operation.
@@ -125,16 +130,20 @@ class PacketDataCause(
 ) : PacketCause(raw) {
     val packet: Packet by raw
 
-    override val id: String by packet::id
-    override var cause: Cause? by packet::cause
+    override val id: Id by packet::id
+    override val type: String by raw
+    override val cause: Cause? by packet::cause
+    override val subject: SubjectDescriptor by raw
 
     @JvmOverloads
     constructor(
-        packet: Packet,
+        id: Id,
+        subject: SubjectDescriptor,
         raw: Raw = MapRaw()
     ) : this(raw) {
         raw[FIELD_TYPE] = CAUSE_TYPE_PACKET_DATA
         raw[PACKET_DATA_CAUSE_FIELD_PACKET] = packet
+        raw[CAUSE_FIELD_SUBJECT] = subject
     }
 }
 
@@ -150,18 +159,26 @@ class PacketDataCause(
 class StandardTextCause(
     raw: Raw
 ) : Cause(raw) {
-    var id: String by raw
+    var id: Id by raw
     var text: String by raw
     var arguments: Map<String, Any?> by raw
 
+    override val type: String by raw
+    override val cause: Cause? by raw
+    override val subject: SubjectDescriptor by raw
+
     @JvmOverloads
     constructor(
-        id: String,
+        id: Id,
         text: String,
+        subject: SubjectDescriptor,
+        cause: Cause? = null,
         arguments: Map<String, Any?> = emptyMap(),
         raw: Raw = MapRaw()
     ) : this(raw) {
         raw[FIELD_TYPE] = CAUSE_TYPE_STANDARD_TEXT
+        raw[CAUSE_FIELD_CAUSE] = cause
+        raw[CAUSE_FIELD_SUBJECT] = subject
 
         this.id = id
         this.text = text
@@ -184,15 +201,19 @@ class EventCause(
 ) : Cause(raw) {
     var event: Event by raw
 
+    override val type: String by raw
+    override val cause: Cause
+        get() = event.cause
+    override val subject: SubjectDescriptor
+        get() = event.cause.subject
+
     @JvmOverloads
     constructor(
         event: Event,
-        cause: Cause? = null,
         raw: Raw = MapRaw()
     ) : this(raw) {
         raw[FIELD_TYPE] = CAUSE_TYPE_EVENT
 
         this.event = event
-        this.cause = cause
     }
 }

@@ -16,6 +16,7 @@
 
 package cn.codethink.xiaoming.common
 
+import cn.codethink.xiaoming.io.action.StandardAction
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
@@ -65,51 +66,15 @@ const val SUBJECT_DESCRIPTOR_TYPE_PROTOCOL = "protocol"
 const val PROTOCOL_SUBJECT_DESCRIPTOR_FIELD_VERSION = "version"
 
 /**
- * Represent a subject that is a xiaoming SDK.
+ * Represent a subject that is a protocol. Type is [SUBJECT_DESCRIPTOR_TYPE_PROTOCOL].
  *
  * @author Chuanwise
+ * @see StandardAction
  */
-@JsonTypeName(SUBJECT_DESCRIPTOR_TYPE_PROTOCOL)
-class SdkSubjectDescriptor(
-    raw: Raw
-) : SubjectDescriptor(raw) {
-    val group: String by raw
-    val name: String by raw
-    val version: Version by raw
-    val protocol: Version by raw
-
-    @JvmOverloads
-    constructor(
-        group: String,
-        name: String,
-        version: Version,
-        protocol: Version,
-        raw: Raw = MapRaw()
-    ) : this(raw) {
-        raw[FIELD_TYPE] = SUBJECT_DESCRIPTOR_TYPE_SDK
-        raw[SDK_SUBJECT_DESCRIPTOR_FIELD_GROUP] = group
-        raw[SDK_SUBJECT_DESCRIPTOR_FIELD_NAME] = name
-        raw[SDK_SUBJECT_DESCRIPTOR_FIELD_VERSION] = version
-        raw[SDK_SUBJECT_DESCRIPTOR_FIELD_PROTOCOL] = protocol
-    }
-}
-
-/**
- * The current SDK subject.
- */
-val XiaomingSdkSubject: SdkSubjectDescriptor = SdkSubjectDescriptor(MapRaw().apply {
-    this[FIELD_TYPE] = SUBJECT_DESCRIPTOR_TYPE_SDK
-    this[SDK_SUBJECT_DESCRIPTOR_FIELD_GROUP] = SdkGroup
-    this[SDK_SUBJECT_DESCRIPTOR_FIELD_NAME] = SdkName
-    this[SDK_SUBJECT_DESCRIPTOR_FIELD_VERSION] = SdkVersionString.toVersion()
-    this[SDK_SUBJECT_DESCRIPTOR_FIELD_PROTOCOL] = SdkProtocolString.toVersion()
-})
-
 class ProtocolSubjectDescriptor(
     raw: Raw
 ) : SubjectDescriptor(raw) {
     val version: Version by raw
-    val matcher = ProtocolSubjectMatcher()
 
     @JvmOverloads
     constructor(
@@ -150,7 +115,7 @@ class ModuleSubjectDescriptor(
 /**
  * The current protocol subject.
  */
-val XiaomingProtocolSubject: ProtocolSubjectDescriptor = ProtocolSubjectDescriptor(XiaomingSdkSubject.protocol)
+val XiaomingProtocolSubject: ProtocolSubjectDescriptor = ProtocolSubjectDescriptor(SdkProtocol)
 
 const val SUBJECT_DESCRIPTOR_TYPE_PLUGIN = "plugin"
 
@@ -262,22 +227,3 @@ class DefaultPluginSubjectMatcher(
 }
 
 fun PluginSubjectDescriptor.toLiteralMatcher() = DefaultPluginSubjectMatcher(id.toLiteralMatcher())
-
-
-class ProtocolSubjectMatcher @JvmOverloads constructor(
-    raw: Raw = MapRaw()
-) : AbstractData(raw), Matcher<ProtocolSubjectDescriptor> {
-    override val type: String by raw
-
-    override val targetType: Class<ProtocolSubjectDescriptor> = ProtocolSubjectDescriptor::class.java
-
-    override val targetNullable: Boolean = false
-
-    init {
-        raw[MATCHER_FIELD_TYPE] = SUBJECT_DESCRIPTOR_MATCHER_TYPE_DEFAULT_PROTOCOL
-    }
-
-    override fun isMatched(target: ProtocolSubjectDescriptor): Boolean {
-        return true
-    }
-}

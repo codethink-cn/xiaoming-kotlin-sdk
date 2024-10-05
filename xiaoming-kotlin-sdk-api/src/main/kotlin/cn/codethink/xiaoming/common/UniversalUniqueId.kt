@@ -14,15 +14,30 @@
  * limitations under the License.
  */
 
-@file:JvmName("Packets")
-
-package cn.codethink.xiaoming.io.packet
+package cn.codethink.xiaoming.common
 
 import java.util.UUID
+
+@JvmInline
+value class UniversalUniqueId(
+    private val uuid: UUID
+) : Id, Comparable<UniversalUniqueId> {
+    companion object {
+        @JvmStatic
+        @JavaFriendlyApi
+        fun random() = randomUniversalUniqueId()
+    }
+
+    override fun compareTo(other: UniversalUniqueId): Int {
+        return uuid.compareTo(other.uuid)
+    }
+
+    fun toUuid(): UUID = uuid
+}
 
 /**
  * Generate a random packet id follows UUID format.
  *
  * @author Chuanwise
  */
-fun randomUuidString(): String = UUID.randomUUID().toString()
+fun randomUniversalUniqueId(): UniversalUniqueId = UniversalUniqueId(UUID.randomUUID())
