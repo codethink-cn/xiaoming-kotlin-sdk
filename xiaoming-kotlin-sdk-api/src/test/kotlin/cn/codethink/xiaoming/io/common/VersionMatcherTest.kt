@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.io.common
 
-import cn.codethink.xiaoming.common.CompositeVersionMatcher
+import cn.codethink.xiaoming.common.AndVersionMatcher
 import cn.codethink.xiaoming.common.ExcludeVersionMatcher
 import cn.codethink.xiaoming.common.GreaterThanOrEqualVersionMatcher
 import cn.codethink.xiaoming.common.GreaterThanVersionMatcher
@@ -25,6 +25,7 @@ import cn.codethink.xiaoming.common.LessThanOrEqualVersionMatcher
 import cn.codethink.xiaoming.common.LessThanVersionMatcher
 import cn.codethink.xiaoming.common.MajorMinorVersionPrefixMatcher
 import cn.codethink.xiaoming.common.MajorVersionPrefixMatcher
+import cn.codethink.xiaoming.common.OrVersionMatcher
 import cn.codethink.xiaoming.common.toVersion
 import cn.codethink.xiaoming.common.toVersionMatcher
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -38,9 +39,7 @@ class VersionMatcherTest {
     @Test
     fun testParseVersionMatcher() {
         assertEquals(GreaterThanVersionMatcher("0.1.0".toVersion()), ">0.1.0".toVersionMatcher())
-        assertEquals(GreaterThanVersionMatcher("0.1.0".toVersion()), ")0.1.0".toVersionMatcher())
         assertEquals(GreaterThanVersionMatcher("0.1.0".toVersion()), "0.1.0<".toVersionMatcher())
-        assertEquals(GreaterThanVersionMatcher("0.1.0".toVersion()), "0.1.0(".toVersionMatcher())
 
         assertEquals(GreaterThanOrEqualVersionMatcher("0.2.0".toVersion()), ">=0.2.0".toVersionMatcher())
         assertEquals(GreaterThanOrEqualVersionMatcher("0.2.0".toVersion()), "]0.2.0".toVersionMatcher())
@@ -48,8 +47,6 @@ class VersionMatcherTest {
         assertEquals(GreaterThanOrEqualVersionMatcher("0.2.0".toVersion()), "0.2.0[".toVersionMatcher())
 
         assertEquals(LessThanVersionMatcher("1.1.4".toVersion()), "<1.1.4".toVersionMatcher())
-        assertEquals(LessThanVersionMatcher("1.1.4".toVersion()), "(1.1.4".toVersionMatcher())
-        assertEquals(LessThanVersionMatcher("1.1.4".toVersion()), "1.1.4)".toVersionMatcher())
         assertEquals(LessThanVersionMatcher("1.1.4".toVersion()), "1.1.4>".toVersionMatcher())
 
         assertEquals(LessThanOrEqualVersionMatcher("5.1.4".toVersion()), "<=5.1.4".toVersionMatcher())
@@ -64,12 +61,33 @@ class VersionMatcherTest {
         assertEquals(MajorVersionPrefixMatcher(26), "26.+".toVersionMatcher())
 
         assertEquals(
-            CompositeVersionMatcher(
-                listOf(
+            AndVersionMatcher(
+                GreaterThanOrEqualVersionMatcher("0.1.0".toVersion()),
+                LessThanOrEqualVersionMatcher("0.1.0".toVersion())
+            ), ">=0.1.0 & <=0.1.0".toVersionMatcher()
+        )
+
+        assertEquals(
+            OrVersionMatcher(
+                AndVersionMatcher(
                     GreaterThanOrEqualVersionMatcher("0.1.0".toVersion()),
                     LessThanOrEqualVersionMatcher("0.1.0".toVersion())
-                )
-            ), ">=0.1.0, <=0.1.0".toVersionMatcher()
+                ),
+                GreaterThanOrEqualVersionMatcher("2.1.0".toVersion())
+            ), "(>=0.1.0 & <=0.1.0) | >=2.1.0".toVersionMatcher()
+        )
+
+        assertEquals(
+            OrVersionMatcher(
+                AndVersionMatcher(
+                    GreaterThanOrEqualVersionMatcher("0.1.0".toVersion()),
+                    OrVersionMatcher(
+                        LessThanOrEqualVersionMatcher("0.1.0".toVersion()),
+                        LessThanVersionMatcher("0.0.1".toVersion())
+                    )
+                ),
+                GreaterThanOrEqualVersionMatcher("2.1.0".toVersion())
+            ), "(>=0.1.0 & (<=0.1.0 | <0.0.1)) | >=2.1.0".toVersionMatcher()
         )
     }
 

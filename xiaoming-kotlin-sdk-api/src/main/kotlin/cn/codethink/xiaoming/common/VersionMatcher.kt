@@ -83,35 +83,11 @@ object VersionMatcherDeserializer : StdDeserializer<VersionMatcher>(VersionMatch
  * BNF patterns:
  *
  * ```bnf
- * versionMatcher := singleVersionMatcher | singleVersionMatcher "," versionMatcher;
- *
- * singleVersionMatcher := version        // Match the exact version.
- *                       | not version    // Match the version that is not equal to the version.
- *                       | versionRange   // Match the version range.
- *                       | versionPrefix  // Match the version prefix.
- *                       ;
- *
- * versionPrefix := digits:major "." digits:minor ".+"  // Match the version prefix.
- *                | digits:major ".+"                   // Match the major version.
- *                ;
- *
- * versionRange := simpleVersionRange;
- *
- * simpleVersionRange := greaterThan version         | version lessThan           // Greater than version.
- *                     | greaterThanOrEqual version  | version lessThanOrEqual    // Greater than or equal to version.
- *                     | lessThan version            | version greaterThan        // Less than version.
- *                     | lessThanOrEqual version     | version greaterThanOrEqual // Less than or equal to version.
- *                     ;
- *
- * not := "!" | "^";
- *
- * greaterThan := ">" | ")";
- *
- * greaterThanOrEqual := ">=" | "=>" | "]";
- *
- * lessThan := "<" | ")";
- *
- * lessThanOrEqual := "<=" | "" | "]";
+ * versionMatcher := singleVersionMatcher               // Match the single version matcher.
+ *                 | "(" versionMatcher ")"             // Match the version matcher in parentheses.
+ *                 | versionMatcher "&" versionMatcher  // Match the version matcher that is matched by both matchers.
+ *                 | versionMatcher "|" versionMatcher  // Match the version matcher that is matched by either matcher.
+ *                 ;
  * ```
  */
 fun String.toVersionMatcher(): VersionMatcher {
@@ -119,16 +95,116 @@ fun String.toVersionMatcher(): VersionMatcher {
         "Version matcher string must not be empty."
     }
 
-    val stringMatchers = split(",")
-    check(stringMatchers.isNotEmpty()) {
-        "Version matcher string must not be empty."
+    // 1. Tokenize.
+    abstract class Token
+    class OperatorToken(val operator: String) : Token()
+    class VersionMatcherToken(val matcher: String) : Token()
+
+    val tokens = mutableListOf<Token>()
+    val current = StringBuilder()
+
+    fun String.toToken(): Token = when (this) {
+        "(", ")", "&", "|" -> OperatorToken(this)
+        else -> VersionMatcherToken(this)
+    }
+    for (char in this) {
+        if (char == ' ') {
+            continue
+        }
+
+        when (char) {
+            '(', ')', '&', '|' -> {
+                if (current.isNotEmpty()) {
+                    tokens.add(current.toString().toToken())
+                    current.clear()
+                }
+
+                tokens.add(char.toString().toToken())
+            }
+
+            else -> current.append(char)
+        }
     }
 
-    return if (stringMatchers.size == 1) {
-        stringMatchers.single().toSingleStringMatcher()
-    } else {
-        CompositeVersionMatcher(stringMatchers.map { it.trim().toSingleStringMatcher() })
+    if (current.isNotEmpty()) {
+        tokens.add(current.toString().toToken())
     }
+
+    // 2. Parse.
+    val stack = mutableListOf<VersionMatcher>()
+    val operatorStack = mutableListOf<String>()
+
+    // After tokenize, all possible tokens:
+    // &, |, (, ) matcher.
+
+    fun popUntilLeftParentheses() {
+        while (operatorStack.isNotEmpty() && operatorStack.last() != "(") {
+            val operator = operatorStack.removeLast()
+            val right = stack.removeLast()
+            val left = stack.removeLast()
+
+            stack.add(
+                when (operator) {
+                    "&" -> AndVersionMatcher(left, right)
+                    "|" -> OrVersionMatcher(left, right)
+                    else -> throw IllegalArgumentException("Invalid operator: $operator")
+                }
+            )
+        }
+
+        if (operatorStack.isNotEmpty()) {
+            operatorStack.removeLast()
+        }
+    }
+
+    for (token in tokens) {
+        when (token) {
+            is VersionMatcherToken -> stack.add(token.matcher.toSingleStringMatcher())
+            is OperatorToken -> when (token.operator) {
+                "(" -> operatorStack.add(token.operator)
+                ")" -> popUntilLeftParentheses()
+                "&", "|" -> {
+                    while (operatorStack.isNotEmpty() && operatorStack.last() != "(") {
+                        val operator = operatorStack.removeLast()
+                        val right = stack.removeLast()
+                        val left = stack.removeLast()
+
+                        stack.add(
+                            when (operator) {
+                                "&" -> AndVersionMatcher(left, right)
+                                "|" -> OrVersionMatcher(left, right)
+                                else -> throw IllegalArgumentException("Invalid operator: $operator")
+                            }
+                        )
+                    }
+
+                    operatorStack.add(token.operator)
+                }
+
+                else -> throw IllegalArgumentException("Invalid operator: ${token.operator}")
+            }
+        }
+    }
+
+    while (operatorStack.isNotEmpty()) {
+        val operator = operatorStack.removeLast()
+        val right = stack.removeLast()
+        val left = stack.removeLast()
+
+        stack.add(
+            when (operator) {
+                "&" -> AndVersionMatcher(left, right)
+                "|" -> OrVersionMatcher(left, right)
+                else -> throw IllegalArgumentException("Invalid operator: $operator")
+            }
+        )
+    }
+
+    require(stack.size == 1) {
+        "Invalid version matcher: $this"
+    }
+
+    return stack.first()
 }
 
 private val MAJOR_PREFIX_REGEX = """(\d+)\.\+""".toRegex()
@@ -150,6 +226,38 @@ private val MAJOR_MINOR_PREFIX_REGEX = """(\d+)\.(\d+)\.\+""".toRegex()
  * <=1.0.0  // Less than or equal to version.
  * ```
  *
+ * BNF patterns:
+ *
+ * ```bnf
+ * singleVersionMatcher := version                            // Match the exact version.
+ *                       | not version                        // Match the version that is not equal to the version.
+ *                       | versionRange                       // Match the version range.
+ *                       | versionPrefix                      // Match the version prefix.
+ *                       ;
+ *
+ * versionPrefix := digits:major "." digits:minor ".+"  // Match the version prefix.
+ *                | digits:major ".+"                   // Match the major version.
+ *                ;
+ *
+ * versionRange := simpleVersionRange;
+ *
+ * simpleVersionRange := greaterThan version         | version lessThan           // Greater than version.
+ *                     | greaterThanOrEqual version  | version lessThanOrEqual    // Greater than or equal to version.
+ *                     | lessThan version            | version greaterThan        // Less than version.
+ *                     | lessThanOrEqual version     | version greaterThanOrEqual // Less than or equal to version.
+ *                     ;
+ *
+ * not := "!" | "~";
+ *
+ * greaterThan := ">";
+ *
+ * greaterThanOrEqual := ">=" | "=>" | "]";
+ *
+ * lessThan := "<";
+ *
+ * lessThanOrEqual := "<=" | "" | "]";
+ * ```
+ *
  * @see toVersionMatcher
  */
 fun String.toSingleStringMatcher(): SingleVersionMatcher {
@@ -159,7 +267,7 @@ fun String.toSingleStringMatcher(): SingleVersionMatcher {
 
     return when {
         // Not equal.
-        startsWith('!') || startsWith('^') -> ExcludeVersionMatcher(substring(1).toVersion())
+        startsWith('!') || startsWith('~') -> ExcludeVersionMatcher(substring(1).toVersion())
 
         // Greater than or equal.
         startsWith(">=") || startsWith("=>") -> GreaterThanOrEqualVersionMatcher(substring(2).toVersion())
@@ -169,8 +277,8 @@ fun String.toSingleStringMatcher(): SingleVersionMatcher {
         endsWith('[') -> GreaterThanOrEqualVersionMatcher(substring(0, length - 1).toVersion())
 
         // Greater than.
-        startsWith('>') || startsWith(')') -> GreaterThanVersionMatcher(substring(1).toVersion())
-        endsWith('<') || endsWith('(') -> GreaterThanVersionMatcher(substring(0, length - 1).toVersion())
+        startsWith('>') -> GreaterThanVersionMatcher(substring(1).toVersion())
+        endsWith('<') -> GreaterThanVersionMatcher(substring(0, length - 1).toVersion())
 
         // Less than or equal.
         startsWith("<=") || startsWith("=<") -> LessThanOrEqualVersionMatcher(substring(2).toVersion())
@@ -180,8 +288,8 @@ fun String.toSingleStringMatcher(): SingleVersionMatcher {
         endsWith(']') -> LessThanOrEqualVersionMatcher(substring(0, length - 1).toVersion())
 
         // Less than.
-        startsWith('<') || startsWith('(') -> LessThanVersionMatcher(substring(1).toVersion())
-        endsWith('>') || endsWith(')') -> LessThanVersionMatcher(substring(0, length - 1).toVersion())
+        startsWith('<') -> LessThanVersionMatcher(substring(1).toVersion())
+        endsWith('>') -> LessThanVersionMatcher(substring(0, length - 1).toVersion())
 
         // Prefix matcher.
         endsWith(".+") -> when {
@@ -210,21 +318,66 @@ data object AnyVersionMatcher : VersionMatcher {
 
 sealed interface SingleVersionMatcher : VersionMatcher
 
-@JvmInline
-value class CompositeVersionMatcher(
-    private val matchers: List<VersionMatcher>
+class AndVersionMatcher(
+    val left: VersionMatcher,
+    val right: VersionMatcher
 ) : VersionMatcher {
-    init {
-        require(matchers.isNotEmpty()) {
-            "Composite version matcher must have at least one matcher."
-        }
-    }
-
     override fun isMatched(target: Version): Boolean {
-        return matchers.all { it.isMatched(target) }
+        return left.isMatched(target) && right.isMatched(target)
     }
 
-    override fun toString(): String = matchers.joinToString(", ")
+    override fun toString(): String = "($left & $right)"
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as AndVersionMatcher
+
+        if (left != other.left) return false
+        if (right != other.right) return false
+
+        return true
+    }
+
+    private val hashCodeCache: Int = run {
+        var result = left.hashCode()
+        result = 31 * result + right.hashCode()
+        result
+    }
+
+    override fun hashCode(): Int = hashCodeCache
+}
+
+class OrVersionMatcher(
+    val left: VersionMatcher,
+    val right: VersionMatcher
+) : VersionMatcher {
+    override fun isMatched(target: Version): Boolean {
+        return left.isMatched(target) || right.isMatched(target)
+    }
+
+    override fun toString(): String = "($left | $right)"
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as OrVersionMatcher
+
+        if (left != other.left) return false
+        if (right != other.right) return false
+
+        return true
+    }
+
+    private val hashCodeCache: Int = run {
+        var result = left.hashCode()
+        result = 31 * result + right.hashCode()
+        result
+    }
+
+    override fun hashCode(): Int = hashCodeCache
 }
 
 @JvmInline
