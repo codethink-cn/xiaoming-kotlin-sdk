@@ -16,26 +16,15 @@
 
 package cn.codethink.xiaoming.plugin
 
+import cn.codethink.xiaoming.common.Cause
+
 /**
- * Manages the runtime meta of a plugin.
+ * Represents a task that can be executed.
+ *
+ * For example, load, enable, disable, unload, fix, etc.
  *
  * @author Chuanwise
  */
-interface PluginRuntimeMeta {
-    val state: PluginState
-    val level: PluginLevel
-    val mode: PluginMode
-
-    val isLoaded: Boolean
-    val isEnabled: Boolean
-    val isErrored: Boolean
+interface PluginTask {
+    fun execute(plugin: Plugin, cause: Cause)
 }
-
-val PluginRuntimeMeta.isNotLoaded: Boolean
-    get() = !isLoaded
-
-val PluginRuntimeMeta.isNotEnabled: Boolean
-    get() = !isEnabled
-
-val PluginRuntimeMeta.isNotError: Boolean
-    get() = !isErrored

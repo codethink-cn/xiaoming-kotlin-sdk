@@ -14,28 +14,23 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin
+package cn.codethink.xiaoming.plugin.jvm.classic
 
-/**
- * Manages the runtime meta of a plugin.
- *
- * @author Chuanwise
- */
-interface PluginRuntimeMeta {
-    val state: PluginState
-    val level: PluginLevel
-    val mode: PluginMode
+import cn.codethink.xiaoming.plugin.PluginState
 
-    val isLoaded: Boolean
-    val isEnabled: Boolean
-    val isErrored: Boolean
+enum class ClassicalPluginState(
+    val loaded: Boolean = false,
+    val enabled: Boolean = false,
+    val errored: Boolean = false
+) : PluginState {
+    INITIALIZED,
+    LOADING,
+    LOADING_ERROR(errored = true),
+    LOADED(loaded = true),
+    ENABLING(loaded = true),
+    ENABLING_ERROR(loaded = true, errored = true),
+    ENABLED(loaded = true, enabled = true),
+    DISABLING(loaded = true),
+    DISABLING_ERROR(loaded = true, errored = true),
+    DISABLED(loaded = true),
 }
-
-val PluginRuntimeMeta.isNotLoaded: Boolean
-    get() = !isLoaded
-
-val PluginRuntimeMeta.isNotEnabled: Boolean
-    get() = !isEnabled
-
-val PluginRuntimeMeta.isNotError: Boolean
-    get() = !isErrored

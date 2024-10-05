@@ -14,28 +14,21 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin
+package cn.codethink.xiaoming.plugin.jvm.classic;
 
 /**
- * Manages the runtime meta of a plugin.
+ * Main class of Java classic plugin.
  *
  * @author Chuanwise
  */
-interface PluginRuntimeMeta {
-    val state: PluginState
-    val level: PluginLevel
-    val mode: PluginMode
+@PluginMain(invoker = JavaClassicPluginMainInvokerFactory.class)
+public interface JavaPluginMain {
+    default void onLoad(JavaClassicPluginContext context) {
+    }
 
-    val isLoaded: Boolean
-    val isEnabled: Boolean
-    val isErrored: Boolean
+    default void onEnable(JavaClassicPluginContext context) {
+    }
+
+    default void onDisable(JavaClassicPluginContext context) {
+    }
 }
-
-val PluginRuntimeMeta.isNotLoaded: Boolean
-    get() = !isLoaded
-
-val PluginRuntimeMeta.isNotEnabled: Boolean
-    get() = !isEnabled
-
-val PluginRuntimeMeta.isNotError: Boolean
-    get() = !isErrored

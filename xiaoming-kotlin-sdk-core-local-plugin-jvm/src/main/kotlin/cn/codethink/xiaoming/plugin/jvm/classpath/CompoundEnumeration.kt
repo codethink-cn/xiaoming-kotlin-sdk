@@ -14,28 +14,25 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin
+package cn.codethink.xiaoming.plugin.jvm.classpath
 
-/**
- * Manages the runtime meta of a plugin.
- *
- * @author Chuanwise
- */
-interface PluginRuntimeMeta {
-    val state: PluginState
-    val level: PluginLevel
-    val mode: PluginMode
+import java.util.Enumeration
 
-    val isLoaded: Boolean
-    val isEnabled: Boolean
-    val isErrored: Boolean
+class CompoundEnumeration<T>(
+    private val first: Enumeration<T>,
+    private val second: Enumeration<T>
+) : Enumeration<T> {
+    override fun hasMoreElements(): Boolean {
+        return first.hasMoreElements() || second.hasMoreElements()
+    }
+
+    override fun nextElement(): T {
+        return if (first.hasMoreElements()) {
+            first.nextElement()
+        } else {
+            second.nextElement()
+        }
+    }
 }
 
-val PluginRuntimeMeta.isNotLoaded: Boolean
-    get() = !isLoaded
-
-val PluginRuntimeMeta.isNotEnabled: Boolean
-    get() = !isEnabled
-
-val PluginRuntimeMeta.isNotError: Boolean
-    get() = !isErrored
+operator fun <T> Enumeration<T>.plus(other: Enumeration<T>): Enumeration<T> = CompoundEnumeration(this, other)

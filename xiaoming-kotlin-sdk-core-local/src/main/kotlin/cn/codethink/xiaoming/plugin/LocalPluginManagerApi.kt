@@ -19,6 +19,7 @@ package cn.codethink.xiaoming.plugin
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.common.InternalApi
+import cn.codethink.xiaoming.common.NamespaceId
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.currentThreadCauseOrFail
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
@@ -34,8 +35,35 @@ class LocalPluginManagerApi(
     val plugins: Map<Id, Plugin>
         get() = mutablePlugins.toMap()
 
+    private var mutableProvidedPluginIds: MutableMap<NamespaceId, NamespaceId> = HashMap()
+
     @InternalApi
-    internal fun start(cause: Cause, subject: SubjectDescriptor) {
+    fun start(cause: Cause, subject: SubjectDescriptor) {
+
+    }
+
+    /**
+     * Load multiple plugins. If argument contains a plugin that is already loaded or enabled,
+     * it will be ignored. If it's errored, it will be reloaded forcefully if [force] = true,
+     * otherwise exception will be thrown because it's not safe to reload an errored plugin.
+     *
+     * If no error occurred, it's expected that [InitializedPlugin.isLoaded] return true,
+     * otherwise the [InitializedPlugin.isErrored] should return true.
+     *
+     * @param plugins the plugins to load.
+     * @param force whether to force load the errored plugin.
+     * @param cause the cause of this operation.
+     *
+     * @see InitializedPlugin.load
+     * @see InitializedPlugin.isLoaded
+     */
+    fun loadPlugins(
+        plugins: Iterable<Plugin>, force: Boolean = false, cause: Cause? = null
+    ): Unit = lock.write {
+        val finalCause = cause ?: currentThreadCauseOrFail()
+        val pluginsById = plugins.associateBy { it.descriptor.id }
+
+        val alreadyLoadedPluginIds = mutableSetOf<NamespaceId>()
 
     }
 
@@ -46,6 +74,33 @@ class LocalPluginManagerApi(
     ): Unit = lock.write {
         val finalCause = cause ?: currentThreadCauseOrFail()
         val pluginsById = plugins.associateBy { it.descriptor.id }
+
+        val alreadyEnabledPluginIds = mutableSetOf<NamespaceId>()
+
+        // Collate provisions.
+        // This -> By Whom (include This)
+        val providedPluginIds = HashMap(mutableProvidedPluginIds)
+        for (required in plugins) {
+            val providerId = providedPluginIds[required.descriptor.id]
+            if (providerId != null) {
+                val provider = mutablePlugins[providerId]
+                checkNotNull(provider) { "The provider of plugin '${required.id}': '${providerId}' is not found." }
+
+                if (providerId == required.descriptor.id) {
+                    // Plugin already provided by itself.
+                    if (required.version == provider.version) {
+                        // If the version is same, check if it is enabled.
+                        if (provider is InitializedPlugin && provider.isEnabled) {
+                            // Plugin already enabled.
+                            alreadyEnabledPluginIds.add(required.descriptor.id)
+                            continue
+                        }
+                    }
+                }
+
+                // Plugin already provided by another plugin.
+            }
+        }
 
         // Build dependency graph.
         class Node(
@@ -70,7 +125,7 @@ class LocalPluginManagerApi(
                     // If version changed, we need to unload the previous one.
                     // Then load and enable the new one.
 
-                    if (presented.isErrored) {
+                    if (presented is InitializedPlugin && presented.isErrored) {
                         check(force) {
                             "The plugins to enabled contains '${plugin.toExactRequirement()}', " +
                                     "but there is a same plugin with a another version '${presented.version}', " +

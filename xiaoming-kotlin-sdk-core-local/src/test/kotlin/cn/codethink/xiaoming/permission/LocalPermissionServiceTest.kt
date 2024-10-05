@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
+@file:OptIn(InternalApi::class)
+
 package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.DefaultLocalPlatformApi
 import cn.codethink.xiaoming.DefaultLocalPlatformConfiguration
+import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.PluginSubjectDescriptor
 import cn.codethink.xiaoming.common.TestCause
 import cn.codethink.xiaoming.common.TestSubjectDescriptor

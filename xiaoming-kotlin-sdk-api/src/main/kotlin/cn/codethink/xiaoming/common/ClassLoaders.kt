@@ -14,28 +14,15 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin
+package cn.codethink.xiaoming.common
 
-/**
- * Manages the runtime meta of a plugin.
- *
- * @author Chuanwise
- */
-interface PluginRuntimeMeta {
-    val state: PluginState
-    val level: PluginLevel
-    val mode: PluginMode
-
-    val isLoaded: Boolean
-    val isEnabled: Boolean
-    val isErrored: Boolean
+@InternalApi
+inline fun <T> ignoreClassNotFoundException(
+    crossinline block: () -> T
+): T? {
+    return try {
+        block()
+    } catch (exception: ClassNotFoundException) {
+        null
+    }
 }
-
-val PluginRuntimeMeta.isNotLoaded: Boolean
-    get() = !isLoaded
-
-val PluginRuntimeMeta.isNotEnabled: Boolean
-    get() = !isEnabled
-
-val PluginRuntimeMeta.isNotError: Boolean
-    get() = !isErrored

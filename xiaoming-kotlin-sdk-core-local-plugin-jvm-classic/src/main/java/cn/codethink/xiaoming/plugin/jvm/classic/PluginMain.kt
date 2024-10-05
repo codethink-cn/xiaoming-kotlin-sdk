@@ -14,28 +14,17 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin
+package cn.codethink.xiaoming.plugin.jvm.classic
+
+import kotlin.reflect.KClass
 
 /**
- * Manages the runtime meta of a plugin.
+ * Mark a plugin implemented main class.
  *
  * @author Chuanwise
  */
-interface PluginRuntimeMeta {
-    val state: PluginState
-    val level: PluginLevel
-    val mode: PluginMode
-
-    val isLoaded: Boolean
-    val isEnabled: Boolean
-    val isErrored: Boolean
-}
-
-val PluginRuntimeMeta.isNotLoaded: Boolean
-    get() = !isLoaded
-
-val PluginRuntimeMeta.isNotEnabled: Boolean
-    get() = !isEnabled
-
-val PluginRuntimeMeta.isNotError: Boolean
-    get() = !isErrored
+@MustBeDocumented
+@Retention(AnnotationRetention.RUNTIME)
+annotation class PluginMain(
+    val invoker: KClass<out PluginMainInvokerFactory>
+)

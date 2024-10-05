@@ -14,28 +14,22 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin
+package cn.codethink.xiaoming.plugin.jvm.classic
 
-/**
- * Manages the runtime meta of a plugin.
- *
- * @author Chuanwise
- */
-interface PluginRuntimeMeta {
-    val state: PluginState
-    val level: PluginLevel
-    val mode: PluginMode
+import cn.codethink.xiaoming.common.Cause
 
-    val isLoaded: Boolean
-    val isEnabled: Boolean
-    val isErrored: Boolean
+class JavaPluginMainInvoker(
+    private val main: JavaPluginMain
+) : PluginMainInvoker {
+    override fun invokeOnLoad(plugin: ClassicPlugin, cause: Cause) {
+        TODO("Not yet implemented")
+    }
+
+    override fun invokeOnEnable(plugin: ClassicPlugin, cause: Cause) {
+        TODO("Not yet implemented")
+    }
+
+    override fun invokeOnDisable(plugin: ClassicPlugin, cause: Cause) {
+        TODO("Not yet implemented")
+    }
 }
-
-val PluginRuntimeMeta.isNotLoaded: Boolean
-    get() = !isLoaded
-
-val PluginRuntimeMeta.isNotEnabled: Boolean
-    get() = !isEnabled
-
-val PluginRuntimeMeta.isNotError: Boolean
-    get() = !isErrored

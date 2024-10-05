@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
+@file:OptIn(InternalApi::class)
+
 package cn.codethink.xiaoming
 
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.EventCause
+import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.SdkVersionString
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.currentThreadCauseOrFail
@@ -51,6 +54,8 @@ interface LocalPlatformApi : PlatformApi {
     val deserializerModule: DeserializerModule
     val internalApi: LocalPlatformInternalApi
     val dataObjectMapper: ObjectMapper
+    val environmentClassLoader: ClassLoader
+    val platformClassLoader: ClassLoader
 }
 
 data class DefaultLocalPlatformConfiguration(
@@ -59,6 +64,8 @@ data class DefaultLocalPlatformConfiguration(
     val dataObjectMapper: ObjectMapper,
     val deserializerModule: DeserializerModule,
     val data: LocalPlatformDataConfiguration,
+    val environmentClassLoader: ClassLoader = ClassLoader.getPlatformClassLoader(),
+    val platformClassLoader: ClassLoader = Platform::class.java.classLoader,
     val parentJob: Job? = null,
     val parentCoroutineContext: CoroutineContext = EmptyCoroutineContext,
     val contributorsDisplayingLimits: Int? = null,
@@ -70,9 +77,11 @@ data class DefaultLocalPlatformConfiguration(
 )
 
 class DefaultLocalPlatformApi(
-    private val configuration: DefaultLocalPlatformConfiguration,
+    private val configuration: DefaultLocalPlatformConfiguration
 ) : LocalPlatformApi {
     private val logger: KLogger by configuration::logger
+    override val environmentClassLoader by configuration::environmentClassLoader
+    override val platformClassLoader by configuration::platformClassLoader
 
     // Forward to configuration.
     override val descriptor: SubjectDescriptor by configuration::descriptor

@@ -32,7 +32,8 @@ import java.lang.annotation.Inherited
  */
 @Inherited
 @MustBeDocumented
-@Retention(AnnotationRetention.SOURCE)
+@Retention(AnnotationRetention.BINARY)
+@RequiresOptIn(level = RequiresOptIn.Level.ERROR)
 annotation class InternalApi
 
 /**
@@ -46,5 +47,6 @@ annotation class InternalApi
  */
 @Inherited
 @MustBeDocumented
-@Retention(AnnotationRetention.SOURCE)
+@Retention(AnnotationRetention.BINARY)
+@RequiresOptIn(level = RequiresOptIn.Level.ERROR)
 annotation class JavaFriendlyApi

@@ -16,13 +16,10 @@
 
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.Platform
-import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.NamespaceId
 import cn.codethink.xiaoming.common.PluginSubjectDescriptor
 import cn.codethink.xiaoming.common.SegmentId
 import cn.codethink.xiaoming.common.Subject
-import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.Version
 
 /**
@@ -30,15 +27,19 @@ import cn.codethink.xiaoming.common.Version
  * platform locally and remotely.
  *
  * @author Chuanwise
+ * @see LazyInitializedPlugin
+ * @see InitializedPlugin
  */
-interface Plugin : Subject {
-    val meta: PluginRuntimeMeta
+sealed interface Plugin : Subject {
+    /**
+     * Plugin's descriptor.
+     */
     override val descriptor: PluginSubjectDescriptor
 
-    fun load(platform: Platform, cause: Cause, subject: SubjectDescriptor)
-    fun enable(platform: Platform, cause: Cause, subject: SubjectDescriptor)
-    fun disable(platform: Platform, cause: Cause, subject: SubjectDescriptor)
-    fun unload(platform: Platform, cause: Cause, subject: SubjectDescriptor)
+    /**
+     * Plugin's meta information.
+     */
+    val meta: PluginMeta
 }
 
 val Plugin.id: NamespaceId
@@ -51,27 +52,9 @@ val Plugin.group: SegmentId
     get() = descriptor.id.group
 
 val Plugin.version: Version
-    get() = meta.meta.version
+    get() = meta.version
 
-val Plugin.isErrored: Boolean
-    get() = meta.isErrored
-
-val Plugin.isEnabled: Boolean
-    get() = meta.isEnabled
-
-val Plugin.isLoaded: Boolean
-    get() = meta.isLoaded
-
-val Plugin.isNotError: Boolean
-    get() = meta.isNotError
-
-val Plugin.isNotEnabled: Boolean
-    get() = meta.isNotEnabled
-
-val Plugin.isNotLoaded: Boolean
-    get() = meta.isNotLoaded
-
-fun Plugin.toExactRequirement() = meta.meta.toExactRequirement()
+fun Plugin.toExactRequirement() = meta.toExactRequirement()
 
 @JvmOverloads
-fun Plugin.toExactDependency(optional: Boolean = false) = meta.meta.toExactDependency(optional)
+fun Plugin.toExactDependency(optional: Boolean = false) = meta.toExactDependency(optional)
