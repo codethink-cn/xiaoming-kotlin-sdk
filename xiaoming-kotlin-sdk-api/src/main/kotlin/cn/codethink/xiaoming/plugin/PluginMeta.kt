@@ -60,7 +60,8 @@ interface PluginMeta {
     /**
      * Describes what other plugins' features the plugin can provide.
      *
-     * For plugin A, if it can provide plugins B, C? (optional), D.
+     * For plugin A, if it can provide plugins B, C? (optional) and D, plugins depended on
+     * them can be enabled even if plugin B, C or D is not enabled.
      */
     val provisions: List<OptionalPluginRequirement>
 
