@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
+
+@file:OptIn(InternalApi::class)
+
 package cn.codethink.xiaoming.permission
 
+import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.FIELD_TYPE
 import cn.codethink.xiaoming.common.FIELD_VERSION

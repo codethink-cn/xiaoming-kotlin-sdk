@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
+
+@file:OptIn(InternalApi::class)
+
 package cn.codethink.xiaoming.permission.data.sql.v1
 
 import cn.codethink.xiaoming.LocalPlatformApi
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.FIELD_TYPE
 import cn.codethink.xiaoming.common.FIELD_VERSION
+import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.data.LocalPlatformDataApi
 import cn.codethink.xiaoming.io.data.DefaultValue
 import cn.codethink.xiaoming.io.data.Field

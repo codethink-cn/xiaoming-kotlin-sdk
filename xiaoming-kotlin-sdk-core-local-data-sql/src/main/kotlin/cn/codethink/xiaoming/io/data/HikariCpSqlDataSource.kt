@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
+
+@file:OptIn(InternalApi::class)
+
 package cn.codethink.xiaoming.io.data
 
 import cn.codethink.xiaoming.common.AbstractData
+import cn.codethink.xiaoming.common.InternalApi
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
