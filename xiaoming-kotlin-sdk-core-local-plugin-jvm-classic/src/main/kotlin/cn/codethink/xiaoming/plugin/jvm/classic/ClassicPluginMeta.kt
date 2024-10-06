@@ -41,7 +41,7 @@ class ClassicPluginMeta(
     override val channel: String,
     val main: String,
     val logger: String? = null,
-    override val dependencies: List<PluginDependency>,
+    override val dependencies: List<PluginDependency> = emptyList(),
     override val description: String? = null,
     override val protocol: VersionMatcher? = null,
     override val provisions: List<PluginRequirement> = emptyList()

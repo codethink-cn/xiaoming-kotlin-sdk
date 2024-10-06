@@ -21,6 +21,7 @@ import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.EVENT_SNAPSHOT_FIELD_CAUSE
 import cn.codethink.xiaoming.common.EVENT_SNAPSHOT_FIELD_EVENT
 import cn.codethink.xiaoming.common.EVENT_SNAPSHOT_FIELD_LISTENER
+import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.PUBLISH_EVENT_RECEIPT_DATA_SNAPSHOTS
 import cn.codethink.xiaoming.common.PUBLISH_EVENT_REQUEST_PARA_EVENT
 import cn.codethink.xiaoming.common.PUBLISH_EVENT_REQUEST_PARA_MUTABLE
@@ -32,12 +33,13 @@ import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
 
-class PublishEventRequestPara(
-    raw: Raw
-) : AbstractData(raw) {
+class PublishEventRequestPara : AbstractData {
     val type: List<String> by raw
     val event: Event by raw
     val mutable: Boolean by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
@@ -45,7 +47,7 @@ class PublishEventRequestPara(
         event: Event,
         mutable: Boolean = false,
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         raw[PUBLISH_EVENT_REQUEST_PARA_TYPE] = type
         raw[PUBLISH_EVENT_REQUEST_PARA_EVENT] = event
         raw[PUBLISH_EVENT_REQUEST_PARA_MUTABLE] = mutable

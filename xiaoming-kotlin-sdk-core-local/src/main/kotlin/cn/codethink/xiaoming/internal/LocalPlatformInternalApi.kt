@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
+@file:OptIn(InternalApi::class)
+
 package cn.codethink.xiaoming.internal
 
 import cn.codethink.xiaoming.common.AutoClosableSubject
 import cn.codethink.xiaoming.common.Cause
+import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.TextCause
 import cn.codethink.xiaoming.common.doModuleRelatedAction
@@ -47,6 +50,8 @@ import kotlin.coroutines.CoroutineContext
 class LocalPlatformInternalApi(
     val configuration: LocalPlatformInternalConfiguration,
 ) : CoroutineScope, AutoClosableSubject {
+    val platform by configuration::platform
+
     val logger by configuration::logger
     override val descriptor by configuration::descriptor
 

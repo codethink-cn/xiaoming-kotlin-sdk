@@ -25,5 +25,5 @@ package cn.codethink.xiaoming.plugin.jvm.classic
  * @author Chuanwise
  */
 interface PluginMainInvokerFactory {
-    fun create(plugin: ClassicPlugin, mainClass: Class<*>): PluginMainInvoker
+    fun create(mainClass: Class<*>): PluginMainInvoker
 }

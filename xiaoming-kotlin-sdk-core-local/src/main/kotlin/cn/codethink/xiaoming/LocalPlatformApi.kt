@@ -50,6 +50,7 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
 interface LocalPlatformApi : PlatformApi {
+    val supervisorJob: Job
     val modules: List<Module>
     val deserializerModule: DeserializerModule
     val internalApi: LocalPlatformInternalApi
@@ -90,7 +91,7 @@ class DefaultLocalPlatformApi(
     override val dataObjectMapper: ObjectMapper by configuration::dataObjectMapper
 
     // Coroutines related.
-    private val supervisorJob = SupervisorJob(configuration.parentJob)
+    override val supervisorJob = SupervisorJob(configuration.parentJob)
     private val scope: CoroutineScope = CoroutineScope(supervisorJob + configuration.parentCoroutineContext)
     override val coroutineContext: CoroutineContext by scope::coroutineContext
 
@@ -114,7 +115,7 @@ class DefaultLocalPlatformApi(
     override lateinit var internalApi: LocalPlatformInternalApi
 
     @JvmOverloads
-    fun start(cause: Cause? = null): Unit = lock.write {
+    fun start(platform: Platform, cause: Cause? = null): Unit = lock.write {
         val finalCause = cause ?: currentThreadCauseOrFail()
 
         stateNoLock = when (stateNoLock) {
@@ -160,6 +161,7 @@ class DefaultLocalPlatformApi(
 
             internalApi = LocalPlatformInternalApi(
                 configuration = DefaultLocalPlatformInternalConfiguration(
+                    platform = platform,
                     logger = logger,
                     deserializerModule = deserializerModule,
                     dataObjectMapper = configuration.dataObjectMapper,

@@ -27,32 +27,32 @@ dependencies {
     val log4jVersion: String by rootProject
     val kotlinLoggingVersion: String by rootProject
     val slf4jVersion: String by rootProject
-    implementation("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
+    api("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
     testImplementation("org.slf4j:slf4j-api:$slf4jVersion")
     testImplementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
     testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:$log4jVersion")
     testRuntimeOnly("org.apache.logging.log4j:log4j-core:$log4jVersion")
 
     val jacksonVersion: String by rootProject
-    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+    api("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    api("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
+    api("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
 
     val apacheCommonTextVersion: String by rootProject
-    implementation("org.apache.commons:commons-text:$apacheCommonTextVersion")
+    api("org.apache.commons:commons-text:$apacheCommonTextVersion")
 
     val kotlinCoroutineVersion: String by rootProject
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutineVersion")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutineVersion")
 
     val apacheCommonCollectionVersion: String by rootProject
-    implementation("org.apache.commons:commons-collections4:$apacheCommonCollectionVersion")
+    api("org.apache.commons:commons-collections4:$apacheCommonCollectionVersion")
 
     val ktorVersion: String by rootProject
-    implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-websockets:$ktorVersion")
-    implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
+    api("io.ktor:ktor-server-core-jvm:$ktorVersion")
+    api("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
+    api("io.ktor:ktor-server-netty-jvm:$ktorVersion")
+    api("io.ktor:ktor-websockets:$ktorVersion")
+    api("io.ktor:ktor-client-okhttp:$ktorVersion")
 
     val junitVersion: String by rootProject
     testImplementation(platform("org.junit:junit-bom:$junitVersion"))

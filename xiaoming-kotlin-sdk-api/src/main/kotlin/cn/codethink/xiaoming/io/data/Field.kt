@@ -17,6 +17,7 @@
 package cn.codethink.xiaoming.io.data
 
 import cn.codethink.xiaoming.common.Data
+import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.Tristate
 import cn.codethink.xiaoming.common.defaultNullable
 import cn.codethink.xiaoming.common.defaultOptional
@@ -229,6 +230,10 @@ private class AllSuperClassOrInterfacesView(
 
     override fun iterator(): Iterator<Class<*>> = It()
 }
+
+@InternalApi
+val Class<*>.allAssignableClasses: Iterable<Class<*>>
+    get() = AllSuperClassOrInterfacesView(this)
 
 fun applyNamingPolicyIfPresent(property: KProperty<*>): String {
     var name = property.name

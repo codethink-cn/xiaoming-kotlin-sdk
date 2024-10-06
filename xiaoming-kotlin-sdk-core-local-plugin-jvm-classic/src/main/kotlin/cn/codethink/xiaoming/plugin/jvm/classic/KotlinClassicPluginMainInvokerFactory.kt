@@ -14,8 +14,20 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin
+package cn.codethink.xiaoming.plugin.jvm.classic
 
-interface LazyInitializedPlugin : Plugin {
-    fun initialize(): InitializedPlugin
+import cn.codethink.xiaoming.common.getOrConstruct
+import io.github.oshai.kotlinlogging.KotlinLogging
+
+/**
+ * @see JavaPluginMain
+ * @author Chuanwise
+ */
+object KotlinClassicPluginMainInvokerFactory : PluginMainInvokerFactory {
+    private val logger = KotlinLogging.logger { }
+
+    override fun create(mainClass: Class<*>): PluginMainInvoker {
+        val main = getOrConstruct(mainClass) as KotlinPluginMain
+        return KotlinPluginMainInvoker(main)
+    }
 }

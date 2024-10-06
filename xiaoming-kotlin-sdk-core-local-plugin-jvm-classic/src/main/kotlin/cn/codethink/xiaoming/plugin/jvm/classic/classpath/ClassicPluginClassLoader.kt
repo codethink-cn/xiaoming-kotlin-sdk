@@ -138,7 +138,8 @@ class ClassicPluginClassLoader(
     override fun loadClass(name: String, resolve: Boolean): Class<*> = loadClass(name)
 
     override fun loadClass(name: String): Class<*> {
-        publicLibrariesClassLoader.loadClass(name)?.let { return it }
+        ignoreClassNotFoundException { environmentClassLoader.loadClass(name) }?.let { return it }
+        ignoreClassNotFoundException { publicLibrariesClassLoader.loadClass(name) }?.let { return it }
 
         // Load class in protected libraries.
         protectedLibrariesClassLoader.loadClassInThisClassLoaderAndLibraries(name)?.let { return it }

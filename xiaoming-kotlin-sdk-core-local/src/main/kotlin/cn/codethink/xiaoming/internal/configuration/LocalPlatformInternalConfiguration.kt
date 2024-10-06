@@ -16,6 +16,7 @@
 
 package cn.codethink.xiaoming.internal.configuration
 
+import cn.codethink.xiaoming.Platform
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.data.LocalPlatformData
 import cn.codethink.xiaoming.internal.module.Module
@@ -29,6 +30,11 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
 interface LocalPlatformInternalConfiguration {
+    /**
+     * Platform of the platform.
+     */
+    val platform: Platform
+
     /**
      * Registry of deserializers.
      */
@@ -72,6 +78,7 @@ interface LocalPlatformInternalConfiguration {
 }
 
 data class DefaultLocalPlatformInternalConfiguration(
+    override val platform: Platform,
     override val deserializerModule: DeserializerModule,
     override val dataObjectMapper: ObjectMapper,
     override val data: LocalPlatformData,

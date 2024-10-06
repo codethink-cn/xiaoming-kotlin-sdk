@@ -36,9 +36,10 @@ class KotlinClassicPluginContext(
     private val scope = CoroutineScope(supervisorJob + parentCoroutineContext)
     override val coroutineContext: CoroutineContext by scope::coroutineContext
 
-    val logger = KotlinLogging.logger { plugin.meta.logger ?: plugin.id.toString() }
+    val logger = KotlinLogging.logger(plugin.meta.logger ?: plugin.id.toString())
 }
 
+@PluginMain(invoker = KotlinClassicPluginMainInvokerFactory::class)
 interface KotlinPluginMain {
     /**
      * Do some initialization work when the plugin is loading.
@@ -62,11 +63,26 @@ interface KotlinPluginMain {
     fun onDisable(context: KotlinClassicPluginContext) = Unit
 }
 
+/**
+ * Notice that the implementation is not thread safe. [ClassicPlugin] will maintain a single
+ * instance of this invoker, and make sure that it's only called by one thread at a time.
+ *
+ * @author Chuanwise
+ */
 class KotlinPluginMainInvoker(
     val main: KotlinPluginMain
 ) : PluginMainInvoker {
+    private var context: KotlinClassicPluginContext? = null
+
     override fun invokeOnLoad(plugin: ClassicPlugin, cause: Cause) {
-        TODO("Not yet implemented")
+        var context = context
+        if (context == null) {
+            context = KotlinClassicPluginContext(
+                plugin, cause, plugin.platformApi.supervisorJob, plugin.platformApi.coroutineContext, null
+            )
+        }
+
+        main.onLoad(context)
     }
 
     override fun invokeOnEnable(plugin: ClassicPlugin, cause: Cause) {

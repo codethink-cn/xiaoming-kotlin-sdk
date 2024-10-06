@@ -20,6 +20,7 @@ package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.DefaultLocalPlatformApi
 import cn.codethink.xiaoming.DefaultLocalPlatformConfiguration
+import cn.codethink.xiaoming.Platform
 import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.PluginSubjectDescriptor
 import cn.codethink.xiaoming.common.TestCause
@@ -82,9 +83,13 @@ class LocalPermissionServiceTest {
                 fileObjectMapper.readValue<LocalPlatformDataConfiguration>(it)
             }
         ),
-    ).apply {
-        start(TestCause)
+    )
+    private val platform = Platform(platformApi)
+
+    init {
+        platformApi.start(platform, TestCause)
     }
+
     private val api = platformApi.internalApi
 
     private val subjectId = "cn.codethink.xiaoming:demo".toNamespaceId()

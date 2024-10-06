@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
+@file:OptIn(InternalApi::class)
+
 package cn.codethink.xiaoming.io.packet
 
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.Id
+import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.PACKET_TYPE_RECEIPT
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.currentTimeSeconds
@@ -35,7 +38,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
  * @see RequestPacket
  * @see ReceiptPacket
  */
-abstract class Packet(
+abstract class Packet @InternalApi constructor(
     raw: Raw
 ) : AbstractData(raw) {
     abstract val id: Id
@@ -51,9 +54,7 @@ abstract class Packet(
  * @author Chuanwise
  */
 @JsonTypeName(PACKET_TYPE_REQUEST)
-class RequestPacket(
-    raw: Raw
-) : Packet(raw) {
+class RequestPacket : Packet {
     override var id: Id by raw
     override var type: String by raw
     override var time: Long by raw
@@ -64,6 +65,9 @@ class RequestPacket(
     var mode: String by raw
     var argument: Any? by raw
     var timeout: Long by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
@@ -76,7 +80,7 @@ class RequestPacket(
         time: Long = currentTimeSeconds,
         session: SubjectDescriptor? = null,
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         this.id = id
         this.type = PACKET_TYPE_REQUEST
         this.time = time
@@ -98,9 +102,7 @@ const val PACKET_TYPE_REQUEST = "request"
  * @author Chuanwise
  */
 @JsonTypeName(PACKET_TYPE_RECEIPT)
-class ReceiptPacket(
-    raw: Raw
-) : Packet(raw) {
+class ReceiptPacket : Packet {
     override var id: Id by raw
     override var type: String by raw
     override var time: Long by raw
@@ -110,6 +112,9 @@ class ReceiptPacket(
     var target: Id by raw
     var state: String by raw
     var data: Any? by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
@@ -121,7 +126,7 @@ class ReceiptPacket(
         time: Long = currentTimeSeconds,
         session: SubjectDescriptor? = null,
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         this.id = id
         this.type = PACKET_TYPE_REQUEST
         this.time = time

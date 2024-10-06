@@ -16,6 +16,7 @@
 
 package cn.codethink.xiaoming.io.common
 
+import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.PacketIdCause
 import cn.codethink.xiaoming.common.TestSubjectDescriptor
 import cn.codethink.xiaoming.common.TextCause
@@ -27,6 +28,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.junit.jupiter.api.Test
 
 class CauseTest {
+    @InternalApi
     @Test
     fun testSerializeCause() {
         val mapper = jacksonObjectMapper().apply {

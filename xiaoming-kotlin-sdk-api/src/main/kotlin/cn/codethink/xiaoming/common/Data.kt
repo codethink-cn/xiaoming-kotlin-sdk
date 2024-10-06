@@ -66,9 +66,8 @@ object DefaultDataSerializer : JsonSerializer<Data>() {
  * @see Raw
  * @see Data
  */
-@InternalApi
 abstract class AbstractData(
-    override val raw: Raw
+    final override val raw: Raw
 ) : Data {
     override fun toString(): String = "${javaClass.simpleName}(${raw.contentToString()})"
     override fun equals(other: Any?): Boolean {

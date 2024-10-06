@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:OptIn(InternalApi::class)
+
 package cn.codethink.xiaoming.common
 
 import cn.codethink.xiaoming.io.action.StandardAction
@@ -29,16 +31,14 @@ import com.fasterxml.jackson.annotation.JsonTypeName
  *
  * @author Chuanwise
  */
-abstract class SubjectDescriptor(
-    raw: Raw
-) : AbstractData(raw) {
+abstract class SubjectDescriptor : AbstractData {
     val type: String by raw
 
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
+
     @JvmOverloads
-    constructor(
-        type: String,
-        raw: Raw = MapRaw()
-    ) : this(raw) {
+    constructor(type: String, raw: Raw = MapRaw()) : super(raw) {
         raw[FIELD_TYPE] = type
     }
 }

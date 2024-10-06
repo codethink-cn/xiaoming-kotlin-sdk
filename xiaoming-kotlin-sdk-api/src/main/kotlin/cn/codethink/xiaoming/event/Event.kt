@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:OptIn(InternalApi::class)
+
 package cn.codethink.xiaoming.event
 
 import cn.codethink.xiaoming.common.AbstractData
@@ -21,6 +23,7 @@ import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.EventCause
 import cn.codethink.xiaoming.common.FIELD_CAUSE
 import cn.codethink.xiaoming.common.FIELD_TYPE
+import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
@@ -31,11 +34,12 @@ import cn.codethink.xiaoming.io.data.set
  *
  * @author Chuanwise
  */
-abstract class Event(
-    raw: Raw
-) : AbstractData(raw) {
+abstract class Event : AbstractData {
     val type: String by raw
     val cause: Cause by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(

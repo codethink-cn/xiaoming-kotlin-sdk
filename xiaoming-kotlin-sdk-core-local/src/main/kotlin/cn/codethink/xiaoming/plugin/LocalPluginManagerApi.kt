@@ -65,6 +65,10 @@ class LocalPluginManagerApi(
 
         val alreadyLoadedPluginIds = mutableSetOf<NamespaceId>()
 
+        internalApi.logger.info { "I can't waiting for load plugins!" }
+        pluginsById.values.forEach {
+            (it as InitializedPlugin).load(internalApi.platform, finalCause)
+        }
     }
 
     fun enablePlugins(

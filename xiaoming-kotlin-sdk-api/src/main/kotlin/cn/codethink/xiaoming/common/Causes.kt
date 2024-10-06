@@ -32,18 +32,18 @@ import kotlin.coroutines.CoroutineContext
  * @see currentCoroutineCauseOrFail
  * @see launchBy
  */
-data class CauseSubjectPairElement(
+data class CauseContextElement(
     val cause: Cause
-) : AbstractCoroutineContextElement(CauseSubjectPairElement) {
-    companion object Key : CoroutineContext.Key<CauseSubjectPairElement>
+) : AbstractCoroutineContextElement(CauseContextElement) {
+    companion object Key : CoroutineContext.Key<CauseContextElement>
 }
 
 fun CoroutineScope.launchBy(
     cause: Cause, block: suspend CoroutineScope.() -> Unit
-) = launch(CauseSubjectPairElement(cause), block = block)
+) = launch(CauseContextElement(cause), block = block)
 
 suspend fun currentCoroutineCause(): Cause? {
-    return currentCoroutineContext()[CauseSubjectPairElement]?.cause
+    return currentCoroutineContext()[CauseContextElement]?.cause
 }
 
 suspend fun currentCoroutineCauseOrFail(): Cause = currentCoroutineCause()
@@ -84,7 +84,7 @@ fun runBy(cause: Cause, block: () -> Unit) {
 }
 
 inline fun <reified T> runInlineBy(
-    cause: Cause, subject: SubjectDescriptor, crossinline block: () -> T
+    cause: Cause, crossinline block: () -> T
 ): T {
     threadLocalCause.set(cause)
     try {
