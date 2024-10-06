@@ -19,7 +19,6 @@
 
 package cn.codethink.xiaoming.io.action
 
-import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.EVENT_SNAPSHOT_FIELD_CAUSE
