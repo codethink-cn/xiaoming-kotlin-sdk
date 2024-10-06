@@ -21,11 +21,11 @@ import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.SegmentId
 
 /**
- * Initialized plugin.
+ * Allocated plugin.
  *
  * @author Chuanwise
  */
-interface InitializedPlugin : Plugin {
+interface AllocatedPlugin : Plugin {
     /**
      * Plugin's meta information.
      */
@@ -86,20 +86,20 @@ interface InitializedPlugin : Plugin {
     fun unload(platform: Platform, cause: Cause? = null)
 }
 
-val InitializedPlugin.isErrored: Boolean
+val AllocatedPlugin.isErrored: Boolean
     get() = runtime.isErrored
 
-val InitializedPlugin.isEnabled: Boolean
+val AllocatedPlugin.isEnabled: Boolean
     get() = runtime.isEnabled
 
-val InitializedPlugin.isLoaded: Boolean
+val AllocatedPlugin.isLoaded: Boolean
     get() = runtime.isLoaded
 
-val InitializedPlugin.isNotError: Boolean
+val AllocatedPlugin.isNotError: Boolean
     get() = runtime.isNotError
 
-val InitializedPlugin.isNotEnabled: Boolean
+val AllocatedPlugin.isNotEnabled: Boolean
     get() = runtime.isNotEnabled
 
-val InitializedPlugin.isNotLoaded: Boolean
+val AllocatedPlugin.isNotLoaded: Boolean
     get() = runtime.isNotLoaded

@@ -27,8 +27,8 @@ import cn.codethink.xiaoming.common.Version
  * platform locally and remotely.
  *
  * @author Chuanwise
- * @see LazyInitializedPlugin
- * @see InitializedPlugin
+ * @see NotYetAllocatedPlugin
+ * @see AllocatedPlugin
  */
 sealed interface Plugin : Subject {
     /**

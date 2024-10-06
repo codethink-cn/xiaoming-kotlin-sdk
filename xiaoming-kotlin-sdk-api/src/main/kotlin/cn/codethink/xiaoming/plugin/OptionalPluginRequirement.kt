@@ -27,14 +27,14 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
 
 /**
- * Describe plugin dependency.
+ * Describe plugin dependency or provisions.
  *
  * @author Chuanwise
- * @see toPluginDependency
+ * @see toOptionalPluginRequirement
  */
-@JsonSerialize(using = PluginDependencySerializer::class)
-@JsonDeserialize(using = PluginDependencyDeserializer::class)
-class PluginDependency(
+@JsonSerialize(using = OptionalPluginRequirementSerializer::class)
+@JsonDeserialize(using = OptionalPluginRequirementDeserializer::class)
+class OptionalPluginRequirement(
     val requirement: PluginRequirement,
     val optional: Boolean = false
 ) {
@@ -45,14 +45,14 @@ class PluginDependency(
     companion object {
         @JvmStatic
         @JavaFriendlyApi
-        fun parse(string: String) = string.toPluginDependency()
+        fun parse(string: String) = string.toOptionalPluginRequirement()
     }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as PluginDependency
+        other as OptionalPluginRequirement
 
         if (id != other.id) return false
         if (version != other.version) return false
@@ -80,25 +80,31 @@ class PluginDependency(
     override fun toString(): String = toStringCache
 }
 
-object PluginDependencySerializer : StdSerializer<PluginDependency>(PluginDependency::class.java) {
-    private fun readResolve(): Any = PluginDependencySerializer
-    override fun serialize(dependency: PluginDependency, generator: JsonGenerator, provider: SerializerProvider) {
+object OptionalPluginRequirementSerializer :
+    StdSerializer<OptionalPluginRequirement>(OptionalPluginRequirement::class.java) {
+    private fun readResolve(): Any = OptionalPluginRequirementSerializer
+    override fun serialize(
+        dependency: OptionalPluginRequirement,
+        generator: JsonGenerator,
+        provider: SerializerProvider
+    ) {
         generator.writeString(dependency.toString())
     }
 }
 
-object PluginDependencyDeserializer : StdDeserializer<PluginDependency>(PluginDependency::class.java) {
-    private fun readResolve(): Any = PluginDependencyDeserializer
-    override fun deserialize(parser: JsonParser, context: DeserializationContext): PluginDependency {
-        return parser.valueAsString.toPluginDependency()
+object OptionalPluginRequirementDeserializer :
+    StdDeserializer<OptionalPluginRequirement>(OptionalPluginRequirement::class.java) {
+    private fun readResolve(): Any = OptionalPluginRequirementDeserializer
+    override fun deserialize(parser: JsonParser, context: DeserializationContext): OptionalPluginRequirement {
+        return parser.valueAsString.toOptionalPluginRequirement()
     }
 }
 
 /**
- * Parse a string to a [PluginDependency].
+ * Parse a string to a [OptionalPluginRequirement].
  */
-fun String.toPluginDependency(): PluginDependency {
+fun String.toOptionalPluginRequirement(): OptionalPluginRequirement {
     val optional = endsWith("?")
     val requirement = substringBeforeLast("?").toPluginRequirement()
-    return PluginDependency(requirement, optional)
+    return OptionalPluginRequirement(requirement, optional)
 }

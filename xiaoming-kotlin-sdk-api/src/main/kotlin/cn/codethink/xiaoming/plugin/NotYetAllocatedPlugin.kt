@@ -16,6 +16,8 @@
 
 package cn.codethink.xiaoming.plugin
 
-interface LazyInitializedPlugin : Plugin {
-    fun initialize(): InitializedPlugin
+import cn.codethink.xiaoming.Platform
+
+interface NotYetAllocatedPlugin : Plugin {
+    fun allocate(platform: Platform): AllocatedPlugin
 }

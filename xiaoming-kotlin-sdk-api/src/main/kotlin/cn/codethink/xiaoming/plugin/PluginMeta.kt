@@ -58,14 +58,16 @@ interface PluginMeta {
     val protocol: VersionMatcher?
 
     /**
-     * Plugin provisions.
+     * Describes what other plugins' features the plugin can provide.
+     *
+     * For plugin A, if it can provide plugins B, C? (optional), D.
      */
-    val provisions: List<PluginRequirement>
+    val provisions: List<OptionalPluginRequirement>
 
     /**
      * Plugin dependencies.
      */
-    val dependencies: List<PluginDependency>
+    val dependencies: List<OptionalPluginRequirement>
 }
 
 fun PluginMeta.toExactRequirement() = PluginRequirement(
@@ -73,6 +75,6 @@ fun PluginMeta.toExactRequirement() = PluginRequirement(
 )
 
 @JvmOverloads
-fun PluginMeta.toExactDependency(optional: Boolean = false) = PluginDependency(
+fun PluginMeta.toExactDependency(optional: Boolean = false) = OptionalPluginRequirement(
     requirement = toExactRequirement(), optional = optional
 )

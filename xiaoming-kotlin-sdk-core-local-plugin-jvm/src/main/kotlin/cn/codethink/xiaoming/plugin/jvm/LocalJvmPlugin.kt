@@ -17,9 +17,9 @@
 package cn.codethink.xiaoming.plugin.jvm
 
 import cn.codethink.xiaoming.common.InternalApi
-import cn.codethink.xiaoming.plugin.InitializedPlugin
+import cn.codethink.xiaoming.plugin.AllocatedPlugin
 import cn.codethink.xiaoming.plugin.PluginDetector
 
 abstract class LocalJvmPlugin @InternalApi constructor(
     val detector: PluginDetector
-) : InitializedPlugin
+) : AllocatedPlugin
