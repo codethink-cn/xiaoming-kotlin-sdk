@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
+
+@file:OptIn(InternalApi::class)
+
 package cn.codethink.xiaoming
 
 import cn.codethink.xiaoming.common.ConnectionSubjectDescriptor
+import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.TestSubjectDescriptor
 import cn.codethink.xiaoming.common.toId
 import cn.codethink.xiaoming.io.connection.DefaultWebSocketClientConfiguration

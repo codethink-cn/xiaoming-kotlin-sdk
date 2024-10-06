@@ -15,9 +15,11 @@
  */
 
 @file:JvmName("Permissions")
+@file:OptIn(InternalApi::class)
 
 package cn.codethink.xiaoming.permission
 
+import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.IdSubjectDescriptor
 import cn.codethink.xiaoming.common.LITERAL_PERMISSION_MATCHER_FIELD_VALUE

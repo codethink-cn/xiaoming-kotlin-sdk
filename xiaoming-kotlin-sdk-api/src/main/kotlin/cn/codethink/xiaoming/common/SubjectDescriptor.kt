@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:OptIn(InternalApi::class)
+
 package cn.codethink.xiaoming.common
 
 import cn.codethink.xiaoming.io.action.StandardAction

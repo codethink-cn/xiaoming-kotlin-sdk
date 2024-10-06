@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
+
+@file:OptIn(InternalApi::class)
+
 package cn.codethink.xiaoming.internal
 
+import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.AutoClosableSubject
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.SubjectDescriptor

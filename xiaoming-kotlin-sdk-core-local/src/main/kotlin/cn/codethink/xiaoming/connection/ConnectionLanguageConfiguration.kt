@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
+
+@file:OptIn(InternalApi::class)
+
 package cn.codethink.xiaoming.connection
 
 import cn.codethink.xiaoming.common.AbstractData
+import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.Template
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.getValue
@@ -26,6 +30,7 @@ import cn.codethink.xiaoming.io.data.getValue
  *
  * @author Chuanwise
  */
+
 class ConnectionLanguageConfiguration(
     raw: Raw
 ) : AbstractData(raw) {

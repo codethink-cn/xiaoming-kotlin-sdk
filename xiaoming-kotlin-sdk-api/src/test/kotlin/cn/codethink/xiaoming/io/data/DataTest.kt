@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
+
+@file:OptIn(InternalApi::class)
+
 package cn.codethink.xiaoming.io.data
 
+import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.TestSubjectDescriptor
 import cn.codethink.xiaoming.common.assertJsonContentEquals
 import cn.codethink.xiaoming.common.toId
