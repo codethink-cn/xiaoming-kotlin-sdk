@@ -68,12 +68,6 @@ class LiteralNamespaceIdMatcher(
 ) : LiteralMatcher<NamespaceId> {
     override val type: String = NAMESPACE_ID_MATCHER_TYPE
 
-    override val targetType: Class<NamespaceId>
-        get() = NamespaceId::class.java
-
-    override val targetNullable: Boolean
-        get() = false
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

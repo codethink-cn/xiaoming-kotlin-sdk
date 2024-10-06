@@ -16,7 +16,6 @@
 
 package cn.codethink.xiaoming.common
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
@@ -41,17 +40,8 @@ sealed interface VersionMatcher : Matcher<Version> {
         fun parse(string: String) = string.toVersionMatcher()
     }
 
-    @get:JsonIgnore
     override val type: String
         get() = VERSION_MATCHER_TYPE
-
-    @get:JsonIgnore
-    override val targetNullable: Boolean
-        get() = false
-
-    @get:JsonIgnore
-    override val targetType: Class<Version>
-        get() = Version::class.java
 }
 
 object VersionMatcherSerializer : StdSerializer<VersionMatcher>(VersionMatcher::class.java) {

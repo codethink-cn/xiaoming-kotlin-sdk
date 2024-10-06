@@ -26,7 +26,6 @@ import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.NamespaceId
 import cn.codethink.xiaoming.common.Registration
-import cn.codethink.xiaoming.common.currentThreadCauseOrFail
 import cn.codethink.xiaoming.common.expectedError
 import cn.codethink.xiaoming.common.failure
 import cn.codethink.xiaoming.common.success
@@ -232,25 +231,23 @@ class LocalPluginManagerApi(
      * @see AllocatedPlugin.isLoaded
      */
     fun loadPlugins(
-        plugins: Iterable<Plugin>, force: Boolean = false, cause: Cause? = null
+        plugins: Iterable<Plugin>, cause: Cause, force: Boolean = false
     ): Unit = lock.write {
-        val finalCause = cause ?: currentThreadCauseOrFail()
         val pluginsById = plugins.associateBy { it.descriptor.id }
 
         val alreadyLoadedPluginIds = mutableSetOf<NamespaceId>()
 
         internalApi.logger.info { "I can't waiting for load plugins!" }
         pluginsById.values.forEach {
-            (it as AllocatedPlugin).load(internalApi.platform, finalCause)
+            (it as AllocatedPlugin).load(internalApi.platform, cause)
         }
     }
 
     fun enablePlugins(
         plugins: Iterable<Plugin>,
+        cause: Cause,
         force: Boolean = false,
-        cause: Cause? = null
     ): Unit = lock.write {
-        val finalCause = cause ?: currentThreadCauseOrFail()
         val pluginsById = plugins.associateBy { it.descriptor.id }
 
         val alreadyEnabledPluginIds = mutableSetOf<NamespaceId>()

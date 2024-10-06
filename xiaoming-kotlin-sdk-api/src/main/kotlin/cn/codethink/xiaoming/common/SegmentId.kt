@@ -198,10 +198,6 @@ class WildcardStringMatcher private constructor(
 
     override val type: String = STRING_MATCHER_TYPE_WILDCARD
 
-    override val targetType: Class<String> = String::class.java
-
-    override val targetNullable: Boolean = false
-
     override fun isMatched(target: String): Boolean = true
 
     override fun onDefaultStringListMatcherConstructing(context: DefaultStringListMatcherConstructingContext) {
@@ -387,11 +383,6 @@ class DefaultSegmentIdMatcher(
     }
 
     override val type: String = SEGMENT_ID_MATCHER_TYPE_DEFAULT
-
-    override val targetType: Class<SegmentId> = SegmentId::class.java
-
-    override val targetNullable: Boolean = false
-
 
     override fun isMatched(target: SegmentId): Boolean {
         val context = DefaultStringListMatchingContext(this, target, matchers)
@@ -649,10 +640,6 @@ class LiteralSegmentIdMatcher(
     val id: SegmentId
 ) : Matcher<SegmentId> {
     override val type: String = SEGMENT_ID_MATCHER_TYPE_LITERAL
-
-    override val targetType: Class<SegmentId> = SegmentId::class.java
-
-    override val targetNullable: Boolean = false
 
     override fun isMatched(target: SegmentId): Boolean = target == id
 

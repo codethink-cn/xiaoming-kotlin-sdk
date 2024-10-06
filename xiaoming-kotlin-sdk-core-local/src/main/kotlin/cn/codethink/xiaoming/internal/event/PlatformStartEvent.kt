@@ -17,13 +17,11 @@
 package cn.codethink.xiaoming.internal.event
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.FIELD_CAUSE
-import cn.codethink.xiaoming.common.FIELD_TYPE
+import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.InternalEvent
 import cn.codethink.xiaoming.event.Event
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.set
 
 const val EVENT_TYPE_PLATFORM_STARTING = "platform_starting"
 
@@ -34,15 +32,17 @@ const val EVENT_TYPE_PLATFORM_STARTING = "platform_starting"
  * @author Chuanwise
  */
 @InternalEvent
-class PlatformStartEvent(
-    raw: Raw,
-) : Event(raw) {
+class PlatformStartEvent : Event {
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
+
     @JvmOverloads
     constructor(
         cause: Cause,
         raw: Raw = MapRaw()
-    ) : this(raw) {
-        raw[FIELD_TYPE] = EVENT_TYPE_PLATFORM_STARTING
-        raw[FIELD_CAUSE] = cause
-    }
+    ) : super(
+        type = EVENT_TYPE_PLATFORM_STARTING,
+        cause = cause,
+        raw = raw
+    )
 }

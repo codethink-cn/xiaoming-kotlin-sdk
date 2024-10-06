@@ -15,12 +15,12 @@
  */
 
 
-@file:OptIn(InternalApi::class)
-
 package cn.codethink.xiaoming.io.data
 
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.InternalApi
+import cn.codethink.xiaoming.common.getValue
+import cn.codethink.xiaoming.common.setValue
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -36,17 +36,18 @@ const val SQL_DATA_SOURCE_TYPE_HIKARI_CP = "hikari_cp"
  * @see SqlDataSource
  */
 @JsonTypeName(SQL_DATA_SOURCE_TYPE_HIKARI_CP)
-class HikariCpSqlDataSource(
-    raw: Raw
-) : AbstractData(raw), SqlDataSource {
+class HikariCpSqlDataSource : AbstractData, SqlDataSource {
     override var type: String by raw
     var properties: Properties by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
         properties: Properties,
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         this.type = SQL_DATA_SOURCE_TYPE_HIKARI_CP
         this.properties = properties
     }
@@ -54,24 +55,4 @@ class HikariCpSqlDataSource(
     override fun toDataSource(): DataSource = HikariDataSource(
         HikariConfig(properties)
     )
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        if (!super.equals(other)) return false
-
-        other as HikariCpSqlDataSource
-
-        return properties == other.properties
-    }
-
-    override fun hashCode(): Int {
-        var result = super.hashCode()
-        result = 31 * result + properties.hashCode()
-        return result
-    }
-
-    override fun toString(): String {
-        return "HikariCpSqlDataSource(properties=$properties)"
-    }
 }

@@ -19,18 +19,18 @@
 
 package cn.codethink.xiaoming.permission
 
-import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.FIELD_TYPE
 import cn.codethink.xiaoming.common.FIELD_VERSION
+import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.Matcher
 import cn.codethink.xiaoming.common.SegmentId
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.Tristate
+import cn.codethink.xiaoming.common.getValue
 import cn.codethink.xiaoming.common.tristateOf
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
 import com.fasterxml.jackson.annotation.JsonTypeName
 
@@ -61,9 +61,7 @@ const val PERMISSION_COMPARATOR_FIELD_SUBJECT = "subject"
 const val PERMISSION_COMPARATOR_FIELD_NODE = "node"
 
 @JsonTypeName(DEFAULT_PERMISSION_COMPARATOR_VERSION_1)
-class DefaultPermissionComparatorV1(
-    raw: Raw
-) : AbstractData(raw), DefaultPermissionComparator {
+class DefaultPermissionComparatorV1 : AbstractData, DefaultPermissionComparator {
     override val type: String by raw
 
     override val version: String by raw
@@ -72,13 +70,16 @@ class DefaultPermissionComparatorV1(
     override val subject: Matcher<SubjectDescriptor> by raw
     override val node: Matcher<SegmentId> by raw
 
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
+
     @JvmOverloads
     constructor(
         subject: Matcher<SubjectDescriptor>,
         node: Matcher<SegmentId>,
         value: Boolean?,
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         raw[FIELD_TYPE] = PERMISSION_COMPARATOR_TYPE_DEFAULT
         raw[FIELD_VERSION] = DEFAULT_PERMISSION_COMPARATOR_VERSION_1
 

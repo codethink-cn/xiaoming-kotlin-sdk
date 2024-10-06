@@ -21,27 +21,28 @@ package cn.codethink.xiaoming.configuration
 
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.InternalApi
+import cn.codethink.xiaoming.common.getValue
+import cn.codethink.xiaoming.common.setValue
 import cn.codethink.xiaoming.data.LocalPlatformDataConfiguration
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.getValue
-import cn.codethink.xiaoming.io.data.setValue
 
 /**
  * Configuration storing the data of local platform.
  *
  * @author Chuanwise
  */
-class LocalPlatformConfiguration(
-    raw: Raw
-) : AbstractData(raw) {
+class LocalPlatformConfiguration : AbstractData {
     var data: LocalPlatformDataConfiguration by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
         data: LocalPlatformDataConfiguration,
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         this.data = data
     }
 }

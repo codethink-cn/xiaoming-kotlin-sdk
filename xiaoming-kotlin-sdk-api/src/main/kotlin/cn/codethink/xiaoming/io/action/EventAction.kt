@@ -29,11 +29,11 @@ import cn.codethink.xiaoming.common.PUBLISH_EVENT_RECEIPT_DATA_SNAPSHOTS
 import cn.codethink.xiaoming.common.PUBLISH_EVENT_REQUEST_PARA_EVENT
 import cn.codethink.xiaoming.common.PUBLISH_EVENT_REQUEST_PARA_MUTABLE
 import cn.codethink.xiaoming.common.PUBLISH_EVENT_REQUEST_PARA_TYPE
+import cn.codethink.xiaoming.common.getValue
 import cn.codethink.xiaoming.event.Event
 import cn.codethink.xiaoming.event.listener.ListenerDescriptor
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
 
 class PublishEventRequestPara : AbstractData {
@@ -57,12 +57,13 @@ class PublishEventRequestPara : AbstractData {
     }
 }
 
-class EventSnapshot(
-    raw: Raw
-) : AbstractData(raw) {
+class EventSnapshot : AbstractData {
     val event: Event by raw
     val listener: ListenerDescriptor by raw
     val cause: Cause? by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
@@ -70,23 +71,24 @@ class EventSnapshot(
         listener: ListenerDescriptor,
         cause: Cause?,
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         raw[EVENT_SNAPSHOT_FIELD_EVENT] = event
         raw[EVENT_SNAPSHOT_FIELD_LISTENER] = listener
         raw[EVENT_SNAPSHOT_FIELD_CAUSE] = cause
     }
 }
 
-class PublishEventReceiptData(
-    raw: Raw
-) : AbstractData(raw) {
+class PublishEventReceiptData : AbstractData {
     val snapshots: List<EventSnapshot> by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
         snapshots: List<EventSnapshot> = emptyList(),
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         raw[PUBLISH_EVENT_RECEIPT_DATA_SNAPSHOTS] = snapshots
     }
 }

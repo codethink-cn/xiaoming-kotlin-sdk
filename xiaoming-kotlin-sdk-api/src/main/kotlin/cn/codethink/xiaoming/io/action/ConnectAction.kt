@@ -22,10 +22,10 @@ package cn.codethink.xiaoming.io.action
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.SubjectDescriptor
+import cn.codethink.xiaoming.common.getValue
+import cn.codethink.xiaoming.common.setValue
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.getValue
-import cn.codethink.xiaoming.io.data.setValue
 
 class ConnectRequestPara : AbstractData {
     var subject: SubjectDescriptor by raw
@@ -34,7 +34,10 @@ class ConnectRequestPara : AbstractData {
     constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
-    constructor(subject: SubjectDescriptor, raw: Raw = MapRaw()) : super(raw) {
+    constructor(
+        subject: SubjectDescriptor,
+        raw: Raw = MapRaw()
+    ) : super(raw) {
         this.subject = subject
     }
 }

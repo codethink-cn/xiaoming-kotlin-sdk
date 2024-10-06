@@ -19,17 +19,17 @@
 
 package cn.codethink.xiaoming.permission
 
-import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.FIELD_TYPE
 import cn.codethink.xiaoming.common.FIELD_VERSION
+import cn.codethink.xiaoming.common.Field
 import cn.codethink.xiaoming.common.Id
+import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.Tristate
+import cn.codethink.xiaoming.common.getValue
 import cn.codethink.xiaoming.common.tristateOf
-import cn.codethink.xiaoming.io.data.Field
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
 import com.fasterxml.jackson.annotation.JsonTypeName
 import java.util.Stack
@@ -62,9 +62,7 @@ interface InheritancePermissionComparator : PermissionComparator {
 const val INHERITANCE_PERMISSION_COMPARATOR_VERSION_1 = "1"
 
 @JsonTypeName(INHERITANCE_PERMISSION_COMPARATOR_VERSION_1)
-class InheritancePermissionComparatorV1(
-    raw: Raw
-) : AbstractData(raw), InheritancePermissionComparator {
+class InheritancePermissionComparatorV1 : AbstractData, InheritancePermissionComparator {
     companion object {
         @JvmStatic
         private val THREAD_LOCAL_INHERITANCE_STACK = ThreadLocal<Stack<Any>>()
@@ -81,13 +79,16 @@ class InheritancePermissionComparatorV1(
     @Field(INHERITANCE_PERMISSION_COMPARATOR_FIELD_RESULT_MAPPING)
     override val resultMapping: Map<Boolean?, Boolean?> by raw
 
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
+
     @JvmOverloads
     constructor(
         profileId: Id,
         context: Map<String, Any?> = emptyMap(),
         resultMapping: Map<Boolean?, Boolean?> = emptyMap(),
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         raw[FIELD_TYPE] = PERMISSION_COMPARATOR_TYPE_INHERITANCE
         raw[FIELD_VERSION] = INHERITANCE_PERMISSION_COMPARATOR_VERSION_1
 
@@ -119,7 +120,7 @@ class InheritancePermissionComparatorV1(
 
             val inheritedContext = toInheritedContext(context)
             val result = context.permissionServiceApi.hasPermission(
-                profile, context.permission, inheritedContext, context.cause
+                profile, context.permission, context.cause, inheritedContext
             )
             return tristateOf(resultMapping.getOrDefault(result, result))
         } finally {

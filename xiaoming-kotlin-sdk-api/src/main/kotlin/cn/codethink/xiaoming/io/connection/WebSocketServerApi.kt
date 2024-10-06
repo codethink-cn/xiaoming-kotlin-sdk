@@ -124,7 +124,7 @@ abstract class WebSocketServerApi(
         }
     }
 
-    override fun close(cause: Cause?) {
+    override fun close(cause: Cause) {
         lock.write {
             stateNoLock = when (stateNoLock) {
                 State.ALLOCATED, State.STARTED -> State.CLOSING

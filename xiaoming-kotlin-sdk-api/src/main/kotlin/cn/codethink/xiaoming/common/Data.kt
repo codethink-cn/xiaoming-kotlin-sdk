@@ -16,8 +16,6 @@
 
 package cn.codethink.xiaoming.common
 
-import cn.codethink.xiaoming.io.data.DefaultFieldNamingPolicy
-import cn.codethink.xiaoming.io.data.NamingPolicy
 import cn.codethink.xiaoming.io.data.NodeRaw
 import cn.codethink.xiaoming.io.data.Raw
 import com.fasterxml.jackson.core.JsonGenerator

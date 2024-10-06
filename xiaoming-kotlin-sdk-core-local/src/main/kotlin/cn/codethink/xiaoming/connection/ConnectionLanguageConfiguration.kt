@@ -22,8 +22,8 @@ package cn.codethink.xiaoming.connection
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.Template
+import cn.codethink.xiaoming.common.getValue
 import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.getValue
 
 /**
  * Connection language configuration.
@@ -31,7 +31,7 @@ import cn.codethink.xiaoming.io.data.getValue
  * @author Chuanwise
  */
 
-class ConnectionLanguageConfiguration(
+class ConnectionLanguageConfiguration @InternalApi constructor(
     raw: Raw
 ) : AbstractData(raw) {
     val adapterNotFound: Template by raw

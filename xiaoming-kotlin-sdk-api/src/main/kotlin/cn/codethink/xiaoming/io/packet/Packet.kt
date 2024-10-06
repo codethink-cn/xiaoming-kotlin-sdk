@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-@file:OptIn(InternalApi::class)
-
 package cn.codethink.xiaoming.io.packet
 
 import cn.codethink.xiaoming.common.AbstractData
@@ -25,10 +23,10 @@ import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.PACKET_TYPE_RECEIPT
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.currentTimeSeconds
+import cn.codethink.xiaoming.common.getValue
+import cn.codethink.xiaoming.common.setValue
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.getValue
-import cn.codethink.xiaoming.io.data.setValue
 import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
@@ -38,7 +36,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
  * @see RequestPacket
  * @see ReceiptPacket
  */
-abstract class Packet @InternalApi constructor(
+abstract class Packet(
     raw: Raw
 ) : AbstractData(raw) {
     abstract val id: Id

@@ -21,9 +21,7 @@ package cn.codethink.xiaoming.common
 import cn.codethink.xiaoming.io.action.StandardAction
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
-import cn.codethink.xiaoming.io.data.setValue
 import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
@@ -38,25 +36,31 @@ abstract class SubjectDescriptor : AbstractData {
     constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
-    constructor(type: String, raw: Raw = MapRaw()) : super(raw) {
+    constructor(
+        type: String,
+        raw: Raw = MapRaw()
+    ) : super(raw) {
         raw[FIELD_TYPE] = type
     }
 }
 
 const val ID_SUBJECT_DESCRIPTOR_DESCRIPTOR_FIELD_ID = "id"
 
-abstract class IdSubjectDescriptor(
-    raw: Raw
-) : SubjectDescriptor(raw) {
+abstract class IdSubjectDescriptor : SubjectDescriptor {
     open val id: Id by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
         type: String,
         id: Id,
         raw: Raw = MapRaw()
-    ) : this(raw) {
-        raw[FIELD_TYPE] = type
+    ) : super(
+        type = type,
+        raw = raw
+    ) {
         raw[ID_SUBJECT_DESCRIPTOR_DESCRIPTOR_FIELD_ID] = id
     }
 }
@@ -71,17 +75,20 @@ const val PROTOCOL_SUBJECT_DESCRIPTOR_FIELD_VERSION = "version"
  * @author Chuanwise
  * @see StandardAction
  */
-class ProtocolSubjectDescriptor(
-    raw: Raw
-) : SubjectDescriptor(raw) {
+class ProtocolSubjectDescriptor : SubjectDescriptor {
     val version: Version by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
         version: Version,
         raw: Raw = MapRaw()
-    ) : this(raw) {
-        raw[FIELD_TYPE] = SUBJECT_DESCRIPTOR_TYPE_PROTOCOL
+    ) : super(
+        type = SUBJECT_DESCRIPTOR_TYPE_PROTOCOL,
+        raw = raw
+    ) {
         raw[PROTOCOL_SUBJECT_DESCRIPTOR_FIELD_VERSION] = version
     }
 }
@@ -91,12 +98,13 @@ class ProtocolSubjectDescriptor(
  *
  * @author Chuanwise
  */
-class ModuleSubjectDescriptor(
-    raw: Raw
-) : SubjectDescriptor(raw) {
+class ModuleSubjectDescriptor : SubjectDescriptor {
     val group: String by raw
     val name: String by raw
     val version: Version by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
@@ -104,8 +112,10 @@ class ModuleSubjectDescriptor(
         name: String,
         version: Version,
         raw: Raw = MapRaw()
-    ) : this(raw) {
-        raw[FIELD_TYPE] = SUBJECT_DESCRIPTOR_TYPE_MODULE
+    ) : super(
+        type = FIELD_TYPE,
+        raw = raw
+    ) {
         raw[MODULE_SUBJECT_DESCRIPTOR_FIELD_GROUP] = group
         raw[MODULE_SUBJECT_DESCRIPTOR_FIELD_NAME] = name
         raw[MODULE_SUBJECT_DESCRIPTOR_FIELD_VERSION] = version
@@ -125,19 +135,21 @@ const val SUBJECT_DESCRIPTOR_TYPE_PLUGIN = "plugin"
  * @author Chuanwise
  */
 @JsonTypeName(SUBJECT_DESCRIPTOR_TYPE_PLUGIN)
-class PluginSubjectDescriptor(
-    raw: Raw
-) : IdSubjectDescriptor(raw) {
+class PluginSubjectDescriptor : IdSubjectDescriptor {
     override val id: NamespaceId by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
         id: NamespaceId,
         raw: Raw = MapRaw()
-    ) : this(raw) {
-        raw[FIELD_TYPE] = SUBJECT_DESCRIPTOR_TYPE_PLUGIN
-        raw[ID_SUBJECT_DESCRIPTOR_DESCRIPTOR_FIELD_ID] = id
-    }
+    ) : super(
+        type = SUBJECT_DESCRIPTOR_TYPE_PLUGIN,
+        id = id,
+        raw = raw
+    )
 }
 
 const val SUBJECT_DESCRIPTOR_TYPE_PLATFORM = "platform"
@@ -148,19 +160,19 @@ const val SUBJECT_DESCRIPTOR_TYPE_PLATFORM = "platform"
  * @author Chuanwise
  */
 @JsonTypeName(SUBJECT_DESCRIPTOR_TYPE_PLATFORM)
-class PlatformSubjectDescriptor(
-    raw: Raw
-) : SubjectDescriptor(raw) {
-    var id: Id by raw
+class PlatformSubjectDescriptor : IdSubjectDescriptor {
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
         id: Id,
         raw: Raw = MapRaw()
-    ) : this(raw) {
-        raw[FIELD_TYPE] = SUBJECT_DESCRIPTOR_TYPE_PLATFORM
-        this.id = id
-    }
+    ) : super(
+        type = SUBJECT_DESCRIPTOR_TYPE_PLATFORM,
+        id = id,
+        raw = raw
+    )
 }
 
 const val SUBJECT_DESCRIPTOR_TYPE_CONNECTION = "connection"
@@ -171,19 +183,19 @@ const val SUBJECT_DESCRIPTOR_TYPE_CONNECTION = "connection"
  * @author Chuanwise
  */
 @JsonTypeName(SUBJECT_DESCRIPTOR_TYPE_CONNECTION)
-class ConnectionSubjectDescriptor(
-    raw: Raw
-) : SubjectDescriptor(raw) {
-    var id: Id by raw
+class ConnectionSubjectDescriptor : IdSubjectDescriptor {
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
         id: Id,
         raw: Raw = MapRaw()
-    ) : this(raw) {
-        raw[FIELD_TYPE] = SUBJECT_DESCRIPTOR_TYPE_CONNECTION
-        this.id = id
-    }
+    ) : super(
+        type = SUBJECT_DESCRIPTOR_TYPE_CONNECTION,
+        id = id,
+        raw = raw
+    )
 }
 
 const val SUBJECT_DESCRIPTOR_MATCHER_TYPE_DEFAULT_PLUGIN = "subject.plugin.default"
@@ -196,22 +208,19 @@ const val DEFAULT_PLUGIN_SUBJECT_DESCRIPTOR_MATCHER_FIELD_ID = "id"
  * @author Chuanwise
  */
 @JsonTypeName(SUBJECT_DESCRIPTOR_MATCHER_TYPE_DEFAULT_PLUGIN)
-class DefaultPluginSubjectMatcher(
-    raw: Raw
-) : AbstractData(raw), Matcher<SubjectDescriptor> {
+class DefaultPluginSubjectMatcher : AbstractData, Matcher<SubjectDescriptor> {
     override val type: String by raw
 
-    override val targetType: Class<SubjectDescriptor> = SubjectDescriptor::class.java
-
-    override val targetNullable: Boolean = false
-
     val id: Matcher<NamespaceId> by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
         id: Matcher<NamespaceId>,
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         raw[MATCHER_FIELD_TYPE] = SUBJECT_DESCRIPTOR_MATCHER_TYPE_DEFAULT_PLUGIN
         raw[DEFAULT_PLUGIN_SUBJECT_DESCRIPTOR_MATCHER_FIELD_ID] = id
     }

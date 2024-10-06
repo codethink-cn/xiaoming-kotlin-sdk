@@ -16,7 +16,6 @@
 
 package cn.codethink.xiaoming.common
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
@@ -27,25 +26,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
 interface Matcher<out T> {
     val type: String
 
-    @get:JsonIgnore
-    val targetType: Class<@UnsafeVariance T>
-
-    @get:JsonIgnore
-    val targetNullable: Boolean
-
     fun isMatched(target: @UnsafeVariance T): Boolean
-}
-
-fun <T> Matcher<T>.isMatchable(target: Any?): Boolean {
-    return targetType.isInstance(target) || (target == null && targetNullable)
-}
-
-fun <T> Matcher<T>.isMatchedOrNull(target: Any?): Boolean? {
-    return if (isMatchable(target)) {
-        (this as Matcher<Any?>).isMatched(target)
-    } else {
-        null
-    }
 }
 
 interface LiteralMatcher<T> : Matcher<T> {
@@ -56,13 +37,8 @@ interface LiteralMatcher<T> : Matcher<T> {
 const val MATCHER_TYPE_ANY = "any"
 
 @JsonTypeName(MATCHER_TYPE_ANY)
-@Suppress("UNCHECKED_CAST")
 object AnyMatcher : Matcher<Any?> {
     override val type: String = MATCHER_TYPE_ANY
-
-    override val targetType: Class<Any?> = Any::class.java as Class<Any?>
-
-    override val targetNullable: Boolean = true
 
     override fun isMatched(target: Any?): Boolean = true
 }
@@ -73,13 +49,8 @@ inline fun <reified T : Any?> AnyMatcher(): Matcher<T> = AnyMatcher as Matcher<T
 const val MATCHER_TYPE_NONE = "none"
 
 @JsonTypeName(MATCHER_TYPE_NONE)
-@Suppress("UNCHECKED_CAST")
 object NoneMatcher : Matcher<Any?> {
     override val type: String = MATCHER_TYPE_NONE
-
-    override val targetType: Class<Any?> = Any::class.java as Class<Any?>
-
-    override val targetNullable: Boolean = true
 
     override fun isMatched(target: Any?): Boolean = false
 }
@@ -87,16 +58,11 @@ object NoneMatcher : Matcher<Any?> {
 @Suppress("UNCHECKED_CAST")
 inline fun <reified T : Any?> NoneMatcher(): Matcher<T> = NoneMatcher as Matcher<T>
 
-
 @JsonTypeName(STRING_MATCHER_TYPE_REGEX)
 class RegexStringMatcher(
     val regex: Regex
 ) : Matcher<String> {
     override val type: String = STRING_MATCHER_TYPE_REGEX
-
-    override val targetType: Class<String> = String::class.java
-
-    override val targetNullable: Boolean = false
 
     override fun isMatched(target: String): Boolean = regex.matches(target)
 
@@ -123,10 +89,6 @@ class LiteralStringMatcher(
     override val value: String
 ) : LiteralMatcher<String> {
     override val type: String = STRING_MATCHER_TYPE_LITERAL
-
-    override val targetType: Class<String> = String::class.java
-
-    override val targetNullable: Boolean = false
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

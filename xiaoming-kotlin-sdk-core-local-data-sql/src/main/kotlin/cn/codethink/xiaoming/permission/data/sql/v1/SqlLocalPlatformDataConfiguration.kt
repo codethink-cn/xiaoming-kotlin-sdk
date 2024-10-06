@@ -21,18 +21,18 @@ package cn.codethink.xiaoming.permission.data.sql.v1
 
 import cn.codethink.xiaoming.LocalPlatformApi
 import cn.codethink.xiaoming.common.AbstractData
+import cn.codethink.xiaoming.common.DefaultValue
 import cn.codethink.xiaoming.common.FIELD_TYPE
 import cn.codethink.xiaoming.common.FIELD_VERSION
+import cn.codethink.xiaoming.common.Field
 import cn.codethink.xiaoming.common.InternalApi
+import cn.codethink.xiaoming.common.getValue
+import cn.codethink.xiaoming.common.setValue
 import cn.codethink.xiaoming.data.LocalPlatformDataApi
-import cn.codethink.xiaoming.io.data.DefaultValue
-import cn.codethink.xiaoming.io.data.Field
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.SqlDataSource
-import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
-import cn.codethink.xiaoming.io.data.setValue
 import cn.codethink.xiaoming.permission.data.sql.SqlLocalPlatformDataApi
 import cn.codethink.xiaoming.permission.data.sql.SqlLocalPlatformDataConfiguration
 import com.fasterxml.jackson.annotation.JsonTypeName
@@ -44,9 +44,7 @@ const val SQL_LOCAL_PLATFORM_DATA_CONFIGURATION_VERSION_1 = "1"
  * @see SqlLocalPlatformDataConfiguration
  */
 @JsonTypeName(SQL_LOCAL_PLATFORM_DATA_CONFIGURATION_VERSION_1)
-class SqlLocalPlatformDataConfigurationV1(
-    raw: Raw
-) : AbstractData(raw), SqlLocalPlatformDataConfiguration {
+class SqlLocalPlatformDataConfigurationV1 : AbstractData, SqlLocalPlatformDataConfiguration {
     override val type: String by raw
     override val version: String by raw
 
@@ -54,12 +52,15 @@ class SqlLocalPlatformDataConfigurationV1(
     override var tables: SqlLocalPlatformDataConfigurationTablesV1 by raw
     override var source: SqlDataSource by raw
 
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
+
     @JvmOverloads
     constructor(
         source: SqlDataSource,
         tables: SqlLocalPlatformDataConfigurationTablesV1,
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         raw[FIELD_TYPE] = LOCAL_PLATFORM_DATA_CONFIGURATION_TYPE_SQL
         raw[FIELD_VERSION] = SQL_LOCAL_PLATFORM_DATA_CONFIGURATION_VERSION_1
 

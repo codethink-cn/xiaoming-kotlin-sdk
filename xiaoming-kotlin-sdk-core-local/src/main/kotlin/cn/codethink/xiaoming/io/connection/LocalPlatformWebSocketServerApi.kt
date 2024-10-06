@@ -160,7 +160,7 @@ class LocalPlatformWebSocketServerApi(
 
         override fun close() = close(TextCause("Server closed.", descriptor))
 
-        override fun close(cause: Cause?) = onlineLock.write {
+        override fun close(cause: Cause) = onlineLock.write {
             stateNoLock = when (stateNoLock) {
                 OnlineState.INITIALIZING, OnlineState.CONNECTED, OnlineState.DISCONNECTING, OnlineState.DISCONNECTED -> OnlineState.CLOSING
                 else -> throw IllegalStateException("Online connection internal error: unexpected state before close: $stateNoLock.")

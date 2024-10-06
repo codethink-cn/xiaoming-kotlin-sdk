@@ -20,9 +20,9 @@ import cn.codethink.xiaoming.common.ID_SUBJECT_DESCRIPTOR_DESCRIPTOR_FIELD_ID
 import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.common.IdSubjectDescriptor
 import cn.codethink.xiaoming.common.SubjectDescriptor
+import cn.codethink.xiaoming.common.getValue
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
 
 const val LISTENER_DESCRIPTOR_FIELD_SUBJECT = "subject"

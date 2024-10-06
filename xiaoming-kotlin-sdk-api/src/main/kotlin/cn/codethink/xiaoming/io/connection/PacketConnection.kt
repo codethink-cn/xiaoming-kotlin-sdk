@@ -106,7 +106,7 @@ class PacketConnection<T>(
         action: Action<P, R>,
         mode: String,
         timeout: Long,
-        cause: Cause?,
+        cause: Cause,
         argument: P?,
         time: Long
     ): Pair<Received<T>, R?> {
@@ -168,16 +168,14 @@ class PacketConnection<T>(
         types[type] = DefaultRegistration(handler, subject)
     }
 
-    override fun close(cause: Cause?): Unit = lock.write {
-        val finalCause = cause ?: currentThreadCauseOrFail()
-
+    override fun close(cause: Cause): Unit = lock.write {
         if (closedNoLock) {
             throw IllegalStateException("Connection has been closed.")
         }
         closedNoLock = true
 
         // 1. Remove channel from connection API.
-        if (!connectionApi.remove(finalCause.subject)) {
+        if (!connectionApi.remove(cause.subject)) {
             throw IllegalStateException("Failed to remove the subject from the connection.")
         }
 

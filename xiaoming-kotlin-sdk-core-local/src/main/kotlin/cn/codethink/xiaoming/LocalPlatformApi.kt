@@ -26,14 +26,12 @@ import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.doModuleRelatedAction
 import cn.codethink.xiaoming.data.LocalPlatformData
 import cn.codethink.xiaoming.data.LocalPlatformDataConfiguration
-import cn.codethink.xiaoming.event.Event
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import cn.codethink.xiaoming.internal.configuration.DefaultLocalPlatformInternalConfiguration
 import cn.codethink.xiaoming.internal.event.PlatformStartEvent
 import cn.codethink.xiaoming.internal.module.Module
 import cn.codethink.xiaoming.internal.module.ModuleContext
 import cn.codethink.xiaoming.io.ProtocolLanguageConfiguration
-import cn.codethink.xiaoming.io.action.EventSnapshot
 import cn.codethink.xiaoming.io.data.DeserializerModule
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KLogger
@@ -194,18 +192,6 @@ class DefaultLocalPlatformApi(
         if (state != State.STARTED) {
             throw IllegalStateException("The platform is not started yet.")
         }
-    }
-
-    override fun publishEvent(
-        type: String,
-        event: Event,
-        mutable: Boolean,
-        timeout: Long?,
-        cause: Cause?
-    ): List<EventSnapshot> = lock.read {
-        assertStarted()
-
-        emptyList()
     }
 
     override fun close() = lock.write {

@@ -113,7 +113,7 @@ class LocalPermissionServiceTest {
         )
 
         // First the permission is unset.
-        assertEquals(null, api.permissionServiceApi.hasPermission(profile, permission))
+        assertEquals(null, api.permissionServiceApi.hasPermission(profile, permission, TestCause))
 
         // Set the permission to false and check.
         api.permissionServiceApi.setPermission(
@@ -122,9 +122,10 @@ class LocalPermissionServiceTest {
                 subject = subjectMatcher,
                 node = segmentIdOf("a.b.c").toLiteralMatcher(),
                 value = false
-            )
+            ),
+            cause = TestCause
         )
-        assertEquals(null, api.permissionServiceApi.hasPermission(profile, permission))
+        assertEquals(null, api.permissionServiceApi.hasPermission(profile, permission, TestCause))
 
         // Set the permission to false and check.
         api.permissionServiceApi.setPermission(
@@ -133,9 +134,10 @@ class LocalPermissionServiceTest {
                 subject = subjectMatcher,
                 node = segmentIdOf("a.b.c.d").toLiteralMatcher(),
                 value = false
-            )
+            ),
+            cause = TestCause
         )
-        assertEquals(false, api.permissionServiceApi.hasPermission(profile, permission))
+        assertEquals(false, api.permissionServiceApi.hasPermission(profile, permission, TestCause))
 
         // Set to true and check.
         api.permissionServiceApi.setPermission(
@@ -144,9 +146,10 @@ class LocalPermissionServiceTest {
                 subject = subjectMatcher,
                 node = segmentIdOf("a.b.c.d").toLiteralMatcher(),
                 value = true
-            )
+            ),
+            cause = TestCause
         )
-        assertEquals(true, api.permissionServiceApi.hasPermission(profile, permission))
+        assertEquals(true, api.permissionServiceApi.hasPermission(profile, permission, TestCause))
 
         // Unset and check.
         api.permissionServiceApi.setPermission(
@@ -155,9 +158,10 @@ class LocalPermissionServiceTest {
                 subject = subjectMatcher,
                 node = segmentIdOf("a.b.c.d").toLiteralMatcher(),
                 value = null
-            )
+            ),
+            cause = TestCause
         )
-        assertEquals(null, api.permissionServiceApi.hasPermission(profile, permission))
+        assertEquals(null, api.permissionServiceApi.hasPermission(profile, permission, TestCause))
     }
 
     @Test
@@ -188,18 +192,18 @@ class LocalPermissionServiceTest {
         )
 
         // A, B, C are empty.
-        assertEquals(null, api.permissionServiceApi.hasPermission(subjectAProfile, permissionA))
-        assertEquals(null, api.permissionServiceApi.hasPermission(subjectBProfile, permissionA))
-        assertEquals(null, api.permissionServiceApi.hasPermission(subjectCProfile, permissionA))
+        assertEquals(null, api.permissionServiceApi.hasPermission(subjectAProfile, permissionA, TestCause))
+        assertEquals(null, api.permissionServiceApi.hasPermission(subjectBProfile, permissionA, TestCause))
+        assertEquals(null, api.permissionServiceApi.hasPermission(subjectCProfile, permissionA, TestCause))
 
         // A:
         // 1. a.b: true
 
         // B, C: empty
-        api.permissionServiceApi.setPermission(subjectAProfile, permissionAComparatorTrue)
-        assertEquals(true, api.permissionServiceApi.hasPermission(subjectAProfile, permissionA))
-        assertEquals(null, api.permissionServiceApi.hasPermission(subjectBProfile, permissionA))
-        assertEquals(null, api.permissionServiceApi.hasPermission(subjectCProfile, permissionA))
+        api.permissionServiceApi.setPermission(subjectAProfile, permissionAComparatorTrue, TestCause)
+        assertEquals(true, api.permissionServiceApi.hasPermission(subjectAProfile, permissionA, TestCause))
+        assertEquals(null, api.permissionServiceApi.hasPermission(subjectBProfile, permissionA, TestCause))
+        assertEquals(null, api.permissionServiceApi.hasPermission(subjectCProfile, permissionA, TestCause))
 
         // A:
         // 1. a.b: true
@@ -208,10 +212,14 @@ class LocalPermissionServiceTest {
         // 1. inheritance(profile_id = A)
 
         // C: empty
-        api.permissionServiceApi.setPermission(subjectBProfile, InheritancePermissionComparatorV1(subjectAProfile.id))
-        assertEquals(true, api.permissionServiceApi.hasPermission(subjectAProfile, permissionA))
-        assertEquals(true, api.permissionServiceApi.hasPermission(subjectBProfile, permissionA))
-        assertEquals(null, api.permissionServiceApi.hasPermission(subjectCProfile, permissionA))
+        api.permissionServiceApi.setPermission(
+            subjectBProfile,
+            InheritancePermissionComparatorV1(subjectAProfile.id),
+            TestCause
+        )
+        assertEquals(true, api.permissionServiceApi.hasPermission(subjectAProfile, permissionA, TestCause))
+        assertEquals(true, api.permissionServiceApi.hasPermission(subjectBProfile, permissionA, TestCause))
+        assertEquals(null, api.permissionServiceApi.hasPermission(subjectCProfile, permissionA, TestCause))
 
         // A:
         // 1. a.b: true
@@ -221,10 +229,14 @@ class LocalPermissionServiceTest {
 
         // C:
         // 1. inheritance(profile_id = A)
-        api.permissionServiceApi.setPermission(subjectCProfile, InheritancePermissionComparatorV1(subjectAProfile.id))
-        assertEquals(true, api.permissionServiceApi.hasPermission(subjectAProfile, permissionA))
-        assertEquals(true, api.permissionServiceApi.hasPermission(subjectBProfile, permissionA))
-        assertEquals(true, api.permissionServiceApi.hasPermission(subjectCProfile, permissionA))
+        api.permissionServiceApi.setPermission(
+            subjectCProfile,
+            InheritancePermissionComparatorV1(subjectAProfile.id),
+            TestCause
+        )
+        assertEquals(true, api.permissionServiceApi.hasPermission(subjectAProfile, permissionA, TestCause))
+        assertEquals(true, api.permissionServiceApi.hasPermission(subjectBProfile, permissionA, TestCause))
+        assertEquals(true, api.permissionServiceApi.hasPermission(subjectCProfile, permissionA, TestCause))
 
         // A:
         // 1. a.b: true
@@ -235,17 +247,22 @@ class LocalPermissionServiceTest {
         // C:
         // 1. inheritance(profile_id = A)
         // 2. inheritance(profile_id = B)
-        api.permissionServiceApi.setPermission(subjectCProfile, InheritancePermissionComparatorV1(subjectBProfile.id))
-        assertEquals(true, api.permissionServiceApi.hasPermission(subjectAProfile, permissionA))
-        assertEquals(true, api.permissionServiceApi.hasPermission(subjectBProfile, permissionA))
-        assertEquals(true, api.permissionServiceApi.hasPermission(subjectCProfile, permissionA))
+        api.permissionServiceApi.setPermission(
+            subjectCProfile,
+            InheritancePermissionComparatorV1(subjectBProfile.id),
+            TestCause
+        )
+        assertEquals(true, api.permissionServiceApi.hasPermission(subjectAProfile, permissionA, TestCause))
+        assertEquals(true, api.permissionServiceApi.hasPermission(subjectBProfile, permissionA, TestCause))
+        assertEquals(true, api.permissionServiceApi.hasPermission(subjectCProfile, permissionA, TestCause))
 
         // Loop inheritance:
         // C -> B -> C
         assertThrows<IllegalArgumentException> {
             api.permissionServiceApi.setPermission(
                 subjectBProfile,
-                InheritancePermissionComparatorV1(subjectCProfile.id)
+                InheritancePermissionComparatorV1(subjectCProfile.id),
+                TestCause
             )
         }
     }

@@ -147,7 +147,7 @@ class LocalPlatformInternalApi(
         TODO()
     }
 
-    override fun close(cause: Cause?) {
+    override fun close(cause: Cause) {
         TODO("Not yet implemented")
     }
 

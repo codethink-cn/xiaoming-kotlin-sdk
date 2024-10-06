@@ -260,7 +260,7 @@ class WebSocketClientConnectionInternalApi(
         close(TextCause("Client closed.", descriptor))
     }
 
-    override fun close(cause: Cause?) = lock.write {
+    override fun close(cause: Cause) = lock.write {
         stateNoLock = when (stateNoLock) {
             State.ALLOCATED, State.CONNECTING, State.CONNECTED, State.DISCONNECTED, State.WAITING -> State.CLOSING
             else -> throw IllegalStateException("Client internal error: unexpected state before closing: $stateNoLock.")

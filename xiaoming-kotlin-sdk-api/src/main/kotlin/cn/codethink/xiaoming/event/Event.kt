@@ -19,15 +19,15 @@
 
 package cn.codethink.xiaoming.event
 
-import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.EventCause
 import cn.codethink.xiaoming.common.FIELD_CAUSE
 import cn.codethink.xiaoming.common.FIELD_TYPE
+import cn.codethink.xiaoming.common.InternalApi
+import cn.codethink.xiaoming.common.getValue
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
 
 /**
@@ -47,7 +47,7 @@ abstract class Event : AbstractData {
         type: String,
         cause: Cause,
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         raw[FIELD_TYPE] = type
         raw[FIELD_CAUSE] = cause
     }

@@ -22,9 +22,7 @@ package cn.codethink.xiaoming.common
 import cn.codethink.xiaoming.event.Event
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
-import cn.codethink.xiaoming.io.data.setValue
 import cn.codethink.xiaoming.io.packet.Packet
 import com.fasterxml.jackson.annotation.JsonTypeName
 
@@ -51,14 +49,15 @@ const val CAUSE_TYPE_TEXT = "text"
  *
  * @author Chuanwise
  */
-open class TextCause(
-    raw: Raw
-) : Cause(raw) {
+open class TextCause : Cause {
     var text: String by raw
 
     override val type: String by raw
     override val cause: Cause? by raw
     override val subject: SubjectDescriptor by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
@@ -66,7 +65,7 @@ open class TextCause(
         subject: SubjectDescriptor,
         cause: Cause? = null,
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         raw[FIELD_TYPE] = CAUSE_TYPE_TEXT
         raw[CAUSE_FIELD_CAUSE] = cause
         raw[CAUSE_FIELD_SUBJECT] = subject
@@ -96,14 +95,15 @@ const val CAUSE_TYPE_PACKET_ID = "packet_id"
  *
  * @author Chuanwise
  */
-class PacketIdCause(
-    raw: Raw
-) : PacketCause(raw) {
+class PacketIdCause : PacketCause {
     override val id: Id by raw
 
     override val type: String by raw
     override val cause: Cause? by raw
     override val subject: SubjectDescriptor by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
@@ -111,7 +111,7 @@ class PacketIdCause(
         subject: SubjectDescriptor,
         cause: Cause? = null,
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         raw[FIELD_TYPE] = CAUSE_TYPE_PACKET_ID
         raw[CAUSE_FIELD_CAUSE] = cause
         raw[CAUSE_FIELD_SUBJECT] = subject
@@ -128,9 +128,7 @@ const val PACKET_DATA_CAUSE_FIELD_PACKET = "packet"
  *
  * @author Chuanwise
  */
-class PacketDataCause(
-    raw: Raw
-) : PacketCause(raw) {
+class PacketDataCause : PacketCause {
     val packet: Packet by raw
 
     override val id: Id by packet::id
@@ -138,12 +136,15 @@ class PacketDataCause(
     override val cause: Cause? by packet::cause
     override val subject: SubjectDescriptor by raw
 
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
+
     @JvmOverloads
     constructor(
         id: Id,
         subject: SubjectDescriptor,
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         raw[FIELD_TYPE] = CAUSE_TYPE_PACKET_DATA
         raw[PACKET_DATA_CAUSE_FIELD_PACKET] = packet
         raw[CAUSE_FIELD_SUBJECT] = subject
@@ -159,9 +160,7 @@ class PacketDataCause(
  *
  * @author Chuanwise
  */
-class StandardTextCause(
-    raw: Raw
-) : Cause(raw) {
+class StandardTextCause : Cause {
     var id: Id by raw
     var text: String by raw
     var arguments: Map<String, Any?> by raw
@@ -169,6 +168,9 @@ class StandardTextCause(
     override val type: String by raw
     override val cause: Cause? by raw
     override val subject: SubjectDescriptor by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
@@ -178,7 +180,7 @@ class StandardTextCause(
         cause: Cause? = null,
         arguments: Map<String, Any?> = emptyMap(),
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         raw[FIELD_TYPE] = CAUSE_TYPE_STANDARD_TEXT
         raw[CAUSE_FIELD_CAUSE] = cause
         raw[CAUSE_FIELD_SUBJECT] = subject
@@ -199,9 +201,7 @@ const val CAUSE_TYPE_EVENT = "event"
  * @author Chuanwise
  */
 @JsonTypeName(CAUSE_TYPE_EVENT)
-class EventCause(
-    raw: Raw
-) : Cause(raw) {
+class EventCause : Cause {
     var event: Event by raw
 
     override val type: String by raw
@@ -210,11 +210,14 @@ class EventCause(
     override val subject: SubjectDescriptor
         get() = event.cause.subject
 
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
+
     @JvmOverloads
     constructor(
         event: Event,
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         raw[FIELD_TYPE] = CAUSE_TYPE_EVENT
 
         this.event = event

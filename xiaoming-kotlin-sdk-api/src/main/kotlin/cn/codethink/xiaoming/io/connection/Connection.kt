@@ -37,7 +37,7 @@ interface Connection<T> : AutoClosableSubject, CoroutineScope {
         action: Action<P, R>,
         mode: String,
         timeout: Long,
-        cause: Cause? = null,
+        cause: Cause,
         argument: P? = null,
         time: Long = currentTimeSeconds,
     ) : Pair<Received<T>, R?>

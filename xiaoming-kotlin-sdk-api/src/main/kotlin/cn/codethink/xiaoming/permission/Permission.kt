@@ -19,9 +19,10 @@
 
 package cn.codethink.xiaoming.permission
 
-import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.AbstractData
+import cn.codethink.xiaoming.common.Field
 import cn.codethink.xiaoming.common.IdSubjectDescriptor
+import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.LITERAL_PERMISSION_MATCHER_FIELD_VALUE
 import cn.codethink.xiaoming.common.LiteralMatcher
 import cn.codethink.xiaoming.common.MATCHER_FIELD_TYPE
@@ -45,12 +46,11 @@ import cn.codethink.xiaoming.common.SegmentId
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.defaultNullable
 import cn.codethink.xiaoming.common.defaultOptional
-import cn.codethink.xiaoming.io.data.Field
+import cn.codethink.xiaoming.common.getValue
+import cn.codethink.xiaoming.common.setValue
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.getValue
 import cn.codethink.xiaoming.io.data.set
-import cn.codethink.xiaoming.io.data.setValue
 import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
@@ -58,18 +58,19 @@ import com.fasterxml.jackson.annotation.JsonTypeName
  *
  * @author Chuanwise
  */
-class PermissionDescriptor(
-    raw: Raw
-) : AbstractData(raw) {
+class PermissionDescriptor : AbstractData {
     val node: SegmentId by raw
     val subject: IdSubjectDescriptor by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
         node: SegmentId,
         subject: IdSubjectDescriptor,
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         raw[PERMISSION_SUBJECT_DESCRIPTOR_FIELD_NODE] = node
         raw[PERMISSION_SUBJECT_DESCRIPTOR_FIELD_SUBJECT] = subject
     }
@@ -80,15 +81,16 @@ class PermissionDescriptor(
  *
  * @author Chuanwise
  */
-class PermissionParameterMeta(
-    raw: Raw
-) : AbstractData(raw) {
+class PermissionParameterMeta : AbstractData {
     @Field(PERMISSION_VARIABLE_META_FIELD_DEFAULT_MATCHER_OR_VALUE)
     val defaultMatcherOrValue: Any? by raw
     val description: String? by raw
 
     val optional: Boolean by raw
     val nullable: Boolean by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
@@ -97,7 +99,7 @@ class PermissionParameterMeta(
         optional: Boolean,
         nullable: Boolean,
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         raw[PERMISSION_VARIABLE_META_FIELD_DEFAULT_MATCHER_OR_VALUE] = defaultMatcherOrValue
         raw[PERMISSION_VARIABLE_META_FIELD_DESCRIPTION] = description
         raw[PERMISSION_VARIABLE_META_FIELD_OPTIONAL] = optional
@@ -124,14 +126,15 @@ inline fun <reified T> PermissionParameterMeta(
  *
  * @author Chuanwise
  */
-class PermissionMeta(
-    raw: Raw
-) : AbstractData(raw) {
+class PermissionMeta : AbstractData {
     val node: SegmentId by raw
     val subject: IdSubjectDescriptor by raw
     val parameters: Map<String, PermissionParameterMeta> by raw
     val description: String? by raw
     val descriptor: PermissionDescriptor by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
@@ -141,7 +144,7 @@ class PermissionMeta(
         description: String? = null,
         descriptor: PermissionDescriptor = PermissionDescriptor(node, subject),
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         raw[PERMISSION_META_FIELD_NODE] = node
         raw[PERMISSION_META_FIELD_SUBJECT] = subject
         raw[PERMISSION_META_FIELD_DESCRIPTION] = description
@@ -155,18 +158,19 @@ class PermissionMeta(
  *
  * @author Chuanwise
  */
-class Permission(
-    raw: Raw
-) : AbstractData(raw) {
+class Permission : AbstractData {
     val descriptor: PermissionDescriptor by raw
     val arguments: Map<String, Any?> by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
         descriptor: PermissionDescriptor,
         arguments: Map<String, Any?> = emptyMap(),
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         raw[PERMISSION_FIELD_DESCRIPTOR] = descriptor
         raw[PERMISSION_FIELD_ARGUMENTS] = arguments
     }
@@ -178,22 +182,18 @@ class Permission(
  * @author Chuanwise
  */
 @JsonTypeName(PERMISSION_MATCHER_TYPE_LITERAL)
-class LiteralPermissionMatcher(
-    raw: Raw
-) : AbstractData(raw), LiteralMatcher<Permission> {
+class LiteralPermissionMatcher : AbstractData, LiteralMatcher<Permission> {
     override val type: String by raw
-
-    override val targetType: Class<Permission> = Permission::class.java
-
-    override val targetNullable: Boolean = false
-
     override val value: Permission by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
         value: Permission,
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         raw[MATCHER_FIELD_TYPE] = PERMISSION_MATCHER_TYPE_LITERAL
         raw[LITERAL_PERMISSION_MATCHER_FIELD_VALUE] = value
     }
@@ -202,24 +202,21 @@ class LiteralPermissionMatcher(
 fun Permission.toLiteralMatcher(): LiteralPermissionMatcher = LiteralPermissionMatcher(this)
 
 @JsonTypeName(PERMISSION_MATCHER_TYPE_DEFAULT)
-class DefaultPermissionMatcher(
-    raw: Raw
-) : AbstractData(raw), Matcher<Permission> {
+class DefaultPermissionMatcher : AbstractData, Matcher<Permission> {
     override val type: String by raw
-
-    override val targetType: Class<Permission> = Permission::class.java
-
-    override val targetNullable: Boolean = false
 
     var node: Matcher<SegmentId> by raw
     var arguments: Map<String, Matcher<*>> by raw
+
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
 
     @JvmOverloads
     constructor(
         node: Matcher<SegmentId>,
         arguments: Map<String, Matcher<*>> = emptyMap(),
         raw: Raw = MapRaw()
-    ) : this(raw) {
+    ) : super(raw) {
         raw[MATCHER_FIELD_TYPE] = PERMISSION_MATCHER_TYPE_DEFAULT
         this.node = node
         this.arguments = arguments

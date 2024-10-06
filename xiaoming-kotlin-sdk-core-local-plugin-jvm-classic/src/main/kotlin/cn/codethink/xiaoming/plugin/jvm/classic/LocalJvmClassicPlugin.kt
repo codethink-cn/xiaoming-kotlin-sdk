@@ -24,8 +24,6 @@ import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.PluginSubjectDescriptor
 import cn.codethink.xiaoming.common.SegmentId
-import cn.codethink.xiaoming.common.currentThreadCauseOrFail
-import cn.codethink.xiaoming.plugin.PluginDetector
 import cn.codethink.xiaoming.plugin.PluginLevel
 import cn.codethink.xiaoming.plugin.PluginMode
 import cn.codethink.xiaoming.plugin.PluginRuntimeMeta
@@ -40,17 +38,16 @@ import kotlin.concurrent.write
 
 class LocalJvmClassicPlugin(
     val platformApi: LocalPlatformApi,
-    detector: PluginDetector,
     val distributionFile: File,
     val distributionDirectoryFile: File,
     val configurationDirectoryFile: File,
     val dataDirectoryFile: File,
     level: PluginLevel,
     override val meta: LocalJvmClassicPluginMeta,
-    override val descriptor: PluginSubjectDescriptor,
-    private val invoker: LocalJvmClassicPluginMainEntry
-) : LocalJvmPlugin(detector) {
+    private val entry: LocalJvmClassicPluginMainEntry
+) : LocalJvmPlugin() {
     private val lock = ReentrantReadWriteLock()
+    override val descriptor: PluginSubjectDescriptor = PluginSubjectDescriptor(meta.id)
 
     class ClassicPluginRuntimeMeta(
         override val level: PluginLevel,
@@ -80,9 +77,7 @@ class LocalJvmClassicPlugin(
     private val state: LocalJvmClassicPluginState
         get() = lock.read { stateNoLock }
 
-    override fun load(platform: Platform, cause: Cause?): Unit = lock.write {
-        val finalCause = cause ?: currentThreadCauseOrFail()
-
+    override fun load(platform: Platform, cause: Cause): Unit = lock.write {
         stateNoLock = when (stateNoLock) {
             LocalJvmClassicPluginState.ALLOCATED -> LocalJvmClassicPluginState.LOADING
             LocalJvmClassicPluginState.LOADING -> throw IllegalStateException("Concurrent loading plugin.")
@@ -90,7 +85,7 @@ class LocalJvmClassicPlugin(
         }
 
         try {
-            invoker.onLoad(this, finalCause)
+            entry.onLoad(this, cause)
             stateNoLock = LocalJvmClassicPluginState.LOADED
         } catch (e: Throwable) {
             stateNoLock = LocalJvmClassicPluginState.LOADING_ERROR
@@ -98,9 +93,7 @@ class LocalJvmClassicPlugin(
         }
     }
 
-    override fun enable(platform: Platform, cause: Cause?): Unit = lock.write {
-        val finalCause = cause ?: currentThreadCauseOrFail()
-
+    override fun enable(platform: Platform, cause: Cause): Unit = lock.write {
         stateNoLock = when (stateNoLock) {
             LocalJvmClassicPluginState.LOADED -> LocalJvmClassicPluginState.ENABLING
             LocalJvmClassicPluginState.ENABLING -> throw IllegalStateException("Concurrent enabling plugin.")
@@ -108,7 +101,7 @@ class LocalJvmClassicPlugin(
         }
 
         try {
-            invoker.onEnable(this, finalCause)
+            entry.onEnable(this, cause)
             stateNoLock = LocalJvmClassicPluginState.ENABLED
         } catch (e: Throwable) {
             stateNoLock = LocalJvmClassicPluginState.ENABLING_ERROR
@@ -116,9 +109,7 @@ class LocalJvmClassicPlugin(
         }
     }
 
-    override fun disable(platform: Platform, cause: Cause?): Unit = lock.write {
-        val finalCause = cause ?: currentThreadCauseOrFail()
-
+    override fun disable(platform: Platform, cause: Cause): Unit = lock.write {
         stateNoLock = when (stateNoLock) {
             LocalJvmClassicPluginState.ENABLED -> LocalJvmClassicPluginState.DISABLING
             LocalJvmClassicPluginState.DISABLING -> throw IllegalStateException("Concurrent disabling plugin.")
@@ -126,7 +117,7 @@ class LocalJvmClassicPlugin(
         }
 
         try {
-            invoker.onDisable(this, finalCause)
+            entry.onDisable(this, cause)
             stateNoLock = LocalJvmClassicPluginState.DISABLED
         } catch (e: Throwable) {
             stateNoLock = LocalJvmClassicPluginState.DISABLING_ERROR
@@ -134,9 +125,7 @@ class LocalJvmClassicPlugin(
         }
     }
 
-    override fun unload(platform: Platform, cause: Cause?): Unit = lock.write {
-        val finalCause = cause ?: currentThreadCauseOrFail()
-
+    override fun unload(platform: Platform, cause: Cause): Unit = lock.write {
         stateNoLock = when (stateNoLock) {
             LocalJvmClassicPluginState.DISABLED -> LocalJvmClassicPluginState.ALLOCATED
             LocalJvmClassicPluginState.ALLOCATED -> throw IllegalStateException("Concurrent unloading plugin.")
@@ -149,5 +138,9 @@ class LocalJvmClassicPlugin(
             stateNoLock = LocalJvmClassicPluginState.LOADING_ERROR
             throw e
         }
+    }
+
+    override fun toString(): String {
+        return "LocalJvmClassicPlugin(meta=$meta)"
     }
 }

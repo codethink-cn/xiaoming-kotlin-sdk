@@ -47,7 +47,7 @@ interface AllocatedPlugin : Plugin {
      * @param platform the platform to load.
      * @param cause the cause of loading.
      */
-    fun load(platform: Platform, cause: Cause? = null)
+    fun load(platform: Platform, cause: Cause)
 
     /**
      * Enable this plugin for specified platform.
@@ -58,7 +58,7 @@ interface AllocatedPlugin : Plugin {
      * @param platform the platform to enable.
      * @param cause the cause of enabling.
      */
-    fun enable(platform: Platform, cause: Cause? = null)
+    fun enable(platform: Platform, cause: Cause)
 
     /**
      * Disable this plugin for specified platform.
@@ -72,7 +72,7 @@ interface AllocatedPlugin : Plugin {
      * @param platform the platform to disable.
      * @param cause the cause of disabling.
      */
-    fun disable(platform: Platform, cause: Cause? = null)
+    fun disable(platform: Platform, cause: Cause)
 
     /**
      * Unload this plugin for specified platform.
@@ -83,7 +83,7 @@ interface AllocatedPlugin : Plugin {
      * @param platform the platform to unload.
      * @param cause the cause of unloading.
      */
-    fun unload(platform: Platform, cause: Cause? = null)
+    fun unload(platform: Platform, cause: Cause)
 }
 
 val AllocatedPlugin.isErrored: Boolean
