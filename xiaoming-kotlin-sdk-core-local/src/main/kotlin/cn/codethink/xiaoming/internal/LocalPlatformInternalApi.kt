@@ -48,23 +48,23 @@ import kotlin.coroutines.CoroutineContext
  * @author Chuanwise
  */
 class LocalPlatformInternalApi(
-    val configuration: LocalPlatformInternalConfiguration,
+    val internalConfiguration: LocalPlatformInternalConfiguration,
 ) : CoroutineScope, AutoClosableSubject {
-    val platform by configuration::platform
+    val platform by internalConfiguration::platform
 
-    val logger by configuration::logger
-    override val descriptor by configuration::descriptor
+    val logger by internalConfiguration::logger
+    override val descriptor by internalConfiguration::descriptor
 
     // Coroutine related APIs.
-    val supervisorJob = SupervisorJob(configuration.parentJob)
-    private val coroutineScope = CoroutineScope(configuration.parentCoroutineContext + supervisorJob)
+    val supervisorJob = SupervisorJob(internalConfiguration.parentJob)
+    private val coroutineScope = CoroutineScope(internalConfiguration.parentCoroutineContext + supervisorJob)
     override val coroutineContext: CoroutineContext by coroutineScope::coroutineContext
 
     /**
      * Lock for changing state.
      */
     val lock = ReentrantReadWriteLock()
-    private var stateNoLock = LocalPlatformInternalState.INITIALIZED
+    private var stateNoLock = LocalPlatformInternalState.ALLOCATED
     val state: LocalPlatformInternalState
         get() = lock.read { stateNoLock }
 
@@ -78,7 +78,7 @@ class LocalPlatformInternalApi(
         get() = lock.read { languageConfigurationNoLock!! }
         set(value) = lock.write { languageConfigurationNoLock = value }
 
-    val data: LocalPlatformData by configuration::data
+    val data: LocalPlatformData by internalConfiguration::data
 
     val pluginManagerApi = LocalPluginManagerApi(this)
     val permissionServiceApi = LocalPermissionServiceApi(this)
@@ -86,7 +86,7 @@ class LocalPlatformInternalApi(
 
     fun start(cause: Cause, context: ModuleContext) = lock.write {
         stateNoLock = when (stateNoLock) {
-            LocalPlatformInternalState.INITIALIZED -> LocalPlatformInternalState.STARTING
+            LocalPlatformInternalState.ALLOCATED -> LocalPlatformInternalState.STARTING
             else -> throw IllegalStateException("Cannot start platform when it's not initialized.")
         }
 
@@ -94,11 +94,11 @@ class LocalPlatformInternalApi(
             logger.info { "Starting platform internal API." }
 
             // Call module lifecycle methods.
-            configuration.modules.forEach {
+            internalConfiguration.modules.forEach {
                 doModuleRelatedAction(
                     logger = logger,
                     description = "callback module '${it.subject.name}' lifecycle methods 'Module#onPlatformStarting'",
-                    failOnModuleError = configuration.failOnModuleError
+                    failOnModuleError = internalConfiguration.failOnModuleError
                 ) { it.onPlatformStarting(context) }
             }
 

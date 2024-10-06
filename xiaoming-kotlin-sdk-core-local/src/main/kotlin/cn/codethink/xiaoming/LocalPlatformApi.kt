@@ -99,7 +99,7 @@ class DefaultLocalPlatformApi(
 
     // State related.
     private enum class State {
-        INITIALIZED,
+        ALLOCATED,
         STARTING,
         STARTING_ERROR,
         STARTED,
@@ -108,7 +108,7 @@ class DefaultLocalPlatformApi(
         STOPPED
     }
 
-    private var stateNoLock: State = State.INITIALIZED
+    private var stateNoLock: State = State.ALLOCATED
     private val state: State
         get() = lock.read { stateNoLock }
 
@@ -119,7 +119,7 @@ class DefaultLocalPlatformApi(
         val finalCause = cause ?: currentThreadCauseOrFail()
 
         stateNoLock = when (stateNoLock) {
-            State.INITIALIZED -> State.STARTING
+            State.ALLOCATED -> State.STARTING
             else -> throw IllegalStateException("Cannot start platform when it's in $stateNoLock state.")
         }
 
@@ -160,7 +160,7 @@ class DefaultLocalPlatformApi(
             val dataApi = configuration.data.toDataApi(this)
 
             internalApi = LocalPlatformInternalApi(
-                configuration = DefaultLocalPlatformInternalConfiguration(
+                internalConfiguration = DefaultLocalPlatformInternalConfiguration(
                     platform = platform,
                     logger = logger,
                     deserializerModule = deserializerModule,

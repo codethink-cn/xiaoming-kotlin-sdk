@@ -23,7 +23,7 @@ enum class ClassicalPluginState(
     val enabled: Boolean = false,
     val errored: Boolean = false
 ) : PluginState {
-    INITIALIZED,
+    ALLOCATED,
     LOADING,
     LOADING_ERROR(errored = true),
     LOADED(loaded = true),

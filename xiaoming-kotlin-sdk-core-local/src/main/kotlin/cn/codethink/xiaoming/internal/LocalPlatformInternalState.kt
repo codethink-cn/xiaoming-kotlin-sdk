@@ -22,7 +22,7 @@ package cn.codethink.xiaoming.internal
  * @author Chuanwise
  */
 enum class LocalPlatformInternalState {
-    INITIALIZED,
+    ALLOCATED,
     STARTING,
     STARTING_ERROR,
     STARTED,

@@ -85,7 +85,7 @@ class WebSocketClientConnectionInternalApi(
     private val condition = lock.writeLock().newCondition()
 
     enum class State {
-        INITIALIZED,
+        ALLOCATED,
         CONNECTING,
 
         CONNECTED,
@@ -97,7 +97,7 @@ class WebSocketClientConnectionInternalApi(
         CLOSED,
     }
 
-    private var stateNoLock = State.INITIALIZED
+    private var stateNoLock = State.ALLOCATED
     private val state: State
         get() = lock.read { stateNoLock }
 
@@ -125,7 +125,7 @@ class WebSocketClientConnectionInternalApi(
             logger.info { "Connecting to $address with subject: $descriptor (attempt: $attempt)." }
             lock.write {
                 stateNoLock = when (stateNoLock) {
-                    State.INITIALIZED, State.WAITING, State.DISCONNECTED -> {
+                    State.ALLOCATED, State.WAITING, State.DISCONNECTED -> {
                         State.CONNECTING
                     }
 
@@ -262,7 +262,7 @@ class WebSocketClientConnectionInternalApi(
 
     override fun close(cause: Cause?) = lock.write {
         stateNoLock = when (stateNoLock) {
-            State.INITIALIZED, State.CONNECTING, State.CONNECTED, State.DISCONNECTED, State.WAITING -> State.CLOSING
+            State.ALLOCATED, State.CONNECTING, State.CONNECTED, State.DISCONNECTED, State.WAITING -> State.CLOSING
             else -> throw IllegalStateException("Client internal error: unexpected state before closing: $stateNoLock.")
         }
         condition.signalAll()

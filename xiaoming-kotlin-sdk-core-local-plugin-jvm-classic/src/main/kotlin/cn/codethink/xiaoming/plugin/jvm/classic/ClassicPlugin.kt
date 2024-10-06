@@ -76,7 +76,7 @@ class ClassicPlugin(
         get() = mutableTasks.toMap()
 
     // State related.
-    private var stateNoLock: ClassicalPluginState = ClassicalPluginState.INITIALIZED
+    private var stateNoLock: ClassicalPluginState = ClassicalPluginState.ALLOCATED
     private val state: ClassicalPluginState
         get() = lock.read { stateNoLock }
 
@@ -84,7 +84,7 @@ class ClassicPlugin(
         val finalCause = cause ?: currentThreadCauseOrFail()
 
         stateNoLock = when (stateNoLock) {
-            ClassicalPluginState.INITIALIZED -> ClassicalPluginState.LOADING
+            ClassicalPluginState.ALLOCATED -> ClassicalPluginState.LOADING
             ClassicalPluginState.LOADING -> throw IllegalStateException("Concurrent loading plugin.")
             else -> throw IllegalStateException("Cannot load plugin in state $stateNoLock.")
         }
@@ -138,8 +138,8 @@ class ClassicPlugin(
         val finalCause = cause ?: currentThreadCauseOrFail()
 
         stateNoLock = when (stateNoLock) {
-            ClassicalPluginState.DISABLED -> ClassicalPluginState.INITIALIZED
-            ClassicalPluginState.INITIALIZED -> throw IllegalStateException("Concurrent unloading plugin.")
+            ClassicalPluginState.DISABLED -> ClassicalPluginState.ALLOCATED
+            ClassicalPluginState.ALLOCATED -> throw IllegalStateException("Concurrent unloading plugin.")
             else -> throw IllegalStateException("Cannot unload plugin in state $stateNoLock.")
         }
 

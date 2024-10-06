@@ -77,13 +77,13 @@ abstract class WebSocketServerApi(
     protected val lock = ReentrantReadWriteLock()
 
     enum class State {
-        INITIALIZED,
+        ALLOCATED,
         STARTED,
         CLOSING,
         CLOSED,
     }
 
-    private var stateNoLock = State.INITIALIZED
+    private var stateNoLock = State.ALLOCATED
     private val state: State
         get() = lock.read { stateNoLock }
 
@@ -105,7 +105,7 @@ abstract class WebSocketServerApi(
     private fun Application.module() {
         lock.write {
             stateNoLock = when (stateNoLock) {
-                State.INITIALIZED -> State.STARTED
+                State.ALLOCATED -> State.STARTED
                 State.CLOSING -> return
                 else -> throw IllegalStateException(
                     "Server internal error: unexpected state after started: $stateNoLock."
@@ -127,7 +127,7 @@ abstract class WebSocketServerApi(
     override fun close(cause: Cause?) {
         lock.write {
             stateNoLock = when (stateNoLock) {
-                State.INITIALIZED, State.STARTED -> State.CLOSING
+                State.ALLOCATED, State.STARTED -> State.CLOSING
                 else -> throw IllegalStateException("Client internal error: unexpected state before closing: $stateNoLock.")
             }
         }
