@@ -16,15 +16,16 @@
 
 package cn.codethink.xiaoming.event.listener
 
-import cn.codethink.xiaoming.common.ID_SUBJECT_DESCRIPTOR_DESCRIPTOR_FIELD_ID
+import cn.codethink.xiaoming.common.AbstractData
 import cn.codethink.xiaoming.common.Id
-import cn.codethink.xiaoming.common.IdSubjectDescriptor
+import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.getValue
 import cn.codethink.xiaoming.io.data.MapRaw
 import cn.codethink.xiaoming.io.data.Raw
 import cn.codethink.xiaoming.io.data.set
 
+const val LISTENER_DESCRIPTOR_FIELD_ID = "id"
 const val LISTENER_DESCRIPTOR_FIELD_SUBJECT = "subject"
 
 /**
@@ -32,17 +33,19 @@ const val LISTENER_DESCRIPTOR_FIELD_SUBJECT = "subject"
  *
  * @author Chuanwise
  */
-class ListenerDescriptor(
-    raw: Raw
-) : IdSubjectDescriptor(raw) {
+class ListenerDescriptor : AbstractData {
     val subject: SubjectDescriptor by raw
 
+    @InternalApi
+    constructor(raw: Raw) : super(raw)
+
+    @JvmOverloads
     constructor(
         id: Id,
         subject: SubjectDescriptor,
         raw: Raw = MapRaw()
-    ) : this(raw) {
-        raw[ID_SUBJECT_DESCRIPTOR_DESCRIPTOR_FIELD_ID] = id
+    ) : super(raw) {
+        raw[LISTENER_DESCRIPTOR_FIELD_ID] = id
         raw[LISTENER_DESCRIPTOR_FIELD_SUBJECT] = subject
     }
 }
