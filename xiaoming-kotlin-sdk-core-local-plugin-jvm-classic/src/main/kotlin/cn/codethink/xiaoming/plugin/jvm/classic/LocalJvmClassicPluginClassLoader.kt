@@ -33,6 +33,7 @@ import java.util.Collections
 import java.util.Enumeration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArraySet
+import java.util.function.Predicate
 import java.util.zip.ZipFile
 
 const val CLASS_FILE_NAME_EXTENSION_WITH_DOT = ".class"
@@ -59,7 +60,7 @@ class LocalJvmClassicPluginClassLoader(
     var resolveIndependentPluginClasses: Boolean,
     var resolvableByIndependentPlugins: Boolean,
 
-    val ownedResourceNamePrefixes: Set<String>,
+    val resourcesFilter: Predicate<String>,
 
     private val pluginClassLoaders: Map<SegmentId, LocalJvmClassicPluginClassLoader>,
     private val logger: KLogger
@@ -199,7 +200,7 @@ class LocalJvmClassicPluginClassLoader(
     }
 
     override fun getResources(name: String): Enumeration<URL> {
-        if (ownedResourceNamePrefixes.any { name.startsWith(it) }) {
+        if (resourcesFilter.test(name)) {
             return findResources(name)
         }
 
@@ -207,7 +208,7 @@ class LocalJvmClassicPluginClassLoader(
     }
 
     override fun getResource(name: String): URL? {
-        if (ownedResourceNamePrefixes.any { name.startsWith(it) }) {
+        if (resourcesFilter.test(name)) {
             return findResource(name)
         }
 
