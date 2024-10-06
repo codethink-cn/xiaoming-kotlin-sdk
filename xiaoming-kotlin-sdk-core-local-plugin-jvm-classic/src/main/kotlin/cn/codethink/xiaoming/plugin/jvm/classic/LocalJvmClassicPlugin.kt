@@ -38,7 +38,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 
-class ClassicPlugin(
+class LocalJvmClassicPlugin(
     val platformApi: LocalPlatformApi,
     detector: PluginDetector,
     val distributionFile: File,
@@ -46,9 +46,9 @@ class ClassicPlugin(
     val configurationDirectoryFile: File,
     val dataDirectoryFile: File,
     level: PluginLevel,
-    override val meta: ClassicPluginMeta,
+    override val meta: LocalJvmClassicPluginMeta,
     override val descriptor: PluginSubjectDescriptor,
-    private val invoker: PluginMainInvoker
+    private val invoker: LocalJvmClassicPluginMainEntry
 ) : LocalJvmPlugin(detector) {
     private val lock = ReentrantReadWriteLock()
 
@@ -56,7 +56,7 @@ class ClassicPlugin(
         override val level: PluginLevel,
 
         @JsonIgnore
-        private val plugin: ClassicPlugin
+        private val plugin: LocalJvmClassicPlugin
     ) : PluginRuntimeMeta {
         override val state by plugin::state
         override val mode: PluginMode = PluginMode.LOCAL
@@ -76,24 +76,24 @@ class ClassicPlugin(
         get() = mutableTasks.toMap()
 
     // State related.
-    private var stateNoLock: ClassicalPluginState = ClassicalPluginState.ALLOCATED
-    private val state: ClassicalPluginState
+    private var stateNoLock: LocalJvmClassicPluginState = LocalJvmClassicPluginState.ALLOCATED
+    private val state: LocalJvmClassicPluginState
         get() = lock.read { stateNoLock }
 
     override fun load(platform: Platform, cause: Cause?): Unit = lock.write {
         val finalCause = cause ?: currentThreadCauseOrFail()
 
         stateNoLock = when (stateNoLock) {
-            ClassicalPluginState.ALLOCATED -> ClassicalPluginState.LOADING
-            ClassicalPluginState.LOADING -> throw IllegalStateException("Concurrent loading plugin.")
+            LocalJvmClassicPluginState.ALLOCATED -> LocalJvmClassicPluginState.LOADING
+            LocalJvmClassicPluginState.LOADING -> throw IllegalStateException("Concurrent loading plugin.")
             else -> throw IllegalStateException("Cannot load plugin in state $stateNoLock.")
         }
 
         try {
-            invoker.invokeOnLoad(this, finalCause)
-            stateNoLock = ClassicalPluginState.LOADED
+            invoker.onLoad(this, finalCause)
+            stateNoLock = LocalJvmClassicPluginState.LOADED
         } catch (e: Throwable) {
-            stateNoLock = ClassicalPluginState.LOADING_ERROR
+            stateNoLock = LocalJvmClassicPluginState.LOADING_ERROR
             throw e
         }
     }
@@ -102,16 +102,16 @@ class ClassicPlugin(
         val finalCause = cause ?: currentThreadCauseOrFail()
 
         stateNoLock = when (stateNoLock) {
-            ClassicalPluginState.LOADED -> ClassicalPluginState.ENABLING
-            ClassicalPluginState.ENABLING -> throw IllegalStateException("Concurrent enabling plugin.")
+            LocalJvmClassicPluginState.LOADED -> LocalJvmClassicPluginState.ENABLING
+            LocalJvmClassicPluginState.ENABLING -> throw IllegalStateException("Concurrent enabling plugin.")
             else -> throw IllegalStateException("Cannot enable plugin in state $stateNoLock.")
         }
 
         try {
-            invoker.invokeOnEnable(this, finalCause)
-            stateNoLock = ClassicalPluginState.ENABLED
+            invoker.onEnable(this, finalCause)
+            stateNoLock = LocalJvmClassicPluginState.ENABLED
         } catch (e: Throwable) {
-            stateNoLock = ClassicalPluginState.ENABLING_ERROR
+            stateNoLock = LocalJvmClassicPluginState.ENABLING_ERROR
             throw e
         }
     }
@@ -120,16 +120,16 @@ class ClassicPlugin(
         val finalCause = cause ?: currentThreadCauseOrFail()
 
         stateNoLock = when (stateNoLock) {
-            ClassicalPluginState.ENABLED -> ClassicalPluginState.DISABLING
-            ClassicalPluginState.DISABLING -> throw IllegalStateException("Concurrent disabling plugin.")
+            LocalJvmClassicPluginState.ENABLED -> LocalJvmClassicPluginState.DISABLING
+            LocalJvmClassicPluginState.DISABLING -> throw IllegalStateException("Concurrent disabling plugin.")
             else -> throw IllegalStateException("Cannot disable plugin in state $stateNoLock.")
         }
 
         try {
-            invoker.invokeOnDisable(this, finalCause)
-            stateNoLock = ClassicalPluginState.DISABLED
+            invoker.onDisable(this, finalCause)
+            stateNoLock = LocalJvmClassicPluginState.DISABLED
         } catch (e: Throwable) {
-            stateNoLock = ClassicalPluginState.DISABLING_ERROR
+            stateNoLock = LocalJvmClassicPluginState.DISABLING_ERROR
             throw e
         }
     }
@@ -138,15 +138,15 @@ class ClassicPlugin(
         val finalCause = cause ?: currentThreadCauseOrFail()
 
         stateNoLock = when (stateNoLock) {
-            ClassicalPluginState.DISABLED -> ClassicalPluginState.ALLOCATED
-            ClassicalPluginState.ALLOCATED -> throw IllegalStateException("Concurrent unloading plugin.")
+            LocalJvmClassicPluginState.DISABLED -> LocalJvmClassicPluginState.ALLOCATED
+            LocalJvmClassicPluginState.ALLOCATED -> throw IllegalStateException("Concurrent unloading plugin.")
             else -> throw IllegalStateException("Cannot unload plugin in state $stateNoLock.")
         }
 
         try {
             TODO()
         } catch (e: Throwable) {
-            stateNoLock = ClassicalPluginState.LOADING_ERROR
+            stateNoLock = LocalJvmClassicPluginState.LOADING_ERROR
             throw e
         }
     }

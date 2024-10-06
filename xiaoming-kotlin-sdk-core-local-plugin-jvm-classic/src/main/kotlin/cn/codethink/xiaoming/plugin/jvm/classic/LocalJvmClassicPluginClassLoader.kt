@@ -16,14 +16,14 @@
 
 @file:OptIn(InternalApi::class)
 
-package cn.codethink.xiaoming.plugin.jvm.classic.classpath
+package cn.codethink.xiaoming.plugin.jvm.classic
 
 import cn.codethink.xiaoming.common.InternalApi
-import cn.codethink.xiaoming.common.Matcher
 import cn.codethink.xiaoming.common.NamespaceId
 import cn.codethink.xiaoming.common.SegmentId
 import cn.codethink.xiaoming.common.ignoreClassNotFoundException
-import cn.codethink.xiaoming.plugin.jvm.classpath.DynamicLibrariesClassLoader
+import cn.codethink.xiaoming.plugin.jvm.DynamicLibrariesClassLoader
+import cn.codethink.xiaoming.plugin.jvm.PluginClassAccessPolicy
 import io.github.oshai.kotlinlogging.KLogger
 import java.io.File
 import java.net.URI
@@ -45,16 +45,23 @@ const val CLASS_FILE_NAME_EXTENSION_WITH_DOT = ".class"
  * @author Chuanwise
  * @see DynamicLibrariesClassLoader
  */
-class ClassicPluginClassLoader(
-    private val id: NamespaceId,
-    private val distributionFile: File,
-    private val environmentClassLoader: ClassLoader,
-    private val resolveEnvironmentResources: Boolean,
-    private val publicLibrariesClassLoader: ClassLoader,
-    private val resolvePublicResources: Boolean,
-    private val exportedClassNameMatcher: Matcher<String>,
-    private val resolveIndependentPluginClasses: Boolean,
-    private val pluginClassLoaders: Map<SegmentId, ClassicPluginClassLoader>,
+class LocalJvmClassicPluginClassLoader(
+    val id: NamespaceId,
+    val distributionFile: File,
+
+    val environmentClassLoader: ClassLoader,
+    var resolveEnvironmentResources: Boolean,
+
+    val publicLibrariesClassLoader: ClassLoader,
+    var resolvePublicResources: Boolean,
+
+    var classAccessPolicy: PluginClassAccessPolicy,
+    var resolveIndependentPluginClasses: Boolean,
+    var resolvableByIndependentPlugins: Boolean,
+
+    val ownedResourceNamePrefixes: Set<String>,
+
+    private val pluginClassLoaders: Map<SegmentId, LocalJvmClassicPluginClassLoader>,
     private val logger: KLogger
 ) : URLClassLoader(
     distributionFile.name, arrayOf(distributionFile.toURI().toURL()), null
@@ -62,7 +69,7 @@ class ClassicPluginClassLoader(
     /**
      * Class loaders to load classes in dependent plugins.
      */
-    private val dependenciesClassLoaders: Map<SegmentId, ClassicPluginClassLoader> = ConcurrentHashMap()
+    private val dependenciesClassLoaders: Map<SegmentId, LocalJvmClassicPluginClassLoader> = ConcurrentHashMap()
 
     /**
      * Package names of the classes in the plugin distribution file.
@@ -109,21 +116,31 @@ class ClassicPluginClassLoader(
         if (!packageNames.contains(packageName)) {
             return null
         }
-        if (!exportedClassNameMatcher.isMatched(name)) {
+        if (!classAccessPolicy.isAccessible(name)) {
             return null
         }
         return loadClassInThisClassLoader(name)
     }
 
-    fun linkLibrary(uri: URI, private: Boolean) {
+    fun link(uri: URI, private: Boolean) {
         if (private) {
             logger.trace { "Linking private library: $uri." }
-            privateLibrariesClassLoader.addLibrary(uri.toURL())
+            privateLibrariesClassLoader.link(uri.toURL())
         } else {
             logger.trace { "Linking private library: $uri." }
-            protectedLibrariesClassLoader.addLibrary(uri.toURL())
+            protectedLibrariesClassLoader.link(uri.toURL())
         }
         logger.debug { "Linked library: $uri." }
+    }
+
+    fun link(classLoader: DynamicLibrariesClassLoader, private: Boolean) {
+        if (private) {
+            logger.debug { "Linking private library: $classLoader." }
+            privateLibrariesClassLoader.libraries.add(classLoader)
+        } else {
+            logger.debug { "Linking protected library: $classLoader." }
+            protectedLibrariesClassLoader.libraries.add(classLoader)
+        }
     }
 
     @InternalApi
@@ -143,6 +160,7 @@ class ClassicPluginClassLoader(
 
         // Load class in protected libraries.
         protectedLibrariesClassLoader.loadClassInThisClassLoaderAndLibraries(name)?.let { return it }
+
         // Find class in dependencies.
         dependenciesClassLoaders.values.forEach { classLoader ->
             classLoader.resolveProtectedLibrariesAndPublicClass(name)?.let { return it }
@@ -154,23 +172,25 @@ class ClassicPluginClassLoader(
         // Load by this class loader.
         loadClassInThisClassLoader(name)?.let { return it }
 
-        val independentPluginPolicy = resolveIndependentPluginClasses
+        val resolveIndependentPluginClasses = resolveIndependentPluginClasses
         pluginClassLoaders.forEach { (id, classLoader) ->
             if (classLoader != this && !dependenciesClassLoaders.containsKey(id)) {
-                classLoader.resolveProtectedLibrariesAndPublicClass(name)?.let {
-                    if (undefinedDependencies.add(classLoader.id)) {
-                        logger.warn {
-                            "Plugin '${id}' (${distributionFile}) class $name " +
-                                    "of '${classLoader.id}' (${classLoader.distributionFile.name}) but not depend on it. "
-                        }
+                if (classLoader.resolvableByIndependentPlugins) {
+                    classLoader.resolveProtectedLibrariesAndPublicClass(name)?.let {
+                        if (undefinedDependencies.add(classLoader.id)) {
+                            logger.warn {
+                                "Plugin '${id}' (${distributionFile}) class $name " +
+                                        "of '${classLoader.id}' (${classLoader.distributionFile.name}) but not depend on it. "
+                            }
 
-                        if (independentPluginPolicy) {
-                            return it
-                        } else {
-                            return@forEach
+                            if (resolveIndependentPluginClasses) {
+                                return it
+                            } else {
+                                return@forEach
+                            }
                         }
+                        return it
                     }
-                    return it
                 }
             }
         }
@@ -179,7 +199,37 @@ class ClassicPluginClassLoader(
     }
 
     override fun getResources(name: String): Enumeration<URL> {
+        if (ownedResourceNamePrefixes.any { name.startsWith(it) }) {
+            return findResources(name)
+        }
+
         return getResources(name, mutableSetOf())
+    }
+
+    override fun getResource(name: String): URL? {
+        if (ownedResourceNamePrefixes.any { name.startsWith(it) }) {
+            return findResource(name)
+        }
+
+        findResource(name)?.let { return it }
+
+        protectedLibrariesClassLoader.getResource(name)?.let { return it }
+
+        dependenciesClassLoaders.values.forEach { classLoader ->
+            classLoader.getResource(name)?.let { return it }
+        }
+
+        privateLibrariesClassLoader.getResource(name)?.let { return it }
+
+        if (resolvePublicResources) {
+            publicLibrariesClassLoader.getResource(name)?.let { return it }
+        }
+
+        if (resolveEnvironmentResources) {
+            environmentClassLoader.getResource(name)?.let { return it }
+        }
+
+        return null
     }
 
     private fun getResources(
@@ -219,29 +269,7 @@ class ClassicPluginClassLoader(
         return Collections.enumeration(resolved)
     }
 
-    override fun getResource(name: String): URL? {
-        findResource(name)?.let { return it }
-
-        protectedLibrariesClassLoader.getResource(name)?.let { return it }
-
-        dependenciesClassLoaders.values.forEach { classLoader ->
-            classLoader.getResource(name)?.let { return it }
-        }
-
-        privateLibrariesClassLoader.getResource(name)?.let { return it }
-
-        if (resolvePublicResources) {
-            publicLibrariesClassLoader.getResource(name)?.let { return it }
-        }
-
-        if (resolveEnvironmentResources) {
-            environmentClassLoader.getResource(name)?.let { return it }
-        }
-
-        return null
-    }
-
-    override fun toString(): String = "ClassicPluginClassLoader(file=${distributionFile})"
+    override fun toString(): String = "LocalJvmClassicPluginClassLoader(file=${distributionFile})"
 }
 
 private fun String.classNameToPackageName(): String {

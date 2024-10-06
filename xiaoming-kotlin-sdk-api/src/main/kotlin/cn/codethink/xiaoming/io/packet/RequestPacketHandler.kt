@@ -251,11 +251,11 @@ class RequestPacketHandler(
     }
 
     fun registerModeHandler(mode: String, handler: PacketHandler, subject: SubjectDescriptor) {
-        modes.register(mode, DefaultRegistration(handler, subject))
+        modes[mode] = DefaultRegistration(handler, subject)
     }
 
     fun unregisterModeHandlerByMode(mode: String) {
-        modes.unregisterByKey(mode)
+        modes.remove(mode)
     }
 
     fun unregisterModeHandlerBySubject(subject: SubjectDescriptor) {
@@ -264,14 +264,11 @@ class RequestPacketHandler(
 
     @Suppress("UNCHECKED_CAST")
     fun <P, R> registerActionHandler(action: Action<P, R>, handler: RequestHandler<P, R>, subject: SubjectDescriptor) {
-        actions.register(
-            action.name,
-            PacketActionHandlerRegistration(
-                action,
-                handler,
-                subject
-            ) as PacketActionHandlerRegistration<Nothing, Nothing>
-        )
+        actions[action.name] = PacketActionHandlerRegistration(
+            action,
+            handler,
+            subject
+        ) as PacketActionHandlerRegistration<Nothing, Nothing>
     }
 
     fun unregisterActionHandlerByAction(action: String) {

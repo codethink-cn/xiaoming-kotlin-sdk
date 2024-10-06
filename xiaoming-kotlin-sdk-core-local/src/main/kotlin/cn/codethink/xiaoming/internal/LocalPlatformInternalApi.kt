@@ -18,6 +18,7 @@
 
 package cn.codethink.xiaoming.internal
 
+import cn.codethink.xiaoming.LocalPlatform
 import cn.codethink.xiaoming.common.AutoClosableSubject
 import cn.codethink.xiaoming.common.Cause
 import cn.codethink.xiaoming.common.InternalApi
@@ -50,8 +51,6 @@ import kotlin.coroutines.CoroutineContext
 class LocalPlatformInternalApi(
     val internalConfiguration: LocalPlatformInternalConfiguration,
 ) : CoroutineScope, AutoClosableSubject {
-    val platform by internalConfiguration::platform
-
     val logger by internalConfiguration::logger
     override val descriptor by internalConfiguration::descriptor
 
@@ -64,34 +63,69 @@ class LocalPlatformInternalApi(
      * Lock for changing state.
      */
     val lock = ReentrantReadWriteLock()
-    private var stateNoLock = LocalPlatformInternalState.ALLOCATED
-    val state: LocalPlatformInternalState
+
+    /**
+     * The platform that this internal API belongs to.
+     * Initialized in [start].
+     */
+    private var mutPlatform: LocalPlatform? = null
+    val platform: LocalPlatform
+        get() = lock.read { mutPlatform } ?: throw IllegalStateException("Platform not started yet.")
+
+    /**
+     * The state of the platform internal API.
+     */
+    private enum class State {
+        ALLOCATED,
+        STARTING,
+        STARTING_ERROR,
+        STARTED,
+        STOPPING,
+        STOPPING_ERROR,
+        STOPPED
+    }
+
+    private var stateNoLock = State.ALLOCATED
+    private val state: State
         get() = lock.read { stateNoLock }
 
+    /**
+     * The configuration of the platform.
+     */
     private var platformConfigurationNoLock: LocalPlatformConfiguration? = null
     var platformConfiguration: LocalPlatformConfiguration
         get() = lock.read { platformConfigurationNoLock!! }
         set(value) = lock.write { platformConfigurationNoLock = value }
 
+    /**
+     * The language of the platform.
+     */
     private var languageConfigurationNoLock: LanguageConfiguration? = null
     var languageConfiguration: LanguageConfiguration
         get() = lock.read { languageConfigurationNoLock!! }
         set(value) = lock.write { languageConfigurationNoLock = value }
 
+    /**
+     * The data of the platform.
+     */
     val data: LocalPlatformData by internalConfiguration::data
 
+    /**
+     * The subsystems of the platform.
+     */
     val pluginManagerApi = LocalPluginManagerApi(this)
     val permissionServiceApi = LocalPermissionServiceApi(this)
     val connectionManagerApi = ConnectionManagerApi(this)
 
-    fun start(cause: Cause, context: ModuleContext) = lock.write {
+    fun start(platform: LocalPlatform, cause: Cause, context: ModuleContext) = lock.write {
         stateNoLock = when (stateNoLock) {
-            LocalPlatformInternalState.ALLOCATED -> LocalPlatformInternalState.STARTING
+            State.ALLOCATED -> State.STARTING
             else -> throw IllegalStateException("Cannot start platform when it's not initialized.")
         }
 
         try {
             logger.info { "Starting platform internal API." }
+            mutPlatform = platform
 
             // Call module lifecycle methods.
             internalConfiguration.modules.forEach {
@@ -102,9 +136,9 @@ class LocalPlatformInternalApi(
                 ) { it.onPlatformStarting(context) }
             }
 
-            stateNoLock = LocalPlatformInternalState.STARTED
+            stateNoLock = State.STARTED
         } catch (e: Exception) {
-            stateNoLock = LocalPlatformInternalState.STARTING_ERROR
+            stateNoLock = State.STARTING_ERROR
             throw e
         }
     }
@@ -119,14 +153,5 @@ class LocalPlatformInternalApi(
 
     override fun close() {
         close(TextCause("Local platform internal API closed.", descriptor))
-    }
-}
-
-fun LocalPlatformInternalApi.assertState(
-    state: LocalPlatformInternalState,
-    block: () -> String = { "Expected state $state, but got ${this.state}." }
-) {
-    if (state != this.state) {
-        throw IllegalStateException(block())
     }
 }

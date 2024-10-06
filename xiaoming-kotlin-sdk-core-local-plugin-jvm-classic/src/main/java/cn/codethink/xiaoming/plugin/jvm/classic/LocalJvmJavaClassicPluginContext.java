@@ -25,9 +25,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
-public class JavaClassicPluginContext implements ClassicPluginContext {
+public class LocalJvmJavaClassicPluginContext implements LocalJvmClassicPluginContext {
     @NotNull
-    final ClassicPlugin plugin;
+    final LocalJvmClassicPlugin plugin;
 
     @NotNull
     final Cause cause;
@@ -38,8 +38,8 @@ public class JavaClassicPluginContext implements ClassicPluginContext {
     @Nullable
     Cause error;
 
-    public JavaClassicPluginContext(
-            @NotNull ClassicPlugin plugin,
+    public LocalJvmJavaClassicPluginContext(
+            @NotNull LocalJvmClassicPlugin plugin,
             @NotNull Cause cause
     ) {
         this.plugin = plugin;
@@ -54,7 +54,7 @@ public class JavaClassicPluginContext implements ClassicPluginContext {
 
     @NotNull
     @Override
-    public ClassicPlugin getPlugin() {
+    public LocalJvmClassicPlugin getPlugin() {
         return plugin;
     }
 

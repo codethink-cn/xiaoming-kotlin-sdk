@@ -55,20 +55,14 @@ interface Registrations {
  *
  * @author Chuanwise
  */
-class MapRegistrations<K, T, R : Registration<T>> : Registrations {
+class MapRegistrations<K, T, R : Registration<T>>(
     private val mutableMap: MutableMap<K, R> = ConcurrentHashMap()
-    private val map: Map<K, R>
-        get() = mutableMap.toMap()
-
-    fun toMap(): Map<K, R> = map
-
-    operator fun get(key: K): R? {
-        return mutableMap[key]
-    }
-
+) : Registrations, MutableMap<K, R> by mutableMap {
+    fun toMap(): Map<K, R> = mutableMap.toMap()
     fun register(key: K, registration: R) {
         mutableMap[key] = registration
     }
+
     fun unregisterByKey(key: K): R? = mutableMap.remove(key)
     override fun unregisterBySubject(subject: SubjectDescriptor): Boolean =
         mutableMap.values.removeIf { it.subject == subject }
@@ -76,19 +70,17 @@ class MapRegistrations<K, T, R : Registration<T>> : Registrations {
 
 inline fun <reified K, reified T> DefaultMapRegistrations() = MapRegistrations<K, T, DefaultRegistration<T>>()
 inline fun <reified T> DefaultStringMapRegistrations() = DefaultMapRegistrations<String, T>()
+inline fun <reified T> DefaultIdMapRegistrations() = DefaultMapRegistrations<Id, T>()
 
 /**
  * Registrations in this class are saved in a list.
  *
  * @author Chuanwise
  */
-class ListRegistrations<T, R : Registration<T>> : Registrations {
-    private val mutableList = CopyOnWriteArrayList<R>()
-    private val list: List<R>
-        get() = mutableList.toList()
-
-    fun toList(): List<R> = list
-
+class ListRegistrations<T, R : Registration<T>>(
+    private val mutableList: MutableList<R> = CopyOnWriteArrayList<R>()
+) : Registrations, MutableList<R> by mutableList {
+    fun toList(): List<R> = mutableList.toList()
     fun register(registration: R) {
         mutableList.add(registration)
     }

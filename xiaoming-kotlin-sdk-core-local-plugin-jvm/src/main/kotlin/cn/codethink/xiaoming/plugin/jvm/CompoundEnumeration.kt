@@ -14,16 +14,25 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin
+package cn.codethink.xiaoming.plugin.jvm
 
-import cn.codethink.xiaoming.Platform
-import cn.codethink.xiaoming.common.Cause
+import java.util.Enumeration
 
-/**
- * Detect all available plugins (installed or to be installed).
- *
- * @author Chuanwise
- */
-interface PluginDetector {
-    fun detectAll(platform: Platform, cause: Cause): Iterable<Plugin>
+class CompoundEnumeration<T>(
+    private val first: Enumeration<T>,
+    private val second: Enumeration<T>
+) : Enumeration<T> {
+    override fun hasMoreElements(): Boolean {
+        return first.hasMoreElements() || second.hasMoreElements()
+    }
+
+    override fun nextElement(): T {
+        return if (first.hasMoreElements()) {
+            first.nextElement()
+        } else {
+            second.nextElement()
+        }
+    }
 }
+
+operator fun <T> Enumeration<T>.plus(other: Enumeration<T>): Enumeration<T> = CompoundEnumeration(this, other)

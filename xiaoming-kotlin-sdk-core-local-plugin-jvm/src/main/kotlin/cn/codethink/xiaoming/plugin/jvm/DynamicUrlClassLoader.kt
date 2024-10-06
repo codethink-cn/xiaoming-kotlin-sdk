@@ -16,7 +16,7 @@
 
 @file:OptIn(InternalApi::class)
 
-package cn.codethink.xiaoming.plugin.jvm.classpath
+package cn.codethink.xiaoming.plugin.jvm
 
 import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.ignoreClassNotFoundException
@@ -25,6 +25,7 @@ import java.net.URL
 import java.net.URLClassLoader
 import java.util.Collections
 import java.util.Enumeration
+import java.util.concurrent.CopyOnWriteArrayList
 
 private const val JAVA_SYSTEM_CLASS_NAME_PREFIX = "java."
 private val EMPTY_URL_ARRAY = arrayOf<URL>()
@@ -35,15 +36,15 @@ private val EMPTY_URL_ARRAY = arrayOf<URL>()
  *
  * @author Chuanwise
  */
-open class DynamicClasspathClassLoader(
+open class DynamicUrlClassLoader(
     urls: Array<URL> = EMPTY_URL_ARRAY, parent: ClassLoader? = null, name: String? = null
 ) : URLClassLoader(name, urls, parent) {
     init {
         ClassLoader.registerAsParallelCapable()
     }
 
-    fun addLibrary(url: URL) = addURL(url)
-    fun addLibrary(file: File) = addURL(file.toURI().toURL())
+    fun link(url: URL) = addURL(url)
+    fun link(file: File) = addURL(file.toURI().toURL())
 }
 
 
@@ -53,8 +54,12 @@ class DynamicLibrariesClassLoader(
     private val toStringName: String,
     parent: ClassLoader? = null,
     urls: Array<URL> = EMPTY_URL_ARRAY,
-) : DynamicClasspathClassLoader(urls, parent, classLoaderName) {
-    var libraries: List<DynamicLibrariesClassLoader> = emptyList()
+) : DynamicUrlClassLoader(urls, parent, classLoaderName) {
+    val libraries: MutableList<DynamicLibrariesClassLoader> = CopyOnWriteArrayList()
+
+    init {
+        ClassLoader.registerAsParallelCapable()
+    }
 
     override fun loadClass(name: String): Class<*> {
         ignoreClassNotFoundException { environmentClassLoader.loadClass(name) }?.let { return it }

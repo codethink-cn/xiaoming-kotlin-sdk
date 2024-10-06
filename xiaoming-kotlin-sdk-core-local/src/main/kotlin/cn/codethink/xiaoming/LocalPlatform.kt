@@ -14,16 +14,8 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin
+package cn.codethink.xiaoming
 
-import cn.codethink.xiaoming.Platform
-import cn.codethink.xiaoming.common.Cause
-
-/**
- * Detect all available plugins (installed or to be installed).
- *
- * @author Chuanwise
- */
-interface PluginDetector {
-    fun detectAll(platform: Platform, cause: Cause): Iterable<Plugin>
+interface LocalPlatform : Platform {
+    val api: LocalPlatformApi
 }

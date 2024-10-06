@@ -21,7 +21,6 @@ package cn.codethink.xiaoming
  *
  * @author Chuanwise
  */
-class Platform(
-    val api: PlatformApi
-) {
+interface Platform {
+
 }

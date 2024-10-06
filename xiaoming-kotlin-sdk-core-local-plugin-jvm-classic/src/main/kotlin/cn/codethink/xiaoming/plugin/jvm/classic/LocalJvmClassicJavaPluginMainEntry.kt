@@ -17,13 +17,19 @@
 package cn.codethink.xiaoming.plugin.jvm.classic
 
 import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.PluginSubjectDescriptor
 
-interface ClassicPluginContext {
-    val plugin: ClassicPlugin
-    val cause: Cause
-    val error: Cause?
+class LocalJvmClassicJavaPluginMainEntry(
+    private val main: LocalJvmJavaPluginMain
+) : LocalJvmClassicPluginMainEntry {
+    override fun onLoad(plugin: LocalJvmClassicPlugin, cause: Cause) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onEnable(plugin: LocalJvmClassicPlugin, cause: Cause) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onDisable(plugin: LocalJvmClassicPlugin, cause: Cause) {
+        TODO("Not yet implemented")
+    }
 }
-
-val ClassicPluginContext.descriptor: PluginSubjectDescriptor
-    get() = plugin.descriptor

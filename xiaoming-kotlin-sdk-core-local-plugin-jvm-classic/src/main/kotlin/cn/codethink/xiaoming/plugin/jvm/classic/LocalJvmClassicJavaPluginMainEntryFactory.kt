@@ -16,15 +16,15 @@
 
 package cn.codethink.xiaoming.plugin.jvm.classic
 
-import kotlin.reflect.KClass
+import cn.codethink.xiaoming.common.getOrConstruct
 
 /**
- * Mark a plugin implemented main class.
- *
+ * @see LocalJvmJavaPluginMain
  * @author Chuanwise
  */
-@MustBeDocumented
-@Retention(AnnotationRetention.RUNTIME)
-annotation class PluginMain(
-    val invoker: KClass<out PluginMainInvokerFactory>
-)
+object LocalJvmClassicJavaPluginMainEntryFactory : LocalJvmPluginMainEntryFactory {
+    override fun create(context: LocalJvmPluginMainEntryContext): LocalJvmClassicPluginMainEntry {
+        val main = getOrConstruct(context.mainClass) as LocalJvmJavaPluginMain
+        return LocalJvmClassicJavaPluginMainEntry(main)
+    }
+}

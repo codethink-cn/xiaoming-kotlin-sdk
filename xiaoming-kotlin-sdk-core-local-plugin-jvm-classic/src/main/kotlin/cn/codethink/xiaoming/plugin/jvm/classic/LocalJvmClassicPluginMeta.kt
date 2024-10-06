@@ -16,14 +16,16 @@
 
 package cn.codethink.xiaoming.plugin.jvm.classic
 
+import cn.codethink.xiaoming.plugin.PluginMeta
+
+const val PLUGIN_META_TYPE_CLASSIC = "jvm.classic"
+
 /**
- * Factory to create [PluginMainInvoker].
- *
- * This interface is used to create [PluginMainInvoker] for all kinds of JVM
- * plugins.
+ * Local JVM classic plugin meta.
  *
  * @author Chuanwise
  */
-interface PluginMainInvokerFactory {
-    fun create(mainClass: Class<*>): PluginMainInvoker
+interface LocalJvmClassicPluginMeta : PluginMeta {
+    val main: String
+    val logger: String?
 }

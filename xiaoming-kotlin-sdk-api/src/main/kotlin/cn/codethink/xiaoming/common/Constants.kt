@@ -79,7 +79,6 @@ const val PERMISSION_FIELD_DESCRIPTOR = "descriptor"
 const val PERMISSION_FIELD_ARGUMENTS = "arguments"
 
 const val MATCHER_FIELD_TYPE = FIELD_TYPE
-const val MATCHER_TYPE_ANY = "any"
 
 const val SUBJECT_DESCRIPTOR_MATCHER_TYPE_DEFAULT_PROTOCOL = "subject.protocol"
 

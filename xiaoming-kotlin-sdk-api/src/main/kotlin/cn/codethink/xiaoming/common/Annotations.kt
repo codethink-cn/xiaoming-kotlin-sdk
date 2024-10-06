@@ -50,3 +50,37 @@ annotation class InternalApi
 @Retention(AnnotationRetention.BINARY)
 @RequiresOptIn(level = RequiresOptIn.Level.ERROR)
 annotation class JavaFriendlyApi
+
+/**
+ * Mark the API is experimental, which means that the API is not stable
+ * and may be changed in the future.
+ *
+ * If the marked API is an open class, interface or open function,
+ * it means all its implementations are experimental.
+ *
+ * Notice that It's highly not recommended to use in release versions.
+ *
+ * @author Chuanwise
+ */
+@Inherited
+@MustBeDocumented
+@Retention(AnnotationRetention.BINARY)
+@RequiresOptIn(level = RequiresOptIn.Level.WARNING)
+annotation class ExperimentalApi
+
+/**
+ * Mark the API is not stable, which means that the API is not stable
+ * and may be changed in the future.
+ *
+ * If the marked API is an open class, interface or open function,
+ * it means all its implementations are not stable.
+ *
+ * Notice that It's highly not recommended to inherit or construct them.
+ *
+ * @author Chuanwise
+ */
+@Inherited
+@MustBeDocumented
+@Retention(AnnotationRetention.BINARY)
+@RequiresOptIn(level = RequiresOptIn.Level.ERROR)
+annotation class NotStable

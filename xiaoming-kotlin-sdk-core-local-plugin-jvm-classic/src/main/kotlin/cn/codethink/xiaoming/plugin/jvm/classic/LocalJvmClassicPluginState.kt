@@ -16,18 +16,25 @@
 
 package cn.codethink.xiaoming.plugin.jvm.classic
 
-import cn.codethink.xiaoming.common.getOrConstruct
-import io.github.oshai.kotlinlogging.KotlinLogging
+import cn.codethink.xiaoming.plugin.PluginState
 
 /**
- * @see JavaPluginMain
  * @author Chuanwise
+ * @see PluginState
  */
-object JavaClassicPluginMainInvokerFactory : PluginMainInvokerFactory {
-    private val logger = KotlinLogging.logger { }
-
-    override fun create(mainClass: Class<*>): PluginMainInvoker {
-        val main = getOrConstruct(mainClass) as JavaPluginMain
-        return JavaPluginMainInvoker(main)
-    }
+enum class LocalJvmClassicPluginState(
+    val loaded: Boolean = false,
+    val enabled: Boolean = false,
+    val errored: Boolean = false
+) : PluginState {
+    ALLOCATED,
+    LOADING,
+    LOADING_ERROR(errored = true),
+    LOADED(loaded = true),
+    ENABLING(loaded = true),
+    ENABLING_ERROR(loaded = true, errored = true),
+    ENABLED(loaded = true, enabled = true),
+    DISABLING(loaded = true),
+    DISABLING_ERROR(loaded = true, errored = true),
+    DISABLED(loaded = true),
 }

@@ -14,21 +14,14 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin.jvm.classic;
+package cn.codethink.xiaoming.plugin.jvm.classic
 
-/**
- * Main class of Java classic plugin.
- *
- * @author Chuanwise
- */
-@PluginMain(invoker = JavaClassicPluginMainInvokerFactory.class)
-public interface JavaPluginMain {
-    default void onLoad(JavaClassicPluginContext context) {
-    }
+import cn.codethink.xiaoming.common.Cause
 
-    default void onEnable(JavaClassicPluginContext context) {
-    }
+interface LocalJvmClassicPluginMainEntry {
+    fun onLoad(plugin: LocalJvmClassicPlugin, cause: Cause)
 
-    default void onDisable(JavaClassicPluginContext context) {
-    }
+    fun onEnable(plugin: LocalJvmClassicPlugin, cause: Cause)
+
+    fun onDisable(plugin: LocalJvmClassicPlugin, cause: Cause)
 }

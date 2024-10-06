@@ -14,23 +14,21 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin.jvm.classic
+package cn.codethink.xiaoming.plugin.jvm.classic;
 
-import cn.codethink.xiaoming.plugin.PluginState
+/**
+ * Main class of Java classic plugin.
+ *
+ * @author Chuanwise
+ */
+@LocalJvmClassicPluginMain(entry = LocalJvmClassicJavaPluginMainEntryFactory.class)
+public interface LocalJvmJavaPluginMain {
+    default void onLoad(LocalJvmJavaClassicPluginContext context) {
+    }
 
-enum class ClassicalPluginState(
-    val loaded: Boolean = false,
-    val enabled: Boolean = false,
-    val errored: Boolean = false
-) : PluginState {
-    ALLOCATED,
-    LOADING,
-    LOADING_ERROR(errored = true),
-    LOADED(loaded = true),
-    ENABLING(loaded = true),
-    ENABLING_ERROR(loaded = true, errored = true),
-    ENABLED(loaded = true, enabled = true),
-    DISABLING(loaded = true),
-    DISABLING_ERROR(loaded = true, errored = true),
-    DISABLED(loaded = true),
+    default void onEnable(LocalJvmJavaClassicPluginContext context) {
+    }
+
+    default void onDisable(LocalJvmJavaClassicPluginContext context) {
+    }
 }

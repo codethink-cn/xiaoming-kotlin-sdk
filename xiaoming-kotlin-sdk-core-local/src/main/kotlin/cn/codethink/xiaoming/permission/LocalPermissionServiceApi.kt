@@ -177,9 +177,11 @@ class LocalPermissionServiceApi(
 
     fun registerPermissionCalculator(
         type: String, calculator: PermissionCalculator<*>, subject: SubjectDescriptor
-    ) = permissionCalculatorRegistrations.register(type, DefaultRegistration(calculator, subject))
+    ) {
+        permissionCalculatorRegistrations[type] = DefaultRegistration(calculator, subject)
+    }
 
-    fun unregisterPermissionCalculatorByType(type: String) = permissionCalculatorRegistrations.unregisterByKey(type)
+    fun unregisterPermissionCalculatorByType(type: String) = permissionCalculatorRegistrations.remove(type)
     fun unregisterPermissionCalculatorBySubject(subject: SubjectDescriptor) =
         permissionCalculatorRegistrations.unregisterBySubject(subject)
 

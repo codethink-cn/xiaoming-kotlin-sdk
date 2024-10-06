@@ -16,12 +16,15 @@
 
 package cn.codethink.xiaoming.plugin.jvm.classic
 
-import cn.codethink.xiaoming.common.Cause
+import cn.codethink.xiaoming.common.getOrConstruct
 
-interface PluginMainInvoker {
-    fun invokeOnLoad(plugin: ClassicPlugin, cause: Cause)
-
-    fun invokeOnEnable(plugin: ClassicPlugin, cause: Cause)
-
-    fun invokeOnDisable(plugin: ClassicPlugin, cause: Cause)
+/**
+ * @see LocalJvmJavaPluginMain
+ * @author Chuanwise
+ */
+object LocalJvmClassicKotlinPluginMainEntryFactory : LocalJvmPluginMainEntryFactory {
+    override fun create(context: LocalJvmPluginMainEntryContext): LocalJvmClassicPluginMainEntry {
+        val main = getOrConstruct(context.mainClass) as LocalJvmClassicKotlinPluginMain
+        return LocalJvmClassicKotlinPluginMainEntry(main)
+    }
 }

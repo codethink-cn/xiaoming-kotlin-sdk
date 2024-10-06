@@ -56,7 +56,7 @@ class ConnectionManagerApi(
         handler: RequestHandler<ConnectRequestPara, Any?>,
         subject: SubjectDescriptor
     ) {
-        connectRequestHandlers.register(type, DefaultRegistration(handler, subject))
+        connectRequestHandlers[type] = DefaultRegistration(handler, subject)
     }
 
     fun unregisterConnectRequestHandlerByType(type: String) {

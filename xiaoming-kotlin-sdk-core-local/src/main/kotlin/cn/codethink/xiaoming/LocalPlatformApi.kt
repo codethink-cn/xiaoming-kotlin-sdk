@@ -23,7 +23,6 @@ import cn.codethink.xiaoming.common.EventCause
 import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.SdkVersionString
 import cn.codethink.xiaoming.common.SubjectDescriptor
-import cn.codethink.xiaoming.common.currentThreadCauseOrFail
 import cn.codethink.xiaoming.common.doModuleRelatedAction
 import cn.codethink.xiaoming.data.LocalPlatformData
 import cn.codethink.xiaoming.data.LocalPlatformDataConfiguration
@@ -114,17 +113,15 @@ class DefaultLocalPlatformApi(
 
     override lateinit var internalApi: LocalPlatformInternalApi
 
-    @JvmOverloads
-    fun start(platform: Platform, cause: Cause? = null): Unit = lock.write {
-        val finalCause = cause ?: currentThreadCauseOrFail()
-
+    fun start(platform: LocalPlatform, cause: Cause): Unit = lock.write {
+        require(platform.api === this) { "The platform is not bound to this API." }
         stateNoLock = when (stateNoLock) {
             State.ALLOCATED -> State.STARTING
             else -> throw IllegalStateException("Cannot start platform when it's in $stateNoLock state.")
         }
 
         try {
-            val platformStartEvent = PlatformStartEvent(finalCause)
+            val platformStartEvent = PlatformStartEvent(cause)
             val platformStartEventCause = EventCause(platformStartEvent)
 
             logger.info { "Starting default local platform API, SDK version: $SdkVersionString." }
@@ -161,7 +158,6 @@ class DefaultLocalPlatformApi(
 
             internalApi = LocalPlatformInternalApi(
                 internalConfiguration = DefaultLocalPlatformInternalConfiguration(
-                    platform = platform,
                     logger = logger,
                     deserializerModule = deserializerModule,
                     dataObjectMapper = configuration.dataObjectMapper,
@@ -176,7 +172,7 @@ class DefaultLocalPlatformApi(
             )
 
             // 2. Start internal API.
-            internalApi.start(finalCause, context)
+            internalApi.start(platform, platformStartEventCause, context)
 
             // 3. Callback module
             modules.forEach {

@@ -14,25 +14,19 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin.jvm.classpath
+package cn.codethink.xiaoming.plugin.jvm
 
-import java.util.Enumeration
-
-class CompoundEnumeration<T>(
-    private val first: Enumeration<T>,
-    private val second: Enumeration<T>
-) : Enumeration<T> {
-    override fun hasMoreElements(): Boolean {
-        return first.hasMoreElements() || second.hasMoreElements()
-    }
-
-    override fun nextElement(): T {
-        return if (first.hasMoreElements()) {
-            first.nextElement()
-        } else {
-            second.nextElement()
-        }
-    }
+/**
+ * Policy to control the access of plugin classes.
+ *
+ * @author Chuanwise
+ */
+interface PluginClassAccessPolicy {
+    fun isAccessible(name: String): Boolean
 }
 
-operator fun <T> Enumeration<T>.plus(other: Enumeration<T>): Enumeration<T> = CompoundEnumeration(this, other)
+object NonePluginClassAccessPolicy : PluginClassAccessPolicy {
+    override fun isAccessible(name: String): Boolean {
+        return false
+    }
+}

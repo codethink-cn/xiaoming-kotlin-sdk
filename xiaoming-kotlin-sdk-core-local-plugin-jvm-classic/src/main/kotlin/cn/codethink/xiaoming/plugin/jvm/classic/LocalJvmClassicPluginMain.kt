@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin
+package cn.codethink.xiaoming.plugin.jvm.classic
 
-import cn.codethink.xiaoming.Platform
-import cn.codethink.xiaoming.common.Cause
+import kotlin.reflect.KClass
 
 /**
- * Detect all available plugins (installed or to be installed).
+ * Mark a plugin implemented main class.
  *
  * @author Chuanwise
  */
-interface PluginDetector {
-    fun detectAll(platform: Platform, cause: Cause): Iterable<Plugin>
-}
+@MustBeDocumented
+@Retention(AnnotationRetention.RUNTIME)
+annotation class LocalJvmClassicPluginMain(
+    val entry: KClass<out LocalJvmPluginMainEntryFactory>
+)

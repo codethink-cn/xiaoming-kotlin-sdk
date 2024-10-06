@@ -29,11 +29,11 @@ import cn.codethink.xiaoming.plugin.PluginMeta
  * @see PolymorphicDeserializerInitializer
  * @author Chuanwise
  */
-class ClassicPluginPolymorphicDeserializerInitializer : PolymorphicDeserializerInitializer {
+class LocalJvmClassicPluginPolymorphicDeserializerInitializer : PolymorphicDeserializerInitializer {
     override fun initialize(deserializers: PolymorphicDeserializers, subject: SubjectDescriptor) {
         deserializers.subject(subject) {
             names<PluginMeta>(FIELD_TYPE) {
-                name<ClassicPluginMeta>()
+                name<LocalJvmClassicPluginMeta>()
             }
         }
     }

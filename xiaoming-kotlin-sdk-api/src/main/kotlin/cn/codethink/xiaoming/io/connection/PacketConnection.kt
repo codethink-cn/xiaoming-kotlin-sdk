@@ -165,7 +165,7 @@ class PacketConnection<T>(
     }
 
     fun registerTypeHandler(type: String, handler: PacketHandler, subject: SubjectDescriptor) {
-        types.register(type, DefaultRegistration(handler, subject))
+        types[type] = DefaultRegistration(handler, subject)
     }
 
     override fun close(cause: Cause?): Unit = lock.write {

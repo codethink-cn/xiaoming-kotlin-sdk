@@ -18,9 +18,9 @@
 
 package cn.codethink.xiaoming.permission
 
+import cn.codethink.xiaoming.DefaultLocalPlatform
 import cn.codethink.xiaoming.DefaultLocalPlatformApi
 import cn.codethink.xiaoming.DefaultLocalPlatformConfiguration
-import cn.codethink.xiaoming.Platform
 import cn.codethink.xiaoming.common.InternalApi
 import cn.codethink.xiaoming.common.PluginSubjectDescriptor
 import cn.codethink.xiaoming.common.TestCause
@@ -84,7 +84,7 @@ class LocalPermissionServiceTest {
             }
         ),
     )
-    private val platform = Platform(platformApi)
+    private val platform = DefaultLocalPlatform(platformApi)
 
     init {
         platformApi.start(platform, TestCause)

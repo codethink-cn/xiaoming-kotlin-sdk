@@ -14,19 +14,27 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.internal
+package cn.codethink.xiaoming.plugin.jvm.classic
+
+import cn.codethink.xiaoming.LocalPlatform
+import cn.codethink.xiaoming.common.Cause
+
+class LocalJvmPluginMainEntryContext(
+    val cause: Cause,
+    val platform: LocalPlatform,
+    val classLoader: LocalJvmClassicPluginClassLoader,
+    val meta: LocalJvmClassicPluginMeta,
+    val mainClass: Class<*>
+)
 
 /**
- * The internal state of the local platform.
+ * Factory to create [LocalJvmClassicPluginMainEntry].
+ *
+ * This interface is used to create [LocalJvmClassicPluginMainEntry] for all kinds of JVM
+ * plugins.
  *
  * @author Chuanwise
  */
-enum class LocalPlatformInternalState {
-    ALLOCATED,
-    STARTING,
-    STARTING_ERROR,
-    STARTED,
-    STOPPING,
-    STOPPING_ERROR,
-    STOPPED
+interface LocalJvmPluginMainEntryFactory {
+    fun create(context: LocalJvmPluginMainEntryContext): LocalJvmClassicPluginMainEntry
 }
