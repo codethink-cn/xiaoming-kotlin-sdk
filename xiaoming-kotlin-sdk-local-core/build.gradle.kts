@@ -24,8 +24,8 @@ repositories {
 }
 
 dependencies {
-    api(project(":xiaoming-kotlin-sdk-api"))
-    api(project(":xiaoming-kotlin-sdk-core-remote"))
+    api(project(":xiaoming-kotlin-sdk-core-api"))
+    api(project(":xiaoming-kotlin-sdk-remote-core"))
 
     val jacksonVersion: String by rootProject
     api("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
@@ -47,7 +47,7 @@ dependencies {
 
     val sqliteJdbcVersion: String by rootProject
     runtimeOnly("org.xerial:sqlite-jdbc:$sqliteJdbcVersion")
-    testImplementation(project(":xiaoming-kotlin-sdk-core-local-data-sql"))
+    testImplementation(project(":xiaoming-kotlin-sdk-local-core-data-sql"))
 
     val ktorVersion: String by rootProject
     api("io.ktor:ktor-server-core-jvm:$ktorVersion")

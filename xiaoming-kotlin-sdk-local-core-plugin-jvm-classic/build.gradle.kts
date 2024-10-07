@@ -24,8 +24,8 @@ repositories {
 }
 
 dependencies {
-    compileOnly(project(":xiaoming-kotlin-sdk-core-local"))
-    compileOnly(project(":xiaoming-kotlin-sdk-core-local-plugin-jvm"))
+    compileOnly(project(":xiaoming-kotlin-sdk-local-core"))
+    compileOnly(project(":xiaoming-kotlin-sdk-local-core-plugin-jvm"))
 
     val kotlinLoggingVersion: String by rootProject
     val slf4jVersion: String by rootProject

@@ -14,25 +14,8 @@
  * limitations under the License.
  */
 
-pluginManagement {
-    repositories {
-        mavenCentral()
-        gradlePluginPortal()
-    }
+package cn.codethink
+
+fun main() {
+    println("Hello World!")
 }
-
-plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.5.0"
-}
-
-rootProject.name = "xiaoming-kotlin-sdk"
-include("xiaoming-kotlin-sdk-core-api")
-
-include("xiaoming-kotlin-sdk-local-core-api")
-include("xiaoming-kotlin-sdk-local-core")
-include("xiaoming-kotlin-sdk-local-core-data-sql")
-
-include("xiaoming-kotlin-sdk-local-core-plugin-jvm")
-include("xiaoming-kotlin-sdk-local-core-plugin-jvm-classic")
-
-include("xiaoming-kotlin-sdk-remote-core")

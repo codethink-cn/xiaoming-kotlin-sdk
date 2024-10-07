@@ -16,35 +16,19 @@
 
 plugins {
     kotlin("jvm") version "2.0.20"
-    `maven-publish`
 }
+
+group = "cn.codethink"
+version = "0.1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    compileOnly(project(":xiaoming-kotlin-sdk-core-local"))
-
-    val kotlinLoggingVersion: String by rootProject
-    val slf4jVersion: String by rootProject
-    api("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
-    api("org.slf4j:slf4j-api:$slf4jVersion")
-
-    val junitVersion: String by rootProject
-    testImplementation(platform("org.junit:junit-bom:$junitVersion"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation(kotlin("test"))
 }
 
 tasks.test {
     useJUnitPlatform()
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            artifact(tasks.kotlinSourcesJar)
-            from(components["java"])
-        }
-    }
 }

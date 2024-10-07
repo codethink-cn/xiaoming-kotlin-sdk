@@ -141,8 +141,8 @@ class DefaultLocalPlatformApi(
             if (contributorsDisplayingLimits != null && contributors.size > contributorsDisplayingLimits) {
                 val randomContributors = contributors.shuffled().take(contributorsDisplayingLimits)
                 logger.info {
-                            "But we are sorry because configuration item `contributorsDisplayingLimits` set, " +
-                                    "we can only randomly select a part of contributors' names to display. "
+                    "But we are sorry because configuration item `contributorsDisplayingLimits` set, " +
+                            "we can only randomly select a part of contributors' names to display. "
                 }
                 logger.info { "Notice that we also have another ${contributors.size - contributorsDisplayingLimits} contributors!" }
                 logger.info { "Contributors: ${randomContributors.joinToString(", ")}. (Randomly selected)" }
