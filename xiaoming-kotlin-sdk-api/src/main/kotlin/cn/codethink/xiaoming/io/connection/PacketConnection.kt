@@ -24,7 +24,6 @@ import cn.codethink.xiaoming.common.RECEIPT_PACKET_FIELD_DATA
 import cn.codethink.xiaoming.common.RECEIPT_STATE_SUCCEED
 import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.common.TextCause
-import cn.codethink.xiaoming.common.currentThreadCauseOrFail
 import cn.codethink.xiaoming.io.ProtocolLanguageConfiguration
 import cn.codethink.xiaoming.io.action.Action
 import cn.codethink.xiaoming.io.packet.PACKET_TYPE_REQUEST
@@ -116,7 +115,7 @@ class PacketConnection<T>(
             action = action.name,
             mode = mode,
             timeout = timeout,
-            cause = cause ?: currentThreadCauseOrFail(),
+            cause = cause,
             argument = argument,
             time = time,
             session = session
@@ -184,5 +183,9 @@ class PacketConnection<T>(
 
         // 3. Cancel receiving job.
         receivingJob.cancel()
+    }
+
+    override fun close() {
+        close(TextCause("Connection closed.", descriptor))
     }
 }
