@@ -18,7 +18,7 @@ package cn.codethink.xiaoming.plugin.jvm.classic
 
 import cn.codethink.xiaoming.common.Cause
 
-interface LocalJvmClassicPluginMainEntry {
+interface LocalJvmClassicPluginEntry {
     fun onLoad(plugin: LocalJvmClassicPlugin, cause: Cause)
 
     fun onEnable(plugin: LocalJvmClassicPlugin, cause: Cause)

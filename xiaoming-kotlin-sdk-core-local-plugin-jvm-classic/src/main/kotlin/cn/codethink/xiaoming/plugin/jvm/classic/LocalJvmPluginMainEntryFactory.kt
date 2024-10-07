@@ -19,22 +19,22 @@ package cn.codethink.xiaoming.plugin.jvm.classic
 import cn.codethink.xiaoming.LocalPlatform
 import cn.codethink.xiaoming.common.Cause
 
-class LocalJvmPluginMainEntryContext(
+class LocalJvmPluginMainEntryContext<T>(
     val cause: Cause,
     val platform: LocalPlatform,
     val classLoader: LocalJvmClassicPluginClassLoader,
     val meta: LocalJvmClassicPluginMeta,
-    val mainClass: Class<*>
+    val mainClass: Class<out T>
 )
 
 /**
- * Factory to create [LocalJvmClassicPluginMainEntry].
+ * Factory to create [LocalJvmClassicPluginEntry].
  *
- * This interface is used to create [LocalJvmClassicPluginMainEntry] for all kinds of JVM
+ * This interface is used to create [LocalJvmClassicPluginEntry] for all kinds of JVM
  * plugins.
  *
  * @author Chuanwise
  */
-interface LocalJvmPluginMainEntryFactory {
-    fun create(context: LocalJvmPluginMainEntryContext): LocalJvmClassicPluginMainEntry
+interface LocalJvmPluginMainEntryFactory<T> {
+    fun create(context: LocalJvmPluginMainEntryContext<T>): LocalJvmClassicPluginEntry
 }

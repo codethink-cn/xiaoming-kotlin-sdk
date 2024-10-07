@@ -60,9 +60,8 @@ class LocalJvmClassicPluginClassLoader(
     var resolveIndependentPluginClasses: Boolean,
     var resolvableByIndependentPlugins: Boolean,
 
-    val resourcesFilter: Predicate<String>,
-
-    private val pluginClassLoaders: Map<SegmentId, LocalJvmClassicPluginClassLoader>,
+    val uniqueResourcesFilter: Predicate<String>,
+    var pluginClassLoaders: Map<SegmentId, LocalJvmClassicPluginClassLoader>,
     private val logger: KLogger
 ) : URLClassLoader(
     distributionFile.name, arrayOf(distributionFile.toURI().toURL()), null
@@ -200,7 +199,7 @@ class LocalJvmClassicPluginClassLoader(
     }
 
     override fun getResources(name: String): Enumeration<URL> {
-        if (resourcesFilter.test(name)) {
+        if (uniqueResourcesFilter.test(name)) {
             return findResources(name)
         }
 
@@ -208,7 +207,7 @@ class LocalJvmClassicPluginClassLoader(
     }
 
     override fun getResource(name: String): URL? {
-        if (resourcesFilter.test(name)) {
+        if (uniqueResourcesFilter.test(name)) {
             return findResource(name)
         }
 

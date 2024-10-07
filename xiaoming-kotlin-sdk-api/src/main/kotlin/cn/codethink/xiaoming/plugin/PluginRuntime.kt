@@ -14,17 +14,33 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin.jvm.classic
+package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.common.getOrConstruct
+import cn.codethink.xiaoming.common.NamespaceId
+import cn.codethink.xiaoming.common.Version
 
 /**
- * @see LocalJvmJavaPluginMain
+ * Manages the runtime meta of a plugin.
+ *
  * @author Chuanwise
  */
-object LocalJvmClassicKotlinPluginMainEntryFactory : LocalJvmPluginMainEntryFactory {
-    override fun create(context: LocalJvmPluginMainEntryContext): LocalJvmClassicPluginMainEntry {
-        val main = getOrConstruct(context.mainClass) as LocalJvmClassicKotlinPluginMain
-        return LocalJvmClassicKotlinPluginMainEntry(main)
-    }
+interface PluginRuntime {
+    val state: PluginState
+    val level: PluginLevel
+    val mode: PluginMode
+
+    val isLoaded: Boolean
+    val isEnabled: Boolean
+    val isErrored: Boolean
+
+    val provisions: Map<NamespaceId, Version>
 }
+
+val PluginRuntime.isNotLoaded: Boolean
+    get() = !isLoaded
+
+val PluginRuntime.isNotEnabled: Boolean
+    get() = !isEnabled
+
+val PluginRuntime.isNotError: Boolean
+    get() = !isErrored

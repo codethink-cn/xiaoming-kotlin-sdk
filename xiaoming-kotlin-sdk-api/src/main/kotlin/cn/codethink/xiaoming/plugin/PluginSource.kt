@@ -14,27 +14,15 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin.jvm.classic
+package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.plugin.PluginState
+import cn.codethink.xiaoming.common.Cause
 
 /**
+ * Plugin source. Maybe detector, or runtime injected.
+ *
  * @author Chuanwise
- * @see PluginState
  */
-enum class LocalJvmClassicPluginState(
-    val loaded: Boolean = false,
-    val enabled: Boolean = false,
-    val errored: Boolean = false
-) : PluginState {
-    ALLOCATED,
-    LOADING,
-    LOADING_ERROR(errored = true),
-    LOADED(loaded = true),
-    ENABLING(loaded = true),
-    ENABLING_ERROR(loaded = true, errored = true),
-    ENABLED(loaded = true, enabled = true),
-    DISABLING(loaded = true),
-    DISABLING_ERROR(loaded = true, errored = true),
-    DISABLED(loaded = true),
+interface PluginSource {
+    val cause: Cause
 }

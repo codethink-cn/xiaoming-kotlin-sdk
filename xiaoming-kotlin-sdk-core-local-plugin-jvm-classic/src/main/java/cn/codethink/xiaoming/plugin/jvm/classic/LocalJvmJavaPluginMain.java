@@ -21,7 +21,6 @@ package cn.codethink.xiaoming.plugin.jvm.classic;
  *
  * @author Chuanwise
  */
-@LocalJvmClassicPluginMain(entry = LocalJvmClassicJavaPluginMainEntryFactory.class)
 public interface LocalJvmJavaPluginMain {
     default void onLoad(LocalJvmJavaClassicPluginContext context) {
     }

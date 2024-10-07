@@ -38,18 +38,19 @@ annotation class InternalApi
 
 /**
  * Mark the API is Java-friendly, which means that the API is designed
- * to be used in Java.
- *
- * If the marked API is an open class, interface or open function,
- * it means all its implementations are Java-friendly.
+ * to be used in Java, Kotlin developers should not use it.
  *
  * @author Chuanwise
  */
 @Inherited
 @MustBeDocumented
 @Retention(AnnotationRetention.BINARY)
-@RequiresOptIn(level = RequiresOptIn.Level.ERROR)
-annotation class JavaFriendlyApi
+@RequiresOptIn(
+    message = "This API is designed to be used for Java developers. " +
+            "Kotlin developers should use another one provided in annotation field `replacement`.",
+    level = RequiresOptIn.Level.ERROR
+)
+annotation class JavaFriendlyApi(val replacement: String)
 
 /**
  * Mark the API is experimental, which means that the API is not stable

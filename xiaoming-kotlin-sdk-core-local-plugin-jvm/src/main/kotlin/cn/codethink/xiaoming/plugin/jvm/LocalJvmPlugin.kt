@@ -18,4 +18,4 @@ package cn.codethink.xiaoming.plugin.jvm
 
 import cn.codethink.xiaoming.plugin.AllocatedPlugin
 
-abstract class LocalJvmPlugin : AllocatedPlugin
+interface LocalJvmPlugin : AllocatedPlugin

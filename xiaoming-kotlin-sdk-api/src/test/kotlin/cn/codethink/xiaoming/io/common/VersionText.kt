@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.io.common
 
-import cn.codethink.xiaoming.common.versionOf
+import cn.codethink.xiaoming.common.toVersion
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -26,7 +26,7 @@ import org.junit.jupiter.params.provider.CsvSource
 class VersionText {
     @ParameterizedTest
     @CsvSource("1.0.0", "1.0.0-alpha", "1.0.0-alpha.1", "1.0.0-alpha.beta", "1.0.0+20130313144700")
-    fun testVersionParsing(version: String) = assertEquals(version, versionOf(version).toString())
+    fun testVersionParsing(version: String) = assertEquals(version, version.toVersion().toString())
 
     @Test
     fun testVersionComparing() {
@@ -35,14 +35,14 @@ class VersionText {
         // < 1.0.0-beta.2 < 1.0.0-beta.11 < 1.0.0-rc.1 < 1.0.0
 
         val versions = arrayOf(
-            versionOf("1.0.0-alpha"),
-            versionOf("1.0.0-alpha.1"),
-            versionOf("1.0.0-alpha.beta"),
-            versionOf("1.0.0-beta"),
-            versionOf("1.0.0-beta.2"),
-            versionOf("1.0.0-beta.11"),
-            versionOf("1.0.0-rc.1"),
-            versionOf("1.0.0")
+            "1.0.0-alpha".toVersion(),
+            "1.0.0-alpha.1".toVersion(),
+            "1.0.0-alpha.beta".toVersion(),
+            "1.0.0-beta".toVersion(),
+            "1.0.0-beta.2".toVersion(),
+            "1.0.0-beta.11".toVersion(),
+            "1.0.0-rc.1".toVersion(),
+            "1.0.0".toVersion()
         )
 
         for (i in 0 until versions.size - 1) {

@@ -36,7 +36,7 @@ const val VERSION_MATCHER_TYPE = "version"
 sealed interface VersionMatcher : Matcher<Version> {
     companion object {
         @JvmStatic
-        @JavaFriendlyApi
+        @JavaFriendlyApi(replacement = "String.toVersionMatcher")
         fun parse(string: String) = string.toVersionMatcher()
     }
 

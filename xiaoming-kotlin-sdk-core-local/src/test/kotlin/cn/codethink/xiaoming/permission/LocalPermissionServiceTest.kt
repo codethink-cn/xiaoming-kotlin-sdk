@@ -26,10 +26,9 @@ import cn.codethink.xiaoming.common.PluginSubjectDescriptor
 import cn.codethink.xiaoming.common.TestCause
 import cn.codethink.xiaoming.common.TestSubjectDescriptor
 import cn.codethink.xiaoming.common.getTestResourceAsStream
-import cn.codethink.xiaoming.common.segmentIdOf
-import cn.codethink.xiaoming.common.threadLocalCause
 import cn.codethink.xiaoming.common.toLiteralMatcher
 import cn.codethink.xiaoming.common.toNamespaceId
+import cn.codethink.xiaoming.common.toSegmentId
 import cn.codethink.xiaoming.data.LocalPlatformDataConfiguration
 import cn.codethink.xiaoming.data.insertAndGetPermissionProfile
 import cn.codethink.xiaoming.io.DefaultProtocolLanguageConfiguration
@@ -43,7 +42,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.util.Locale
@@ -98,17 +96,12 @@ class LocalPermissionServiceTest {
 
     private val profile = api.data.insertAndGetPermissionProfile(subject)
 
-    @BeforeEach
-    fun beforeEach() {
-        threadLocalCause.set(TestCause)
-    }
-
     @Test
     fun testSetSimplePermission() {
         val permission = Permission(
             descriptor = PermissionDescriptor(
                 subject = subject,
-                node = segmentIdOf("a.b.c.d")
+                node = "a.b.c.d".toSegmentId()
             )
         )
 
@@ -120,7 +113,7 @@ class LocalPermissionServiceTest {
             profile = profile,
             comparator = DefaultPermissionComparatorV1(
                 subject = subjectMatcher,
-                node = segmentIdOf("a.b.c").toLiteralMatcher(),
+                node = "a.b.c".toSegmentId().toLiteralMatcher(),
                 value = false
             ),
             cause = TestCause
@@ -132,7 +125,7 @@ class LocalPermissionServiceTest {
             profile = profile,
             comparator = DefaultPermissionComparatorV1(
                 subject = subjectMatcher,
-                node = segmentIdOf("a.b.c.d").toLiteralMatcher(),
+                node = "a.b.c.d".toSegmentId().toLiteralMatcher(),
                 value = false
             ),
             cause = TestCause
@@ -144,7 +137,7 @@ class LocalPermissionServiceTest {
             profile = profile,
             comparator = DefaultPermissionComparatorV1(
                 subject = subjectMatcher,
-                node = segmentIdOf("a.b.c.d").toLiteralMatcher(),
+                node = "a.b.c.d".toSegmentId().toLiteralMatcher(),
                 value = true
             ),
             cause = TestCause
@@ -156,7 +149,7 @@ class LocalPermissionServiceTest {
             profile = profile,
             comparator = DefaultPermissionComparatorV1(
                 subject = subjectMatcher,
-                node = segmentIdOf("a.b.c.d").toLiteralMatcher(),
+                node = "a.b.c.d".toSegmentId().toLiteralMatcher(),
                 value = null
             ),
             cause = TestCause
@@ -178,7 +171,7 @@ class LocalPermissionServiceTest {
         val subjectCMatcher = subjectB.toLiteralMatcher()
         val subjectCProfile = api.data.insertAndGetPermissionProfile(subjectB)
 
-        val permissionASegmentId = segmentIdOf("a.b")
+        val permissionASegmentId = "a.b".toSegmentId()
         val permissionA = Permission(
             descriptor = PermissionDescriptor(
                 subject = subjectA,

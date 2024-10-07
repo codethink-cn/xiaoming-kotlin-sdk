@@ -27,7 +27,6 @@ import cn.codethink.xiaoming.common.MinorityRequiredWildcardStringMatcher
 import cn.codethink.xiaoming.common.RegexStringMatcher
 import cn.codethink.xiaoming.common.WildcardStringMatcher
 import cn.codethink.xiaoming.common.compileSegmentIdMatcher
-import cn.codethink.xiaoming.common.segmentIdOf
 import cn.codethink.xiaoming.common.toSegmentId
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -38,7 +37,7 @@ import org.junit.jupiter.api.assertThrows
 class SegmentIdTest {
     @Test
     fun testParseSegmentId() {
-        val packageId = segmentIdOf("cn.codethink.xiaoming.io.common")
+        val packageId = "cn.codethink.xiaoming.io.common".toSegmentId()
         assertEquals(listOf("cn", "codethink", "xiaoming", "io", "common"), packageId.toList())
     }
 
@@ -54,7 +53,7 @@ class SegmentIdTest {
                     MinorityOptionalWildcardStringMatcher,
                     LiteralStringMatcher("1919810")
                 )
-            ).isMatched(segmentIdOf("114514.1919810"))
+            ).isMatched("114514.1919810".toSegmentId())
         )
         assertFalse(
             DefaultSegmentIdMatcher(
@@ -63,7 +62,7 @@ class SegmentIdTest {
                     MinorityRequiredWildcardStringMatcher,
                     LiteralStringMatcher("1919810")
                 )
-            ).isMatched(segmentIdOf("114514.1919810"))
+            ).isMatched("114514.1919810".toSegmentId())
         )
 
         assertTrue(
@@ -72,7 +71,7 @@ class SegmentIdTest {
                     RegexStringMatcher("18\\d+".toRegex()),
                     MajorityRequiredWildcardStringMatcher
                 )
-            ).isMatched(segmentIdOf("1893.12.26"))
+            ).isMatched("1893.12.26".toSegmentId())
         )
         assertTrue(
             DefaultSegmentIdMatcher(
@@ -80,7 +79,7 @@ class SegmentIdTest {
                     RegexStringMatcher("18\\d+".toRegex()),
                     MajorityOptionalWildcardStringMatcher
                 )
-            ).isMatched(segmentIdOf("1893.12.26"))
+            ).isMatched("1893.12.26".toSegmentId())
         )
 
         assertFalse(
@@ -90,7 +89,7 @@ class SegmentIdTest {
                     AnyMatcher<String>(),
                     AnyMatcher<String>()
                 )
-            ).isMatched(segmentIdOf("1893.12.26"))
+            ).isMatched("1893.12.26".toSegmentId())
         )
 
         assertThrows<IllegalArgumentException> {
@@ -100,7 +99,7 @@ class SegmentIdTest {
                     MajorityRequiredWildcardStringMatcher,
                     AnyMatcher<String>()
                 )
-            ).isMatched(segmentIdOf("1893.12.26"))
+            ).isMatched("1893.12.26".toSegmentId())
         }
     }
 

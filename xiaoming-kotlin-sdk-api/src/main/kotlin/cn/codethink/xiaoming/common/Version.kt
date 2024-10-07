@@ -43,8 +43,8 @@ data class Version(
 ) : Comparable<Version> {
     companion object {
         @JvmStatic
-        @JavaFriendlyApi
-        fun parse(version: String): Version = versionOf(version)
+        @JavaFriendlyApi(replacement = "String.toVersion")
+        fun parse(version: String): Version = version.toVersion()
     }
 
     private val toStringCache =
@@ -152,18 +152,16 @@ val VERSION_STRING_REGEX: Regex = ("(0|[1-9]\\d*)\\" +
  *
  * @author Chuanwise
  */
-fun versionOf(version: String): Version = VERSION_STRING_REGEX.matchEntire(version)?.let { it ->
+fun String.toVersion(): Version = VERSION_STRING_REGEX.matchEntire(this)?.let { it ->
     val (major, minor, patch, preRelease, build) = it.destructured
     Version(
         major.toInt(), minor.toInt(), patch.toInt(),
         preRelease.takeIf { it.isNotEmpty() }, build.takeIf { it.isNotEmpty() }
     )
 } ?: throw IllegalArgumentException(
-    "Invalid version string: $version, " +
+    "Invalid version string: '$this', " +
             "make sure it matches the regex from the semantic versioning 2.0.0: $VERSION_STRING_REGEX."
 )
-
-fun String.toVersion(): Version = versionOf(this)
 
 object VersionStringSerializer : StdSerializer<Version>(Version::class.java) {
     private fun readResolve(): Any = VersionStringSerializer
@@ -175,6 +173,6 @@ object VersionStringSerializer : StdSerializer<Version>(Version::class.java) {
 object VersionStringDeserializer : StdDeserializer<Version>(Version::class.java) {
     private fun readResolve(): Any = VersionStringDeserializer
     override fun deserialize(parser: JsonParser, context: DeserializationContext): Version {
-        return versionOf(parser.valueAsString)
+        return parser.valueAsString.toVersion()
     }
 }

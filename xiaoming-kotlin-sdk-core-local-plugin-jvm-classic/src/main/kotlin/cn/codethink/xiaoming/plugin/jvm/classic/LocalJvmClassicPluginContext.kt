@@ -22,7 +22,7 @@ import cn.codethink.xiaoming.common.PluginSubjectDescriptor
 interface LocalJvmClassicPluginContext {
     val plugin: LocalJvmClassicPlugin
     val cause: Cause
-    val error: Cause?
+    var error: Cause?
 }
 
 val LocalJvmClassicPluginContext.descriptor: PluginSubjectDescriptor

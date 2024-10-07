@@ -40,6 +40,11 @@ sealed interface Plugin : Subject {
      * Plugin's meta information.
      */
     val meta: PluginMeta
+
+    /**
+     * Plugin's source.
+     */
+    val source: PluginSource
 }
 
 val Plugin.id: NamespaceId

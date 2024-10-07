@@ -24,7 +24,7 @@ value class UniversalUniqueId(
 ) : Id, Comparable<UniversalUniqueId> {
     companion object {
         @JvmStatic
-        @JavaFriendlyApi
+        @JavaFriendlyApi(replacement = "randomUniversalUniqueId")
         fun random() = randomUniversalUniqueId()
     }
 

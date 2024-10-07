@@ -46,7 +46,7 @@ class PluginRequirement(
 ) : Requirement {
     companion object {
         @JvmStatic
-        @JavaFriendlyApi
+        @JavaFriendlyApi(replacement = "String.toPluginRequirement")
         fun parse(string: String) = string.toPluginRequirement()
     }
 

@@ -44,7 +44,7 @@ class OptionalPluginRequirement(
 
     companion object {
         @JvmStatic
-        @JavaFriendlyApi
+        @JavaFriendlyApi(replacement = "String.toOptionalPluginRequirement")
         fun parse(string: String) = string.toOptionalPluginRequirement()
     }
 

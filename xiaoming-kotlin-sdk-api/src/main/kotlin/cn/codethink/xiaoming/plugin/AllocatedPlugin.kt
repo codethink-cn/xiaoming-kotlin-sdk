@@ -27,9 +27,9 @@ import cn.codethink.xiaoming.common.SegmentId
  */
 interface AllocatedPlugin : Plugin {
     /**
-     * Plugin's meta information.
+     * Plugin's runtime meta information.
      */
-    val runtime: PluginRuntimeMeta
+    val runtime: PluginRuntime
 
     /**
      * Plugins provided task.

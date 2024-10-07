@@ -16,15 +16,16 @@
 
 package cn.codethink.xiaoming.plugin.jvm.classic
 
-import cn.codethink.xiaoming.common.getOrConstruct
+import cn.codethink.xiaoming.common.SubjectDescriptor
+import cn.codethink.xiaoming.plugin.PluginDetector
 
-/**
- * @see LocalJvmJavaPluginMain
- * @author Chuanwise
- */
-object LocalJvmClassicJavaPluginMainEntryFactory : LocalJvmPluginMainEntryFactory {
-    override fun create(context: LocalJvmPluginMainEntryContext): LocalJvmClassicPluginMainEntry {
-        val main = getOrConstruct(context.mainClass) as LocalJvmJavaPluginMain
-        return LocalJvmClassicJavaPluginMainEntry(main)
-    }
+interface LocalJvmClassicPluginDetector : PluginDetector {
+    fun <T> registerEntryFactory(
+        mainClass: Class<T>,
+        factory: LocalJvmPluginMainEntryFactory<T>,
+        subject: SubjectDescriptor
+    )
+
+    fun unregisterEntryFactory(mainClass: Class<*>)
+    fun unregisterEntryFactories(subject: SubjectDescriptor)
 }

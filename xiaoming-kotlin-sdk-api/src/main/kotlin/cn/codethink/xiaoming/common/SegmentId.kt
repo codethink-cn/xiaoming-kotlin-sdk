@@ -53,8 +53,8 @@ data class SegmentId(
 
     companion object {
         @JvmStatic
-        @JavaFriendlyApi
-        fun parse(string: String): SegmentId = segmentIdOf(string)
+        @JavaFriendlyApi(replacement = "String.toSegmentId")
+        fun parse(string: String): SegmentId = string.toSegmentId()
     }
 
     fun toList(): List<String> = segments
@@ -66,8 +66,7 @@ data class SegmentId(
     override fun equals(other: Any?): Boolean = other is SegmentId && other.toString() == toString()
 }
 
-fun segmentIdOf(string: String): SegmentId = SegmentId(string.split("."))
-fun String.toSegmentId(): SegmentId = segmentIdOf(this)
+fun String.toSegmentId(): SegmentId = SegmentId(split("."))
 fun String.toSegmentIdOrNull(): SegmentId? {
     return try {
         toSegmentId()
@@ -87,7 +86,7 @@ object SegmentIdStringSerializer : StdSerializer<SegmentId>(SegmentId::class.jav
 object SegmentIdStringDeserializer : StdDeserializer<SegmentId>(SegmentId::class.java) {
     private fun readResolve(): Any = SegmentIdStringDeserializer
     override fun deserialize(parser: JsonParser, context: DeserializationContext): SegmentId {
-        return segmentIdOf(parser.valueAsString)
+        return parser.valueAsString.toSegmentId()
     }
 }
 

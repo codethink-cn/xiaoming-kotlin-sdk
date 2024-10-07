@@ -16,26 +16,11 @@
 
 package cn.codethink.xiaoming.plugin.jvm.classic
 
-import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.plugin.id
-import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.oshai.kotlinlogging.KLogger
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlin.coroutines.CoroutineContext
 
-class LocalJvmKotlinClassicPluginContext(
-    override val plugin: LocalJvmClassicPlugin,
-    override val cause: Cause,
-    parentJob: Job,
-    parentCoroutineContext: CoroutineContext,
-    override val error: Cause? = null
-) : LocalJvmClassicPluginContext, CoroutineScope {
-    private val supervisorJob = SupervisorJob(parentJob)
-    private val scope = CoroutineScope(supervisorJob + parentCoroutineContext)
-    override val coroutineContext: CoroutineContext by scope::coroutineContext
-
-    val logger = KotlinLogging.logger(plugin.meta.logger ?: plugin.id.toString())
+interface LocalJvmKotlinClassicPluginContext : LocalJvmClassicPluginContext, CoroutineScope {
+    val logger: KLogger
 }
 
 /**
@@ -44,7 +29,6 @@ class LocalJvmKotlinClassicPluginContext(
  * @author Chuanwise
  * @see LocalJvmKotlinClassicPluginContext
  */
-@LocalJvmClassicPluginMain(entry = LocalJvmClassicKotlinPluginMainEntryFactory::class)
 interface LocalJvmClassicKotlinPluginMain {
     /**
      * Do some initial works when the plugin is loading.
@@ -107,35 +91,4 @@ interface LocalJvmClassicKotlinPluginMain {
      * @param context the context of this plugin.
      */
     fun onDisable(context: LocalJvmKotlinClassicPluginContext) = Unit
-}
-
-/**
- * Notice that the implementation is not thread safe. [LocalJvmClassicPlugin] will maintain a single
- * instance of this invoker, and make sure that it's only called by one thread at a time.
- *
- * @author Chuanwise
- */
-class LocalJvmClassicKotlinPluginMainEntry(
-    val main: LocalJvmClassicKotlinPluginMain
-) : LocalJvmClassicPluginMainEntry {
-    private var context: LocalJvmKotlinClassicPluginContext? = null
-
-    override fun onLoad(plugin: LocalJvmClassicPlugin, cause: Cause) {
-        var context = context
-        if (context == null) {
-            context = LocalJvmKotlinClassicPluginContext(
-                plugin, cause, plugin.platformApi.supervisorJob, plugin.platformApi.coroutineContext, null
-            )
-        }
-
-        main.onLoad(context)
-    }
-
-    override fun onEnable(plugin: LocalJvmClassicPlugin, cause: Cause) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onDisable(plugin: LocalJvmClassicPlugin, cause: Cause) {
-        TODO("Not yet implemented")
-    }
 }
