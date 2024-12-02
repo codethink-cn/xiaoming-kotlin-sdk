@@ -16,8 +16,8 @@
 
 package cn.codethink.xiaoming.plugin.jvm.classic
 
-import cn.codethink.xiaoming.common.FIELD_TYPE
-import cn.codethink.xiaoming.common.SubjectDescriptor
+import cn.codethink.xiaoming.util.FIELD_TYPE
+import cn.codethink.xiaoming.util.SubjectDescriptor
 import cn.codethink.xiaoming.io.data.PolymorphicDeserializerInitializer
 import cn.codethink.xiaoming.io.data.PolymorphicDeserializers
 import cn.codethink.xiaoming.io.data.name

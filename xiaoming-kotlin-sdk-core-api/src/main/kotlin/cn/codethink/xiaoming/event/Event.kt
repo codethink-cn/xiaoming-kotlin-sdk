@@ -15,45 +15,14 @@
  */
 
 
-@file:OptIn(InternalApi::class)
-
 package cn.codethink.xiaoming.event
 
-import cn.codethink.xiaoming.common.AbstractData
-import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.EventCause
-import cn.codethink.xiaoming.common.FIELD_CAUSE
-import cn.codethink.xiaoming.common.FIELD_TYPE
-import cn.codethink.xiaoming.common.InternalApi
-import cn.codethink.xiaoming.common.getValue
-import cn.codethink.xiaoming.io.data.MapRaw
-import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.set
-
 /**
- * Represent an event that can be listened by listeners and published by subjects.
+ * 事件接口，实现了该接口的类型都可以作为事件类型。
  *
  * @author Chuanwise
+ * @see EventContext
  */
-abstract class Event : AbstractData {
-    val type: String by raw
-    val cause: Cause by raw
-
-    @InternalApi
-    constructor(raw: Raw) : super(raw)
-
-    @JvmOverloads
-    constructor(
-        type: String,
-        cause: Cause,
-        raw: Raw = MapRaw()
-    ) : super(raw) {
-        raw[FIELD_TYPE] = type
-        raw[FIELD_CAUSE] = cause
-    }
+interface Event {
+    val type: String
 }
-
-val Event.subject
-    get() = cause.subject
-
-fun Event.toCause() = EventCause(this)

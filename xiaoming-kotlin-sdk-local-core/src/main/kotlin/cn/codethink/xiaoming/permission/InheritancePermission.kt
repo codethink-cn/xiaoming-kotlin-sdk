@@ -19,17 +19,17 @@
 
 package cn.codethink.xiaoming.permission
 
-import cn.codethink.xiaoming.common.AbstractData
-import cn.codethink.xiaoming.common.FIELD_TYPE
-import cn.codethink.xiaoming.common.FIELD_VERSION
-import cn.codethink.xiaoming.common.Field
-import cn.codethink.xiaoming.common.Id
-import cn.codethink.xiaoming.common.InternalApi
-import cn.codethink.xiaoming.common.Tristate
-import cn.codethink.xiaoming.common.getValue
-import cn.codethink.xiaoming.common.tristateOf
-import cn.codethink.xiaoming.io.data.MapRaw
-import cn.codethink.xiaoming.io.data.Raw
+import cn.codethink.xiaoming.util.AbstractData
+import cn.codethink.xiaoming.util.FIELD_TYPE
+import cn.codethink.xiaoming.util.FIELD_VERSION
+import cn.codethink.xiaoming.util.Field
+import cn.codethink.xiaoming.util.Id
+import cn.codethink.xiaoming.util.InternalApi
+import cn.codethink.xiaoming.util.Tristate
+import cn.codethink.xiaoming.util.getValue
+import cn.codethink.xiaoming.util.tristateOf
+import cn.codethink.xiaoming.util.MapRaw
+import cn.codethink.xiaoming.util.Raw
 import cn.codethink.xiaoming.io.data.set
 import com.fasterxml.jackson.annotation.JsonTypeName
 import java.util.Stack

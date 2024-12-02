@@ -15,26 +15,16 @@
  */
 
 plugins {
-    kotlin("jvm") version "2.0.20"
+    kotlin("jvm")
+    id("me.him188.kotlin-jvm-blocking-bridge")
     `maven-publish`
-}
-
-repositories {
-    mavenCentral()
 }
 
 dependencies {
     compileOnly(project(":xiaoming-kotlin-sdk-local-core"))
     compileOnly(project(":xiaoming-kotlin-sdk-local-core-plugin-jvm"))
 
-    val kotlinLoggingVersion: String by rootProject
-    val slf4jVersion: String by rootProject
-    api("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
-    api("org.slf4j:slf4j-api:$slf4jVersion")
-
-    val junitVersion: String by rootProject
-    testImplementation(platform("org.junit:junit-bom:$junitVersion"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation(kotlin("test"))
 }
 
 tasks.test {

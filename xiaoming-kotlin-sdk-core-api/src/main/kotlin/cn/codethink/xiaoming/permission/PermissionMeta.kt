@@ -16,6 +16,24 @@
 
 package cn.codethink.xiaoming.permission
 
-//data class PermissionMeta(
-//
-//)
+import cn.codethink.xiaoming.util.InternalImplementedApi
+import cn.codethink.xiaoming.util.NamespaceId
+import cn.codethink.xiaoming.util.SubjectDescriptor
+
+@InternalImplementedApi
+interface PermissionMeta {
+    val id: NamespaceId
+    val subject: SubjectDescriptor
+    val descriptor: PermissionDescriptor
+    val parameters: Map<String, PermissionParameterMeta>
+    val description: String
+}
+
+
+@InternalImplementedApi
+interface PermissionParameterMeta {
+    val description: String
+    val name: String
+    val optional: Boolean
+    val nullable: Boolean
+}

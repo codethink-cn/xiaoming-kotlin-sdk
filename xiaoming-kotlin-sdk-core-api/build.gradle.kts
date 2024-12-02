@@ -15,48 +15,27 @@
  */
 
 plugins {
-    kotlin("jvm") version "2.0.20"
+    kotlin("jvm")
+    id("me.him188.kotlin-jvm-blocking-bridge")
     `maven-publish`
 }
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
-    val log4jVersion: String by rootProject
-    val kotlinLoggingVersion: String by rootProject
-    val slf4jVersion: String by rootProject
-    api("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
-    testImplementation("org.slf4j:slf4j-api:$slf4jVersion")
-    testImplementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
-    testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:$log4jVersion")
-    testRuntimeOnly("org.apache.logging.log4j:log4j-core:$log4jVersion")
+    api(libs.kotlin.logging)
+    api(libs.blocking.bridge)
 
-    val jacksonVersion: String by rootProject
-    api("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-    api("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
-    api("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+    api(libs.jackson.databind)
+    api(libs.jackson.annotations)
+    api(libs.jackson.module.kotlin)
 
-    val apacheCommonTextVersion: String by rootProject
-    api("org.apache.commons:commons-text:$apacheCommonTextVersion")
+    api(libs.apache.commons.text)
+    api(libs.apache.commons.collection)
 
-    val kotlinCoroutineVersion: String by rootProject
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutineVersion")
+    api(libs.kotlin.coroutines.core)
 
-    val apacheCommonCollectionVersion: String by rootProject
-    api("org.apache.commons:commons-collections4:$apacheCommonCollectionVersion")
-
-    val ktorVersion: String by rootProject
-    api("io.ktor:ktor-server-core-jvm:$ktorVersion")
-    api("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
-    api("io.ktor:ktor-server-netty-jvm:$ktorVersion")
-    api("io.ktor:ktor-websockets:$ktorVersion")
-    api("io.ktor:ktor-client-okhttp:$ktorVersion")
-
-    val junitVersion: String by rootProject
-    testImplementation(platform("org.junit:junit-bom:$junitVersion"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation(kotlin("test"))
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
 }
 
 tasks.test {
@@ -65,13 +44,12 @@ tasks.test {
 
 tasks.processResources {
     filesMatching("xiaoming/sdk.properties") {
-        val protocol: String by rootProject
         expand(
             mapOf(
                 "group" to project.group,
                 "name" to project.name,
                 "version" to project.version,
-                "protocol" to protocol,
+                "protocol" to Versions.xiaoming,
             )
         )
     }

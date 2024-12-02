@@ -16,9 +16,9 @@
 
 package cn.codethink.xiaoming.data
 
-import cn.codethink.xiaoming.common.Id
-import cn.codethink.xiaoming.common.NumericalId
-import cn.codethink.xiaoming.common.toId
+import cn.codethink.xiaoming.util.Id
+import cn.codethink.xiaoming.util.NumericalId
+import cn.codethink.xiaoming.util.toNumericalId
 import org.jetbrains.exposed.dao.id.EntityID
 
 /**
@@ -32,4 +32,4 @@ value class NumericalEntityId<T : Number>(
 ) : Id
 
 
-fun EntityID<Int>.toId(): NumericalId = value.toId()
+fun EntityID<Int>.toId(): NumericalId = value.toNumericalId()

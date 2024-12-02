@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.connection
 
-import cn.codethink.xiaoming.common.Id
+import cn.codethink.xiaoming.util.Id
 import com.fasterxml.jackson.annotation.JsonTypeName
 
 const val CONNECTION_MANAGER_CONFIGURATION_VERSION_1 = "1"

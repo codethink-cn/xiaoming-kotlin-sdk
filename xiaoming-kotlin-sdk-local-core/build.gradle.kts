@@ -15,50 +15,26 @@
  */
 
 plugins {
-    kotlin("jvm") version "2.0.20"
+    kotlin("jvm")
+    id("me.him188.kotlin-jvm-blocking-bridge")
     `maven-publish`
 }
-
-repositories {
-    mavenCentral()
-}
-
 dependencies {
+    api(project(":xiaoming-kotlin-sdk-local-core-api"))
+
     api(project(":xiaoming-kotlin-sdk-core-api"))
+    api(project(":xiaoming-kotlin-sdk-core"))
+
     api(project(":xiaoming-kotlin-sdk-remote-core"))
 
-    val jacksonVersion: String by rootProject
-    api("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-    api("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
-    api("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
-    api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
+    api(libs.kotlin.logging)
+    testImplementation(libs.slf4j.api)
+    testRuntimeOnly(libs.log4j.slf4j2.impl)
+    testRuntimeOnly(libs.log4j.core)
 
-    val log4jVersion: String by rootProject
-    val kotlinLoggingVersion: String by rootProject
-    val slf4jVersion: String by rootProject
-    api("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
-    testImplementation("org.slf4j:slf4j-api:$slf4jVersion")
-    testImplementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
-    testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:$log4jVersion")
-    testRuntimeOnly("org.apache.logging.log4j:log4j-core:$log4jVersion")
-
-    val kotlinCoroutineVersion: String by rootProject
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutineVersion")
-
-    val sqliteJdbcVersion: String by rootProject
-    runtimeOnly("org.xerial:sqlite-jdbc:$sqliteJdbcVersion")
-    testImplementation(project(":xiaoming-kotlin-sdk-local-core-data-sql"))
-
-    val ktorVersion: String by rootProject
-    api("io.ktor:ktor-server-core-jvm:$ktorVersion")
-    api("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
-    api("io.ktor:ktor-server-netty-jvm:$ktorVersion")
-    api("io.ktor:ktor-websockets:$ktorVersion")
-    api("io.ktor:ktor-client-okhttp:$ktorVersion")
-
-    val junitVersion: String by rootProject
-    testImplementation(platform("org.junit:junit-bom:$junitVersion"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation(kotlin("test"))
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
 }
 
 tasks.test {

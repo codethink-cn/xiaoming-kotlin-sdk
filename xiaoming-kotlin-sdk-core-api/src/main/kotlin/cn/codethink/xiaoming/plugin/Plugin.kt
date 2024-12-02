@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
+@file:JvmName("Plugins")
+
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.common.NamespaceId
-import cn.codethink.xiaoming.common.PluginSubjectDescriptor
-import cn.codethink.xiaoming.common.SegmentId
-import cn.codethink.xiaoming.common.Subject
-import cn.codethink.xiaoming.common.Version
+import cn.codethink.xiaoming.util.NamespaceId
+import cn.codethink.xiaoming.util.PluginSubjectDescriptor
+import cn.codethink.xiaoming.util.Subject
+import cn.codethink.xiaoming.util.Version
 
 /**
- * Plugin is a set of functions that extend platform's abilities. It can service
- * platform locally and remotely.
+ * 插件是一些功能的集合，以对平台产生影响。
  *
  * @author Chuanwise
  * @see NotYetAllocatedPlugin
@@ -32,34 +32,28 @@ import cn.codethink.xiaoming.common.Version
  */
 sealed interface Plugin : Subject {
     /**
-     * Plugin's descriptor.
+     * 插件描述符。
      */
     override val descriptor: PluginSubjectDescriptor
 
     /**
-     * Plugin's meta information.
+     * 插件元数据。
      */
     val meta: PluginMeta
 
     /**
-     * Plugin's source.
+     * 插件源。
      */
     val source: PluginSource
 }
 
 val Plugin.id: NamespaceId
-    get() = descriptor.id
+    get() = meta.id
 
 val Plugin.name: String
-    get() = descriptor.id.name
-
-val Plugin.group: SegmentId
-    get() = descriptor.id.group
+    get() = meta.name
 
 val Plugin.version: Version
     get() = meta.version
 
-fun Plugin.toExactRequirement() = meta.toExactRequirement()
-
-@JvmOverloads
-fun Plugin.toExactDependency(optional: Boolean = false) = meta.toExactDependency(optional)
+fun Plugin.toPluginRequirement() = meta.toPluginRequirement()

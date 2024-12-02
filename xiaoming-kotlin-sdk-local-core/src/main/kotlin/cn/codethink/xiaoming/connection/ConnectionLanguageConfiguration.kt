@@ -19,11 +19,11 @@
 
 package cn.codethink.xiaoming.connection
 
-import cn.codethink.xiaoming.common.AbstractData
-import cn.codethink.xiaoming.common.InternalApi
-import cn.codethink.xiaoming.common.Template
-import cn.codethink.xiaoming.common.getValue
-import cn.codethink.xiaoming.io.data.Raw
+import cn.codethink.xiaoming.util.AbstractData
+import cn.codethink.xiaoming.util.InternalApi
+import cn.codethink.xiaoming.util.Raw
+import cn.codethink.xiaoming.util.Template
+import cn.codethink.xiaoming.util.getValue
 
 /**
  * Connection language configuration.

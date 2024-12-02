@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.connection
 
-import cn.codethink.xiaoming.common.Id
+import cn.codethink.xiaoming.util.Id
 
 /**
  * Configuration of [ConnectionManager].

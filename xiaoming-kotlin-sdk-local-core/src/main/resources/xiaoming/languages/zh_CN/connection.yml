@@ -1,2 +1,0 @@
-# Server related.
-adapterNotFound: "未找到适配器类型：${adapterType}。"

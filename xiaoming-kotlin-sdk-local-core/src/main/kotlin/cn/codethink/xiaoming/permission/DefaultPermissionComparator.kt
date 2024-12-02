@@ -19,18 +19,18 @@
 
 package cn.codethink.xiaoming.permission
 
-import cn.codethink.xiaoming.common.AbstractData
-import cn.codethink.xiaoming.common.FIELD_TYPE
-import cn.codethink.xiaoming.common.FIELD_VERSION
-import cn.codethink.xiaoming.common.InternalApi
-import cn.codethink.xiaoming.common.Matcher
-import cn.codethink.xiaoming.common.SegmentId
-import cn.codethink.xiaoming.common.SubjectDescriptor
-import cn.codethink.xiaoming.common.Tristate
-import cn.codethink.xiaoming.common.getValue
-import cn.codethink.xiaoming.common.tristateOf
-import cn.codethink.xiaoming.io.data.MapRaw
-import cn.codethink.xiaoming.io.data.Raw
+import cn.codethink.xiaoming.util.AbstractData
+import cn.codethink.xiaoming.util.FIELD_TYPE
+import cn.codethink.xiaoming.util.FIELD_VERSION
+import cn.codethink.xiaoming.util.InternalApi
+import cn.codethink.xiaoming.util.Matcher
+import cn.codethink.xiaoming.util.SegmentIdImpl
+import cn.codethink.xiaoming.util.SubjectDescriptor
+import cn.codethink.xiaoming.util.Tristate
+import cn.codethink.xiaoming.util.getValue
+import cn.codethink.xiaoming.util.tristateOf
+import cn.codethink.xiaoming.util.MapRaw
+import cn.codethink.xiaoming.util.Raw
 import cn.codethink.xiaoming.io.data.set
 import com.fasterxml.jackson.annotation.JsonTypeName
 
@@ -50,7 +50,7 @@ const val PERMISSION_COMPARATOR_TYPE_DEFAULT = "default"
 interface DefaultPermissionComparator : PermissionComparator {
     val version: String
     val subject: Matcher<SubjectDescriptor>
-    val node: Matcher<SegmentId>
+    val node: Matcher<SegmentIdImpl>
     val value: Boolean?
 }
 
@@ -68,7 +68,7 @@ class DefaultPermissionComparatorV1 : AbstractData, DefaultPermissionComparator 
     override val value: Boolean? by raw
 
     override val subject: Matcher<SubjectDescriptor> by raw
-    override val node: Matcher<SegmentId> by raw
+    override val node: Matcher<SegmentIdImpl> by raw
 
     @InternalApi
     constructor(raw: Raw) : super(raw)
@@ -76,7 +76,7 @@ class DefaultPermissionComparatorV1 : AbstractData, DefaultPermissionComparator 
     @JvmOverloads
     constructor(
         subject: Matcher<SubjectDescriptor>,
-        node: Matcher<SegmentId>,
+        node: Matcher<SegmentIdImpl>,
         value: Boolean?,
         raw: Raw = MapRaw()
     ) : super(raw) {

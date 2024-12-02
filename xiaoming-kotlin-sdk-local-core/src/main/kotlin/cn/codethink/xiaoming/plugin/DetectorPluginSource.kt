@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.common.Cause
+import cn.codethink.xiaoming.util.Cause
 
 /**
  * Represent a plugin is detected by a [detector] for a [cause].

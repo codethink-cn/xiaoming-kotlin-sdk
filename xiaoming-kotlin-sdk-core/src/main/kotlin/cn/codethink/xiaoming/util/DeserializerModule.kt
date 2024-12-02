@@ -1,0 +1,55 @@
+/*
+ * Copyright 2024 CodeThink Technologies and contributors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package cn.codethink.xiaoming.util
+
+import com.fasterxml.jackson.core.Version
+import com.fasterxml.jackson.databind.Module
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
+import java.util.ServiceLoader
+
+class DeserializerModule(
+    private val name: String = "DeserializerModule",
+    private val version: Version = Version.unknownVersion(),
+    logger: KLogger = KotlinLogging.logger { }
+) : Module() {
+    override fun getModuleName(): String = name
+    override fun version(): Version = version
+
+    val deserializers = MutablePolymorphicDeserializersImpl(logger)
+    val deserializerModifier = DataDeserializerModifier
+
+    override fun setupModule(context: SetupContext) {
+        context.addDeserializers(deserializers)
+        context.addBeanDeserializerModifier(deserializerModifier)
+    }
+}
+
+val JacksonModuleVersion = SdkVersion.let {
+    val snapshotInfo = it.preRelease.orEmpty() + it.build.prependOrNull("+").orEmpty()
+    Version(it.major, it.minor, it.patch, snapshotInfo, SdkGroup, SdkName)
+}
+
+fun DeserializerModule.findAndApplyInitializers(classLoader: ClassLoader, subject: SubjectDescriptor) = apply {
+    ServiceLoader.load(PolymorphicDeserializerInitializer::class.java, classLoader)
+        .forEach { it.initialize(deserializers, subject) }
+}
+
+fun DeserializerModule.findAndApplyInitializers(subject: SubjectDescriptor) = apply {
+    ServiceLoader.load(PolymorphicDeserializerInitializer::class.java)
+        .forEach { it.initialize(deserializers, subject) }
+}

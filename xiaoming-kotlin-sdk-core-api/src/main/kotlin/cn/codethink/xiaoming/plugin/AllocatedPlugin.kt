@@ -14,92 +14,27 @@
  * limitations under the License.
  */
 
+@file:JvmName("AllocatedPlugins")
+
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.Platform
-import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.SegmentId
-
 /**
- * Allocated plugin.
+ * 已分配插件。
  *
  * @author Chuanwise
  */
 interface AllocatedPlugin : Plugin {
     /**
-     * Plugin's runtime meta information.
+     * 插件运行时元数据。
      */
-    val runtime: PluginRuntime
-
-    /**
-     * Plugins provided task.
-     *
-     * It should NOT change plugin state.
-     */
-    val tasks: Map<SegmentId, PluginTask>
-
-    /**
-     * Load this plugin for specified platform.
-     *
-     * For local plugins, it usually means load library, initialize main class, etc.
-     * Otherwise, it may mean connect to remote server and do authorization, etc.
-     *
-     * @param platform the platform to load.
-     * @param cause the cause of loading.
-     */
-    fun load(platform: Platform, cause: Cause)
-
-    /**
-     * Enable this plugin for specified platform.
-     *
-     * For local plugins, it usually means start listening, register commands, etc.
-     * Otherwise, it may mean send enable command to remote server.
-     *
-     * @param platform the platform to enable.
-     * @param cause the cause of enabling.
-     */
-    fun enable(platform: Platform, cause: Cause)
-
-    /**
-     * Disable this plugin for specified platform.
-     *
-     * For local plugins, it usually means stop listening, unregister commands, etc.
-     * Otherwise, it may mean send disable command to remote server.
-     *
-     * Implementations class must ensure that this method will unregister all what
-     * plugin registered.
-     *
-     * @param platform the platform to disable.
-     * @param cause the cause of disabling.
-     */
-    fun disable(platform: Platform, cause: Cause)
-
-    /**
-     * Unload this plugin for specified platform.
-     *
-     * For local plugins, it usually means unload classes, release resources, etc.
-     * Otherwise, it may mean disconnect from remote server.
-     *
-     * @param platform the platform to unload.
-     * @param cause the cause of unloading.
-     */
-    fun unload(platform: Platform, cause: Cause)
+    val runtimeMeta: PluginRuntimeMeta
 }
 
+val AllocatedPlugin.isLoaded: Boolean
+    get() = runtimeMeta.isLoaded
+
 val AllocatedPlugin.isErrored: Boolean
-    get() = runtime.isErrored
+    get() = runtimeMeta.isErrored
 
 val AllocatedPlugin.isEnabled: Boolean
-    get() = runtime.isEnabled
-
-val AllocatedPlugin.isLoaded: Boolean
-    get() = runtime.isLoaded
-
-val AllocatedPlugin.isNotError: Boolean
-    get() = runtime.isNotError
-
-val AllocatedPlugin.isNotEnabled: Boolean
-    get() = runtime.isNotEnabled
-
-val AllocatedPlugin.isNotLoaded: Boolean
-    get() = runtime.isNotLoaded
+    get() = runtimeMeta.isEnabled

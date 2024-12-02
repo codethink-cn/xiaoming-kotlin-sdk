@@ -16,19 +16,17 @@
 
 package cn.codethink.xiaoming.connection
 
-import cn.codethink.xiaoming.common.DefaultRegistration
-import cn.codethink.xiaoming.common.DefaultStringMapRegistrations
-import cn.codethink.xiaoming.common.Id
-import cn.codethink.xiaoming.common.MapRegistrations
-import cn.codethink.xiaoming.common.Registration
-import cn.codethink.xiaoming.common.SubjectDescriptor
-import cn.codethink.xiaoming.common.TextCause
+import cn.codethink.xiaoming.action.ConnectRequestPara
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
-import cn.codethink.xiaoming.io.action.ConnectRequestPara
 import cn.codethink.xiaoming.io.action.RequestHandler
 import cn.codethink.xiaoming.io.connection.AuthorizationService
 import cn.codethink.xiaoming.io.connection.EmptyAuthorizationService
-import cn.codethink.xiaoming.io.connection.ServerApi
+import cn.codethink.xiaoming.util.Id
+import cn.codethink.xiaoming.util.MapRegistrationManager
+import cn.codethink.xiaoming.util.Registration
+import cn.codethink.xiaoming.util.RegistrationImpl
+import cn.codethink.xiaoming.util.StringMapRegistrations
+import cn.codethink.xiaoming.util.SubjectDescriptor
 
 class ConnectionManagerApi(
     private val internalApi: LocalPlatformInternalApi
@@ -42,10 +40,10 @@ class ConnectionManagerApi(
         override val value: ServerApi
     ) : Registration<ServerApi>
 
-    private val servers = MapRegistrations<Id, ServerApi, ServerRegistration>()
+    private val servers = MapRegistrationManager<Id, ServerApi, ServerRegistration>()
 
     // Associated by subject type.
-    private val connectRequestHandlers = DefaultStringMapRegistrations<RequestHandler<ConnectRequestPara, Any?>>()
+    private val connectRequestHandlers = StringMapRegistrations<RequestHandler<ConnectRequestPara, Any?>>()
 
     fun getConnectRequestHandler(type: String): RequestHandler<ConnectRequestPara, Any?>? {
         return connectRequestHandlers[type]?.value
@@ -56,7 +54,7 @@ class ConnectionManagerApi(
         handler: RequestHandler<ConnectRequestPara, Any?>,
         subject: SubjectDescriptor
     ) {
-        connectRequestHandlers[type] = DefaultRegistration(handler, subject)
+        connectRequestHandlers[type] = RegistrationImpl(handler, subject)
     }
 
     fun unregisterConnectRequestHandlerByType(type: String) {
@@ -67,7 +65,7 @@ class ConnectionManagerApi(
                 if (it.value.subject.type == type && !it.value.keepOnNoAdapter) {
                     val registration = servers.unregisterByKey(it.key)
                     if (registration != null) {
-                        registration.value.close(TextCause("Adapter unregistered.", it.value.subject))
+                        registration.value.close(TextCauseImpl("Adapter unregistered.", it.value.subject))
                         internalApi.logger.info {
                             "Stopped server ${it.key} with subject ${it.value.subject} and type ${it.value.subject.type} due to adapter unregistered."
                         }

@@ -17,9 +17,26 @@
 package cn.codethink.xiaoming.plugin
 
 /**
- * Plugin state. Implementation classes support Jackson serialization
- * and deserialization.
+ * 插件状态。
  *
  * @author Chuanwise
  */
-interface PluginState
+enum class PluginState {
+    ALLOCATED,
+
+    LOADING,
+    LOADING_ERRORED,
+    LOADED,
+
+    ENABLING,
+    ENABLING_ERRORED,
+    ENABLED,
+
+    DISABLING,
+    DISABLING_ERRORED,
+    DISABLED,
+
+    UNLOADING,
+    UNLOADING_ERRORED,
+    UNLOADED
+}

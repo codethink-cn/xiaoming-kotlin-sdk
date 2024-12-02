@@ -17,10 +17,10 @@
 
 package cn.codethink.xiaoming.io.data
 
-import cn.codethink.xiaoming.common.AbstractData
-import cn.codethink.xiaoming.common.InternalApi
-import cn.codethink.xiaoming.common.getValue
-import cn.codethink.xiaoming.common.setValue
+import cn.codethink.xiaoming.util.AbstractData
+import cn.codethink.xiaoming.util.InternalApi
+import cn.codethink.xiaoming.util.getValue
+import cn.codethink.xiaoming.util.setValue
 import com.fasterxml.jackson.annotation.JsonTypeName
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource

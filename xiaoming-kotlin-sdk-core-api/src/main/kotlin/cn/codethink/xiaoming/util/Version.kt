@@ -1,0 +1,47 @@
+/*
+ * Copyright 2024 CodeThink Technologies and contributors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@file:JvmName("Versions")
+
+package cn.codethink.xiaoming.util
+
+/**
+ * 遵循 [语义化版本 2.0.0](https://semver.org/) 的版本。
+ *
+ * @author Chuanwise
+ */
+@InternalImplementedApi
+interface Version : Comparable<Version> {
+    val major: Int
+    val minor: Int
+    val patch: Int
+    val preRelease: String?
+    val build: String?
+
+    companion object {
+        @JvmStatic
+        @JavaFriendlyApi
+        fun parse(version: String): Version = version.toVersion()
+
+        @JvmStatic
+        @JavaFriendlyApi
+        fun of(major: Int, minor: Int, patch: Int, preRelease: String? = null, build: String? = null): Version =
+            createVersion(major, minor, patch, preRelease, build)
+    }
+}
+
+fun Version.toLiteralVersionMatcher() = createIncludeVersionMatcher(this)
+fun String.toVersion(): Version = parseVersion(this)

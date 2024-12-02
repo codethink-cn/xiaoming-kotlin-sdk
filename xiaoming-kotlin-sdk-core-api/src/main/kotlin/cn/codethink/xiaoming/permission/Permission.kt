@@ -15,225 +15,38 @@
  */
 
 @file:JvmName("Permissions")
-@file:OptIn(InternalApi::class)
 
 package cn.codethink.xiaoming.permission
 
-import cn.codethink.xiaoming.common.AbstractData
-import cn.codethink.xiaoming.common.Field
-import cn.codethink.xiaoming.common.IdSubjectDescriptor
-import cn.codethink.xiaoming.common.InternalApi
-import cn.codethink.xiaoming.common.LITERAL_PERMISSION_MATCHER_FIELD_VALUE
-import cn.codethink.xiaoming.common.LiteralMatcher
-import cn.codethink.xiaoming.common.MATCHER_FIELD_TYPE
-import cn.codethink.xiaoming.common.Matcher
-import cn.codethink.xiaoming.common.PERMISSION_FIELD_ARGUMENTS
-import cn.codethink.xiaoming.common.PERMISSION_FIELD_DESCRIPTOR
-import cn.codethink.xiaoming.common.PERMISSION_MATCHER_TYPE_DEFAULT
-import cn.codethink.xiaoming.common.PERMISSION_MATCHER_TYPE_LITERAL
-import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_DESCRIPTION
-import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_DESCRIPTOR
-import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_NODE
-import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_PARAMETERS
-import cn.codethink.xiaoming.common.PERMISSION_META_FIELD_SUBJECT
-import cn.codethink.xiaoming.common.PERMISSION_SUBJECT_DESCRIPTOR_FIELD_NODE
-import cn.codethink.xiaoming.common.PERMISSION_SUBJECT_DESCRIPTOR_FIELD_SUBJECT
-import cn.codethink.xiaoming.common.PERMISSION_VARIABLE_META_FIELD_DEFAULT_MATCHER_OR_VALUE
-import cn.codethink.xiaoming.common.PERMISSION_VARIABLE_META_FIELD_DESCRIPTION
-import cn.codethink.xiaoming.common.PERMISSION_VARIABLE_META_FIELD_NULLABLE
-import cn.codethink.xiaoming.common.PERMISSION_VARIABLE_META_FIELD_OPTIONAL
-import cn.codethink.xiaoming.common.SegmentId
-import cn.codethink.xiaoming.common.SubjectDescriptor
-import cn.codethink.xiaoming.common.defaultNullable
-import cn.codethink.xiaoming.common.defaultOptional
-import cn.codethink.xiaoming.common.getValue
-import cn.codethink.xiaoming.common.setValue
-import cn.codethink.xiaoming.io.data.MapRaw
-import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.set
-import com.fasterxml.jackson.annotation.JsonTypeName
+import cn.codethink.xiaoming.util.Id
+import cn.codethink.xiaoming.util.InternalImplementedApi
+import cn.codethink.xiaoming.util.NamespaceId
+import cn.codethink.xiaoming.util.SegmentId
 
 /**
- * Describe a permission.
+ * 表示一个具体的操作。
  *
  * @author Chuanwise
+ * @see PermissionManager
  */
-class PermissionDescriptor : AbstractData {
-    val node: SegmentId by raw
-    val subject: IdSubjectDescriptor by raw
+@InternalImplementedApi
+interface Permission {
+    /**
+     * 权限 ID。
+     *
+     * 内置标准权限是普通的 [SegmentId]，第三方扩展的权限 ID 必须使用 [NamespaceId]。
+     */
+    val id: Id
 
-    @InternalApi
-    constructor(raw: Raw) : super(raw)
+    /**
+     * 权限参数。
+     */
+    val arguments: Map<String, Any?>
 
-    @JvmOverloads
-    constructor(
-        node: SegmentId,
-        subject: IdSubjectDescriptor,
-        raw: Raw = MapRaw()
-    ) : super(raw) {
-        raw[PERMISSION_SUBJECT_DESCRIPTOR_FIELD_NODE] = node
-        raw[PERMISSION_SUBJECT_DESCRIPTOR_FIELD_SUBJECT] = subject
-    }
+    /**
+     * 权限描述符。
+     */
+    val descriptor: PermissionDescriptor
 }
 
-/**
- * Permission context is a variable that can be used to test if a permission is available.
- *
- * @author Chuanwise
- */
-class PermissionParameterMeta : AbstractData {
-    @Field(PERMISSION_VARIABLE_META_FIELD_DEFAULT_MATCHER_OR_VALUE)
-    val defaultMatcherOrValue: Any? by raw
-    val description: String? by raw
-
-    val optional: Boolean by raw
-    val nullable: Boolean by raw
-
-    @InternalApi
-    constructor(raw: Raw) : super(raw)
-
-    @JvmOverloads
-    constructor(
-        defaultMatcherOrValue: Any?,
-        description: String?,
-        optional: Boolean,
-        nullable: Boolean,
-        raw: Raw = MapRaw()
-    ) : super(raw) {
-        raw[PERMISSION_VARIABLE_META_FIELD_DEFAULT_MATCHER_OR_VALUE] = defaultMatcherOrValue
-        raw[PERMISSION_VARIABLE_META_FIELD_DESCRIPTION] = description
-        raw[PERMISSION_VARIABLE_META_FIELD_OPTIONAL] = optional
-        raw[PERMISSION_VARIABLE_META_FIELD_NULLABLE] = nullable
-
-        if (optional && !nullable && defaultMatcherOrValue == null) {
-            throw IllegalArgumentException(
-                "If a permission parameter is optional, it must be nullable or have a non-null default matcher or value."
-            )
-        }
-    }
-}
-
-inline fun <reified T> PermissionParameterMeta(
-    defaultMatcherOrValue: T? = null,
-    description: String? = null,
-    optional: Boolean = defaultOptional<T>(),
-    nullable: Boolean = defaultNullable<T>(),
-    raw: Raw = MapRaw()
-) = PermissionParameterMeta(defaultMatcherOrValue, description, optional, nullable, raw)
-
-/**
- * Describe a permission.
- *
- * @author Chuanwise
- */
-class PermissionMeta : AbstractData {
-    val node: SegmentId by raw
-    val subject: IdSubjectDescriptor by raw
-    val parameters: Map<String, PermissionParameterMeta> by raw
-    val description: String? by raw
-    val descriptor: PermissionDescriptor by raw
-
-    @InternalApi
-    constructor(raw: Raw) : super(raw)
-
-    @JvmOverloads
-    constructor(
-        node: SegmentId,
-        subject: IdSubjectDescriptor,
-        parameters: Map<String, PermissionParameterMeta> = emptyMap(),
-        description: String? = null,
-        descriptor: PermissionDescriptor = PermissionDescriptor(node, subject),
-        raw: Raw = MapRaw()
-    ) : super(raw) {
-        raw[PERMISSION_META_FIELD_NODE] = node
-        raw[PERMISSION_META_FIELD_SUBJECT] = subject
-        raw[PERMISSION_META_FIELD_DESCRIPTION] = description
-        raw[PERMISSION_META_FIELD_PARAMETERS] = parameters
-        raw[PERMISSION_META_FIELD_DESCRIPTOR] = descriptor
-    }
-}
-
-/**
- * Permission is a specific permission node that can be used to test if an [SubjectDescriptor].
- *
- * @author Chuanwise
- */
-class Permission : AbstractData {
-    val descriptor: PermissionDescriptor by raw
-    val arguments: Map<String, Any?> by raw
-
-    @InternalApi
-    constructor(raw: Raw) : super(raw)
-
-    @JvmOverloads
-    constructor(
-        descriptor: PermissionDescriptor,
-        arguments: Map<String, Any?> = emptyMap(),
-        raw: Raw = MapRaw()
-    ) : super(raw) {
-        raw[PERMISSION_FIELD_DESCRIPTOR] = descriptor
-        raw[PERMISSION_FIELD_ARGUMENTS] = arguments
-    }
-}
-
-/**
- * Matches if given permission is exactly the same as the [value].
- *
- * @author Chuanwise
- */
-@JsonTypeName(PERMISSION_MATCHER_TYPE_LITERAL)
-class LiteralPermissionMatcher : AbstractData, LiteralMatcher<Permission> {
-    override val type: String by raw
-    override val value: Permission by raw
-
-    @InternalApi
-    constructor(raw: Raw) : super(raw)
-
-    @JvmOverloads
-    constructor(
-        value: Permission,
-        raw: Raw = MapRaw()
-    ) : super(raw) {
-        raw[MATCHER_FIELD_TYPE] = PERMISSION_MATCHER_TYPE_LITERAL
-        raw[LITERAL_PERMISSION_MATCHER_FIELD_VALUE] = value
-    }
-}
-
-fun Permission.toLiteralMatcher(): LiteralPermissionMatcher = LiteralPermissionMatcher(this)
-
-@JsonTypeName(PERMISSION_MATCHER_TYPE_DEFAULT)
-class DefaultPermissionMatcher : AbstractData, Matcher<Permission> {
-    override val type: String by raw
-
-    var node: Matcher<SegmentId> by raw
-    var arguments: Map<String, Matcher<*>> by raw
-
-    @InternalApi
-    constructor(raw: Raw) : super(raw)
-
-    @JvmOverloads
-    constructor(
-        node: Matcher<SegmentId>,
-        arguments: Map<String, Matcher<*>> = emptyMap(),
-        raw: Raw = MapRaw()
-    ) : super(raw) {
-        raw[MATCHER_FIELD_TYPE] = PERMISSION_MATCHER_TYPE_DEFAULT
-        this.node = node
-        this.arguments = arguments
-    }
-
-    override fun isMatched(target: Permission): Boolean {
-        if (!node.isMatched(target.descriptor.node)) {
-            return false
-        }
-
-        for ((key, matcher) in arguments) {
-            val value = target.arguments[key] ?: return false
-            if (!(matcher as Matcher<Any?>).isMatched(value)) {
-                return false
-            }
-        }
-
-        return true
-    }
-}
+fun Permission.toLiteralMatcher(): PermissionMatcher = createLiteralPermissionMatcher(this)

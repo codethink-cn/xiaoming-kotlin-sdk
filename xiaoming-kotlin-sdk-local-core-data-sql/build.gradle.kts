@@ -15,45 +15,23 @@
  */
 
 plugins {
-    kotlin("jvm") version "2.0.20"
+    kotlin("jvm")
+    id("me.him188.kotlin-jvm-blocking-bridge")
     `maven-publish`
-}
-
-repositories {
-    mavenCentral()
 }
 
 dependencies {
     compileOnly(project(":xiaoming-kotlin-sdk-local-core"))
 
-    val jacksonVersion: String by rootProject
-    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.dao)
+    implementation(libs.exposed.jdbc)
+    implementation(libs.exposed.kotlin.datetime)
+    implementation(libs.exposed.json)
 
-    val kotlinLoggingVersion: String by rootProject
-    implementation("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
+    implementation(libs.hikari.cp)
 
-    val exposedVersion: String by rootProject
-    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-kotlin-datetime:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-json:$exposedVersion")
-
-    val hikariCpVersion: String by rootProject
-    implementation("com.zaxxer:HikariCP:$hikariCpVersion")
-
-    val ktorVersion: String by rootProject
-    implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-websockets:$ktorVersion")
-    implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
-
-    val junitVersion: String by rootProject
-    testImplementation(platform("org.junit:junit-bom:$junitVersion"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation(kotlin("test"))
 }
 
 tasks.test {

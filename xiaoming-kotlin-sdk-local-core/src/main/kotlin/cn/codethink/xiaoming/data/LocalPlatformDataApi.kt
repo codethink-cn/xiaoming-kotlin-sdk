@@ -16,12 +16,12 @@
 
 package cn.codethink.xiaoming.data
 
-import cn.codethink.xiaoming.common.Id
-import cn.codethink.xiaoming.common.Matcher
-import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.permission.PermissionComparator
 import cn.codethink.xiaoming.permission.data.PermissionProfile
 import cn.codethink.xiaoming.permission.data.PermissionRecord
+import cn.codethink.xiaoming.util.Id
+import cn.codethink.xiaoming.util.Matcher
+import cn.codethink.xiaoming.util.SubjectDescriptor
 
 /**
  * Operations to access and modify the data of the platform.

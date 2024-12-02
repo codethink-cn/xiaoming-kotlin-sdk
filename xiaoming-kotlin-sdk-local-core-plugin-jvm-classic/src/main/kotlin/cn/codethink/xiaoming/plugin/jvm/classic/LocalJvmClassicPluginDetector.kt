@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.plugin.jvm.classic
 
-import cn.codethink.xiaoming.common.SubjectDescriptor
+import cn.codethink.xiaoming.util.SubjectDescriptor
 import cn.codethink.xiaoming.plugin.PluginDetector
 
 interface LocalJvmClassicPluginDetector : PluginDetector {

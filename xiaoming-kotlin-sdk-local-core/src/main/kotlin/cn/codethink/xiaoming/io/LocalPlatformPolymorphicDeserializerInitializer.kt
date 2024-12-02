@@ -16,9 +16,9 @@
 
 package cn.codethink.xiaoming.io
 
-import cn.codethink.xiaoming.common.FIELD_TYPE
-import cn.codethink.xiaoming.common.FIELD_VERSION
-import cn.codethink.xiaoming.common.SubjectDescriptor
+import cn.codethink.xiaoming.util.FIELD_TYPE
+import cn.codethink.xiaoming.util.FIELD_VERSION
+import cn.codethink.xiaoming.util.SubjectDescriptor
 import cn.codethink.xiaoming.connection.ConnectionManagerConfiguration
 import cn.codethink.xiaoming.connection.ConnectionManagerConfigurationV1
 import cn.codethink.xiaoming.io.data.PolymorphicDeserializerInitializer

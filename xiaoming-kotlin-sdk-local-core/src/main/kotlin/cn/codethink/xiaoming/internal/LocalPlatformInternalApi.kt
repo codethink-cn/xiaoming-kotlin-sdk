@@ -19,20 +19,20 @@
 package cn.codethink.xiaoming.internal
 
 import cn.codethink.xiaoming.LocalPlatform
-import cn.codethink.xiaoming.common.AutoClosableSubject
-import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.InternalApi
-import cn.codethink.xiaoming.common.SubjectDescriptor
-import cn.codethink.xiaoming.common.TextCause
-import cn.codethink.xiaoming.common.doModuleRelatedAction
 import cn.codethink.xiaoming.configuration.LocalPlatformConfiguration
 import cn.codethink.xiaoming.connection.ConnectionManagerApi
 import cn.codethink.xiaoming.data.LocalPlatformData
 import cn.codethink.xiaoming.internal.configuration.LocalPlatformInternalConfiguration
-import cn.codethink.xiaoming.internal.module.ModuleContext
 import cn.codethink.xiaoming.language.LanguageConfiguration
+import cn.codethink.xiaoming.module.ModuleContext
 import cn.codethink.xiaoming.permission.LocalPermissionServiceApi
 import cn.codethink.xiaoming.plugin.LocalPluginManagerApi
+import cn.codethink.xiaoming.util.AutoClosableSubject
+import cn.codethink.xiaoming.util.Cause
+import cn.codethink.xiaoming.util.CauseImpl
+import cn.codethink.xiaoming.util.InternalApi
+import cn.codethink.xiaoming.util.SubjectDescriptor
+import cn.codethink.xiaoming.util.doModuleRelatedAction
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import java.util.concurrent.locks.ReentrantReadWriteLock
@@ -152,6 +152,6 @@ class LocalPlatformInternalApi(
     }
 
     override fun close() {
-        close(TextCause("Local platform internal API closed.", descriptor))
+        close(CauseImpl("Local platform internal API closed.", descriptor))
     }
 }

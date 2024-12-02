@@ -18,11 +18,11 @@
 
 package cn.codethink.xiaoming.plugin.jvm.classic
 
-import cn.codethink.xiaoming.common.InternalApi
-import cn.codethink.xiaoming.common.NamespaceId
-import cn.codethink.xiaoming.common.SegmentId
-import cn.codethink.xiaoming.common.ignoreClassNotFoundException
-import cn.codethink.xiaoming.plugin.jvm.DynamicLibrariesClassLoader
+import cn.codethink.xiaoming.classpath.DynamicLibrariesClassLoader
+import cn.codethink.xiaoming.util.InternalApi
+import cn.codethink.xiaoming.util.NamespaceId
+import cn.codethink.xiaoming.util.SegmentIdImpl
+import cn.codethink.xiaoming.util.ignoreClassNotFoundException
 import cn.codethink.xiaoming.plugin.jvm.PluginClassAccessPolicy
 import io.github.oshai.kotlinlogging.KLogger
 import java.io.File
@@ -47,7 +47,7 @@ const val CLASS_FILE_NAME_EXTENSION_WITH_DOT = ".class"
  * @see DynamicLibrariesClassLoader
  */
 class LocalJvmClassicPluginClassLoader(
-    val id: NamespaceId,
+    var id: NamespaceId,
     val distributionFile: File,
 
     val environmentClassLoader: ClassLoader,
@@ -61,15 +61,15 @@ class LocalJvmClassicPluginClassLoader(
     var resolvableByIndependentPlugins: Boolean,
 
     val uniqueResourcesFilter: Predicate<String>,
-    var pluginClassLoaders: Map<SegmentId, LocalJvmClassicPluginClassLoader>,
-    private val logger: KLogger
+    var pluginClassLoaders: Map<SegmentIdImpl, LocalJvmClassicPluginClassLoader>,
+    var logger: KLogger
 ) : URLClassLoader(
     distributionFile.name, arrayOf(distributionFile.toURI().toURL()), null
 ) {
     /**
      * Class loaders to load classes in dependent plugins.
      */
-    private val dependenciesClassLoaders: Map<SegmentId, LocalJvmClassicPluginClassLoader> = ConcurrentHashMap()
+    private val dependenciesClassLoaders: Map<SegmentIdImpl, LocalJvmClassicPluginClassLoader> = ConcurrentHashMap()
 
     /**
      * Package names of the classes in the plugin distribution file.

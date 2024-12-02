@@ -18,13 +18,13 @@
 
 package cn.codethink.xiaoming
 
-import cn.codethink.xiaoming.common.ConnectionSubjectDescriptor
-import cn.codethink.xiaoming.common.InternalApi
-import cn.codethink.xiaoming.common.TestSubjectDescriptor
-import cn.codethink.xiaoming.common.toId
-import cn.codethink.xiaoming.io.connection.DefaultWebSocketClientConfiguration
-import cn.codethink.xiaoming.io.connection.TextFrameConnectionApi
-import cn.codethink.xiaoming.io.connection.WebSocketClientConnectionInternalApi
+import cn.codethink.xiaoming.util.ConnectionDescriptor
+import cn.codethink.xiaoming.util.InternalApi
+import cn.codethink.xiaoming.util.TestSubjectDescriptor
+import cn.codethink.xiaoming.util.toStringId
+import cn.codethink.xiaoming.connection.DefaultWebSocketClientConfiguration
+import cn.codethink.xiaoming.connection.AbstractConnection
+import cn.codethink.xiaoming.connection.WebSocketClientConnectionApi
 import cn.codethink.xiaoming.io.data.DeserializerModule
 import cn.codethink.xiaoming.io.data.JacksonModuleVersion
 import cn.codethink.xiaoming.io.data.findAndApplyInitializers
@@ -57,8 +57,8 @@ class PlatformTest {
 
     @Test
     fun testConnectAsPlugin() {
-        val subject = ConnectionSubjectDescriptor("demo-client".toId())
-        val connectionInternalApi = WebSocketClientConnectionInternalApi(
+        val subject = ConnectionDescriptor("demo-client".toStringId())
+        val connectionInternalApi = WebSocketClientConnectionApi(
             configuration = DefaultWebSocketClientConfiguration(
                 host = "localhost",
                 path = TEST_PATH,
@@ -71,10 +71,10 @@ class PlatformTest {
             httpClient = HttpClient { install(WebSockets) }
         )
 
-        val connectionApi = TextFrameConnectionApi(
+        val connectionApi = AbstractConnection(
             logger = logger,
             objectMapper = dataObjectMapper,
-            connectionInternalApi = connectionInternalApi
+            connectionApi = connectionInternalApi
         )
 
 //        platformInternalApi.serializationApi.externalObjectMapper

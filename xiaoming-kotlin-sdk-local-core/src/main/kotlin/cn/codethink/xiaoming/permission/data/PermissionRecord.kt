@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.permission.data
 
-import cn.codethink.xiaoming.common.Matcher
+import cn.codethink.xiaoming.util.Matcher
 import cn.codethink.xiaoming.permission.PermissionComparator
 
 /**

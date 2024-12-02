@@ -16,14 +16,14 @@
 
 package cn.codethink.xiaoming.internal.event
 
-import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.InternalApi
-import cn.codethink.xiaoming.common.InternalEvent
 import cn.codethink.xiaoming.event.Event
-import cn.codethink.xiaoming.io.data.MapRaw
-import cn.codethink.xiaoming.io.data.Raw
+import cn.codethink.xiaoming.util.Cause
+import cn.codethink.xiaoming.util.InternalApi
+import cn.codethink.xiaoming.util.InternalEvent
+import cn.codethink.xiaoming.util.MapRaw
+import cn.codethink.xiaoming.util.Raw
 
-const val EVENT_TYPE_PLATFORM_STARTING = "platform_starting"
+const val EVENT_TYPE_PLATFORM_START = "platform_start"
 
 /**
  * Create and passed by the platform when it is starting, to notify all
@@ -41,7 +41,7 @@ class PlatformStartEvent : Event {
         cause: Cause,
         raw: Raw = MapRaw()
     ) : super(
-        type = EVENT_TYPE_PLATFORM_STARTING,
+        type = EVENT_TYPE_PLATFORM_START,
         cause = cause,
         raw = raw
     )

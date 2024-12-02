@@ -17,7 +17,21 @@
 package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.Platform
+import cn.codethink.xiaoming.util.Cause
 
+interface PluginAllocatingContext {
+    val platform: Platform
+    val cause: Cause
+    val runtimeMeta: PluginRuntimeMeta
+}
+
+/**
+ * 只加载了插件元数据 [meta] 但尚未加载和分配其他任何资源的插件。
+ *
+ * 平台会在需要时调用 [allocate] 来分配插件。
+ *
+ * @author Chuanwise
+ */
 interface NotYetAllocatedPlugin : Plugin {
-    fun allocate(platform: Platform): AllocatedPlugin
+    fun allocate(context: PluginAllocatingContext): AllocatedPlugin
 }

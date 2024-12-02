@@ -16,8 +16,8 @@
 
 package cn.codethink.xiaoming.permission
 
-import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.SubjectDescriptor
+import cn.codethink.xiaoming.util.Cause
+import cn.codethink.xiaoming.util.SubjectDescriptor
 
 data class PermissionCalculatingContext<T : SubjectDescriptor>(
     val permissionServiceApi: LocalPermissionServiceApi,
@@ -27,15 +27,4 @@ data class PermissionCalculatingContext<T : SubjectDescriptor>(
     val cause: Cause
 ) {
     val internalApi by permissionServiceApi::internalApi
-}
-
-/**
- * Calculating whether the given subject has the given permission.
- *
- * Developers can add default permission profile logic here.
- *
- * @author Chuanwise
- */
-interface PermissionCalculator<T : SubjectDescriptor> {
-    suspend fun hasPermission(context: PermissionCalculatingContext<T>): Boolean?
 }

@@ -16,10 +16,10 @@
 
 package cn.codethink.xiaoming.permission
 
-import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.Data
-import cn.codethink.xiaoming.common.Id
-import cn.codethink.xiaoming.common.Tristate
+import cn.codethink.xiaoming.util.Cause
+import cn.codethink.xiaoming.util.Data
+import cn.codethink.xiaoming.util.Id
+import cn.codethink.xiaoming.util.Tristate
 import cn.codethink.xiaoming.data.getPermissionProfileOrFail
 import cn.codethink.xiaoming.permission.data.PermissionProfile
 import cn.codethink.xiaoming.permission.data.PermissionRecord

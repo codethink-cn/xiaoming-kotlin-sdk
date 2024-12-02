@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.permission
 
-import cn.codethink.xiaoming.common.Cause
+import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.permission.data.PermissionProfile
 
 

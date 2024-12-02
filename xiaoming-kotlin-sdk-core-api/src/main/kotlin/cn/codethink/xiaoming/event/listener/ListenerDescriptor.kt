@@ -16,36 +16,16 @@
 
 package cn.codethink.xiaoming.event.listener
 
-import cn.codethink.xiaoming.common.AbstractData
-import cn.codethink.xiaoming.common.Id
-import cn.codethink.xiaoming.common.InternalApi
-import cn.codethink.xiaoming.common.SubjectDescriptor
-import cn.codethink.xiaoming.common.getValue
-import cn.codethink.xiaoming.io.data.MapRaw
-import cn.codethink.xiaoming.io.data.Raw
-import cn.codethink.xiaoming.io.data.set
-
-const val LISTENER_DESCRIPTOR_FIELD_ID = "id"
-const val LISTENER_DESCRIPTOR_FIELD_SUBJECT = "subject"
+import cn.codethink.xiaoming.util.SegmentId
+import cn.codethink.xiaoming.util.SubjectDescriptor
 
 /**
- * Describe a listener.
+ * 监听器描述符，用于唯一地指定一个监听器，通过 [Listener.descriptor] 获取。
  *
  * @author Chuanwise
+ * @see Listener
  */
-class ListenerDescriptor : AbstractData {
-    val subject: SubjectDescriptor by raw
-
-    @InternalApi
-    constructor(raw: Raw) : super(raw)
-
-    @JvmOverloads
-    constructor(
-        id: Id,
-        subject: SubjectDescriptor,
-        raw: Raw = MapRaw()
-    ) : super(raw) {
-        raw[LISTENER_DESCRIPTOR_FIELD_ID] = id
-        raw[LISTENER_DESCRIPTOR_FIELD_SUBJECT] = subject
-    }
+interface ListenerDescriptor {
+    val id: SegmentId
+    val subject: SubjectDescriptor
 }

@@ -16,8 +16,8 @@
 
 package cn.codethink.xiaoming.permission.data
 
-import cn.codethink.xiaoming.common.Id
-import cn.codethink.xiaoming.common.SubjectDescriptor
+import cn.codethink.xiaoming.util.Id
+import cn.codethink.xiaoming.util.SubjectDescriptor
 
 /**
  * Permission profile is a set of permissions that a subject has. It can be an external user,

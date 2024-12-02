@@ -1,0 +1,9 @@
+session.unsupported: "会话不支持。"
+session.existed: "会话已存在。"
+session.required: "缺少会话参数。"
+session.invalid: "无效会话。"
+session.rejected: "会话被拒绝。"
+session.handler.errored: "会话处理器错误。"
+
+
+request.mode.unsupported: "不支持请求模式 ${mode}。"

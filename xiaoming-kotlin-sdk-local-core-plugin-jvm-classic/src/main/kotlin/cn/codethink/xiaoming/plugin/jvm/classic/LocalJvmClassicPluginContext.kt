@@ -16,8 +16,8 @@
 
 package cn.codethink.xiaoming.plugin.jvm.classic
 
-import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.PluginSubjectDescriptor
+import cn.codethink.xiaoming.util.Cause
+import cn.codethink.xiaoming.util.PluginSubjectDescriptor
 
 interface LocalJvmClassicPluginContext {
     val plugin: LocalJvmClassicPlugin

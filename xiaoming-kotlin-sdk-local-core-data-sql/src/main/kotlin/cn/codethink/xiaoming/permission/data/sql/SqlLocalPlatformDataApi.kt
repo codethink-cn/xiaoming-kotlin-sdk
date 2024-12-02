@@ -16,10 +16,10 @@
 
 package cn.codethink.xiaoming.permission.data.sql
 
-import cn.codethink.xiaoming.common.Id
-import cn.codethink.xiaoming.common.Matcher
-import cn.codethink.xiaoming.common.NumericalId
-import cn.codethink.xiaoming.common.SubjectDescriptor
+import cn.codethink.xiaoming.util.Id
+import cn.codethink.xiaoming.util.Matcher
+import cn.codethink.xiaoming.util.NumericalId
+import cn.codethink.xiaoming.util.SubjectDescriptor
 import cn.codethink.xiaoming.data.LocalPlatformDataApi
 import cn.codethink.xiaoming.data.toId
 import cn.codethink.xiaoming.permission.PermissionComparator

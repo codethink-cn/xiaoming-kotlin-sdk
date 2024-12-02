@@ -16,10 +16,10 @@
 
 package cn.codethink.xiaoming.internal.configuration
 
-import cn.codethink.xiaoming.common.SubjectDescriptor
 import cn.codethink.xiaoming.data.LocalPlatformData
-import cn.codethink.xiaoming.internal.module.Module
 import cn.codethink.xiaoming.io.data.DeserializerModule
+import cn.codethink.xiaoming.module.Module
+import cn.codethink.xiaoming.util.SubjectDescriptor
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging

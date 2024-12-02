@@ -16,12 +16,12 @@
 
 package cn.codethink.xiaoming.plugin.jvm.classic
 
-import cn.codethink.xiaoming.plugin.PluginRuntime
+import cn.codethink.xiaoming.plugin.RemotePluginRuntimeMeta
 import cn.codethink.xiaoming.plugin.jvm.LocalJvmPlugin
 
 interface LocalJvmClassicPlugin : LocalJvmPlugin {
     override val meta: LocalJvmClassicPluginMeta
-    override val runtime: PluginRuntime
+    override val runtimeMeta: RemotePluginRuntimeMeta
 
     val entry: LocalJvmClassicPluginEntry
 }

@@ -20,17 +20,17 @@
 package cn.codethink.xiaoming.permission.data.sql.v1
 
 import cn.codethink.xiaoming.LocalPlatformApi
-import cn.codethink.xiaoming.common.AbstractData
-import cn.codethink.xiaoming.common.DefaultValue
-import cn.codethink.xiaoming.common.FIELD_TYPE
-import cn.codethink.xiaoming.common.FIELD_VERSION
-import cn.codethink.xiaoming.common.Field
-import cn.codethink.xiaoming.common.InternalApi
-import cn.codethink.xiaoming.common.getValue
-import cn.codethink.xiaoming.common.setValue
+import cn.codethink.xiaoming.util.AbstractData
+import cn.codethink.xiaoming.util.DefaultValue
+import cn.codethink.xiaoming.util.FIELD_TYPE
+import cn.codethink.xiaoming.util.FIELD_VERSION
+import cn.codethink.xiaoming.util.Field
+import cn.codethink.xiaoming.util.InternalApi
+import cn.codethink.xiaoming.util.getValue
+import cn.codethink.xiaoming.util.setValue
 import cn.codethink.xiaoming.data.LocalPlatformDataApi
-import cn.codethink.xiaoming.io.data.MapRaw
-import cn.codethink.xiaoming.io.data.Raw
+import cn.codethink.xiaoming.util.MapRaw
+import cn.codethink.xiaoming.util.Raw
 import cn.codethink.xiaoming.io.data.SqlDataSource
 import cn.codethink.xiaoming.io.data.set
 import cn.codethink.xiaoming.permission.data.sql.SqlLocalPlatformDataApi

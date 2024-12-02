@@ -16,5 +16,16 @@
 
 allprojects {
     group = "cn.codethink"
-    version = "0.1.0-SNAPSHOT"
+    version = Versions.project
+}
+
+plugins {
+    alias(libs.plugins.kotlin) apply false
+    alias(libs.plugins.blocking.bridge) apply false
+}
+
+subprojects {
+    repositories {
+        mavenCentral()
+    }
 }

@@ -1,0 +1,174 @@
+/*
+ * Copyright 2024 CodeThink Technologies and contributors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@file:OptIn(InternalApi::class)
+
+package cn.codethink.xiaoming.io.connection
+
+import cn.codethink.xiaoming.connection.DefaultWebSocketClientConfiguration
+import cn.codethink.xiaoming.connection.DefaultWebSocketServerConfiguration
+import cn.codethink.xiaoming.connection.WebSocketClientConnectionApi
+import cn.codethink.xiaoming.connection.await
+import cn.codethink.xiaoming.util.InternalApi
+import cn.codethink.xiaoming.util.SubjectDescriptor
+import cn.codethink.xiaoming.util.TestSubjectDescriptor
+import cn.codethink.xiaoming.util.currentTimeMillis
+import cn.codethink.xiaoming.util.DeserializerModule
+import cn.codethink.xiaoming.util.JacksonModuleVersion
+import cn.codethink.xiaoming.util.PluginSubjectDescriptorImpl
+import cn.codethink.xiaoming.util.createTestSubjectDescriptor
+import cn.codethink.xiaoming.util.findAndApplyInitializers
+import cn.codethink.xiaoming.util.toNamespaceId
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.websocket.WebSockets
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Test
+
+const val TEST_HOST = "127.0.0.1"
+const val TEST_PORT = 11451
+const val TEST_PATH = "/1893/12/26"
+const val TEST_TOKEN = "ExampleAccessToken"
+
+class WebSocketClientSessionInternalCoreApiTest {
+    private val logger = KotlinLogging.logger { }
+
+    inner class TestAuthorizationService : AuthorizationService {
+        override fun authorize(token: String): SubjectDescriptor? {
+            if (token == TEST_TOKEN) {
+                logger.info { "Authorized" }
+                return createTestSubjectDescriptor()
+            } else {
+                return null
+            }
+        }
+    }
+
+    private val deserializerModule = DeserializerModule(
+        version = JacksonModuleVersion,
+        logger = logger
+    ).apply {
+        findAndApplyInitializers(javaClass.classLoader, createTestSubjectDescriptor())
+    }
+
+    private val dataObjectMapper = jacksonObjectMapper().apply {
+        propertyNamingStrategy = PropertyNamingStrategies.SNAKE_CASE
+        findAndRegisterModules()
+        registerModule(deserializerModule)
+    }
+
+    @Test
+    fun testConnect(): Unit = runBlocking {
+        val demoPluginSubject = PluginSubjectDescriptorImpl("cn.codethink.xiaoming:demo".toNamespaceId())
+        val supervisorJob = SupervisorJob()
+
+        val server = LocalPlatformWebSocketServerApi(
+            configuration = DefaultWebSocketServerConfiguration(
+                port = TEST_PORT,
+                host = TEST_HOST,
+                path = TEST_PATH
+            ),
+            descriptor = createTestSubjectDescriptor(),
+            authorizationService = TestAuthorizationService(),
+            parentJob = supervisorJob
+        )
+
+        val clientConfiguration = DefaultWebSocketClientConfiguration(
+            host = TEST_HOST,
+            port = TEST_PORT,
+            path = TEST_PATH,
+            token = TEST_TOKEN,
+            reconnectIntervalMillis = 1000
+        )
+        val client = WebSocketClientConnectionApi(
+            configuration = clientConfiguration,
+            logger = logger,
+            httpClient = HttpClient { install(WebSockets) },
+            descriptor = demoPluginSubject,
+            parentJob = supervisorJob,
+        )
+
+        var durationMillis = currentTimeMillis
+        while (true) {
+            client.await(500)
+            if (client.isConnected) {
+                break
+            }
+            logger.info { "Waiting, connection.isConnected: ${client.isConnected}, pass ${currentTimeMillis - durationMillis}ms." }
+        }
+        durationMillis = currentTimeMillis - durationMillis
+
+        logger.info { "connection.isConnected: ${client.isConnected}, cost ${durationMillis}ms." }
+
+        delay(100)
+        logger.info { "Closing" }
+        server.close()
+
+        logger.info { "Looking client effect" }
+        delay(10000)
+        client.close()
+
+        supervisorJob.cancel()
+    }
+
+    @Test
+    fun testAuthorizeFail(): Unit = runBlocking {
+        val server = LocalPlatformWebSocketServerApi(
+            configuration = DefaultWebSocketServerConfiguration(
+                port = TEST_PORT,
+                host = TEST_HOST,
+                path = TEST_PATH
+            ),
+            descriptor = createTestSubjectDescriptor(),
+            authorizationService = TestAuthorizationService()
+        )
+
+        val clientConfiguration = DefaultWebSocketClientConfiguration(
+            host = TEST_HOST,
+            port = TEST_PORT,
+            path = TEST_PATH,
+            token = "WrongToken",
+            reconnectIntervalMillis = 1000
+        )
+        val connection = WebSocketClientConnectionApi(
+            configuration = clientConfiguration,
+            logger = logger,
+            httpClient = HttpClient { install(WebSockets) },
+            descriptor = createTestSubjectDescriptor()
+        )
+
+        var durationMillis = currentTimeMillis
+        while (true) {
+            connection.await(500)
+            if (connection.isConnected || (currentTimeMillis - durationMillis) > 5000) {
+                break
+            }
+            logger.info { "Waiting, connection.isConnected: ${connection.isConnected}, pass ${currentTimeMillis - durationMillis}ms." }
+        }
+        durationMillis = currentTimeMillis - durationMillis
+
+        assertFalse(connection.isConnected)
+        logger.info { "connection.isConnected: ${connection.isConnected}, after ${durationMillis}ms." }
+
+        server.close()
+        connection.close()
+    }
+}

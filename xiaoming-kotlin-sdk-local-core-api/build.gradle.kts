@@ -15,20 +15,29 @@
  */
 
 plugins {
-    kotlin("jvm") version "2.0.20"
-}
-
-group = "cn.codethink"
-version = "0.1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
+    kotlin("jvm")
+    id("me.him188.kotlin-jvm-blocking-bridge")
+    `maven-publish`
 }
 
 dependencies {
+    api(project(":xiaoming-kotlin-sdk-core-api"))
+    api(project(":xiaoming-kotlin-sdk-remote-core-api"))
+
+    implementation(project(":xiaoming-kotlin-sdk-remote-core"))
+
     testImplementation(kotlin("test"))
 }
 
 tasks.test {
     useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            artifact(tasks.kotlinSourcesJar)
+            from(components["java"])
+        }
+    }
 }

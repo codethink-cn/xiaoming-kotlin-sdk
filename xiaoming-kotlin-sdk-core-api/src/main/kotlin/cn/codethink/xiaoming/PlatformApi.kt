@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming
 
-import cn.codethink.xiaoming.common.Subject
+import cn.codethink.xiaoming.util.Subject
 import kotlinx.coroutines.CoroutineScope
 
 /**

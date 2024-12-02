@@ -16,8 +16,8 @@
 
 package cn.codethink.xiaoming.permission.data.sql
 
-import cn.codethink.xiaoming.common.Matcher
-import cn.codethink.xiaoming.common.NumericalId
+import cn.codethink.xiaoming.util.Matcher
+import cn.codethink.xiaoming.util.NumericalId
 import cn.codethink.xiaoming.data.getPermissionProfileOrFail
 import cn.codethink.xiaoming.permission.PermissionComparator
 import cn.codethink.xiaoming.permission.data.PermissionProfile

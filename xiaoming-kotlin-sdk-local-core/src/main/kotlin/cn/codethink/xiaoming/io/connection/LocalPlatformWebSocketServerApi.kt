@@ -16,10 +16,14 @@
 
 package cn.codethink.xiaoming.io.connection
 
-import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.HEADER_VALUE_AUTHORIZATION_BEARER_WITH_SPACE
-import cn.codethink.xiaoming.common.SubjectDescriptor
-import cn.codethink.xiaoming.common.TextCause
+import cn.codethink.xiaoming.connection.DefaultWebSocketServerConfiguration
+import cn.codethink.xiaoming.connection.WebSocketConnectionApi
+import cn.codethink.xiaoming.connection.WebSocketServerApi
+import cn.codethink.xiaoming.connection.WebSocketServerConfiguration
+import cn.codethink.xiaoming.connection.address
+import cn.codethink.xiaoming.util.Cause
+import cn.codethink.xiaoming.util.HEADER_VALUE_AUTHORIZATION_BEARER_WITH_SPACE
+import cn.codethink.xiaoming.util.SubjectDescriptor
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
@@ -64,7 +68,7 @@ val CONNECTION_SUBJECT_DESCRIPTOR_Descriptor_ATTRIBUTE_KEY = AttributeKey<Subjec
  * @see AuthorizationService
  */
 class LocalPlatformWebSocketServerApi(
-    val configuration: WebSocketServerConfiguration,
+    val configuration: DefaultWebSocketServerConfiguration,
     descriptor: SubjectDescriptor,
     val authorizationService: AuthorizationService,
     private val logger: KLogger = KotlinLogging.logger { },
@@ -92,7 +96,7 @@ class LocalPlatformWebSocketServerApi(
         override val descriptor: SubjectDescriptor,
         parentJob: Job,
         parentCoroutineContext: CoroutineContext
-    ) : WebSocketConnectionInternalApi {
+    ) : WebSocketConnectionApi {
         private val supervisorJob = SupervisorJob(parentJob)
         private val scope = CoroutineScope(parentCoroutineContext + supervisorJob)
         override val coroutineContext: CoroutineContext = scope.coroutineContext
@@ -158,7 +162,7 @@ class LocalPlatformWebSocketServerApi(
             }
         }
 
-        override fun close() = close(TextCause("Server closed.", descriptor))
+        override fun close() = close(TextCauseImpl("Server closed.", descriptor))
 
         override fun close(cause: Cause) = onlineLock.write {
             stateNoLock = when (stateNoLock) {

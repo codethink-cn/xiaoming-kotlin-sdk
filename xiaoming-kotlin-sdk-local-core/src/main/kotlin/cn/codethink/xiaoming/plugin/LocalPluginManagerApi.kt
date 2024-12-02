@@ -18,24 +18,59 @@
 
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.DefaultIdMapRegistrations
-import cn.codethink.xiaoming.common.ErrorPolicy
-import cn.codethink.xiaoming.common.Expected
-import cn.codethink.xiaoming.common.Id
-import cn.codethink.xiaoming.common.InternalApi
-import cn.codethink.xiaoming.common.NamespaceId
-import cn.codethink.xiaoming.common.Registration
-import cn.codethink.xiaoming.common.expectedError
-import cn.codethink.xiaoming.common.failure
-import cn.codethink.xiaoming.common.success
+import cn.codethink.xiaoming.Platform
+import cn.codethink.xiaoming.util.Cause
+import cn.codethink.xiaoming.util.IdMapRegistrations
+import cn.codethink.xiaoming.util.RegistrationImpl
+import cn.codethink.xiaoming.util.DualKeyMap
+import cn.codethink.xiaoming.util.MutableDualKeyMap
+import cn.codethink.xiaoming.util.Id
+import cn.codethink.xiaoming.util.InternalApi
+import cn.codethink.xiaoming.util.NamespaceId
+import cn.codethink.xiaoming.util.Registration
+import cn.codethink.xiaoming.util.SubjectDescriptor
+import cn.codethink.xiaoming.util.Version
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
 import kotlin.concurrent.write
 
-typealias PluginToDetector = Pair<Plugin, Map.Entry<Id, Registration<PluginDetector>>>
+data class DetectedPlugin(
+    val plugin: Plugin,
+    val detector: PluginDetector,
+    val detectorId: Id,
+    val detectorRegistration: Registration<PluginDetector>
+)
+
+/**
+ * Internal context of a plugin including allocated flag, lifecycle methods.
+ *
+ * Notice that that lifecycle methods' duty is to:
+ *
+ * 1. Trigger corresponding events.
+ * 2. Maintain flags in [PluginRuntimeMeta].
+ * 3. Call the corresponding lifecycle methods of the plugin.
+ * 4. Handle exceptions.
+ *
+ * @author Chuanwise
+ */
+interface PluginInternalContext {
+    val key: DualKeyMap.Key<NamespaceId, Version>
+    val plugin: Plugin
+
+    val isAllocated: Boolean
+    val isAllocating: Boolean
+    val isAllocatingErrored: Boolean
+
+    fun allocate(cause: Cause, force: Boolean = false): AllocatedPlugin
+
+    fun load(platform: Platform, cause: Cause, force: Boolean = false)
+    fun enable(platform: Platform, cause: Cause, force: Boolean = false)
+    fun disable(platform: Platform, cause: Cause, force: Boolean = false)
+    fun unload(platform: Platform, cause: Cause, force: Boolean = false)
+}
 
 /**
  * Manages plugins installed in local platform.
@@ -52,140 +87,145 @@ class LocalPluginManagerApi(
      */
     private val lock = ReentrantReadWriteLock()
 
-    /**
-     * API state.
-     */
-    private enum class State {
-        /**
-         * API is never started in this platform.
-         */
-        ALLOCATED,
+    // Plugin container can storage multi versions of a plugin.
+    private inner class PluginInternalContextImpl(
+        override val key: DualKeyMap.Key<NamespaceId, Version>,
+        var pluginNoLock: Plugin,
+        val runtimeMeta: MutablePluginRuntimeMeta
+    ) : PluginInternalContext {
+        val lock: ReentrantReadWriteLock = ReentrantReadWriteLock()
+
+        override val plugin: Plugin
+            get() = lock.read { pluginNoLock }
+
+        override var isAllocated: Boolean = false
+        override var isAllocating: Boolean = false
+        override var isAllocatingErrored: Boolean = false
 
         /**
-         * API is starting.
+         * Allocate plugin if not, or return the allocated plugin.
          */
-        STARTING,
+        override fun allocate(cause: Cause, force: Boolean): AllocatedPlugin = lock.write {
+            val currentPlugin = plugin
+            if (currentPlugin is AllocatedPlugin) {
+                return currentPlugin
+            }
+            check(!isAllocatingErrored || force) {
+                "The plugin '${plugin.toPluginRequirement()}' is errored when allocating, " +
+                        "and the platform dare not forcefully operate it. " +
+                        "If you really need to allocate it, please set the `force` to true and try again."
+            }
 
-        /**
-         * API tried to start, but an error occurred.
-         */
-        STARTING_ERRORED,
+            val notYetAllocatedPlugin = pluginNoLock
+            check(notYetAllocatedPlugin is NotYetAllocatedPlugin<*>) {
+                "The plugin '${pluginNoLock.toPluginRequirement()}' is not a NotYetAllocatedPlugin."
+            }
 
-        /**
-         * API is started.
-         */
-        STARTED,
+            isAllocating = true
+            try {
+                // Do allocate operation.
+                val context = PluginAllocatingContext(internalApi.platform, cause, runtimeMeta)
+                val allocated = notYetAllocatedPlugin.allocate(context)
 
-        /**
-         * API is stopping.
-         */
-        STOPPING,
+                // Only if allocate success, then return the allocated plugin.
+                isAllocated = true
+                isAllocatingErrored = false
 
-        /**
-         * API tried to stop, but an error occurred.
-         */
-        STOPPING_ERRORED,
+                pluginNoLock = allocated
 
-        /**
-         * API is stopped.
-         */
-        STOPPED
+                return@write allocated
+            } catch (t: Throwable) {
+                isAllocatingErrored = true
+                throw t
+            } finally {
+                isAllocating = false
+            }
+        }
+
+        override fun load(platform: Platform, cause: Cause, force: Boolean): Unit = lock.write {
+            val plugin = allocate(cause, force)
+
+            if (runtimeMeta.isLoaded) {
+                return
+            }
+            require(!runtimeMeta.isLoadingErrored || force) {
+                "The plugin '${plugin.toPluginRequirement()}' is errored when loading, " +
+                        "and the platform dare not forcefully operate it. " +
+                        "If you really need to load it, please set the `force` to true and try again."
+            }
+
+            // Check if only one version of the plugin is loaded.
+            val versions = pluginInternalContexts.toMapByKey1(key.key1)
+
+            val versionsLoadingOrAttempted = versions.filterValues {
+                it !== this && (it.runtimeMeta.isLoading || it.runtimeMeta.isLoadingAttempted)
+            }
+            check(versionsLoadingOrAttempted.isEmpty()) {
+                "Other "
+            }
+
+            // TODO: Trigger event.
+            val event = PluginLoadEvent
+
+            runtimeMeta.isLoading = true
+            try {
+                plugin.load(platform, cause, force)
+                runtimeMeta.isLoaded = true
+                runtimeMeta.isLoadingErrored = false
+            } catch (t: Throwable) {
+                runtimeMeta.isLoadingErrored = true
+                throw t
+            } finally {
+                runtimeMeta.isLoading = false
+            }
+        }
+
+        override fun enable(platform: Platform, cause: Cause, force: Boolean) {
+            TODO("Not yet implemented")
+        }
+
+        override fun disable(platform: Platform, cause: Cause, force: Boolean) {
+            TODO("Not yet implemented")
+        }
+
+        override fun unload(platform: Platform, cause: Cause, force: Boolean) {
+            TODO("Not yet implemented")
+        }
     }
 
-    private var stateNoLock: State = State.ALLOCATED
+    private val pluginInternalContexts: MutableDualKeyMap<NamespaceId, Version, PluginInternalContextImpl> =
+        MutableDualKeyMap()
 
     /**
-     * Plugins allocated to this platform, associated by real ID.
+     * External view of [pluginInternalContexts].
      */
-    private val mutPlugins: MutableMap<NamespaceId, AllocatedPlugin> = HashMap()
-
-    /**
-     * External view of [mutPlugins].
-     */
-    val plugins: Map<NamespaceId, AllocatedPlugin>
-        get() = mutPlugins.toMap()
+    val plugins: Collection<Plugin>
+        get() = pluginInternalContexts.toValues().map { it.pluginNoLock }
 
     /**
      * Provided plugins, see [PluginMeta.provisions].
      */
-    private var mutProvidedPluginIds: MutableMap<NamespaceId, NamespaceId> = HashMap()
+    private var mutableProvidedPluginIds: MutableMap<NamespaceId, NamespaceId> = HashMap()
 
     /**
      * Plugin detectors, to detect available installed plugins.
      */
-    private val mutDetectors = DefaultIdMapRegistrations<PluginDetector>()
+    private val mutablePluginDetectors = IdMapRegistrations<PluginDetector>()
 
     /**
-     * External view of [mutDetectors].
+     * External view of [mutablePluginDetectors].
      */
     val detectors: Map<Id, Registration<PluginDetector>>
-        get() = mutDetectors.toMap()
-
-
-    /**
-     * Start plugin manager API.
-     *
-     * If the API is already started, it will be ignored.
-     *
-     * @param cause the cause of starting.
-     * @param force whether to force start the errored plugin.
-     * @param policy the policy for expected errors.
-     */
-    @InternalApi
-    fun start(
-        cause: Cause,
-        force: Boolean = false,
-        resolver: PluginCoexistenceResolver = NoOperationPluginCoexistenceResolver,
-        policy: ErrorPolicy = ErrorPolicy.THROW_EXCEPTION
-    ): Expected<Unit> = lock.write {
-        stateNoLock = when (stateNoLock) {
-            State.ALLOCATED, State.STOPPED -> State.STARTING
-            State.STARTED -> return@write success()
-            State.STARTING_ERRORED -> if (force) State.STARTING else {
-                return@write failure(logger.expectedError(cause, internalApi.descriptor, policy) {
-                    "Plugin manager API is already errored in the last starting attempt. " +
-                            "To retry forcefully, set argument `force` to true."
-                })
-            }
-
-            State.STOPPING_ERRORED -> return@write failure(logger.expectedError(cause, internalApi.descriptor, policy) {
-                "Unexpected plugin manager API state: $stateNoLock before starting."
-            })
-
-            else -> error("Unexpected plugin manager API state: $stateNoLock before starting.")
-        }
-        logger.debug { "Starting plugin manager API." }
-
-        try {
-            // 1. Detect all plugins.
-            val detectedPluginList = detectPlugins(cause)
-
-            // 2. Resolve plugins.
-            val resolvedPlugins = resolver.resolve(
-                context = PluginConflictResolverContext(
-                    platform = internalApi.platform,
-                    cause = cause,
-                    plugins = detectedPluginList,
-                    policy = policy
-                )
-            )
-
-            stateNoLock = State.STARTED
-            return@write success()
-        } catch (t: Throwable) {
-            stateNoLock = State.STARTING_ERRORED
-            throw t
-        }
-    }
+        get() = mutablePluginDetectors.toMap()
 
     // Just detect plugins, without id conflict checking.
-    private fun detectPlugins(
+    fun detectPlugins(
         cause: Cause
-    ): List<PluginToDetector> = lock.write {
-        val results = mutableListOf<PluginToDetector>()
+    ): List<DetectedPlugin> = lock.write {
+        val results = mutableListOf<DetectedPlugin>()
 
         // Get registered plugin detectors and detect all plugins.
-        for (entry in mutDetectors) {
+        for (entry in mutablePluginDetectors) {
             val (id, registration) = entry
             logger.trace { "Detecting plugins by detector '$id' registered by ${registration.subject}." }
 
@@ -209,115 +249,110 @@ class LocalPluginManagerApi(
             }
 
             // 3. Check if conflict plugin detected.
-            results += detected.map { it to entry }
+            results += detected.map {
+                DetectedPlugin(
+                    plugin = it,
+                    detector = registration.value,
+                    detectorId = id,
+                    detectorRegistration = registration
+                )
+            }
         }
 
         return@write results
     }
 
-    /**
-     * Load multiple plugins. If argument contains a plugin that is already loaded or enabled,
-     * it will be ignored. If it's errored, it will be reloaded forcefully if [force] = true,
-     * otherwise exception will be thrown because it's not safe to reload an errored plugin.
-     *
-     * If no error occurred, it's expected that [AllocatedPlugin.isLoaded] return true,
-     * otherwise the [AllocatedPlugin.isErrored] should return true.
-     *
-     * @param plugins the plugins to load.
-     * @param force whether to force load the errored plugin.
-     * @param cause the cause of this operation.
-     *
-     * @see AllocatedPlugin.load
-     * @see AllocatedPlugin.isLoaded
-     */
-    fun loadPlugins(
-        plugins: Iterable<Plugin>, cause: Cause, force: Boolean = false
-    ): Unit = lock.write {
-        val pluginsById = plugins.associateBy { it.descriptor.id }
-
-        val alreadyLoadedPluginIds = mutableSetOf<NamespaceId>()
-
-        internalApi.logger.info { "I can't waiting for load plugins!" }
-        pluginsById.values.forEach {
-            (it as AllocatedPlugin).load(internalApi.platform, cause)
+    private fun putAndCheckNotInternalContextRegistered(
+        key: DualKeyMap.Key<NamespaceId, Version>,
+        internalContext: PluginInternalContextImpl
+    ) {
+        val oldInternalContext = pluginInternalContexts.putIfAbsent(key, internalContext)
+        if (oldInternalContext != null) {
+            val requirement = oldInternalContext.plugin.toPluginRequirement()
+            error("The plugin '$requirement' is already registered.")
         }
     }
 
-    fun enablePlugins(
-        plugins: Iterable<Plugin>,
-        cause: Cause,
-        force: Boolean = false,
+    /**
+     * Allocate a plugin. If the plugin is already allocated, an exception will be thrown.
+     *
+     * Notice that the method will NOT check if dependencies or other conditions are
+     * satisfied, it's the caller's responsibility.
+     *
+     * If failed, the plugin will not be added to the [pluginInternalContexts].
+     *
+     * @param plugin the plugin to register, must be a [NotYetAllocatedPlugin].
+     * @return the allocated plugin.
+     *
+     * @see NotYetAllocatedLocalPlugin
+     * @see NotYetAllocatedRemotePlugin
+     */
+    @InternalApi
+    fun registerPlugin(plugin: NotYetAllocatedPlugin): PluginInternalContext {
+        val runtimeMeta: MutablePluginRuntimeMeta = when (plugin) {
+            is NotYetAllocatedRemotePlugin -> RemotePluginRuntimeMetaRemoteViewImpl()
+            is NotYetAllocatedLocalPlugin -> LocalPluginRuntimeMetaImpl()
+            else -> error(
+                "Unexpected plugin type: ${plugin::class.qualifiedName}, " +
+                        "required 'cn.codethink.xiaoming.plugin.NotYetAllocatedRemotePlugin' or " +
+                        "'cn.codethink.xiaoming.plugin.NotYetAllocatedLocalPlugin'."
+            )
+        }
+
+        val key = DualKeyMap.Key(plugin.id, plugin.version)
+        val internalContext = PluginInternalContextImpl(key, plugin, runtimeMeta)
+
+        putAndCheckNotInternalContextRegistered(key, internalContext)
+        return internalContext
+    }
+
+    fun getPluginInternalContext(key: DualKeyMap.Key<NamespaceId, Version>): PluginInternalContext? = lock.read {
+        pluginInternalContexts[key]
+    }
+
+    @InternalApi
+    fun unloadPluginsNoCheck(
+        plugins: Map<NamespaceId, AllocatedPlugin>, cause: Cause, force: Boolean
     ): Unit = lock.write {
-        val pluginsById = plugins.associateBy { it.descriptor.id }
+        // Plugins are not empty, and values are in the `mutablePlugins`.
 
-        val alreadyEnabledPluginIds = mutableSetOf<NamespaceId>()
-
-        // Collate provisions.
-        // This -> By Whom (include This)
-        val providedPluginIds = HashMap(mutProvidedPluginIds)
-        for (required in plugins) {
-            val providerId = providedPluginIds[required.descriptor.id]
-            if (providerId != null) {
-                val provider = mutPlugins[providerId]
-                checkNotNull(provider) { "The provider of plugin '${required.id}': '${providerId}' is not found." }
-
-                if (providerId == required.descriptor.id) {
-                    // Plugin already provided by itself.
-                    if (required.version == provider.version) {
-                        // If the version is same, check if it is enabled.
-                        if (provider is AllocatedPlugin && provider.isEnabled) {
-                            // Plugin already enabled.
-                            alreadyEnabledPluginIds.add(required.descriptor.id)
-                            continue
-                        }
-                    }
+        // 1. Disable plugins if needed.
+        val presentedPluginsToDisableBeforeActions = mutableMapOf<NamespaceId, AllocatedPlugin>()
+        for ((id, plugin) in pluginInternalContexts) {
+            if (plugin.isEnabled) {
+                presentedPluginsToDisableBeforeActions[id] = plugin
+            } else if (plugin.runtimeMeta.isDisablingErrored) {
+                check(force) {
+                    "The plugins to unload contains '${plugin.toExactRequirement()}', " +
+                            "but it is disabling errored, platform dare not forcefully operate it. " +
+                            "If you really need to unload it, please set the `force` to true and try again."
                 }
-
-                // Plugin already provided by another plugin.
+                presentedPluginsToDisableBeforeActions[id] = plugin
             }
         }
 
-        // Build dependency graph.
-        class Node(
-            val plugin: Plugin,
-            val present: Boolean,
+        disablePluginsNoCheck(presentedPluginsToDisableBeforeActions, cause, force)
 
-            // Other -> This
-            val edgeHeads: MutableMap<Id, Node> = mutableMapOf(),
+        // 2. Unload them.
+        for ((id, plugin) in pluginInternalContexts) {
+            val context = mutablePluginRuntimeMetas[id] ?: error("The plugin context of plugin '$id' is not found.")
 
-            // This -> Other
-            val edgeTails: MutableMap<Id, Node> = mutableMapOf()
-        )
+            // If plugin already unloaded, ignore it.
 
-        val nodes = mutableMapOf<Id, Node>()
-
-        // 1. Check if there is any plugin that is in error state.
-        for (plugin in plugins) {
-            val presented = mutPlugins[plugin.descriptor.id]
-            if (presented != null) {
-                // Check if version changed.
-                if (presented.version != plugin.version) {
-                    // If version changed, we need to unload the previous one.
-                    // Then load and enable the new one.
-
-                    if (presented is AllocatedPlugin && presented.isErrored) {
-                        check(force) {
-                            "The plugins to enabled contains '${plugin.toExactRequirement()}', " +
-                                    "but there is a same plugin with a another version '${presented.version}', " +
-                                    "platform needs to unload it first. " +
-                                    "But it is already in an error state and the platform dare not forcefully operate it. " +
-                                    "If you really need to enable the new, please set the `force` to true " +
-                                    "or disable the presented forcefully first."
-                        }
-                    }
-                }
-            }
         }
+    }
 
+    fun registerPluginDetector(
+        id: Id, detector: PluginDetector, subject: SubjectDescriptor
+    ): Unit = lock.write {
+        mutablePluginDetectors.register(id, RegistrationImpl(detector, subject))
+    }
 
-        // 1. Add present plugins.
-        for (presentPlugin in this.mutPlugins) {
-            nodes[presentPlugin.key] = Node(presentPlugin.value, true)
-        }
+    fun unregisterPluginDetectorById(id: Id): Unit = lock.write {
+        mutablePluginDetectors.unregisterByKey(id)
+    }
+
+    fun unregisterPluginDetectorBySubject(subject: SubjectDescriptor): Unit = lock.write {
+        mutablePluginDetectors.unregisterBySubject(subject)
     }
 }

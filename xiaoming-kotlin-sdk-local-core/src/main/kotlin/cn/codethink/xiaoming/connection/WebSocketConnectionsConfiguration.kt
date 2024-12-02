@@ -16,12 +16,10 @@
 
 package cn.codethink.xiaoming.connection
 
-import cn.codethink.xiaoming.common.ConnectionSubjectDescriptor
-import cn.codethink.xiaoming.common.Id
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import cn.codethink.xiaoming.io.connection.LocalPlatformWebSocketServerApi
-import cn.codethink.xiaoming.io.connection.ServerApi
-import cn.codethink.xiaoming.io.connection.WebSocketServerConfiguration
+import cn.codethink.xiaoming.util.ConnectionDescriptor
+import cn.codethink.xiaoming.util.Id
 
 
 const val SERVER_CONFIGURATION_TYPE_WEBSOCKET = "web_socket"
@@ -38,7 +36,7 @@ class WebSocketServerConfiguration(
         return LocalPlatformWebSocketServerApi(
             configuration = this,
             authorizationService = api.connectionManagerApi.authorizationService,
-            descriptor = ConnectionSubjectDescriptor(id),
+            descriptor = ConnectionDescriptor(id),
             parentJob = api.supervisorJob,
             parentCoroutineContext = api.coroutineContext
         )

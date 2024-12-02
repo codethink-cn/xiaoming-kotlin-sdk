@@ -16,8 +16,7 @@
 
 package cn.codethink.xiaoming.language
 
-import cn.codethink.xiaoming.connection.ConnectionLanguageConfiguration
-import cn.codethink.xiaoming.io.ProtocolLanguageConfiguration
+import cn.codethink.xiaoming.connection.SessionLanguageConfiguration
 
 /**
  * Language configuration.
@@ -25,6 +24,6 @@ import cn.codethink.xiaoming.io.ProtocolLanguageConfiguration
  * @author Chuanwise
  */
 data class LanguageConfiguration(
-    val protocol: ProtocolLanguageConfiguration,
-    val connection: ConnectionLanguageConfiguration
+    val protocol: SessionLanguageConfiguration,
+    val connection: SessionLanguageConfiguration
 )

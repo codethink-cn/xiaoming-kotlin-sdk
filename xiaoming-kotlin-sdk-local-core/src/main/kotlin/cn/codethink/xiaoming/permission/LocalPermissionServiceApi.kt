@@ -16,48 +16,34 @@
 
 package cn.codethink.xiaoming.permission
 
-import cn.codethink.xiaoming.common.Cause
-import cn.codethink.xiaoming.common.DefaultRegistration
-import cn.codethink.xiaoming.common.DefaultStringMapRegistrations
-import cn.codethink.xiaoming.common.Id
-import cn.codethink.xiaoming.common.Matcher
-import cn.codethink.xiaoming.common.Registration
-import cn.codethink.xiaoming.common.Registrations
-import cn.codethink.xiaoming.common.SegmentId
-import cn.codethink.xiaoming.common.SubjectDescriptor
+import cn.codethink.xiaoming.util.Cause
+import cn.codethink.xiaoming.util.RegistrationImpl
+import cn.codethink.xiaoming.util.Id
+import cn.codethink.xiaoming.util.Matcher
+import cn.codethink.xiaoming.util.Registration
+import cn.codethink.xiaoming.util.RegistrationManager
+import cn.codethink.xiaoming.util.SegmentIdImpl
+import cn.codethink.xiaoming.util.SubjectDescriptor
 import cn.codethink.xiaoming.internal.LocalPlatformInternalApi
 import cn.codethink.xiaoming.permission.data.PermissionProfile
+import cn.codethink.xiaoming.util.MutableStringMapRegistrationManagerImpl
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 
-/**
- * The core permission service api.
- *
- * @author Chuanwise
- * @see LocalPermissionService
- */
 class LocalPermissionServiceApi(
     val internalApi: LocalPlatformInternalApi
 ) {
     val logger by internalApi::logger
 
-    /**
-     * Calculator is used to deal with different type of subjects.
-     */
-    val permissionCalculatorRegistrations = DefaultStringMapRegistrations<PermissionCalculator<*>>()
+    val permissionCalculatorRegistrations =
+        MutableStringMapRegistrationManagerImpl<PermissionCalculator<SubjectDescriptor>>()
+    val permissionContextMatcherRegistrations = MutableStringMapRegistrationManagerImpl<Matcher<*>>()
 
-    /**
-     * Check if permission record is valid, usually called in [PermissionComparator].
-     *
-     * @see DefaultPermissionComparator
-     */
-    val permissionContextMatcherRegistrations = DefaultStringMapRegistrations<Matcher<*>>()
+    val permissionMetaRegistrations = PermissionMetaRegistrationManager()
 
-    val permissionMetaRegistrations = PermissionMetaRegistrations()
-
-    val permissionSettingCheckerRegistrations = DefaultStringMapRegistrations<PermissionSettingChecker>()
+    val permissionSettingCheckerRegistrations = MutableStringMapRegistrationManagerImpl<PermissionSettingChecker>()
 
     init {
         registerPermissionSettingChecker(
@@ -174,28 +160,28 @@ class LocalPermissionServiceApi(
     fun registerPermissionCalculator(
         type: String, calculator: PermissionCalculator<*>, subject: SubjectDescriptor
     ) {
-        permissionCalculatorRegistrations[type] = DefaultRegistration(calculator, subject)
+        permissionCalculatorRegistrations[type] = RegistrationImpl(calculator, subject)
     }
 
     fun unregisterPermissionCalculatorByType(type: String) = permissionCalculatorRegistrations.remove(type)
     fun unregisterPermissionCalculatorBySubject(subject: SubjectDescriptor) =
         permissionCalculatorRegistrations.unregisterBySubject(subject)
 
-    fun registerPermissionMeta(id: SegmentId, meta: PermissionMeta, subject: SubjectDescriptor) =
+    fun registerPermissionMeta(id: SegmentIdImpl, meta: PermissionMeta, subject: SubjectDescriptor) =
         permissionMetaRegistrations.register(id, meta, subject)
 
-    fun unregisterPermissionMetaById(id: SegmentId) = permissionMetaRegistrations.unregisterById(id)
+    fun unregisterPermissionMetaById(id: SegmentIdImpl) = permissionMetaRegistrations.unregisterById(id)
     fun unregisterPermissionMetaBySubject(subject: SubjectDescriptor) =
         permissionMetaRegistrations.unregisterBySubject(subject)
 
-    fun unregisterPermissionMetaByIdAndSubject(id: SegmentId, subject: SubjectDescriptor) =
+    fun unregisterPermissionMetaByIdAndSubject(id: SegmentIdImpl, subject: SubjectDescriptor) =
         permissionMetaRegistrations.unregisterByIdAndSubject(id, subject)
 
     fun registerPermissionSettingChecker(
         type: String,
         checker: PermissionSettingChecker,
         subject: SubjectDescriptor
-    ) = permissionSettingCheckerRegistrations.register(type, DefaultRegistration(checker, subject))
+    ) = permissionSettingCheckerRegistrations.register(type, RegistrationImpl(checker, subject))
 
     fun unregisterPermissionSettingCheckerByType(type: String) =
         permissionSettingCheckerRegistrations.unregisterByKey(type)
@@ -216,52 +202,53 @@ fun LocalPermissionServiceApi.hasPermission(
     context: Map<String, Any?> = emptyMap()
 ): Boolean? = hasPermission(profile.id, permission, cause, context)
 
-class PermissionComparatorRegistrations : Registrations {
+class PermissionComparatorRegistrationManager : RegistrationManager {
     data class PermissionComparatorRegistration(
-        val matcher: Matcher<SegmentId>,
+        val matcher: Matcher<SegmentIdImpl>,
         override val value: PermissionComparator,
         override val subject: SubjectDescriptor
     ) : Registration<PermissionComparator>
 
     private val comparators = CopyOnWriteArrayList<PermissionComparatorRegistration>()
-    operator fun get(id: SegmentId) = comparators.filter { it.matcher.isMatched(id) }
+    operator fun get(id: SegmentIdImpl) = comparators.filter { it.matcher.isMatched(id) }
 
-    fun register(matcher: Matcher<SegmentId>, comparator: PermissionComparator, subject: SubjectDescriptor) {
+    fun register(matcher: Matcher<SegmentIdImpl>, comparator: PermissionComparator, subject: SubjectDescriptor) {
         comparators.add(PermissionComparatorRegistration(matcher, comparator, subject))
     }
 
     override fun unregisterBySubject(subject: SubjectDescriptor): Boolean =
         comparators.removeAll { it.subject == subject }
 
-    fun unregisterIfMatched(id: SegmentId): Boolean = comparators.removeAll { it.matcher.isMatched(id) }
+    fun unregisterIfMatched(id: SegmentIdImpl): Boolean = comparators.removeAll { it.matcher.isMatched(id) }
 }
 
-class PermissionMetaRegistrations : Registrations {
+class PermissionMetaRegistrationManager : RegistrationManager {
     class PermissionMetaRegistration(
-        val id: SegmentId,
+        val id: SegmentIdImpl,
         override val value: PermissionMeta,
         override val subject: SubjectDescriptor
     ) : Registration<PermissionMeta>
 
     private val lock = ReentrantReadWriteLock()
 
-    private val metaBySegmentId = mutableMapOf<SegmentId, MutableMap<SubjectDescriptor, PermissionMetaRegistration>>()
+    private val metaBySegmentId =
+        mutableMapOf<SegmentIdImpl, MutableMap<SubjectDescriptor, PermissionMetaRegistration>>()
     private val metaBySubjectDescriptor =
-        mutableMapOf<SubjectDescriptor, MutableMap<SegmentId, PermissionMetaRegistration>>()
+        mutableMapOf<SubjectDescriptor, MutableMap<SegmentIdImpl, PermissionMetaRegistration>>()
 
-    operator fun get(id: SegmentId): Map<SubjectDescriptor, PermissionMetaRegistration>? = lock.read {
+    operator fun get(id: SegmentIdImpl): Map<SubjectDescriptor, PermissionMetaRegistration>? = lock.read {
         metaBySegmentId[id]
     }
 
-    operator fun get(subject: SubjectDescriptor): Map<SegmentId, PermissionMetaRegistration>? = lock.read {
+    operator fun get(subject: SubjectDescriptor): Map<SegmentIdImpl, PermissionMetaRegistration>? = lock.read {
         metaBySubjectDescriptor[subject]
     }
 
-    operator fun get(id: SegmentId, subject: SubjectDescriptor): PermissionMetaRegistration? = lock.read {
+    operator fun get(id: SegmentIdImpl, subject: SubjectDescriptor): PermissionMetaRegistration? = lock.read {
         metaBySegmentId[id]?.get(subject)
     }
 
-    fun register(id: SegmentId, meta: PermissionMeta, subject: SubjectDescriptor) {
+    fun register(id: SegmentIdImpl, meta: PermissionMeta, subject: SubjectDescriptor) {
         val registration = PermissionMetaRegistration(id, meta, subject)
 
         lock.write {
@@ -278,7 +265,7 @@ class PermissionMetaRegistrations : Registrations {
         return true
     }
 
-    fun unregisterById(id: SegmentId): Boolean = lock.write {
+    fun unregisterById(id: SegmentIdImpl): Boolean = lock.write {
         val registrations = metaBySegmentId.remove(id) ?: return false
         registrations.values.forEach { registration ->
             metaBySubjectDescriptor[registration.subject]?.remove(id)
@@ -286,7 +273,7 @@ class PermissionMetaRegistrations : Registrations {
         return true
     }
 
-    fun unregisterByIdAndSubject(id: SegmentId, subject: SubjectDescriptor): Boolean = lock.write {
+    fun unregisterByIdAndSubject(id: SegmentIdImpl, subject: SubjectDescriptor): Boolean = lock.write {
         val registration = metaBySegmentId[id]?.remove(subject) ?: return false
         metaBySubjectDescriptor[subject]?.remove(id)
         return true

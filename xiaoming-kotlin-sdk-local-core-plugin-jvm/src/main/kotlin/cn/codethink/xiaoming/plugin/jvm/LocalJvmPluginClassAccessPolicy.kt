@@ -30,3 +30,9 @@ object NonePluginClassAccessPolicy : PluginClassAccessPolicy {
         return false
     }
 }
+
+object AllPluginClassAccessPolicy : PluginClassAccessPolicy {
+    override fun isAccessible(name: String): Boolean {
+        return true
+    }
+}

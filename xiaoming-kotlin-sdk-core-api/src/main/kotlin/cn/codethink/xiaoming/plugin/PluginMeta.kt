@@ -14,68 +14,79 @@
  * limitations under the License.
  */
 
+@file:JvmName("PluginMetas")
+
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.common.NamespaceId
-import cn.codethink.xiaoming.common.Version
-import cn.codethink.xiaoming.common.VersionMatcher
-import cn.codethink.xiaoming.common.toLiteralVersionMatcher
+import cn.codethink.xiaoming.util.NamespaceId
+import cn.codethink.xiaoming.util.Version
+import cn.codethink.xiaoming.util.VersionMatcher
+import cn.codethink.xiaoming.util.createPluginRequirement
+import cn.codethink.xiaoming.util.toLiteralStringMatcher
+import cn.codethink.xiaoming.util.toLiteralVersionMatcher
 
+/**
+ * 插件静态元数据。
+ *
+ * @author Chuanwise
+ */
 interface PluginMeta {
     /**
-     * Plugin type, such as "classic".
+     * 插件类型。
      */
     val type: String
 
     /**
-     * Plugin universal id, such as "cn.codethink:user".
+     * 插件 ID。
      */
     val id: NamespaceId
 
     /**
-     * Plugin name to display, such as "User".
+     * 插件名称，用于显示。
      */
     val name: String
 
     /**
-     * Plugin version.
+     * 插件版本。
      */
     val version: Version
 
     /**
-     * Plugin channel, such as "release".
+     * 插件的更新频道。
      */
     val channel: String
 
     /**
-     * A brief description of the plugin.
+     * 插件描述。
      */
     val description: String?
 
     /**
-     * Protocol version matcher.
+     * 插件所需的小明标准版本。
      */
-    val protocol: VersionMatcher?
+    val xiaoming: VersionMatcher?
 
     /**
-     * Describes what other plugins' features the plugin can provide.
-     *
-     * For plugin A, if it can provide plugins B, C? (optional) and D, plugins depended on
-     * them can be enabled even if plugin B, C or D is not enabled.
+     * 插件能够提供的功能。
      */
-    val provisions: List<OptionalPluginRequirement>
+    val provisions: List<PluginRequirement>
 
     /**
-     * Plugin dependencies.
+     * 插件的依赖。
      */
-    val dependencies: List<OptionalPluginRequirement>
+    val dependencies: List<PluginRequirement>
+
+    /**
+     * 插件的类别。
+     */
+    val categories: List<NamespaceId>
 }
 
-fun PluginMeta.toExactRequirement() = PluginRequirement(
-    id = id, version = version.toLiteralVersionMatcher(), channel = channel
-)
-
 @JvmOverloads
-fun PluginMeta.toExactDependency(optional: Boolean = false) = OptionalPluginRequirement(
-    requirement = toExactRequirement(), optional = optional
+fun PluginMeta.toPluginRequirement(optional: Boolean = false, local: Boolean = false) = createPluginRequirement(
+    id = id,
+    version = version.toLiteralVersionMatcher(),
+    channel = channel.toLiteralStringMatcher(),
+    optional = optional,
+    local = local
 )

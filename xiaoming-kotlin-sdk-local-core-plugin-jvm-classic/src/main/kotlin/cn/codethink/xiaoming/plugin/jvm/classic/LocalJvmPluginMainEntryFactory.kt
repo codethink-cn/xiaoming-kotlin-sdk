@@ -17,7 +17,7 @@
 package cn.codethink.xiaoming.plugin.jvm.classic
 
 import cn.codethink.xiaoming.LocalPlatform
-import cn.codethink.xiaoming.common.Cause
+import cn.codethink.xiaoming.util.Cause
 
 class LocalJvmPluginMainEntryContext<T>(
     val cause: Cause,
