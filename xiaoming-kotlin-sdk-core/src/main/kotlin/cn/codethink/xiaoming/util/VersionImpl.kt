@@ -16,17 +16,6 @@
 
 package cn.codethink.xiaoming.util
 
-import com.fasterxml.jackson.core.JsonGenerator
-import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.SerializerProvider
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.databind.annotation.JsonSerialize
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer
-import com.fasterxml.jackson.databind.ser.std.StdSerializer
-
-@JsonSerialize(using = VersionStringSerializer::class)
-@JsonDeserialize(using = VersionStringDeserializer::class)
 data class VersionImpl(
     override val major: Int,
     override val minor: Int,
@@ -34,8 +23,7 @@ data class VersionImpl(
     override val preRelease: String? = null,
     override val build: String? = null
 ) : Version {
-    private val toStringCache =
-        "$major.$minor.$patch" + preRelease.prependOrNull("-").orEmpty() + build.prependOrNull("+").orEmpty()
+    private val toStringCache = "$major.$minor.$patch" + preRelease.withPrefixOrNull("-").orEmpty() + build.withPrefixOrNull("+").orEmpty()
 
     override fun toString(): String = toStringCache
 
@@ -52,9 +40,7 @@ data class VersionImpl(
         if (minor != other.minor) return false
         if (patch != other.patch) return false
         if (preRelease != other.preRelease) return false
-        if (build != other.build) return false
-
-        return true
+        return build == other.build
     }
 
     override fun compareTo(other: Version): Int {
@@ -115,19 +101,5 @@ data class VersionImpl(
         if (build2 == null) return 1
 
         return build1.compareTo(build2)
-    }
-}
-
-object VersionStringSerializer : StdSerializer<Version>(Version::class.java) {
-    private fun readResolve(): Any = VersionStringSerializer
-    override fun serialize(version: Version, generator: JsonGenerator, serializerProvider: SerializerProvider) {
-        generator.writeString(version.toString())
-    }
-}
-
-object VersionStringDeserializer : StdDeserializer<Version>(Version::class.java) {
-    private fun readResolve(): Any = VersionStringDeserializer
-    override fun deserialize(parser: JsonParser, context: DeserializationContext): Version {
-        return parser.valueAsString.toVersion()
     }
 }

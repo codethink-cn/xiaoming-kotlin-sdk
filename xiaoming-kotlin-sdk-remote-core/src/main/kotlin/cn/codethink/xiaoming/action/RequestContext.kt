@@ -20,7 +20,8 @@ import cn.codethink.xiaoming.connection.Session
 import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.SubjectDescriptor
 import cn.codethink.xiaoming.packet.ReceiptPacket
-import cn.codethink.xiaoming.util.Raw
+import cn.codethink.xiaoming.util.Action
+import cn.codethink.xiaoming.util.Store
 
 /**
  * The context of a request.
@@ -36,7 +37,7 @@ interface RequestContext<P, R> {
     val subjectOrDefault: SubjectDescriptor
     val time: Long
     val cause: Cause?
-    val raw: Raw
+    val raw: Store
     val receipt: ReceiptPacket
     val session: Session
 

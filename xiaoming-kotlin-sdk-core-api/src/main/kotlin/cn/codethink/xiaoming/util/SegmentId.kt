@@ -25,7 +25,7 @@ package cn.codethink.xiaoming.util
  *
  * @author Chuanwise
  */
-interface SegmentId : Id, List<String> {
+interface SegmentId : TextualId, List<String> {
     companion object {
         @JvmStatic
         @JavaFriendlyApi

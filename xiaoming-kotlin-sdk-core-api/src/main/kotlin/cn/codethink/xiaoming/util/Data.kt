@@ -18,16 +18,16 @@ package cn.codethink.xiaoming.util
 
 
 /**
- * 表示一个数据元素，内部使用 [Raw] 表示原始数据。
+ * 表示一个数据元素，内部使用 [Store] 表示原始数据。
  *
- * 序列化时，只会序列化 [Raw] 内的数据。
+ * 序列化时，只会序列化 [Store] 内的数据。
  *
- * 实现类如果不是单例，有一个标注了 [InternalApi] 且只有一个 [Raw] 参数的构造函数，
- * 则反序列化时将调用这个构造函数并传入原始数据。否则将会在强制构造后设置 [Raw]。
+ * 实现类如果不是单例，有一个标注了 [InternalApi] 且只有一个 [Store] 参数的构造函数，
+ * 则反序列化时将调用这个构造函数并传入原始数据。否则将会在强制构造后设置 [Store]。
  *
  * @author Chuanwise
- * @see Raw
+ * @see Store
  */
 interface Data {
-    val raw: Raw
+    val raw: Store
 }

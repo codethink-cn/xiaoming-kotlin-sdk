@@ -15,8 +15,10 @@ log4j = "2.23.1"
 
 jackson = "2.17.1"
 
-exposed = "0.54.0"
+ktorm = "4.1.1"
 hikari-cp = "5.1.0"
+
+build-config = "4.0.4"
 
 [libraries]
 kotlin-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin-coroutines" }
@@ -40,11 +42,8 @@ ktor-server-netty-jvm = { module = "io.ktor:ktor-server-netty-jvm", version.ref 
 ktor-websockets = { module = "io.ktor:ktor-websockets", version.ref = "ktor" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 
-exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
-exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
-exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
-exposed-kotlin-datetime = { module = "org.jetbrains.exposed:exposed-kotlin-datetime", version.ref = "exposed" }
-exposed-json = { module = "org.jetbrains.exposed:exposed-json", version.ref = "exposed" }
+ktorm-core = { module = "org.ktorm:ktorm-core", version.ref = "ktorm" }
+ktorm-jackson = { module = "org.ktorm:ktorm-jackson", version.ref = "ktorm" }
 
 hikari-cp = { module = "com.zaxxer:HikariCP", version.ref = "hikari-cp" }
 
@@ -52,5 +51,7 @@ junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version = "5.8.2" 
 junit-bom = { module = "org.junit:junit-bom", version = "5.8.2" }
 
 [plugins]
-kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-compiler" }
+
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-compiler" }
 blocking-bridge = { id = "me.him188.kotlin-jvm-blocking-bridge", version.ref = "blocking-bridge" }
+build-config = { id = "com.github.gmazzo.buildconfig", version.ref = "build-config" }

@@ -71,4 +71,4 @@ annotation class ExperimentalApi
 @Inherited
 @MustBeDocumented
 @Retention(AnnotationRetention.BINARY)
-annotation class InternalImplementedApi
+annotation class NotStableForInheritance

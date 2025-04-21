@@ -22,23 +22,13 @@ package cn.codethink.xiaoming.util
  * 命名空间组织起来的 ID。
  *
  * @author Chuanwise
- * @see createNamespaceId
- * @see parseNamespaceId
+ * @see NamespaceId
+ * @see NamespaceId
  */
-interface NamespaceId : Id {
-    companion object {
-        @JvmStatic
-        @JavaFriendlyApi
-        fun parse(string: String): NamespaceId = parseNamespaceId(string)
-
-        @JvmStatic
-        @JavaFriendlyApi
-        fun of(group: SegmentId, name: String): NamespaceId = createNamespaceId(group, name)
-    }
-
+interface NamespaceId : TextualId {
     val group: SegmentId
     val name: SegmentId
 }
 
-fun String.toNamespaceId(): NamespaceId = parseNamespaceId(this)
+fun String.toNamespaceId(): NamespaceId = NamespaceId(this)
 

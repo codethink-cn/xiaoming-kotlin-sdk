@@ -17,9 +17,9 @@
 @file:JvmName("PermissionServices")
 package cn.codethink.xiaoming.permission
 
-import cn.codethink.xiaoming.util.Cause
-import cn.codethink.xiaoming.util.SubjectDescriptor
-import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
+import cn.codethink.xiaoming.Platform
+import cn.codethink.xiaoming.util.Subject
+import cn.codethink.xiaoming.util.Operation
 
 /**
  * 权限管理器，管理和权限相关的请求。
@@ -27,11 +27,19 @@ import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
  * @author Chuanwise
  */
 interface PermissionManager {
-    @JvmBlockingBridge
-    suspend fun testPermission(
-        target: SubjectDescriptor,
+    val platform: Platform
+
+    /**
+     * 测试主体是否具有权限。
+     *
+     * @param subject 权限测试的对象
+     * @param permission 权限
+     * @param operation 动作的跟踪信息
+     * @return 是否具有权限，null 表示未定义
+     */
+    fun testPermission(
+        subject: Subject,
         permission: Permission,
-        cause: Cause,
-        context: Map<String, Any?> = emptyMap()
+        operation: Operation
     ): Boolean?
 }

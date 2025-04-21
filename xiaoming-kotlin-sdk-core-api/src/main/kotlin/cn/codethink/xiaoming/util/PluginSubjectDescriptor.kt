@@ -16,6 +16,8 @@
 
 package cn.codethink.xiaoming.util
 
-interface PluginSubjectDescriptor : IdSubjectDescriptor {
-    override val id: NamespaceId
+import com.fasterxml.jackson.annotation.JsonTypeName
+
+interface PluginSubjectDescriptor : SubjectDescriptor {
+    val id: NamespaceId
 }

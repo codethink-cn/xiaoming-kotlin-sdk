@@ -16,14 +16,19 @@
 
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.Platform
-import cn.codethink.xiaoming.util.Cause
-
 /**
- * Detect all available plugins (installed or to be installed).
+ * 检测当前宿主上所有已经安装的插件，或者打算安装的插件。
  *
  * @author Chuanwise
  */
-interface PluginDetector {
-    fun detectAll(platform: Platform, cause: Cause): Iterable<Plugin>
+fun interface PluginDetector {
+    /**
+     * 执行一次插件检测。
+     *
+     * 实现类通过 [PluginDetectContext.addPluginAllocator] 添加一个检测到的结果。
+     * 若 [detectAll] 函数正常退出，则所有添加的结果将被使用，否则已经添加的部分将会作废。
+     *
+     * @param context 插件检测上下文。
+     */
+    fun detectAll(context: PluginDetectContext)
 }

@@ -14,4 +14,4 @@
 # limitations under the License.
 #
 
-cn.codethink.xiaoming.plugin.jvm.classic.LocalJvmClassicPluginPolymorphicDeserializerInitializer
+cn.codethink.xiaoming.plugin.jvm.classic.LocalJvmClassicPluginCodecResolverInitializer

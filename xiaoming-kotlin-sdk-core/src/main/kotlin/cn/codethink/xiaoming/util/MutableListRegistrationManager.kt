@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.util
 
-interface MutableListRegistrationManager<E, R : Registration<E>> : ListRegistrationManager<E, R> {
-    fun toMutableElementList(): MutableList<E>
-    fun toMutableRegistrationList(): MutableList<E>
+interface MutableListRegistrationManager<E, R : Registration<E>> : ListRegistrationManager<E>, MutableRegistrationManager<E, R> {
+    fun toMutableRegistrationList(): MutableList<R>
+    fun register(registration: R): Int
 }

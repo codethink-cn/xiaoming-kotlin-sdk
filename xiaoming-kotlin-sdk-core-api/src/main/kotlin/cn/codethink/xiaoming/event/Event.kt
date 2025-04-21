@@ -17,12 +17,12 @@
 
 package cn.codethink.xiaoming.event
 
+import cn.codethink.xiaoming.util.Cause
+
 /**
  * 事件接口，实现了该接口的类型都可以作为事件类型。
  *
  * @author Chuanwise
  * @see EventContext
  */
-interface Event {
-    val type: String
-}
+interface Event : Cause

@@ -23,13 +23,13 @@ package cn.codethink.xiaoming.util
  *
  * @author Chuanwise
  */
-private class AllSuperClassOrInterfacesView(
+private class InheritedClassesWithDepth(
     val targetClass: Class<*>
-) : Iterable<Class<*>> {
-    private inner class It : Iterator<Class<*>> {
+) : Iterable<Pair<Int, Class<*>>> {
+    private inner class IteratorImpl : Iterator<Pair<Int, Class<*>>> {
         private val visited = mutableSetOf<Class<*>>()
-        private val queue = ArrayDeque<Class<*>>().apply {
-            addLast(targetClass)
+        private val queue = ArrayDeque<Pair<Int, Class<*>>>().apply {
+            addLast(Pair(0, targetClass))
         }
 
         private fun removeVisitedClassInQueue() {
@@ -49,23 +49,42 @@ private class AllSuperClassOrInterfacesView(
             return queue.isNotEmpty()
         }
 
-        override fun next(): Class<*> {
+        override fun next(): Pair<Int, Class<*>> {
             if (!hasNext()) {
                 throw NoSuchElementException()
             }
 
             val current = queue.removeFirst()
-            visited.add(current)
+            visited.add(current.second)
 
-            current.superclass?.takeIf { it !in visited }?.let { queue.addLast(it) }
-            current.interfaces.filter { it !in visited }.forEach { queue.addLast(it) }
+            current.second.superclass?.takeIf { it !in visited }?.let { queue.addLast(Pair(current.first + 1, it)) }
+            current.second.interfaces.filter { it !in visited }.forEach { queue.addLast(Pair(current.first + 1, it)) }
             return current
         }
     }
 
-    override fun iterator(): Iterator<Class<*>> = It()
+    override fun iterator(): Iterator<Pair<Int, Class<*>>> = IteratorImpl()
 }
 
 @InternalApi
-val Class<*>.allAssignableClasses: Iterable<Class<*>>
-    get() = AllSuperClassOrInterfacesView(this)
+val Class<*>.inheritedClassesWithDepth: Iterable<Pair<Int, Class<*>>>
+    get() = InheritedClassesWithDepth(this)
+
+private class MapIterator<T, U>(
+    private val iterator: Iterator<T>,
+    private val mapper: (T) -> U
+) : Iterator<U> {
+    override fun hasNext(): Boolean = iterator.hasNext()
+    override fun next(): U = mapper(iterator.next())
+}
+
+private class MapIterable<T, U>(
+    private val iterable: Iterable<T>,
+    private val mapper: (T) -> U
+) : Iterable<U> {
+    override fun iterator(): Iterator<U> = MapIterator(iterable.iterator(), mapper)
+}
+
+@InternalApi
+val Class<*>.inheritedClasses: Iterable<Class<*>>
+    get() = MapIterable(inheritedClassesWithDepth) { it.second }

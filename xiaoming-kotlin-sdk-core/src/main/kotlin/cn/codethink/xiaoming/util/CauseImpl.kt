@@ -16,24 +16,11 @@
 
 package cn.codethink.xiaoming.util
 
-import com.fasterxml.jackson.annotation.JsonTypeName
-
-const val CAUSE_TYPE_DEFAULT = "default"
-
-@JsonTypeName(CAUSE_TYPE_DEFAULT)
-class CauseImpl : AbstractCause {
-    override var message: String by raw
-
-    @InternalApi
-    constructor(raw: Raw) : super(raw)
-
-    @JvmOverloads
-    constructor(
-        message: String,
-        subject: SubjectDescriptor,
-        cause: Cause? = null,
-        raw: Raw = MapRaw()
-    ) : super(CAUSE_TYPE_DEFAULT, subject, cause, raw) {
-        this.message = message
+data class CauseImpl(
+    override val description: String,
+    override val cause: Cause? = null
+) : Cause {
+    override fun toString(): String {
+        return "Cause(description='$description', cause=$cause)"
     }
 }

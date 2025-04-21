@@ -29,31 +29,32 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.node.ObjectNode
 
 /**
- * 默认的 [Data] 实现。注意所有 [Data] 的子类都应该继承这个类，并且有一个接受单个 [Raw] 参数的构造函数。
+ * 默认的 [Data] 实现。注意所有 [Data] 的子类都应该继承这个类，并且有一个接受单个 [Store] 参数的构造函数。
  *
  * @author Chuanwise
- * @see Raw
+ * @see Store
  * @see Data
  */
-@NamingPolicy(policy = DefaultFieldNamingPolicy.SNAKE_CASE)
+@NamingPolicyClass(SnakeCaseNamingPolicy::class)
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonSerialize(using = DefaultDataSerializer::class)
 abstract class AbstractData(
-    final override val raw: Raw
+    final override val raw: MutableStore
 ) : Data {
     override fun toString(): String = "${javaClass.simpleName}(${raw.contentToString()})"
+
     override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
+        if (this === other) {
+            return true
+        }
+        if (javaClass != other?.javaClass) {
+            return false
+        }
         other as AbstractData
-
-        return raw.contentEquals(other.raw)
+        return raw == other.raw
     }
 
-    override fun hashCode(): Int {
-        return raw.hashCode()
-    }
+    override fun hashCode(): Int = raw.hashCode()
 }
 
 abstract class AbstractDataDeserializer<T : Data>(
@@ -61,11 +62,11 @@ abstract class AbstractDataDeserializer<T : Data>(
 ) : StdDeserializer<T>(type) {
     override fun deserialize(parser: JsonParser, context: DeserializationContext): T {
         val node = parser.readValueAsTree<ObjectNode>()
-        val raw = NodeRaw(parser.codec as ObjectMapper, node)
+        val raw = NodeStoreImpl(parser.codec as ObjectMapper, node)
         return newInstance(raw)
     }
 
-    protected abstract fun newInstance(raw: Raw): T
+    protected abstract fun newInstance(raw: Store): T
 }
 
 object DefaultDataSerializer : JsonSerializer<Data>() {
@@ -79,10 +80,10 @@ class DefaultDataDeserializer<T : Data>(
 ) : AbstractDataDeserializer<T>(type) {
     companion object {
         @JvmStatic
-        private val parameterTypes: Array<Class<*>> = arrayOf(Raw::class.java)
+        private val parameterTypes: Array<Class<*>> = arrayOf(Store::class.java)
     }
 
-    override fun newInstance(raw: Raw): T {
+    override fun newInstance(raw: Store): T {
         return getOrConstruct(type, parameterTypes, arrayOf(raw))
     }
 }

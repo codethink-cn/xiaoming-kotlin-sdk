@@ -22,8 +22,8 @@ package cn.codethink.xiaoming.util
  * @author Chuanwise
  * @see toVersionMatcher
  */
-@InternalImplementedApi
-interface VersionMatcher : Matcher<Version> {
+@NotStableForInheritance
+interface VersionMatcher {
     companion object {
         @JvmStatic
         @JavaFriendlyApi
@@ -31,47 +31,49 @@ interface VersionMatcher : Matcher<Version> {
 
         @JvmStatic
         @JavaFriendlyApi
-        fun and(left: VersionMatcher, right: VersionMatcher) = createAndVersionMatcher(left, right)
+        fun and(left: VersionMatcher, right: VersionMatcher) = AndVersionMatcher(left, right)
 
         @JvmStatic
         @JavaFriendlyApi
-        fun or(left: VersionMatcher, right: VersionMatcher) = createOrVersionMatcher(left, right)
+        fun or(left: VersionMatcher, right: VersionMatcher) = OrVersionMatcher(left, right)
 
         @JvmStatic
         @JavaFriendlyApi
-        fun include(version: Version) = createIncludeVersionMatcher(version)
+        fun include(version: Version) = IncludeVersionMatcher(version)
 
         @JvmStatic
         @JavaFriendlyApi
-        fun exclude(version: Version) = createExcludeVersionMatcher(version)
+        fun exclude(version: Version) = ExcludeVersionMatcher(version)
 
         @JvmStatic
         @JavaFriendlyApi
-        fun greaterThan(version: Version) = createGreaterThanVersionMatcher(version)
+        fun greaterThan(version: Version) = GreaterThanVersionMatcher(version)
 
         @JvmStatic
         @JavaFriendlyApi
-        fun greaterThanOrEqual(version: Version) = createGreaterThanOrEqualVersionMatcher(version)
+        fun greaterThanOrEqual(version: Version) = GreaterThanOrEqualVersionMatcher(version)
 
         @JvmStatic
         @JavaFriendlyApi
-        fun lessThan(version: Version) = createLessThanVersionMatcher(version)
+        fun lessThan(version: Version) = LessThanVersionMatcher(version)
 
         @JvmStatic
         @JavaFriendlyApi
-        fun lessThanOrEqual(version: Version) = createLessThanOrEqualVersionMatcher(version)
+        fun lessThanOrEqual(version: Version) = LessThanOrEqualVersionMatcher(version)
 
         @JvmStatic
         @JavaFriendlyApi
-        fun major(major: Int) = createMajorVersionPrefixMatcher(major)
+        fun major(major: Int) = MajorVersionPrefixMatcher(major)
 
         @JvmStatic
         @JavaFriendlyApi
-        fun majorMinor(major: Int, minor: Int) = createMajorMinorVersionPrefixMatcher(major, minor)
+        fun majorMinor(major: Int, minor: Int) = MajorMinorVersionPrefixMatcher(major, minor)
     }
+
+    fun matches(version: Version): Boolean
 }
 
-fun String.toVersionMatcher(): VersionMatcher = parseVersionMatcher(this)
+fun String.toVersionMatcher(): VersionMatcher = VersionMatcher(this)
 
 interface AndVersionMatcher : VersionMatcher {
     val left: VersionMatcher
@@ -83,8 +85,8 @@ interface OrVersionMatcher : VersionMatcher {
     val right: VersionMatcher
 }
 
-interface IncludeVersionMatcher : VersionMatcher, LiteralMatcher<Version> {
-    override val value: Version
+interface IncludeVersionMatcher : VersionMatcher {
+    val value: Version
 }
 
 interface ExcludeVersionMatcher : VersionMatcher {

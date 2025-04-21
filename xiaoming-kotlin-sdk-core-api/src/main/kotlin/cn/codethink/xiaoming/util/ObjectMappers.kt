@@ -27,7 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
  * @author Chuanwise
  */
 @InternalApi
-fun ObjectMapper.contentEqual(value: Any?, json: String): Boolean {
+fun ObjectMapper.contentEquals(value: Any?, json: String): Boolean {
     val nodeFromValue = valueToTree<JsonNode>(value)
     val nodeFromJson = readTree(json)
     return nodeFromValue == nodeFromJson
@@ -39,8 +39,8 @@ fun ObjectMapper.contentEqual(value: Any?, json: String): Boolean {
  * @author Chuanwise
  */
 @InternalApi
-fun ObjectMapper.assertJsonContentEquals(expected: String, actual: Any?) {
-    if (!contentEqual(actual, expected)) {
+fun ObjectMapper.assertContentEquals(expected: String, actual: Any?) {
+    if (!contentEquals(actual, expected)) {
         throw AssertionError("Expected: $expected\nActual: ${writeValueAsString(actual)}")
     }
 }

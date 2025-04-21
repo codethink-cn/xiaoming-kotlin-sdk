@@ -15,28 +15,10 @@
  */
 
 @file:OptIn(InternalApi::class)
-
+@file:JvmName("IdFactory")
 package cn.codethink.xiaoming.util
 
 import cn.codethink.xiaoming.api.CoreApi
-
-/**
- * 解析字符串为 ID。
- *
- * 算法优先将字符串转化为 [NamespaceId]。若失败，尝试转化为 [SegmentId]。否则，使用 [StringId]。
- *
- * @param string 字符串
- * @see NamespaceId
- * @see SegmentId
- * @see StringId
- */
-fun parseId(string: String): Id = CoreApi.getInstance().parseId(string)
-
-fun createNamespaceId(group: SegmentId, name: String) = CoreApi.getInstance().createNamespaceId(group, name)
-fun createNamespaceId(group: SegmentId, name: SegmentId) = CoreApi.getInstance().createNamespaceId(group, name)
-fun parseNamespaceId(string: String) = CoreApi.getInstance().parseNamespaceId(string)
-
-fun createStringId(string: String): StringId = CoreApi.getInstance().createStringId(string)
 
 fun createNumericalId(number: Int): NumericalId = CoreApi.getInstance().createNumericalId(number)
 fun createNumericalId(number: Long): NumericalId = CoreApi.getInstance().createNumericalId(number)

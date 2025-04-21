@@ -22,59 +22,59 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class VersionMatcherTest {
-    private fun isMatched(matcher: String, version: String) = matcher.toVersionMatcher().isMatched(version.toVersion())
+    private fun isMatched(matcher: String, version: String) = matcher.toVersionMatcher().matches(version.toVersion())
 
     @Test
     fun testParseVersionMatcher() {
-        assertEquals(createGreaterThanVersionMatcher("0.1.0".toVersion()), ">0.1.0".toVersionMatcher())
-        assertEquals(createGreaterThanVersionMatcher("0.1.0".toVersion()), "0.1.0<".toVersionMatcher())
+        assertEquals(GreaterThanVersionMatcher("0.1.0".toVersion()), ">0.1.0".toVersionMatcher())
+        assertEquals(GreaterThanVersionMatcher("0.1.0".toVersion()), "0.1.0<".toVersionMatcher())
 
-        assertEquals(createGreaterThanOrEqualVersionMatcher("0.2.0".toVersion()), ">=0.2.0".toVersionMatcher())
-        assertEquals(createGreaterThanOrEqualVersionMatcher("0.2.0".toVersion()), "]0.2.0".toVersionMatcher())
-        assertEquals(createGreaterThanOrEqualVersionMatcher("0.2.0".toVersion()), "0.2.0=<".toVersionMatcher())
-        assertEquals(createGreaterThanOrEqualVersionMatcher("0.2.0".toVersion()), "0.2.0[".toVersionMatcher())
+        assertEquals(GreaterThanOrEqualVersionMatcher("0.2.0".toVersion()), ">=0.2.0".toVersionMatcher())
+        assertEquals(GreaterThanOrEqualVersionMatcher("0.2.0".toVersion()), "]0.2.0".toVersionMatcher())
+        assertEquals(GreaterThanOrEqualVersionMatcher("0.2.0".toVersion()), "0.2.0=<".toVersionMatcher())
+        assertEquals(GreaterThanOrEqualVersionMatcher("0.2.0".toVersion()), "0.2.0[".toVersionMatcher())
 
-        assertEquals(createLessThanVersionMatcher("1.1.4".toVersion()), "<1.1.4".toVersionMatcher())
-        assertEquals(createLessThanVersionMatcher("1.1.4".toVersion()), "1.1.4>".toVersionMatcher())
+        assertEquals(LessThanVersionMatcher("1.1.4".toVersion()), "<1.1.4".toVersionMatcher())
+        assertEquals(LessThanVersionMatcher("1.1.4".toVersion()), "1.1.4>".toVersionMatcher())
 
-        assertEquals(createLessThanOrEqualVersionMatcher("5.1.4".toVersion()), "<=5.1.4".toVersionMatcher())
-        assertEquals(createLessThanOrEqualVersionMatcher("5.1.4".toVersion()), "[5.1.4".toVersionMatcher())
-        assertEquals(createLessThanOrEqualVersionMatcher("5.1.4".toVersion()), "5.1.4]".toVersionMatcher())
-        assertEquals(createLessThanOrEqualVersionMatcher("5.1.4".toVersion()), "5.1.4>=".toVersionMatcher())
+        assertEquals(LessThanOrEqualVersionMatcher("5.1.4".toVersion()), "<=5.1.4".toVersionMatcher())
+        assertEquals(LessThanOrEqualVersionMatcher("5.1.4".toVersion()), "[5.1.4".toVersionMatcher())
+        assertEquals(LessThanOrEqualVersionMatcher("5.1.4".toVersion()), "5.1.4]".toVersionMatcher())
+        assertEquals(LessThanOrEqualVersionMatcher("5.1.4".toVersion()), "5.1.4>=".toVersionMatcher())
 
-        assertEquals(createIncludeVersionMatcher("0.1.0".toVersion()), "0.1.0".toVersionMatcher())
-        assertEquals(createExcludeVersionMatcher("0.1.0".toVersion()), "!0.1.0".toVersionMatcher())
+        assertEquals(IncludeVersionMatcher("0.1.0".toVersion()), "0.1.0".toVersionMatcher())
+        assertEquals(ExcludeVersionMatcher("0.1.0".toVersion()), "!0.1.0".toVersionMatcher())
 
-        assertEquals(createMajorMinorVersionPrefixMatcher(1893, 12), "1893.12.+".toVersionMatcher())
-        assertEquals(createMajorVersionPrefixMatcher(26), "26.+".toVersionMatcher())
+        assertEquals(MajorMinorVersionPrefixMatcher(1893, 12), "1893.12.+".toVersionMatcher())
+        assertEquals(MajorVersionPrefixMatcher(26), "26.+".toVersionMatcher())
 
         assertEquals(
-            createAndVersionMatcher(
-                createGreaterThanOrEqualVersionMatcher("0.1.0".toVersion()),
-                createLessThanOrEqualVersionMatcher("0.1.0".toVersion())
+            AndVersionMatcher(
+                GreaterThanOrEqualVersionMatcher("0.1.0".toVersion()),
+                LessThanOrEqualVersionMatcher("0.1.0".toVersion())
             ), ">=0.1.0 & <=0.1.0".toVersionMatcher()
         )
 
         assertEquals(
-            createOrVersionMatcher(
-                createAndVersionMatcher(
-                    createGreaterThanOrEqualVersionMatcher("0.1.0".toVersion()),
-                    createLessThanOrEqualVersionMatcher("0.1.0".toVersion())
+            OrVersionMatcher(
+                AndVersionMatcher(
+                    GreaterThanOrEqualVersionMatcher("0.1.0".toVersion()),
+                    LessThanOrEqualVersionMatcher("0.1.0".toVersion())
                 ),
-                createGreaterThanOrEqualVersionMatcher("2.1.0".toVersion())
+                GreaterThanOrEqualVersionMatcher("2.1.0".toVersion())
             ), "(>=0.1.0 & <=0.1.0) | >=2.1.0".toVersionMatcher()
         )
 
         assertEquals(
-            createOrVersionMatcher(
-                createAndVersionMatcher(
-                    createGreaterThanOrEqualVersionMatcher("0.1.0".toVersion()),
-                    createOrVersionMatcher(
-                        createLessThanOrEqualVersionMatcher("0.1.0".toVersion()),
-                        createLessThanVersionMatcher("0.0.1".toVersion())
+            OrVersionMatcher(
+                AndVersionMatcher(
+                    GreaterThanOrEqualVersionMatcher("0.1.0".toVersion()),
+                    OrVersionMatcher(
+                        LessThanOrEqualVersionMatcher("0.1.0".toVersion()),
+                        LessThanVersionMatcher("0.0.1".toVersion())
                     )
                 ),
-                createGreaterThanOrEqualVersionMatcher("2.1.0".toVersion())
+                GreaterThanOrEqualVersionMatcher("2.1.0".toVersion())
             ), "(>=0.1.0 & (<=0.1.0 | <0.0.1)) | >=2.1.0".toVersionMatcher()
         )
     }

@@ -16,9 +16,6 @@
 
 package cn.codethink.xiaoming.event
 
-import cn.codethink.xiaoming.event.operation.SetCancelledEventOperation
-import cn.codethink.xiaoming.util.Cause
-
 /**
  * 可取消事件。
  *
@@ -30,16 +27,3 @@ import cn.codethink.xiaoming.util.Cause
  * @see CancellableEventContext
  */
 interface CancellableEvent : Event
-
-interface CancellableEventContext<E : CancellableEvent> : EventContext<E> {
-    val cancelled: Boolean
-
-    /**
-     * 设置事件的取消状态。
-     *
-     * @param cancelled 新的取消状态
-     * @param cause 取消的原因
-     * @see SetCancelledEventOperation
-     */
-    fun setCancelled(cancelled: Boolean, cause: Cause)
-}

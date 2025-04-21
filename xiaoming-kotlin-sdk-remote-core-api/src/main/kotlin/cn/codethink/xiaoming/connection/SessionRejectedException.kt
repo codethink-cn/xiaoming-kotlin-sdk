@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,34 +16,27 @@
 
 package cn.codethink.xiaoming.connection
 
-import cn.codethink.xiaoming.util.InternalImplementedApi
+import cn.codethink.xiaoming.packet.SessionPacket
+import cn.codethink.xiaoming.util.Received
+import cn.codethink.xiaoming.util.NotStableForInheritance
 
 /**
  * 连接被拒绝异常。
  *
- * @author Chuanwise
- * @see SessionContext
- * @see SessionForwardRejectedException
- * @see SessionBackwardRejectedException
- */
-@InternalImplementedApi
-sealed class SessionRejectedException(message: String) : RuntimeException(message)
-
-/**
- * 该异常可能在 [Connection.start] 和 [SessionBackwardStartContext.accept] 两处抛出。
+ * 当 [side] 为 [SessionSide.CURRENT_SIDE] 时，异常会在 [SharedConnection.start] 抛出，
+ * 表示连接被对方拒绝。
  *
- * 1. 在 [Connection.start] 中，表示己方向对方建立连接，连接被对方拒绝。
- * 2. 在 [SessionBackwardStartContext.accept] 中，表示对方向己方建立连接，己方同意，但对方拒绝。
+ * 当 [side] 为 [SessionSide.OTHER_SIDE] 时，异常可能在两处抛出：
+ *
+ * 1. 在 [SharedConnection.start] 中，表示己方向对方建立连接，连接被对方拒绝。
+ * 2. 在 [SessionPassiveHandshakeContext.accept] 中，表示对方向己方建立连接，己方同意，但对方拒绝。
  *
  * @author Chuanwise
+ * @see SessionHandshakeContext
  */
-@InternalImplementedApi
-abstract class SessionForwardRejectedException(message: String) : SessionRejectedException(message)
-
-/**
- * 该异常可能在 [Connection.start] 里抛出，表示己方向对方建立连接，连接被己方拒绝。
- *
- * @author Chuanwise
- */
-@InternalImplementedApi
-abstract class SessionBackwardRejectedException(message: String) : SessionRejectedException(message)
+@NotStableForInheritance
+abstract class SessionRejectedException(message: String) : SessionClosedException(message) {
+    abstract val side: SessionSide
+    abstract val packet: SessionPacket
+    abstract val received: Received<SessionPacket>?
+}

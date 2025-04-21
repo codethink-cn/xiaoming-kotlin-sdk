@@ -80,44 +80,65 @@ import cn.codethink.xiaoming.api.CoreApi
  * @see VersionMatcher
  */
 @OptIn(InternalApi::class)
-fun parseVersionMatcher(string: String): VersionMatcher = CoreApi.getInstance().parseVersionMatcher(string)
+@JvmName("createVersionMatcher")
+fun VersionMatcher(string: String): VersionMatcher = CoreApi.getInstance().parseVersionMatcher(string)
 
 @OptIn(InternalApi::class)
-fun createAndVersionMatcher(left: VersionMatcher, right: VersionMatcher): AndVersionMatcher =
-    CoreApi.getInstance().createAndVersionMatcher(left, right)
+@JvmName("createAndVersionMatcher")
+fun AndVersionMatcher(left: VersionMatcher, right: VersionMatcher): AndVersionMatcher {
+    return CoreApi.getInstance().createAndVersionMatcher(left, right)
+}
 
 @OptIn(InternalApi::class)
-fun createOrVersionMatcher(left: VersionMatcher, right: VersionMatcher): OrVersionMatcher =
-    CoreApi.getInstance().createOrVersionMatcher(left, right)
+@JvmName("OrVersionMatcher")
+fun OrVersionMatcher(left: VersionMatcher, right: VersionMatcher): OrVersionMatcher {
+    return CoreApi.getInstance().createOrVersionMatcher(left, right)
+}
 
 @OptIn(InternalApi::class)
-fun createIncludeVersionMatcher(value: Version): IncludeVersionMatcher =
-    CoreApi.getInstance().createIncludeVersionMatcher(value)
+@JvmName("createIncludeVersionMatcher")
+fun IncludeVersionMatcher(value: Version): IncludeVersionMatcher {
+    return CoreApi.getInstance().createIncludeVersionMatcher(value)
+}
 
 @OptIn(InternalApi::class)
-fun createExcludeVersionMatcher(value: Version): ExcludeVersionMatcher =
-    CoreApi.getInstance().createExcludeVersionMatcher(value)
+@JvmName("createExcludeVersionMatcher")
+fun ExcludeVersionMatcher(value: Version): ExcludeVersionMatcher {
+    return CoreApi.getInstance().createExcludeVersionMatcher(value)
+}
 
 @OptIn(InternalApi::class)
-fun createGreaterThanVersionMatcher(version: Version): GreaterThanVersionMatcher =
-    CoreApi.getInstance().createGreaterThanVersionMatcher(version)
+@JvmName("createGreaterThanVersionMatcher")
+fun GreaterThanVersionMatcher(version: Version): GreaterThanVersionMatcher {
+    return CoreApi.getInstance().createGreaterThanVersionMatcher(version)
+}
 
 @OptIn(InternalApi::class)
-fun createGreaterThanOrEqualVersionMatcher(version: Version): GreaterThanOrEqualVersionMatcher =
-    CoreApi.getInstance().createGreaterThanOrEqualVersionMatcher(version)
+@JvmName("createGreaterThanOrEqualVersionMatcher")
+fun GreaterThanOrEqualVersionMatcher(version: Version): GreaterThanOrEqualVersionMatcher {
+    return CoreApi.getInstance().createGreaterThanOrEqualVersionMatcher(version)
+}
 
 @OptIn(InternalApi::class)
-fun createLessThanVersionMatcher(version: Version): LessThanVersionMatcher =
-    CoreApi.getInstance().createLessThanVersionMatcher(version)
+@JvmName("createLessThanVersionMatcher")
+fun LessThanVersionMatcher(version: Version): LessThanVersionMatcher {
+    return CoreApi.getInstance().createLessThanVersionMatcher(version)
+}
 
 @OptIn(InternalApi::class)
-fun createLessThanOrEqualVersionMatcher(version: Version): LessThanOrEqualVersionMatcher =
-    CoreApi.getInstance().createLessThanOrEqualVersionMatcher(version)
+@JvmName("createLessThanOrEqualVersionMatcher")
+fun LessThanOrEqualVersionMatcher(version: Version): LessThanOrEqualVersionMatcher {
+    return CoreApi.getInstance().createLessThanOrEqualVersionMatcher(version)
+}
 
 @OptIn(InternalApi::class)
-fun createMajorVersionPrefixMatcher(major: Int): MajorVersionPrefixMatcher =
-    CoreApi.getInstance().createMajorVersionPrefixMatcher(major)
+@JvmName("createMajorVersionPrefixMatcher")
+fun MajorVersionPrefixMatcher(major: Int): MajorVersionPrefixMatcher {
+    return CoreApi.getInstance().createMajorVersionPrefixMatcher(major)
+}
 
 @OptIn(InternalApi::class)
-fun createMajorMinorVersionPrefixMatcher(major: Int, minor: Int): MajorMinorVersionPrefixMatcher =
-    CoreApi.getInstance().createMajorMinorVersionPrefixMatcher(major, minor)
+@JvmName("createMajorMinorVersionPrefixMatcher")
+fun MajorMinorVersionPrefixMatcher(major: Int, minor: Int): MajorMinorVersionPrefixMatcher {
+    return CoreApi.getInstance().createMajorMinorVersionPrefixMatcher(major, minor)
+}

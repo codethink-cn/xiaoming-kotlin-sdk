@@ -16,24 +16,26 @@
 
 package cn.codethink.xiaoming.packet
 
-import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.Id
-import cn.codethink.xiaoming.util.InternalImplementedApi
-import cn.codethink.xiaoming.util.SubjectDescriptor
-
-const val REQUEST_PACKET_FIELD_ARGUMENT = "argument"
+import cn.codethink.xiaoming.util.NotStableForInheritance
+import cn.codethink.xiaoming.util.Operation
+import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
  * 请求数据包。
  *
  * @author Chuanwise
  */
-@InternalImplementedApi
-interface RequestPacket : BusinessPacket {
+@NotStableForInheritance
+@JsonTypeName(RequestPacket.TYPE)
+interface RequestPacket : Packet, Operation {
+    companion object {
+        const val TYPE = "request"
+    }
+
+    override val type: String get() = TYPE
+
     val action: Id
-    val mode: String
     val argument: Any?
     val timeout: Long
-    val subject: SubjectDescriptor
-    override val cause: Cause
 }

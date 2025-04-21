@@ -15,15 +15,20 @@
  */
 
 plugins {
-    kotlin("jvm")
-    id("me.him188.kotlin-jvm-blocking-bridge")
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.blocking.bridge)
     `maven-publish`
 }
 
 dependencies {
     api(project(":xiaoming-kotlin-sdk-core-api"))
 
-    testImplementation(kotlin("test"))
+    api(libs.ktor.server.core.jvm)
+    api(libs.ktor.server.websockets.jvm)
+    api(libs.ktor.server.netty.jvm)
+    api(libs.ktor.websockets)
+    api(libs.ktor.client.okhttp)
+
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
 }

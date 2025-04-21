@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,12 @@
  */
 
 @file:JvmName("PluginSubjectDescriptorMatcherFactory")
-@file:OptIn(InternalApi::class)
-
 package cn.codethink.xiaoming.util
 
 import cn.codethink.xiaoming.api.CoreApi
 
-fun createPluginSubjectDescriptorMatcher(id: Matcher<NamespaceId>): PluginSubjectDescriptorMatcher =
-    CoreApi.getInstance().createPluginSubjectDescriptorMatcher(id)
+@OptIn(InternalApi::class)
+@JvmName("createPluginSubjectDescriptorMatcher")
+fun PluginSubjectDescriptorMatcher(id: NamespaceIdMatcher): PluginSubjectDescriptorMatcher {
+    return CoreApi.getInstance().createPluginSubjectDescriptorMatcher(id)
+}

@@ -19,21 +19,21 @@ package cn.codethink.xiaoming.event.operation
 import cn.codethink.xiaoming.event.listener.ListenerDescriptor
 import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.InternalApi
-import cn.codethink.xiaoming.util.MapRaw
-import cn.codethink.xiaoming.util.Raw
+import cn.codethink.xiaoming.util.MutableStore
+import cn.codethink.xiaoming.util.Store
 import cn.codethink.xiaoming.util.Time
-import cn.codethink.xiaoming.util.getValue
-import cn.codethink.xiaoming.util.setValue
+import cn.codethink.xiaoming.util.createMapStore
+import cn.codethink.xiaoming.util.property
 import com.fasterxml.jackson.annotation.JsonTypeName
 
 const val EVENT_OPERATION_TYPE_SET_CANCELLED = "set_cancelled"
 
 @JsonTypeName(EVENT_OPERATION_TYPE_SET_CANCELLED)
 class SetCancelledEventOperationImpl : AbstractEventOperation, SetCancelledEventOperation {
-    override var cancelled: Boolean by raw
+    override var cancelled: Boolean by raw.property()
 
     @InternalApi
-    constructor(raw: Raw) : super(raw)
+    constructor(raw: MutableStore) : super(raw)
 
     @JvmOverloads
     constructor(
@@ -41,7 +41,7 @@ class SetCancelledEventOperationImpl : AbstractEventOperation, SetCancelledEvent
         cause: Cause,
         listener: ListenerDescriptor,
         time: Time,
-        raw: Raw = MapRaw()
+        raw: MutableStore = createMapStore()
     ) : super(
         EVENT_OPERATION_TYPE_SET_CANCELLED, cause, listener, time, raw
     ) {

@@ -18,35 +18,22 @@
 
 package cn.codethink.xiaoming.permission
 
-import cn.codethink.xiaoming.util.Id
-import cn.codethink.xiaoming.util.InternalImplementedApi
 import cn.codethink.xiaoming.util.NamespaceId
-import cn.codethink.xiaoming.util.SegmentId
+import cn.codethink.xiaoming.util.NotStableForInheritance
 
 /**
  * 表示一个具体的操作。
  *
+ * 尽管使用 [NotStableForInheritance]，但未来可能被解除。在根据需要扩展结构化权限节点后，
+ * 可能对实现 [Permission] 的类做特殊要求。因此目前请不要实现此接口。
+ *
  * @author Chuanwise
  * @see PermissionManager
  */
-@InternalImplementedApi
+@NotStableForInheritance
 interface Permission {
     /**
      * 权限 ID。
-     *
-     * 内置标准权限是普通的 [SegmentId]，第三方扩展的权限 ID 必须使用 [NamespaceId]。
      */
-    val id: Id
-
-    /**
-     * 权限参数。
-     */
-    val arguments: Map<String, Any?>
-
-    /**
-     * 权限描述符。
-     */
-    val descriptor: PermissionDescriptor
+    val id: NamespaceId
 }
-
-fun Permission.toLiteralMatcher(): PermissionMatcher = createLiteralPermissionMatcher(this)

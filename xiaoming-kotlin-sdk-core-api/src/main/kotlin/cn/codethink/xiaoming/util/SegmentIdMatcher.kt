@@ -14,20 +14,15 @@
  * limitations under the License.
  */
 
-@file:JvmName("SegmentIdMatchers")
-@file:OptIn(InternalApi::class)
-
 package cn.codethink.xiaoming.util
-
-import cn.codethink.xiaoming.api.CoreApi
 
 /**
  * 段 ID 匹配器。
  *
  * @author Chuanwise
- * @see String.toSegmentIdMatcher
  */
-interface SegmentIdMatcher : Matcher<SegmentId> {
+@NotStableForInheritance
+interface SegmentIdMatcher {
     companion object {
         @JvmStatic
         @JavaFriendlyApi
@@ -41,30 +36,6 @@ interface SegmentIdMatcher : Matcher<SegmentId> {
         @JavaFriendlyApi
         fun of(segmentId: SegmentId): SegmentIdMatcher = segmentId.toSegmentIdMatcher()
     }
-}
 
-/**
- * 编译字符串为对应的段 ID 匹配器。
- *
- * BNF 范式:
- *
- * ```bnf
- * segmentMatcher := stringMatcher | stringMatcher "." segmentMatcher;
- *
- * stringMatcher := "+"                      // MinorityRequiredOnceWildcardStringMatcher
- *                | "?"                      // MinorityOptionalOnceWildcardStringMatcher
- *                | "++"  | count "++"       // MinorityRequiredWildcardStringMatcher
- *                | "??"  | count "??"       // MinorityOptionalWildcardStringMatcher
- *                | "+++"                    // MajorityRequiredOnceWildcardStringMatcher
- *                | "???" | "*"              // MajorityOptionalOnceWildcardStringMatcher
- *                | literal                  // LiteralStringMatcher
- *                | "{" regex "}"            // RegexStringMatcher
- *                | "\"" escapedLiteral "\"" // LiteralStringMatcher
- *                ;
- * ```
- *
- * @author Chuanwise
- */
-fun String.toSegmentIdMatcher(): SegmentIdMatcher = CoreApi.getInstance().parseSegmentIdMatcher(this)
-fun List<StringMatcher>.toSegmentIdMatcher(): SegmentIdMatcher = CoreApi.getInstance().createSegmentIdMatcher(this)
-fun SegmentId.toSegmentIdMatcher(): SegmentIdMatcher = CoreApi.getInstance().createSegmentIdMatcher(this)
+    fun matches(segmentId: SegmentId): Boolean
+}

@@ -20,9 +20,13 @@ package cn.codethink.xiaoming.util
 
 import cn.codethink.xiaoming.api.CoreApi
 
+@JvmOverloads
 @OptIn(InternalApi::class)
-fun createVersion(major: Int, minor: Int, patch: Int, preRelease: String? = null, build: String? = null): Version =
-    CoreApi.getInstance().createVersion(major, minor, patch, preRelease, build)
+@JvmName("createVersion")
+fun Version(major: Int, minor: Int, patch: Int, preRelease: String? = null, build: String? = null): Version {
+    return CoreApi.getInstance().createVersion(major, minor, patch, preRelease, build)
+}
 
+@JvmName("createVersion")
 @OptIn(InternalApi::class)
-fun parseVersion(string: String): Version = CoreApi.getInstance().parseVersion(string)
+fun Version(string: String): Version = CoreApi.getInstance().parseVersion(string)

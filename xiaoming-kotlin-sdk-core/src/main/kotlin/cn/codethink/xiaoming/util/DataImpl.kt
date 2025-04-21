@@ -17,5 +17,5 @@
 package cn.codethink.xiaoming.util
 
 class DataImpl(
-    raw: Raw
+    raw: MutableStore
 ) : AbstractData(raw)

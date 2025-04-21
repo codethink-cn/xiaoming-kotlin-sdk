@@ -18,12 +18,25 @@
 
 package cn.codethink.xiaoming.api
 
-import cn.codethink.xiaoming.connection.Received
-import cn.codethink.xiaoming.connection.ReceivedImpl
+import cn.codethink.xiaoming.connection.MaxAttemptAndDelayAutoReconnectPolicyImpl
+import cn.codethink.xiaoming.util.Received
 import cn.codethink.xiaoming.util.InternalApi
+import cn.codethink.xiaoming.util.NoOriginReceivedImpl
+import cn.codethink.xiaoming.util.ReceivedImpl
+import kotlin.time.Duration
 
 class RemoteCoreApiImpl : RemoteCoreApi {
-    override fun <T> createReceived(origin: Any?, data: T): Received<T> {
-        return ReceivedImpl(origin, data)
+    // Received
+    override fun <T> createReceived(data: T, origin: Any?): Received<T> {
+        return if (origin == null) {
+            NoOriginReceivedImpl(data)
+        } else {
+            ReceivedImpl(data, origin)
+        }
+    }
+
+    // AutoReconnectPolicy
+    override fun createMaxAttemptAndDelayAutoReconnectPolicy(maxAttempt: Int, delay: Duration): cn.codethink.xiaoming.connection.AutoReconnectPolicy {
+        return MaxAttemptAndDelayAutoReconnectPolicyImpl(maxAttempt, delay)
     }
 }

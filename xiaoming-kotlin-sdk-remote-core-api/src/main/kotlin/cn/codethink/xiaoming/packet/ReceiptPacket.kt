@@ -16,9 +16,8 @@
 
 package cn.codethink.xiaoming.packet
 
-import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.Id
-import cn.codethink.xiaoming.util.InternalImplementedApi
+import cn.codethink.xiaoming.util.NotStableForInheritance
 
 /**
  * 回执数据包。
@@ -26,10 +25,9 @@ import cn.codethink.xiaoming.util.InternalImplementedApi
  * @author Chuanwise
  * @see ReceiptState
  */
-@InternalImplementedApi
-interface ReceiptPacket : BusinessPacket {
-    var request: Id
-    var state: String
-    var data: Any?
-    override var cause: Cause?
+@NotStableForInheritance
+interface ReceiptPacket : Packet {
+    val request: Id
+    val state: ReceiptState
+    val data: Any?
 }

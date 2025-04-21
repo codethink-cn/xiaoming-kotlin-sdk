@@ -20,27 +20,27 @@ import cn.codethink.xiaoming.event.listener.ListenerDescriptor
 import cn.codethink.xiaoming.util.AbstractData
 import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.InternalApi
-import cn.codethink.xiaoming.util.Raw
+import cn.codethink.xiaoming.util.MutableStore
+import cn.codethink.xiaoming.util.Store
 import cn.codethink.xiaoming.util.Time
-import cn.codethink.xiaoming.util.getValue
-import cn.codethink.xiaoming.util.setValue
+import cn.codethink.xiaoming.util.property
 
 abstract class AbstractEventOperation : AbstractData, EventOperation {
-    private var type: String by raw
+    private var type: String by raw.property()
 
-    final override var time: Time by raw
-    final override var cause: Cause by raw
-    final override var listener: ListenerDescriptor by raw
+    final override var time: Time by raw.property()
+    final override var cause: Cause by raw.property()
+    final override var listener: ListenerDescriptor by raw.property()
 
     @InternalApi
-    constructor(raw: Raw) : super(raw)
+    constructor(raw: MutableStore) : super(raw)
 
     constructor(
         type: String,
         cause: Cause,
         listener: ListenerDescriptor,
         time: Time,
-        raw: Raw
+        raw: MutableStore
     ) : super(raw) {
         this.type = type
         this.cause = cause

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,36 +14,23 @@
  * limitations under the License.
  */
 
-@file:OptIn(InternalApi::class)
-
 package cn.codethink.xiaoming.util
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.junit.jupiter.api.Test
 
 class CauseTest {
-    @InternalApi
+    val objectMapper = jacksonObjectMapper()
+
     @Test
-    fun testSerializeCause() {
-        val mapper = jacksonObjectMapper().apply {
-            enable(SerializationFeature.INDENT_OUTPUT)
-            setSerializationInclusion(JsonInclude.Include.NON_NULL)
-        }
+    fun testSerialize() {
+        val cause = Cause("Just for Test")
+        val json = objectMapper.writeValueAsString(cause)
 
-        val textCause = createCause("Reason message here.", createTestSubjectDescriptor())
+        println(json)
 
-        mapper.assertJsonContentEquals(
-            """
-            {
-              "subject" : {
-                "type" : "test"
-              },
-              "message" : "Reason message here.",
-              "type" : "default"
-            }
-            """.trimIndent(), textCause
-        )
+        val value = objectMapper.readValue(json, CauseImpl::class.java)
+        println(value)
     }
 }

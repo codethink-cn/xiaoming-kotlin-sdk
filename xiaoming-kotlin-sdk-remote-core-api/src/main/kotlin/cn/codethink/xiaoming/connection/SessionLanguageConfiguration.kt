@@ -27,7 +27,6 @@ interface SessionLanguageConfiguration {
     val unsupportedSession: Template
     val sessionRequired: Template
     val sessionRejected: Template
-    val sessionExisted: Template
     val unsupportedRequestMode: Template
     val actionError: Template
     val invalidSession: Template

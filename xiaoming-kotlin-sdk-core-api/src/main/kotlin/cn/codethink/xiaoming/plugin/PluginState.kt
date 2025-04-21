@@ -37,6 +37,5 @@ enum class PluginState {
     DISABLED,
 
     UNLOADING,
-    UNLOADING_ERRORED,
-    UNLOADED
+    UNLOADING_ERRORED
 }

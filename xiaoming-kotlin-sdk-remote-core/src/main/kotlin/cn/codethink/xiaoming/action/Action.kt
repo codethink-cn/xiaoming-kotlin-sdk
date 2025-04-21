@@ -18,17 +18,15 @@
 
 package cn.codethink.xiaoming.action
 
+import cn.codethink.xiaoming.util.Action
 import cn.codethink.xiaoming.util.Id
-import cn.codethink.xiaoming.util.RawFieldType
+import cn.codethink.xiaoming.util.TypeMeta
 import cn.codethink.xiaoming.util.SubjectDescriptor
-import com.fasterxml.jackson.core.type.TypeReference
-import java.lang.reflect.Type
-import java.util.function.Supplier
 
 data class ActionImpl<P, R>(
     override val id: Id,
-    override val requestParaType: RawFieldType<P>,
-    override val receiptDataType: RawFieldType<R>,
+    override val requestTypeMeta: TypeMeta<P>,
+    override val receiptTypeMeta: TypeMeta<R>,
     override val subject: SubjectDescriptor
 ) : Action<P, R>
 

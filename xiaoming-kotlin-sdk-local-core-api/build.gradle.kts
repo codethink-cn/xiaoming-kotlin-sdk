@@ -15,8 +15,8 @@
  */
 
 plugins {
-    kotlin("jvm")
-    id("me.him188.kotlin-jvm-blocking-bridge")
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.blocking.bridge)
     `maven-publish`
 }
 
@@ -26,7 +26,8 @@ dependencies {
 
     implementation(project(":xiaoming-kotlin-sdk-remote-core"))
 
-    testImplementation(kotlin("test"))
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
 }
 
 tasks.test {

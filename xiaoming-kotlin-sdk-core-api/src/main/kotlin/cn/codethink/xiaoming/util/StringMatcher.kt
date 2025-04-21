@@ -21,10 +21,17 @@ package cn.codethink.xiaoming.util
 
 import cn.codethink.xiaoming.api.CoreApi
 
-interface StringMatcher : Matcher<String>
+/**
+ * 字符串匹配器。
+ *
+ * @author Chuanwise
+ */
+@NotStableForInheritance
+interface StringMatcher {
+    fun matches(string: String): Boolean
+}
 
-val AnyStringMatcher: StringMatcher
-    get() = MinorityRequiredOnceWildcardStringMatcher
+val AnyStringMatcher: StringMatcher get() = MinorityRequiredWildCardStringMatcher
 
 fun String.toStringMatcher(): StringMatcher = CoreApi.getInstance().parseStringMatcher(this)
 fun String.toLiteralStringMatcher(): StringMatcher = CoreApi.getInstance().createLiteralStringMatcher(this)

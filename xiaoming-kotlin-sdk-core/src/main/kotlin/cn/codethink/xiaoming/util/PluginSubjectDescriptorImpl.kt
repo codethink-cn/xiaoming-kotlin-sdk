@@ -16,22 +16,6 @@
 
 package cn.codethink.xiaoming.util
 
-import com.fasterxml.jackson.annotation.JsonTypeName
-
-const val SUBJECT_DESCRIPTOR_TYPE_PLUGIN = "plugin"
-
-@JsonTypeName(SUBJECT_DESCRIPTOR_TYPE_PLUGIN)
-class PluginSubjectDescriptorImpl : AbstractSubjectDescriptor, PluginSubjectDescriptor {
-    override var id: NamespaceId by raw
-
-    @InternalApi
-    constructor(raw: Raw) : super(raw)
-
-    @JvmOverloads
-    constructor(
-        id: NamespaceId,
-        raw: Raw = MapRaw()
-    ) : super(SUBJECT_DESCRIPTOR_TYPE_PLUGIN, raw) {
-        this.id = id
-    }
-}
+data class PluginSubjectDescriptorImpl(
+    override val id: NamespaceId
+) : PluginSubjectDescriptor

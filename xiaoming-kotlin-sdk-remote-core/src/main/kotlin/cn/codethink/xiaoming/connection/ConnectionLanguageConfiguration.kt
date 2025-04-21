@@ -17,44 +17,28 @@
 package cn.codethink.xiaoming.connection
 
 import cn.codethink.xiaoming.util.CAUSE_TYPE_SESSION_REQUIRED
-import cn.codethink.xiaoming.util.CAUSE_TYPE_SESSION_EXISTED
 import cn.codethink.xiaoming.util.CAUSE_TYPE_UNSUPPORTED_REQUEST_MODE
 import cn.codethink.xiaoming.util.CAUSE_TYPE_UNSUPPORTED_SESSION
 import cn.codethink.xiaoming.util.AbstractData
 import cn.codethink.xiaoming.util.CAUSE_TYPE_ACTION_ERROR
 import cn.codethink.xiaoming.util.CAUSE_TYPE_SESSION_INVALID
 import cn.codethink.xiaoming.util.CAUSE_TYPE_SESSION_REJECTED
-import cn.codethink.xiaoming.util.Field
 import cn.codethink.xiaoming.util.InternalApi
-import cn.codethink.xiaoming.util.Raw
+import cn.codethink.xiaoming.util.MutableStore
 import cn.codethink.xiaoming.util.Template
-import cn.codethink.xiaoming.util.getValue
+import cn.codethink.xiaoming.util.property
 
 class ConnectionLanguageConfigurationImpl @InternalApi constructor(
-    raw: Raw
+    raw: MutableStore
 ) : AbstractData(raw), SessionLanguageConfiguration {
-    @Field(CAUSE_TYPE_UNSUPPORTED_SESSION)
-    override val unsupportedSession: Template by raw
+    override val unsupportedSession: Template by raw.property(CAUSE_TYPE_UNSUPPORTED_SESSION)
+    override val sessionRequired: Template by raw.property(CAUSE_TYPE_SESSION_REQUIRED)
+    override val sessionRejected: Template by raw.property(CAUSE_TYPE_SESSION_REJECTED)
+    override val unsupportedRequestMode: Template by raw.property(CAUSE_TYPE_UNSUPPORTED_REQUEST_MODE)
+    override val actionError: Template by raw.property(CAUSE_TYPE_ACTION_ERROR)
+    override val invalidSession: Template by raw.property(CAUSE_TYPE_SESSION_INVALID)
 
-    @Field(CAUSE_TYPE_SESSION_REQUIRED)
-    override val sessionRequired: Template by raw
-
-    @Field(CAUSE_TYPE_SESSION_REJECTED)
-    override val sessionRejected: Template by raw
-
-    @Field(CAUSE_TYPE_SESSION_EXISTED)
-    override val sessionExisted: Template by raw
-
-    @Field(CAUSE_TYPE_UNSUPPORTED_REQUEST_MODE)
-    override val unsupportedRequestMode: Template by raw
-
-    @Field(CAUSE_TYPE_ACTION_ERROR)
-    override val actionError: Template by raw
-
-    @Field(CAUSE_TYPE_SESSION_INVALID)
-    override val invalidSession: Template by raw
-
-    override val unsupportedRequestAction: Template by raw
-    override val internalActionHandlerError: Template by raw
-    override val actionHandlerTimeout: Template by raw
+    override val unsupportedRequestAction: Template by raw.property()
+    override val internalActionHandlerError: Template by raw.property()
+    override val actionHandlerTimeout: Template by raw.property()
 }

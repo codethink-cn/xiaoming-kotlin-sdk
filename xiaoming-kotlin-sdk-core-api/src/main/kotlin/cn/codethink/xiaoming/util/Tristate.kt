@@ -17,23 +17,33 @@
 package cn.codethink.xiaoming.util
 
 /**
- * Tristate represents a value contains three different states.
+ * 表示三元状态。
  *
  * @author Chuanwise
  */
 enum class Tristate(
-    val value: Boolean?
+    private val value: Boolean?
 ) {
-    TRUE(true),
-    FALSE(false),
-    NULL(null)
+    TRUE(value = true),
+    FALSE(value = false),
+    NULL(value = null);
+
+    fun toBooleanOrNull(): Boolean? = value
+    fun toBoolean(): Boolean = value ?: error("Tristate is null!")
+
+    companion object {
+        @JvmStatic
+        @JavaFriendlyApi
+        fun of(value: Boolean?): Tristate = value.toTristate()
+    }
 }
 
-/**
- * Convert a nullable boolean to [Tristate].
- *
- * @author Chuanwise
- */
+fun Boolean?.toTristate(): Tristate = when (this) {
+    true -> Tristate.TRUE
+    false -> Tristate.FALSE
+    null -> Tristate.NULL
+}
+
 fun tristateOf(value: Boolean?): Tristate = when (value) {
     true -> Tristate.TRUE
     false -> Tristate.FALSE

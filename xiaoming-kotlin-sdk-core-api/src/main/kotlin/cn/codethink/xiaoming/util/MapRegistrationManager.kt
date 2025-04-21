@@ -14,20 +14,25 @@
  * limitations under the License.
  */
 
-@file:JvmName("MapRegistrationManagers")
-
 package cn.codethink.xiaoming.util
 
-interface MapRegistrationManager<K, E, R : Registration<E>> : RegistrationManager<E, R> {
+/**
+ * 通过 [Map] 组织的注册管理器。
+ *
+ * @param K 键类型
+ * @param E 元素类型
+ * @author Chuanwise
+ */
+interface MapRegistrationManager<K, E> : RegistrationManager<E> {
     val keys: Set<K>
+    override val registrations: Collection<MapRegistration<K, E>>
 
     fun toElementMap(): Map<K, E>
-    fun toRegistrationMap(): Map<K, R>
+    fun toRegistrationMap(): Map<K, MapRegistration<K, E>>
 
     fun getElement(key: K): E?
-    fun getRegistration(key: K): R?
-}
+    fun getRegistration(key: K): MapRegistration<K, E>?
 
-operator fun <K, E, R : Registration<E>> MapRegistrationManager<K, E, R>.get(key: K): R? = getRegistration(key)
-operator fun <K, E, R : Registration<E>> MapRegistrationManager<K, E, R>.contains(key: K): Boolean =
-    getRegistration(key) != null
+    operator fun get(key: K): MapRegistration<K, E>? = getRegistration(key)
+    operator fun contains(key: K): Boolean = getRegistration(key) != null
+}

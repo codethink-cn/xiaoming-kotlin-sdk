@@ -16,28 +16,12 @@
 
 package cn.codethink.xiaoming.util
 
-import com.fasterxml.jackson.annotation.JsonTypeName
-
-private const val SUBJECT_DESCRIPTOR_MATCHER_TYPE_DEFAULT_PLUGIN = "subject.plugin"
-
-@JsonTypeName(SUBJECT_DESCRIPTOR_MATCHER_TYPE_DEFAULT_PLUGIN)
-class PluginSubjectDescriptorMatcherImpl : AbstractData, PluginSubjectDescriptorMatcher {
-    private var type: String by raw
-    override var id: Matcher<NamespaceId> by raw
-
-    @InternalApi
-    constructor(raw: Raw) : super(raw)
-
-    @JvmOverloads
-    constructor(
-        id: Matcher<NamespaceId>,
-        raw: Raw = MapRaw()
-    ) : super(raw) {
-        this.type = SUBJECT_DESCRIPTOR_MATCHER_TYPE_DEFAULT_PLUGIN
-        this.id = id
-    }
-
-    override fun isMatched(target: PluginSubjectDescriptor): Boolean {
-        return id.isMatched(target.id)
+@JvmInline
+value class PluginSubjectDescriptorMatcherImpl(
+    private val id: NamespaceIdMatcher
+) : PluginSubjectDescriptorMatcher {
+    override fun matches(descriptor: PluginSubjectDescriptor): Boolean {
+        return id.matches(descriptor.id)
     }
 }
+

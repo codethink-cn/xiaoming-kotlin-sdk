@@ -16,12 +16,13 @@
 
 allprojects {
     group = "cn.codethink"
-    version = Versions.project
+    version = "0.1.0-SNAPSHOT"
 }
 
 plugins {
-    alias(libs.plugins.kotlin) apply false
+    alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.blocking.bridge) apply false
+    alias(libs.plugins.build.config) apply false
 }
 
 subprojects {

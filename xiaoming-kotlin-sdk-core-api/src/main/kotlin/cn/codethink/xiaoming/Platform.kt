@@ -16,11 +16,27 @@
 
 package cn.codethink.xiaoming
 
+import cn.codethink.xiaoming.event.EventManager
+import cn.codethink.xiaoming.exception.ExceptionManager
+import cn.codethink.xiaoming.permission.PermissionManager
+import cn.codethink.xiaoming.plugin.PluginManager
+import cn.codethink.xiaoming.serialization.CodecResolver
+import cn.codethink.xiaoming.util.Subject
+import kotlinx.coroutines.CoroutineScope
+
 /**
- * Platform is a plugin architecture.
+ * 平台：插件化框架宿主程序。
  *
  * @author Chuanwise
  */
-interface Platform {
+interface Platform : Subject, CoroutineScope {
+    val permissionManager: PermissionManager
 
+    val exceptionManager: ExceptionManager
+
+    val serializationManager: CodecResolver
+
+    val eventManager: EventManager
+
+    val pluginManager: PluginManager
 }

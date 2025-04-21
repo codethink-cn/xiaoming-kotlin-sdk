@@ -14,52 +14,22 @@
  * limitations under the License.
  */
 
-@file:JvmName("Causes")
-
 package cn.codethink.xiaoming.util
 
 /**
  * 表示一件事或一个操作的原因。
  *
  * @author Chuanwise
- * @see createCause
+ * @see Cause
  */
 interface Cause {
-    companion object {
-        @JvmStatic
-        @JavaFriendlyApi
-        fun of(text: String, subject: SubjectDescriptor): Cause = createCause(text, subject)
-    }
-
     /**
-     * 原因类型。
+     * 描述原因的一段话，建议使用英文。
      */
-    val type: String
-
-    /**
-     * 提供这个原因的主体。
-     */
-    val subject: SubjectDescriptor
+    val description: String
 
     /**
      * 直接原因。
      */
     val cause: Cause?
-
-    /**
-     * 描述原因的一段话，一般使用英文。
-     */
-    val message: String
 }
-
-/**
- * 获取根原因。
- */
-val Cause.rootCause: Cause
-    get() {
-        var result = this
-        while (true) {
-            result = result.cause ?: return result
-            require(result !== this) { "Cause has a cycle: $this." }
-        }
-    }

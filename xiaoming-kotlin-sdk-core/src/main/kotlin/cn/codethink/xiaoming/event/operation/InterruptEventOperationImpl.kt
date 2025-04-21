@@ -19,9 +19,11 @@ package cn.codethink.xiaoming.event.operation
 import cn.codethink.xiaoming.event.listener.ListenerDescriptor
 import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.InternalApi
-import cn.codethink.xiaoming.util.MapRaw
-import cn.codethink.xiaoming.util.Raw
+import cn.codethink.xiaoming.util.MapStoreImpl
+import cn.codethink.xiaoming.util.MutableStore
+import cn.codethink.xiaoming.util.Store
 import cn.codethink.xiaoming.util.Time
+import cn.codethink.xiaoming.util.createMapStore
 import com.fasterxml.jackson.annotation.JsonTypeName
 
 const val EVENT_OPERATION_TYPE_INTERRUPT = "interrupt"
@@ -29,13 +31,13 @@ const val EVENT_OPERATION_TYPE_INTERRUPT = "interrupt"
 @JsonTypeName(EVENT_OPERATION_TYPE_INTERRUPT)
 class InterruptEventOperationImpl : AbstractEventOperation, InterruptEventOperation {
     @InternalApi
-    constructor(raw: Raw) : super(raw)
+    constructor(raw: MutableStore) : super(raw)
 
     @JvmOverloads
     constructor(
         cause: Cause,
         listener: ListenerDescriptor,
         time: Time,
-        raw: Raw = MapRaw()
+        raw: MutableStore = createMapStore()
     ) : super(EVENT_OPERATION_TYPE_INTERRUPT, cause, listener, time, raw)
 }

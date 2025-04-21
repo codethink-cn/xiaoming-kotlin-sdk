@@ -15,8 +15,8 @@
  */
 
 plugins {
-    kotlin("jvm")
-    id("me.him188.kotlin-jvm-blocking-bridge")
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.blocking.bridge)
     `maven-publish`
 }
 dependencies {
@@ -32,7 +32,6 @@ dependencies {
     testRuntimeOnly(libs.log4j.slf4j2.impl)
     testRuntimeOnly(libs.log4j.core)
 
-    testImplementation(kotlin("test"))
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
 }

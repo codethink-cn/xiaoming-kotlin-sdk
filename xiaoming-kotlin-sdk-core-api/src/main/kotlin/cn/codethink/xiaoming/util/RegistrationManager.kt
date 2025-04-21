@@ -20,12 +20,14 @@ package cn.codethink.xiaoming.util
  * 管理由一些主体注册的对象 [Registration]。
  *
  * @author Chuanwise
+ * @see MutableRegistrationManager
  */
-@InternalImplementedApi
-interface RegistrationManager<E, R : Registration<E>> {
+@NotStableForInheritance
+interface RegistrationManager<E> {
     val elements: Collection<E>
-    val registrations: Collection<R>
+    val registrations: Collection<Registration<E>>
 
     val size: Int
     val isEmpty: Boolean
+    val isNotEmpty: Boolean get() = !isEmpty
 }

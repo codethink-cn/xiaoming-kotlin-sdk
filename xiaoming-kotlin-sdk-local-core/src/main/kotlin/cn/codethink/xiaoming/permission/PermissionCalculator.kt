@@ -20,11 +20,11 @@ import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.SubjectDescriptor
 
 data class PermissionCalculatingContext<T : SubjectDescriptor>(
-    val permissionServiceApi: LocalPermissionServiceApi,
+    val permissionServiceApi: LocalPermissionManagerImpl,
     val target: T,
     val permission: Permission,
     val context: Map<String, Any?> = emptyMap(),
     val cause: Cause
 ) {
-    val internalApi by permissionServiceApi::internalApi
+    val internalApi by permissionServiceApi::platformEngine
 }

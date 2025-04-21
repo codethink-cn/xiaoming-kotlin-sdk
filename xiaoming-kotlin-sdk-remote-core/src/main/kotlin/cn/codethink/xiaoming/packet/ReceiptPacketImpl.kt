@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,47 +17,41 @@
 package cn.codethink.xiaoming.packet
 
 import cn.codethink.xiaoming.util.Cause
-import cn.codethink.xiaoming.util.FIELD_TYPE
 import cn.codethink.xiaoming.util.Id
 import cn.codethink.xiaoming.util.InternalApi
-import cn.codethink.xiaoming.util.MapRaw
-import cn.codethink.xiaoming.util.Raw
+import cn.codethink.xiaoming.util.MutableStore
 import cn.codethink.xiaoming.util.Time
-import cn.codethink.xiaoming.util.getValue
+import cn.codethink.xiaoming.util.createMapStore
 import cn.codethink.xiaoming.util.nowTime
-import cn.codethink.xiaoming.util.setValue
+import cn.codethink.xiaoming.util.property
 import com.fasterxml.jackson.annotation.JsonTypeName
 
-const val RECEIPT_STATE_UNDEFINED = "undefined"
-const val RECEIPT_STATE_SUCCEED = "succeed"
-const val RECEIPT_STATE_FAILED = "failed"
-const val RECEIPT_STATE_INTERRUPTED = "interrupted"
-
-const val RECEIPT_STATE_RECEIVED = "received"
-const val RECEIPT_STATE_CANCELLED = "cancelled"
+const val RECEIPT_PACKET_FIELD_DATA = "data"
 
 private const val PACKET_TYPE_RECEIPT = "receipt"
 
 @JsonTypeName(PACKET_TYPE_RECEIPT)
 class ReceiptPacketImpl : AbstractBusinessPacket, ReceiptPacket {
-    override var request: Id by raw
-    override var state: String by raw
-    override var data: Any? by raw
-    override var cause: Cause? by raw
+    override var request: Id by raw.property()
+    override var state: ReceiptState by raw.property()
+    override var data: Any? by raw.property()
+    override var cause: Cause? by raw.property()
+
+    override val description: String = "Receipt packet to request $request ($id)"
 
     @InternalApi
-    constructor(raw: Raw) : super(raw)
+    constructor(raw: MutableStore) : super(raw)
 
     @JvmOverloads
     constructor(
         id: Id,
         request: Id,
-        state: String,
+        state: ReceiptState,
         data: Any?,
         session: SessionDescriptor,
         cause: Cause? = null,
         time: Time = nowTime,
-        raw: Raw = MapRaw()
+        raw: MutableStore = createMapStore()
     ) : super(id, PACKET_TYPE_RECEIPT, time, session, raw) {
         this.request = request
         this.state = state

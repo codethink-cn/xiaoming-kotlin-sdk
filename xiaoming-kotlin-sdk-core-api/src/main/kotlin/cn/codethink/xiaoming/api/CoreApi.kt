@@ -16,9 +16,10 @@
 
 package cn.codethink.xiaoming.api
 
-import cn.codethink.xiaoming.permission.Permission
-import cn.codethink.xiaoming.permission.PermissionMatcher
+import cn.codethink.xiaoming.event.EventPublishPolicy
 import cn.codethink.xiaoming.plugin.PluginRequirement
+import cn.codethink.xiaoming.plugin.PluginStateChangePolicy
+import cn.codethink.xiaoming.serialization.CodecResolver
 import cn.codethink.xiaoming.util.AndVersionMatcher
 import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.Data
@@ -27,35 +28,42 @@ import cn.codethink.xiaoming.util.GreaterThanOrEqualVersionMatcher
 import cn.codethink.xiaoming.util.GreaterThanVersionMatcher
 import cn.codethink.xiaoming.util.Id
 import cn.codethink.xiaoming.util.IncludeVersionMatcher
+import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.InternalApi
 import cn.codethink.xiaoming.util.LessThanOrEqualVersionMatcher
 import cn.codethink.xiaoming.util.LessThanVersionMatcher
 import cn.codethink.xiaoming.util.MajorMinorVersionPrefixMatcher
 import cn.codethink.xiaoming.util.MajorVersionPrefixMatcher
-import cn.codethink.xiaoming.util.Matcher
+import cn.codethink.xiaoming.util.MutableStore
 import cn.codethink.xiaoming.util.NamespaceId
+import cn.codethink.xiaoming.util.NamespaceIdMatcher
+import cn.codethink.xiaoming.util.NamingPolicy
 import cn.codethink.xiaoming.util.NumericalId
 import cn.codethink.xiaoming.util.OrVersionMatcher
 import cn.codethink.xiaoming.util.PluginSubjectDescriptorMatcher
-import cn.codethink.xiaoming.util.Raw
+import cn.codethink.xiaoming.util.Store
 import cn.codethink.xiaoming.util.SegmentId
 import cn.codethink.xiaoming.util.SegmentIdMatcher
-import cn.codethink.xiaoming.util.StandardCause
 import cn.codethink.xiaoming.util.StringId
 import cn.codethink.xiaoming.util.StringMatcher
 import cn.codethink.xiaoming.util.SubjectDescriptor
 import cn.codethink.xiaoming.util.Template
 import cn.codethink.xiaoming.util.TestSubjectDescriptor
+import cn.codethink.xiaoming.util.TextualId
 import cn.codethink.xiaoming.util.Time
+import cn.codethink.xiaoming.util.TypeMeta
 import cn.codethink.xiaoming.util.UniversalUniqueId
 import cn.codethink.xiaoming.util.Version
 import cn.codethink.xiaoming.util.VersionMatcher
-import cn.codethink.xiaoming.util.WildcardStringMatcher
+import cn.codethink.xiaoming.util.WildCardStringMatcher
+import java.lang.reflect.Type
 import java.util.UUID
+import java.util.function.Supplier
+import kotlin.properties.ReadOnlyProperty
+import kotlin.properties.ReadWriteProperty
 
 /**
- * 小明 [CoreApi]，是通过 `xiaoming-kotlin-sdk-core-api` 模块主动调用
- * `xiaoming-kotlin-sdk-core` 的桥梁。
+ * 小明 [CoreApi]，是通过 API 模块主动调用 CORE 的桥梁。
  *
  * @author Chuanwise
  */
@@ -67,7 +75,7 @@ interface CoreApi {
     }
 
     // Id
-    fun parseId(string: String): Id
+    fun parseTextualId(string: String): TextualId
 
     fun toStringId(id: Id): StringId
     fun toNumericalId(id: Id): NumericalId
@@ -90,29 +98,29 @@ interface CoreApi {
     fun createUniversalUniqueId(uuid: UUID): UniversalUniqueId
 
     // Template
-    fun parseTemplate(format: String): Template
+    fun createTemplate(format: String): Template
 
     // Cause
-    fun createCause(message: String, subject: SubjectDescriptor): Cause
+    fun createCause(description: String, cause: Cause?): Cause
 
-    fun createEmptyTextCause(
-        id: Id,
-        text: String,
-        subject: SubjectDescriptor,
-        cause: Cause?
-    ): StandardCause
+    // Operation
+    fun createOperation(
+        message: String,
+        operator: SubjectDescriptor,
+        cause: Cause?,
+        time: Time,
+        id: Id
+    ): Operation
 
-    // Subject Descriptor
-    fun createTestSubjectDescriptor(): TestSubjectDescriptor
+    // EventPublishPolicy
+    fun createEventPublishPolicy(mutable: Boolean, interceptable: Boolean): EventPublishPolicy
 
     // Data
-    fun createData(raw: Raw): Data
+    fun createData(raw: MutableStore): Data
 
     // Time
-    fun createTimeOfMilliseconds(milliseconds: Long): Time
-
-    // PermissionMatchers
-    fun createLiteralPermissionMatcher(permission: Permission): PermissionMatcher
+    fun createUnixMillisecondsTime(milliseconds: Long): Time
+    fun createUnixSecondsTime(seconds: Long): Time
 
     // PluginMetaMatcher
     fun parsePluginRequirement(string: String): PluginRequirement
@@ -129,15 +137,18 @@ interface CoreApi {
     fun parseStringMatcher(string: String): StringMatcher
     fun createLiteralStringMatcher(string: String): StringMatcher
     fun createRegexStringMatcher(regex: String): StringMatcher
-    fun createWildcardStringMatcher(majority: Boolean, optional: Boolean, count: Int?): WildcardStringMatcher
+    fun createWildcardStringMatcher(majority: Boolean, optional: Boolean): WildCardStringMatcher
 
     // SegmentIdMatcher
     fun parseSegmentIdMatcher(string: String): SegmentIdMatcher
     fun createSegmentIdMatcher(matchers: List<StringMatcher>): SegmentIdMatcher
-    fun createSegmentIdMatcher(segmentId: SegmentId): SegmentIdMatcher
+
+    // NamespaceIdMatcher
+    fun createNamespaceIdMatcher(group: SegmentIdMatcher, name: SegmentIdMatcher): NamespaceIdMatcher
+    fun parseNamespaceIdMatcher(string: String): NamespaceIdMatcher
 
     // PluginSubjectDescriptorMatcher
-    fun createPluginSubjectDescriptorMatcher(id: Matcher<NamespaceId>): PluginSubjectDescriptorMatcher
+    fun createPluginSubjectDescriptorMatcher(id: NamespaceIdMatcher): PluginSubjectDescriptorMatcher
 
     // VersionMatcher
     fun parseVersionMatcher(string: String): VersionMatcher
@@ -156,4 +167,40 @@ interface CoreApi {
     // Version
     fun createVersion(major: Int, minor: Int, patch: Int, preRelease: String?, build: String?): Version
     fun parseVersion(string: String): Version
+
+    // Store
+    fun createMapStore(map: MutableMap<String, Any?>): MutableStore
+    fun createEmptyStore(): Store
+
+    fun <T> createReadOnlyStoreProperty(
+        store: Store, name: String?, meta: TypeMeta<T>?, namingPolicy: NamingPolicy?, defaultValueFactory: Supplier<T>?
+    ): ReadOnlyProperty<Any?, T>
+
+    fun <T> createReadWriteStoreProperty(
+        store: MutableStore, name: String?, meta: TypeMeta<T>?, namingPolicy: NamingPolicy?, defaultValueFactory: Supplier<T>?
+    ): ReadWriteProperty<Any?, T>
+
+    // TypeMeta
+    fun createTypeMeta(type: Type, nullable: Boolean): TypeMeta<*>
+
+    // NamingPolicy
+    fun getKebabCaseNamingPolicy(): NamingPolicy
+    fun getLowerCamelCaseNamingPolicy(): NamingPolicy
+    fun getUpperCamelCaseNamingPolicy(): NamingPolicy
+    fun getSnakeCaseNamingPolicy(): NamingPolicy
+    fun getUpperSnakeCaseNamingPolicy(): NamingPolicy
+    fun getLowerCaseNamingPolicy(): NamingPolicy
+    fun getLowerDotCaseNamingPolicy(): NamingPolicy
+
+    // PluginStateChangePolicy
+    fun createPluginStateChangePolicy(ignorePreviousError: Boolean, ignoreCurrentError: Boolean): PluginStateChangePolicy
+
+    // CodecResolver
+    fun findAndApplyInitializers(
+        resolver: CodecResolver,
+        operation: Operation,
+        classLoader: ClassLoader?,
+        replace: Boolean,
+        visible: Boolean
+    )
 }

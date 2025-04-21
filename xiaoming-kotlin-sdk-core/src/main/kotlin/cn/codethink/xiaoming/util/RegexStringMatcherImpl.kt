@@ -16,32 +16,12 @@
 
 package cn.codethink.xiaoming.util
 
-import com.fasterxml.jackson.annotation.JsonTypeName
-
-const val STRING_MATCHER_TYPE_REGEX = "string.regex"
-
-@JsonTypeName(STRING_MATCHER_TYPE_REGEX)
 class RegexStringMatcherImpl(
     private val regex: Regex
 ) : StringMatcher {
-    val type: String = STRING_MATCHER_TYPE_REGEX
-
-    override fun isMatched(target: String): Boolean = regex.matches(target)
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is RegexStringMatcherImpl) return false
-
-        if (regex.pattern != other.regex.pattern) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return regex.pattern.hashCode()
-    }
+    override fun matches(string: String): Boolean = regex.matches(string)
 
     override fun toString(): String {
-        return "RegexStringMatcher(regex=$regex)"
+        return "{$regex}"
     }
 }

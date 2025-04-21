@@ -18,12 +18,13 @@
 
 package cn.codethink.xiaoming.plugin.jvm.classic
 
+import cn.codethink.xiaoming.LocalPlatform
 import cn.codethink.xiaoming.classpath.DynamicLibrariesClassLoader
 import cn.codethink.xiaoming.util.InternalApi
 import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.SegmentIdImpl
 import cn.codethink.xiaoming.util.ignoreClassNotFoundException
-import cn.codethink.xiaoming.plugin.jvm.PluginClassAccessPolicy
+import cn.codethink.xiaoming.plugin.jvm.LocalJvmPluginClassAccessPolicy
 import io.github.oshai.kotlinlogging.KLogger
 import java.io.File
 import java.net.URI
@@ -38,69 +39,61 @@ import java.util.zip.ZipFile
 
 const val CLASS_FILE_NAME_EXTENSION_WITH_DOT = ".class"
 
-/**
- * Class loader for classic plugins.
- *
- * @param environmentClassLoader Class loader of the environment, such as classes in the package`java.`.
- * @param publicLibrariesClassLoader Class loader of the public libraries.
- * @author Chuanwise
- * @see DynamicLibrariesClassLoader
- */
 class LocalJvmClassicPluginClassLoader(
-    var id: NamespaceId,
-    val distributionFile: File,
+    private var id: NamespaceId,
+    override val distributionFile: File,
 
-    val environmentClassLoader: ClassLoader,
-    var resolveEnvironmentResources: Boolean,
+    override var resolvePlatformResources: Boolean,
+    override var resolveEnvironmentResources: Boolean,
 
-    val publicLibrariesClassLoader: ClassLoader,
-    var resolvePublicResources: Boolean,
+    override var classAccessPolicy: LocalJvmPluginClassAccessPolicy,
+    override var resolveIndependentPluginClasses: Boolean,
+    override var allowResolvedByIndependentPlugins: Boolean,
 
-    var classAccessPolicy: PluginClassAccessPolicy,
-    var resolveIndependentPluginClasses: Boolean,
-    var resolvableByIndependentPlugins: Boolean,
-
-    val uniqueResourcesFilter: Predicate<String>,
-    var pluginClassLoaders: Map<SegmentIdImpl, LocalJvmClassicPluginClassLoader>,
-    var logger: KLogger
+    private val uniqueResourcesFilter: Predicate<String>,
+    private var pluginClassLoaders: Map<NamespaceId, LocalJvmClassicPluginClassLoader>,
+    private var logger: KLogger,
+    platform: LocalPlatform
 ) : URLClassLoader(
     distributionFile.name, arrayOf(distributionFile.toURI().toURL()), null
-) {
-    /**
-     * Class loaders to load classes in dependent plugins.
-     */
-    private val dependenciesClassLoaders: Map<SegmentIdImpl, LocalJvmClassicPluginClassLoader> = ConcurrentHashMap()
+), LocalJvmClassicPluginClassPath {
+    private val platformClassLoader by platform.pluginManager::platformClassLoader
+    private val environmentClassLoader by platform.pluginManager::environmentClassLoader
+
+    override val pluginClassLoader: ClassLoader = this
 
     /**
-     * Package names of the classes in the plugin distribution file.
+     * 用于加载依赖插件的类加载器。
+     */
+    private val dependenciesClassLoaders: Map<NamespaceId, LocalJvmClassicPluginClassLoader> = ConcurrentHashMap()
+
+    /**
+     * 插件分发文件内的包名。
      */
     private val packageNames: Set<String> = distributionFile.filterPackageNames()
 
     /**
-     * Class loader to load classes in protected libraries. For local plugins
-     * depended on this plugin, it can use this class loader to load classes or
-     * resources.
+     * 保护类加载器。依赖于此插件的其他本地插件也可以使用。
      */
     private val protectedLibrariesClassLoader = DynamicLibrariesClassLoader(
         environmentClassLoader = environmentClassLoader,
         classLoaderName = "${distributionFile}[protected]",
         toStringName = "ProtectedLibrariesClassLoader(file=${distributionFile})",
-        parent = publicLibrariesClassLoader
+        parent = platformClassLoader
     )
 
     /**
-     * Class loader to load classes in private libraries. Only this plugin can
-     * use this class loader to load classes or resources.
+     * 私有类加载器，只有插件自身可以使用。
      */
     private val privateLibrariesClassLoader = DynamicLibrariesClassLoader(
         environmentClassLoader = environmentClassLoader,
-        classLoaderName = "${distributionFile}[protected]",
+        classLoaderName = "${distributionFile}[private]",
         toStringName = "ProtectedLibrariesClassLoader(file=${distributionFile})",
-        parent = publicLibrariesClassLoader
+        parent = platformClassLoader
     )
 
     /**
-     * Undefined dependencies of this plugin.
+     * 未定义的插件依赖。当插件尚未声明其依赖关系，但却使用其中的类时维护。
      */
     private val undefinedDependencies: MutableSet<NamespaceId> = CopyOnWriteArraySet()
 
@@ -155,8 +148,8 @@ class LocalJvmClassicPluginClassLoader(
     override fun loadClass(name: String, resolve: Boolean): Class<*> = loadClass(name)
 
     override fun loadClass(name: String): Class<*> {
+        ignoreClassNotFoundException { platformClassLoader.loadClass(name) }?.let { return it }
         ignoreClassNotFoundException { environmentClassLoader.loadClass(name) }?.let { return it }
-        ignoreClassNotFoundException { publicLibrariesClassLoader.loadClass(name) }?.let { return it }
 
         // Load class in protected libraries.
         protectedLibrariesClassLoader.loadClassInThisClassLoaderAndLibraries(name)?.let { return it }
@@ -175,7 +168,7 @@ class LocalJvmClassicPluginClassLoader(
         val resolveIndependentPluginClasses = resolveIndependentPluginClasses
         pluginClassLoaders.forEach { (id, classLoader) ->
             if (classLoader != this && !dependenciesClassLoaders.containsKey(id)) {
-                if (classLoader.resolvableByIndependentPlugins) {
+                if (classLoader.allowResolvedByIndependentPlugins) {
                     classLoader.resolveProtectedLibrariesAndPublicClass(name)?.let {
                         if (undefinedDependencies.add(classLoader.id)) {
                             logger.warn {
@@ -221,20 +214,18 @@ class LocalJvmClassicPluginClassLoader(
 
         privateLibrariesClassLoader.getResource(name)?.let { return it }
 
-        if (resolvePublicResources) {
-            publicLibrariesClassLoader.getResource(name)?.let { return it }
-        }
-
         if (resolveEnvironmentResources) {
             environmentClassLoader.getResource(name)?.let { return it }
+        }
+
+        if (resolvePlatformResources) {
+            platformClassLoader.getResource(name)?.let { return it }
         }
 
         return null
     }
 
-    private fun getResources(
-        name: String, trace: MutableSet<ClassLoader>
-    ): Enumeration<URL> {
+    private fun getResources(name: String, trace: MutableSet<ClassLoader>): Enumeration<URL> {
         if (!trace.add(this)) {
             return Collections.emptyEnumeration()
         }
@@ -251,17 +242,17 @@ class LocalJvmClassicPluginClassLoader(
         // Find resource from private libraries.
         sources += privateLibrariesClassLoader.getResources(name, trace)
 
-        // Find resource from public libraries.
-        if (resolvePublicResources) {
-            if (!trace.add(publicLibrariesClassLoader)) {
-                sources += publicLibrariesClassLoader.getResources(name)
-            }
-        }
-
-        // Find resource from environment.
+        // Find resource from environment class loader.
         if (resolveEnvironmentResources) {
             if (!trace.add(environmentClassLoader)) {
                 sources += environmentClassLoader.getResources(name)
+            }
+        }
+
+        // Find resource from platform class loader.
+        if (resolvePlatformResources) {
+            if (!trace.add(platformClassLoader)) {
+                sources += platformClassLoader.getResources(name)
             }
         }
 

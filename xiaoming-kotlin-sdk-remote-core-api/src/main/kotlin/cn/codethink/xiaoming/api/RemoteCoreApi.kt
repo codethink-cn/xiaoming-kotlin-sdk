@@ -16,8 +16,10 @@
 
 package cn.codethink.xiaoming.api
 
-import cn.codethink.xiaoming.connection.Received
+import cn.codethink.xiaoming.connection.AutoReconnectPolicy
+import cn.codethink.xiaoming.util.Received
 import cn.codethink.xiaoming.util.InternalApi
+import kotlin.time.Duration
 
 @InternalApi
 interface RemoteCoreApi {
@@ -26,5 +28,9 @@ interface RemoteCoreApi {
         fun getInstance(): RemoteCoreApi = RemoteCoreApiInstance.get()
     }
 
-    fun <T> createReceived(origin: Any?, data: T): Received<T>
+    // Received
+    fun <T> createReceived(data: T, origin: Any?): Received<T>
+
+    // AutoReconnectPolicy
+    fun createMaxAttemptAndDelayAutoReconnectPolicy(maxAttempt: Int, delay: Duration): AutoReconnectPolicy
 }

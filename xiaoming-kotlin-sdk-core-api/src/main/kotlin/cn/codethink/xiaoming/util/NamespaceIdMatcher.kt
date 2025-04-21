@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-@file:JvmName("NamespaceIdMatchers")
-
 package cn.codethink.xiaoming.util
 
 /**
@@ -23,4 +21,20 @@ package cn.codethink.xiaoming.util
  *
  * @author Chuanwise
  */
-interface NamespaceIdMatcher : Matcher<NamespaceId>
+@NotStableForInheritance
+interface NamespaceIdMatcher {
+    companion object {
+        @JvmStatic
+        @JavaFriendlyApi
+        fun parse(string: String): NamespaceIdMatcher = parseNamespaceIdMatcher(string)
+
+        @JvmStatic
+        @JavaFriendlyApi
+        fun of(group: SegmentIdMatcher, name: SegmentIdMatcher): NamespaceIdMatcher = NamespaceIdMatcher(group, name)
+    }
+
+    val group: SegmentIdMatcher
+    val name: SegmentIdMatcher
+
+    fun matches(namespaceId: NamespaceId): Boolean
+}

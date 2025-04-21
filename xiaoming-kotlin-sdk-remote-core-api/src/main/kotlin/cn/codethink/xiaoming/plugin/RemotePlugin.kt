@@ -16,14 +16,9 @@
 
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.RemotePlatform
-
 /**
- * Represent a remote plugin.
+ * 表示一个代码不在当前进程运行的插件。
  *
  * @author Chuanwise
  */
-interface RemotePlugin : AllocatedPlugin {
-    override val runtimeMeta: RemotePluginRuntimeMetaRemoteView
-    val platform: RemotePlatform
-}
+interface RemotePlugin : Plugin

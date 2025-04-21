@@ -23,6 +23,4 @@ package cn.codethink.xiaoming.util
  *
  * @author Chuanwise
  */
-interface SubjectDescriptor {
-    val type: String
-}
+interface SubjectDescriptor

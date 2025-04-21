@@ -17,8 +17,10 @@
 package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.event.Event
-
+import cn.codethink.xiaoming.util.Cause
+import cn.codethink.xiaoming.util.NamespaceId
 
 interface PluginEvent : Event {
+    val pluginId: NamespaceId
     val plugin: Plugin
 }

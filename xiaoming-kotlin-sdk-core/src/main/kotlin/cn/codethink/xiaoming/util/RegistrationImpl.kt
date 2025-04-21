@@ -18,5 +18,5 @@ package cn.codethink.xiaoming.util
 
 class RegistrationImpl<T>(
     override val value: T,
-    override val subject: SubjectDescriptor
+    override val operation: Operation
 ) : Registration<T>

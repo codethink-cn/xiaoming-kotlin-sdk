@@ -21,4 +21,4 @@ package cn.codethink.xiaoming.util
 
 import cn.codethink.xiaoming.api.CoreApi
 
-fun createData(raw: Raw): Data = CoreApi.getInstance().createData(raw)
+fun createData(raw: MutableStore): Data = CoreApi.getInstance().createData(raw)

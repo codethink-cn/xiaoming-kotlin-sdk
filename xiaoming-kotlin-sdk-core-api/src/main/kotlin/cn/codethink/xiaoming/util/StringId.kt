@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-@file:JvmName("StringIds")
-
 package cn.codethink.xiaoming.util
 
 /**
@@ -23,16 +21,14 @@ package cn.codethink.xiaoming.util
  *
  * @author Chuanwise
  */
-interface StringId : Id, Comparable<StringId> {
+interface StringId : TextualId, Comparable<StringId> {
     companion object {
         @JvmStatic
         @JavaFriendlyApi
-        fun of(string: String): StringId = createStringId(string)
+        fun of(string: String): StringId = StringId(string)
 
         @JvmStatic
         @JavaFriendlyApi
-        fun empty(): StringId = createStringId("")
+        val EMPTY = StringId("")
     }
 }
-
-fun String.toStringId(): StringId = createStringId(this)

@@ -16,6 +16,13 @@
 
 package cn.codethink.xiaoming.util
 
-interface ListRegistrationManager<E, R : Registration<E>> : RegistrationManager<E, R> {
-    fun unregisterAll(subject: SubjectDescriptor): Boolean
+interface ListRegistrationManager<E> : RegistrationManager<E> {
+    override val elements: List<E>
+    override val registrations: List<Registration<E>>
+
+    fun toElementList(): List<E>
+    fun toRegistrationList(): List<Registration<E>>
+
+    fun getElement(index: Int): E?
+    fun getRegistration(index: Int): Registration<E>?
 }

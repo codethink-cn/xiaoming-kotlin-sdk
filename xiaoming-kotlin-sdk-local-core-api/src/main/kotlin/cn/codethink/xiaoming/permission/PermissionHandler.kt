@@ -16,26 +16,20 @@
 
 package cn.codethink.xiaoming.permission
 
-import cn.codethink.xiaoming.util.SubjectDescriptor
+import cn.codethink.xiaoming.util.Subject
 
 /**
- * 权限测试时的上下文。
+ * 权限处理器，用于处理对某类主体的权限操作。主要是测试和设置操作。
  *
- * @author Chuanwise
- */
-interface PermissionTestContext<S : SubjectDescriptor> {
-    val subject: S
-}
-
-/**
- * 权限计算器用于计算某个主体是否具备给定权限。
- *
- * 对于某些外部用户，其权限并不和某个固定的权限账号绑定。对其查询可能先查询是否有固定账号，若无，再查询某种
- * 默认权限性质的账号。然而对于其他一些没有默认权限的主体，其查询权限的方式则不同，因此需要特定权限计算器。
+ * 不同类型的主体的权限查询方式可能不同。例如对于某些外部用户，其权限并不和某个固定的权限包绑定。查询其是否具备某一权限时，
+ * 可能先查询是否有对应权限包，再查询某种默认权限性质的权限包。然而，对于其他类型的主体，其查询方式又有不同。设置权限时同样
+ * 因此存在差异，因此使用本接口屏蔽这种差异。
  *
  * @param T 主体的描述符类型
  * @author Chuanwise
+ * @see LocalPermissionManager.testPermission
  */
-interface PermissionHandler<S : SubjectDescriptor> {
-    suspend fun onTest(context: PermissionCalculatingContext<T>): Boolean?
+interface PermissionHandler<T : Subject> {
+    fun onTest(context: PermissionTestContext<T>): Boolean?
+    fun onSet(context: PermissionSetContext<T>)
 }

@@ -15,16 +15,16 @@
  */
 
 plugins {
-    kotlin("jvm")
-    id("me.him188.kotlin-jvm-blocking-bridge")
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.blocking.bridge)
     `maven-publish`
 }
 
 dependencies {
     compileOnly(project(":xiaoming-kotlin-sdk-local-core"))
-    compileOnly(project(":xiaoming-kotlin-sdk-local-core-plugin-jvm"))
 
-    testImplementation(kotlin("test"))
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
 }
 
 tasks.test {

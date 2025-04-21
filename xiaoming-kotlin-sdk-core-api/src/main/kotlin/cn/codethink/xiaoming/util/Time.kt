@@ -14,23 +14,15 @@
  * limitations under the License.
  */
 
-@file:JvmName("Times")
-@file:OptIn(InternalApi::class)
-
 package cn.codethink.xiaoming.util
-
-import cn.codethink.xiaoming.api.CoreApi
-import java.text.DateFormat
-import java.util.Date
-import java.util.concurrent.TimeUnit
 
 /**
  * 表示一个具体的时间。
  *
  * @author Chuanwise
  */
-@InternalImplementedApi
-interface Time {
+@NotStableForInheritance
+interface Time : Comparable<Time> {
     companion object {
         @JvmStatic
         @JavaFriendlyApi
@@ -38,22 +30,14 @@ interface Time {
 
         @JvmStatic
         @JavaFriendlyApi
-        fun ofMilliseconds(milliseconds: Long): Time = milliseconds.toMillisecondsTime()
+        fun ofUnixMilliseconds(milliseconds: Long): Time = createUnixMillisecondsTime(milliseconds)
 
         @JvmStatic
         @JavaFriendlyApi
-        fun ofSeconds(seconds: Long): Time = seconds.toSecondsTime()
+        fun ofUnixSeconds(seconds: Long): Time = createUnixSecondsTime(seconds)
     }
 
-    fun toMilliseconds(): Long
+    fun toUnixMilliseconds(): Long
+
+    fun toUnixSeconds(): Long
 }
-
-val nowTime: Time
-    get() = currentTimeMillis.toMillisecondsTime()
-
-fun Time.toSeconds(): Long = TimeUnit.MILLISECONDS.toSeconds(toMilliseconds())
-fun Time.toDate(): Date = Date(toMilliseconds())
-fun Time.format(format: DateFormat): String = format.format(toMilliseconds())
-
-fun Long.toMillisecondsTime(): Time = CoreApi.getInstance().createTimeOfMilliseconds(this)
-fun Long.toSecondsTime(): Time = TimeUnit.SECONDS.toMillis(this).toMillisecondsTime()

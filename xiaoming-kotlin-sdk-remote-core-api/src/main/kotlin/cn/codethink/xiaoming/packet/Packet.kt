@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,9 @@
 package cn.codethink.xiaoming.packet
 
 import cn.codethink.xiaoming.util.Cause
+import cn.codethink.xiaoming.util.Data
 import cn.codethink.xiaoming.util.Id
-import cn.codethink.xiaoming.util.InternalImplementedApi
+import cn.codethink.xiaoming.util.NotStableForInheritance
 import cn.codethink.xiaoming.util.Time
 
 /**
@@ -26,11 +27,7 @@ import cn.codethink.xiaoming.util.Time
  *
  * @author Chuanwise
  */
-@InternalImplementedApi
-interface Packet {
-    val id: Id
+@NotStableForInheritance
+interface Packet : Cause {
     val type: String
-    val time: Time
-    val session: SessionDescriptor?
-    val cause: Cause?
 }

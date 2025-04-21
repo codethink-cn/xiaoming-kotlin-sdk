@@ -16,10 +16,8 @@
 
 package cn.codethink.xiaoming.event.operation
 
-import cn.codethink.xiaoming.event.InterruptibleEventContext
-
 /**
- * 表示设置事件取消状态的操作，在监听器调用 [InterruptibleEventContext.interrupt] 时产生。
+ * 表示拦截事件的操作，通过。
  *
  * @author Chuanwise
  */

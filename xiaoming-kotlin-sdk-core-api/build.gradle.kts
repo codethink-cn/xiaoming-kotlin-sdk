@@ -15,9 +15,17 @@
  */
 
 plugins {
-    kotlin("jvm")
-    id("me.him188.kotlin-jvm-blocking-bridge")
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.blocking.bridge)
+    alias(libs.plugins.build.config)
     `maven-publish`
+}
+
+fun Any.toDoubleQuotedString() = "\"$this\""
+
+buildConfig {
+    buildConfigField("String", "SDK_VERSION", project.version.toDoubleQuotedString())
+    buildConfigField("String", "SDK_GROUP", project.group.toDoubleQuotedString())
 }
 
 dependencies {
@@ -33,7 +41,6 @@ dependencies {
 
     api(libs.kotlin.coroutines.core)
 
-    testImplementation(kotlin("test"))
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
 }
@@ -49,7 +56,7 @@ tasks.processResources {
                 "group" to project.group,
                 "name" to project.name,
                 "version" to project.version,
-                "protocol" to Versions.xiaoming,
+                "standard" to 1893,
             )
         )
     }

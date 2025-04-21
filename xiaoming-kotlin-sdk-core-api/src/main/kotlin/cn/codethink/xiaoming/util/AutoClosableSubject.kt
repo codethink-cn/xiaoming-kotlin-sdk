@@ -20,10 +20,10 @@ package cn.codethink.xiaoming.util
 
 import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 
-interface AutoClosableSubject : Subject, AutoCloseable {
+interface AutoClosableSubject : Subject, SuspendingAutoClosable {
     @JvmBlockingBridge
-    suspend fun close(cause: Cause, subject: SubjectDescriptor)
-}
+    suspend fun close(cause: Cause, subject: Subject)
 
-@JvmBlockingBridge
-suspend fun AutoClosableSubject.close(cause: Cause) = close(cause, descriptor)
+    @JvmBlockingBridge
+    suspend fun close(cause: Cause) = close(cause, this)
+}

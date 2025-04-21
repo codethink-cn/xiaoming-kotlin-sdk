@@ -16,16 +16,23 @@
 
 package cn.codethink.xiaoming.api
 
-import cn.codethink.xiaoming.permission.Permission
-import cn.codethink.xiaoming.permission.PermissionMatcher
+import cn.codethink.xiaoming.event.EventPublishPolicy
+import cn.codethink.xiaoming.event.EventPublishPolicyImpl
 import cn.codethink.xiaoming.permission.PluginRequirementImpl
 import cn.codethink.xiaoming.plugin.PluginRequirement
+import cn.codethink.xiaoming.plugin.PluginStateChangePolicy
+import cn.codethink.xiaoming.plugin.PluginStateChangePolicyImpl
+import cn.codethink.xiaoming.serialization.CodecResolver
+import cn.codethink.xiaoming.serialization.CodecResolverInitializer
+import cn.codethink.xiaoming.serialization.CoreCodecResolverInitializeContextImpl
+import cn.codethink.xiaoming.serialization.findAndApplyInitializers
 import cn.codethink.xiaoming.util.AndVersionMatcher
 import cn.codethink.xiaoming.util.AndVersionMatcherImpl
 import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.CauseImpl
 import cn.codethink.xiaoming.util.Data
 import cn.codethink.xiaoming.util.DataImpl
+import cn.codethink.xiaoming.util.EmptyStoreImpl
 import cn.codethink.xiaoming.util.ExcludeVersionMatcher
 import cn.codethink.xiaoming.util.ExcludeVersionMatcherImpl
 import cn.codethink.xiaoming.util.GreaterThanOrEqualVersionMatcher
@@ -35,39 +42,48 @@ import cn.codethink.xiaoming.util.GreaterThanVersionMatcherImpl
 import cn.codethink.xiaoming.util.Id
 import cn.codethink.xiaoming.util.IncludeVersionMatcher
 import cn.codethink.xiaoming.util.IncludeVersionMatcherImpl
+import cn.codethink.xiaoming.util.Operation
+import cn.codethink.xiaoming.util.OperationImpl
 import cn.codethink.xiaoming.util.InternalApi
+import cn.codethink.xiaoming.util.KebabCaseNamingPolicy
 import cn.codethink.xiaoming.util.LessThanOrEqualVersionMatcher
 import cn.codethink.xiaoming.util.LessThanOrEqualVersionMatcherImpl
 import cn.codethink.xiaoming.util.LessThanVersionMatcher
 import cn.codethink.xiaoming.util.LessThanVersionMatcherImpl
-import cn.codethink.xiaoming.util.ListSegmentIdMatcherImpl
-import cn.codethink.xiaoming.util.LiteralPermissionMatcher
-import cn.codethink.xiaoming.util.LiteralSegmentIdMatcherImpl
+import cn.codethink.xiaoming.util.SegmentIdMatcherImpl
 import cn.codethink.xiaoming.util.LiteralStringMatcherImpl
 import cn.codethink.xiaoming.util.LongIdImpl
+import cn.codethink.xiaoming.util.LowerCamelCaseNamingPolicy
+import cn.codethink.xiaoming.util.LowerCaseNamingPolicy
+import cn.codethink.xiaoming.util.LowerDotCaseNamingPolicy
 import cn.codethink.xiaoming.util.MajorMinorVersionPrefixMatcher
 import cn.codethink.xiaoming.util.MajorMinorVersionPrefixMatcherImpl
 import cn.codethink.xiaoming.util.MajorVersionPrefixMatcher
 import cn.codethink.xiaoming.util.MajorVersionPrefixMatcherImpl
-import cn.codethink.xiaoming.util.MajorityOptionalWildcardStringMatcher
-import cn.codethink.xiaoming.util.MajorityRequiredWildcardStringMatcher
-import cn.codethink.xiaoming.util.Matcher
-import cn.codethink.xiaoming.util.MinorityOptionalOnceWildcardStringMatcher
-import cn.codethink.xiaoming.util.MinorityRequiredOnceWildcardStringMatcher
+import cn.codethink.xiaoming.util.MajorityOptionalWildCardStringMatcher
+import cn.codethink.xiaoming.util.MajorityRequiredWildCardStringMatcher
+import cn.codethink.xiaoming.util.MapStoreImpl
+import cn.codethink.xiaoming.util.MutableStore
 import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.NamespaceIdImpl
+import cn.codethink.xiaoming.util.NamingPolicy
 import cn.codethink.xiaoming.util.NumericalId
 import cn.codethink.xiaoming.util.OrVersionMatcher
 import cn.codethink.xiaoming.util.OrVersionMatcherImpl
-import cn.codethink.xiaoming.util.PluginSubjectDescriptorMatcher
 import cn.codethink.xiaoming.util.PluginSubjectDescriptorMatcherImpl
-import cn.codethink.xiaoming.util.Raw
+import cn.codethink.xiaoming.util.MinorityOptionalWildCardStringMatcher
+import cn.codethink.xiaoming.util.MinorityRequiredWildCardStringMatcher
+import cn.codethink.xiaoming.util.NamespaceIdMatcher
+import cn.codethink.xiaoming.util.NamespaceIdMatcherImpl
+import cn.codethink.xiaoming.util.PluginSubjectDescriptorMatcher
+import cn.codethink.xiaoming.util.ReadOnlyStorePropertyImpl
+import cn.codethink.xiaoming.util.ReadWriteStorePropertyImpl
+import cn.codethink.xiaoming.util.Store
 import cn.codethink.xiaoming.util.RegexStringMatcherImpl
 import cn.codethink.xiaoming.util.SegmentId
 import cn.codethink.xiaoming.util.SegmentIdImpl
 import cn.codethink.xiaoming.util.SegmentIdMatcher
-import cn.codethink.xiaoming.util.StandardCause
-import cn.codethink.xiaoming.util.StandardCauseImpl
+import cn.codethink.xiaoming.util.SnakeCaseNamingPolicy
 import cn.codethink.xiaoming.util.StringId
 import cn.codethink.xiaoming.util.StringIdImpl
 import cn.codethink.xiaoming.util.StringMatcher
@@ -75,29 +91,39 @@ import cn.codethink.xiaoming.util.SubjectDescriptor
 import cn.codethink.xiaoming.util.Template
 import cn.codethink.xiaoming.util.TemplateImpl
 import cn.codethink.xiaoming.util.TestSubjectDescriptor
-import cn.codethink.xiaoming.util.TestSubjectDescriptorImpl
+import cn.codethink.xiaoming.util.TextualId
 import cn.codethink.xiaoming.util.Time
+import cn.codethink.xiaoming.util.TimeImpl
+import cn.codethink.xiaoming.util.TypeMeta
+import cn.codethink.xiaoming.util.TypeMetaImpl
 import cn.codethink.xiaoming.util.UniversalUniqueId
 import cn.codethink.xiaoming.util.UniversalUniqueIdImpl
+import cn.codethink.xiaoming.util.UpperCamelCaseNamingPolicy
+import cn.codethink.xiaoming.util.UpperSnakeCaseNamingPolicy
 import cn.codethink.xiaoming.util.Version
 import cn.codethink.xiaoming.util.VersionImpl
 import cn.codethink.xiaoming.util.VersionMatcher
-import cn.codethink.xiaoming.util.WildcardStringMatcher
-import cn.codethink.xiaoming.util.WildcardStringMatcherImpl
-import cn.codethink.xiaoming.util.toMillisecondsTime
+import cn.codethink.xiaoming.util.WildCardStringMatcher
+import cn.codethink.xiaoming.util.WildCardStringMatcherImpl
 import cn.codethink.xiaoming.util.toNamespaceId
 import cn.codethink.xiaoming.util.toSegmentId
+import cn.codethink.xiaoming.util.toSegmentIdMatcher
 import cn.codethink.xiaoming.util.toSingleSegmentId
 import cn.codethink.xiaoming.util.toStringMatcher
 import cn.codethink.xiaoming.util.toVersion
 import cn.codethink.xiaoming.util.toVersionMatcher
 import org.apache.commons.text.StringEscapeUtils
+import java.lang.reflect.Type
+import java.util.ServiceLoader
 import java.util.UUID
+import java.util.function.Supplier
+import kotlin.properties.ReadOnlyProperty
+import kotlin.properties.ReadWriteProperty
 
 @InternalApi
 class CoreApiImpl : CoreApi {
     // Id
-    override fun parseId(string: String): Id {
+    override fun parseTextualId(string: String): TextualId {
         return if (':' in string) {
             parseNamespaceId(string)
         } else if ('.' in string) {
@@ -186,39 +212,40 @@ class CoreApiImpl : CoreApi {
     }
 
     // Template
-    override fun parseTemplate(format: String): Template {
+    override fun createTemplate(format: String): Template {
         return TemplateImpl(format)
     }
 
     // Cause
-    override fun createCause(message: String, subject: SubjectDescriptor): Cause {
-        return CauseImpl(message, subject)
+    override fun createCause(description: String, cause: Cause?): Cause {
+        return CauseImpl(description, cause)
     }
 
-    override fun createEmptyTextCause(
-        id: Id,
-        text: String,
-        subject: SubjectDescriptor,
-        cause: Cause?
-    ): StandardCause {
-        return StandardCauseImpl(id, text, subject, cause)
+    // Operation
+    override fun createOperation(
+        message: String,
+        operator: SubjectDescriptor,
+        cause: Cause?,
+        time: Time,
+        id: Id
+    ): Operation {
+        return OperationImpl(message, cause, operator, time, id)
     }
 
-    // Subject Descriptor
-    override fun createTestSubjectDescriptor(): TestSubjectDescriptor = TestSubjectDescriptorImpl
+    // EventPublishPolicy
+    override fun createEventPublishPolicy(mutable: Boolean, interceptable: Boolean): EventPublishPolicy {
+        return EventPublishPolicyImpl.of(mutable, interceptable)
+    }
 
     // Data
-    override fun createData(raw: Raw): Data {
+    override fun createData(raw: MutableStore): Data {
         return DataImpl(raw)
     }
 
     // Time
-    override fun createTimeOfMilliseconds(milliseconds: Long): Time = milliseconds.toMillisecondsTime()
+    override fun createUnixMillisecondsTime(milliseconds: Long): Time = TimeImpl(milliseconds)
 
-    // PermissionMatchers
-    override fun createLiteralPermissionMatcher(permission: Permission): PermissionMatcher {
-        return LiteralPermissionMatcher(permission)
-    }
+    override fun createUnixSecondsTime(seconds: Long): Time = TimeImpl(seconds * 1000)
 
     // PluginMetaMatcher
     override fun parsePluginRequirement(string: String): PluginRequirement {
@@ -291,39 +318,16 @@ class CoreApiImpl : CoreApi {
         return PluginRequirementImpl(id, version, channel, optional, local)
     }
 
-    // StringMatcher
-    companion object {
-        private val MINORITY_REQUIRED_WILDCARD_STRING_MATCHER_REGEX = "(\\d+)?\\+{2}".toRegex()
-        private val MINORITY_OPTIONAL_WILDCARD_STRING_MATCHER_REGEX = "(\\d+)?\\?{2}".toRegex()
-    }
-
     override fun parseStringMatcher(string: String): StringMatcher {
         if (string.isEmpty()) {
             throw IllegalArgumentException("String matcher should not be empty.")
         }
 
-        MINORITY_REQUIRED_WILDCARD_STRING_MATCHER_REGEX.matchEntire(string)?.let {
-            val count = it.groupValues[1].toIntOrNull()
-            return cn.codethink.xiaoming.util.WildcardStringMatcher.Companion.of(
-                majority = false,
-                optional = false,
-                count = count
-            )
-        }
-        MINORITY_OPTIONAL_WILDCARD_STRING_MATCHER_REGEX.matchEntire(string)?.let {
-            val count = it.groupValues[1].toIntOrNull()
-            return cn.codethink.xiaoming.util.WildcardStringMatcher.Companion.of(
-                majority = false,
-                optional = true,
-                count = count
-            )
-        }
-
         when (string) {
-            "+" -> return MinorityRequiredOnceWildcardStringMatcher
-            "?" -> return MinorityOptionalOnceWildcardStringMatcher
-            "+++" -> return MajorityRequiredWildcardStringMatcher
-            "???", "*" -> return MajorityOptionalWildcardStringMatcher
+            "+" -> return MinorityRequiredWildCardStringMatcher
+            "?" -> return MinorityOptionalWildCardStringMatcher
+            "++" -> return MajorityRequiredWildCardStringMatcher
+            "??", "*" -> return MajorityOptionalWildCardStringMatcher
             else -> {
                 if (string.startsWith("{") && string.endsWith("}")) {
                     val pattern = string.substring(1, string.length - 1)
@@ -352,8 +356,8 @@ class CoreApiImpl : CoreApi {
         return RegexStringMatcherImpl(Regex(regex))
     }
 
-    override fun createWildcardStringMatcher(majority: Boolean, optional: Boolean, count: Int?): WildcardStringMatcher {
-        return WildcardStringMatcherImpl.of(majority, optional, count)
+    override fun createWildcardStringMatcher(majority: Boolean, optional: Boolean): WildCardStringMatcher {
+        return WildCardStringMatcherImpl.of(majority, optional)
     }
 
     // SegmentIdMatcher
@@ -448,19 +452,34 @@ class CoreApiImpl : CoreApi {
             }
         }
 
-        return ListSegmentIdMatcherImpl(matchers)
+        return SegmentIdMatcherImpl(matchers)
     }
 
     override fun createSegmentIdMatcher(matchers: List<StringMatcher>): SegmentIdMatcher {
-        return ListSegmentIdMatcherImpl(matchers)
+        return SegmentIdMatcherImpl(matchers)
     }
 
-    override fun createSegmentIdMatcher(segmentId: SegmentId): SegmentIdMatcher {
-        return LiteralSegmentIdMatcherImpl(segmentId)
+    // NamespaceIdMatcher
+    override fun createNamespaceIdMatcher(group: SegmentIdMatcher, name: SegmentIdMatcher): NamespaceIdMatcher {
+        return NamespaceIdMatcherImpl(group, name)
+    }
+
+    override fun parseNamespaceIdMatcher(string: String): NamespaceIdMatcher {
+        if (string.isEmpty()) {
+            throw IllegalArgumentException("Namespace id matcher should not be empty.")
+        }
+
+        val colonIndex = string.indexOf(':')
+        require(colonIndex != -1) { "Namespace id matcher string should contain a colon." }
+
+        val group = string.substring(0, colonIndex).toSegmentIdMatcher()
+        val name = string.substring(colonIndex + 1).toSegmentIdMatcher()
+
+        return NamespaceIdMatcherImpl(group, name)
     }
 
     // PluginSubjectDescriptorMatcher
-    override fun createPluginSubjectDescriptorMatcher(id: Matcher<NamespaceId>): PluginSubjectDescriptorMatcher {
+    override fun createPluginSubjectDescriptorMatcher(id: NamespaceIdMatcher): PluginSubjectDescriptorMatcher {
         return PluginSubjectDescriptorMatcherImpl(id)
     }
 
@@ -702,7 +721,77 @@ class CoreApiImpl : CoreApi {
             preRelease.takeIf { it.isNotEmpty() }, build.takeIf { it.isNotEmpty() }
         )
     } ?: throw IllegalArgumentException(
-        "Invalid version string: '$this', " +
+        "Invalid version string: '$string', " +
                 "make sure it matches the regex from the semantic versioning 2.0.0: $VERSION_STRING_REGEX."
     )
+
+    // MapRaw
+    override fun createMapStore(map: MutableMap<String, Any?>): MutableStore {
+        return MapStoreImpl(map)
+    }
+
+    override fun createEmptyStore(): Store {
+        return EmptyStoreImpl
+    }
+
+    override fun <T> createReadOnlyStoreProperty(
+        store: Store,
+        name: String?,
+        meta: TypeMeta<T>?,
+        namingPolicy: NamingPolicy?,
+        defaultValueFactory: Supplier<T>?
+    ): ReadOnlyProperty<Any?, T> = ReadOnlyStorePropertyImpl(store, name, meta, namingPolicy, defaultValueFactory)
+
+    override fun <T> createReadWriteStoreProperty(
+        store: MutableStore,
+        name: String?,
+        meta: TypeMeta<T>?,
+        namingPolicy: NamingPolicy?,
+        defaultValueFactory: Supplier<T>?
+    ): ReadWriteProperty<Any?, T> = ReadWriteStorePropertyImpl(store, name, meta, namingPolicy, defaultValueFactory)
+
+    // TypeMeta
+    private val anyRequiredNullableTypeMeta = TypeMetaImpl<Any?>(Any::class.java, nullable = true)
+
+    override fun createTypeMeta(type: Type, nullable: Boolean): TypeMeta<*> {
+        if (type == Any::class.java && nullable) {
+            return anyRequiredNullableTypeMeta
+        }
+
+        return TypeMetaImpl<Any>(type, nullable)
+    }
+
+    // NamingPolicy
+    override fun getKebabCaseNamingPolicy(): NamingPolicy = KebabCaseNamingPolicy
+
+    override fun getLowerCamelCaseNamingPolicy(): NamingPolicy = LowerCamelCaseNamingPolicy
+
+    override fun getUpperCamelCaseNamingPolicy(): NamingPolicy = UpperCamelCaseNamingPolicy
+
+    override fun getSnakeCaseNamingPolicy(): NamingPolicy = SnakeCaseNamingPolicy
+
+    override fun getUpperSnakeCaseNamingPolicy(): NamingPolicy = UpperSnakeCaseNamingPolicy
+
+    override fun getLowerCaseNamingPolicy(): NamingPolicy = LowerCaseNamingPolicy
+
+    override fun getLowerDotCaseNamingPolicy(): NamingPolicy = LowerDotCaseNamingPolicy
+
+    // PluginStateChangePolicy
+    override fun createPluginStateChangePolicy(ignorePreviousError: Boolean, ignoreCurrentError: Boolean): PluginStateChangePolicy {
+        return PluginStateChangePolicyImpl.of(ignorePreviousError, ignoreCurrentError)
+    }
+
+    // CodecResolver
+    override fun findAndApplyInitializers(resolver: CodecResolver, operation: Operation, classLoader: ClassLoader?, replace: Boolean, visible: Boolean) {
+        val initializerClass = CodecResolverInitializer::class.java
+        val loader = when (classLoader) {
+            null -> ServiceLoader.load(initializerClass)
+            else -> ServiceLoader.load(initializerClass, classLoader)
+        }
+
+        val context = CoreCodecResolverInitializeContextImpl(resolver, operation, replace, visible)
+        for (initializer in loader) {
+            initializer.initialize(context)
+        }
+    }
 }

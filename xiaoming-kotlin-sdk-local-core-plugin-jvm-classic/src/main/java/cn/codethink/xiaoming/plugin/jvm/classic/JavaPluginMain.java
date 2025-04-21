@@ -16,19 +16,26 @@
 
 package cn.codethink.xiaoming.plugin.jvm.classic;
 
+import cn.codethink.xiaoming.plugin.PluginDisableContext;
+import cn.codethink.xiaoming.plugin.PluginEnableContext;
+import cn.codethink.xiaoming.plugin.PluginLoadContext;
+import cn.codethink.xiaoming.plugin.PluginUnloadContext;
+
 /**
  * Main class of Java classic plugin.
  *
  * @author Chuanwise
  */
-public interface JavaPluginMain {
-    default void onLoad(JavaPluginContext context) {
+public class JavaPluginMain {
+    public void onLoad(PluginLoadContext context) {
     }
 
-    default void onEnable(JavaPluginContext context) {
+    public void onEnable(PluginEnableContext context) {
     }
 
-    default void onDisable(JavaPluginContext context) {
+    public void onDisable(PluginDisableContext context) {
+    }
+
+    public void onUnload(PluginUnloadContext context) {
     }
 }
-

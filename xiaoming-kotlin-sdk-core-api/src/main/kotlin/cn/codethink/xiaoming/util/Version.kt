@@ -23,7 +23,7 @@ package cn.codethink.xiaoming.util
  *
  * @author Chuanwise
  */
-@InternalImplementedApi
+@NotStableForInheritance
 interface Version : Comparable<Version> {
     val major: Int
     val minor: Int
@@ -39,9 +39,9 @@ interface Version : Comparable<Version> {
         @JvmStatic
         @JavaFriendlyApi
         fun of(major: Int, minor: Int, patch: Int, preRelease: String? = null, build: String? = null): Version =
-            createVersion(major, minor, patch, preRelease, build)
+            Version(major, minor, patch, preRelease, build)
     }
 }
 
-fun Version.toLiteralVersionMatcher() = createIncludeVersionMatcher(this)
-fun String.toVersion(): Version = parseVersion(this)
+fun Version.toLiteralVersionMatcher() = IncludeVersionMatcher(this)
+fun String.toVersion(): Version = Version(this)

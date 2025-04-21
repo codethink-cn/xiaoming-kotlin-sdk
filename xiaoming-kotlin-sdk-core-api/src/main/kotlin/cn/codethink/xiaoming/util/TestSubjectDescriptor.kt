@@ -22,4 +22,4 @@ package cn.codethink.xiaoming.util
  * @author Chuanwise
  */
 @InternalApi
-interface TestSubjectDescriptor : SubjectDescriptor
+object TestSubjectDescriptor : SubjectDescriptor

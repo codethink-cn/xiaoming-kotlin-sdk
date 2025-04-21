@@ -18,7 +18,7 @@ package cn.codethink.xiaoming.event.operation
 
 import cn.codethink.xiaoming.event.listener.ListenerDescriptor
 import cn.codethink.xiaoming.util.Cause
-import cn.codethink.xiaoming.util.InternalImplementedApi
+import cn.codethink.xiaoming.util.NotStableForInheritance
 import cn.codethink.xiaoming.util.Time
 
 /**
@@ -29,7 +29,7 @@ import cn.codethink.xiaoming.util.Time
  *
  * @author Chuanwise
  */
-@InternalImplementedApi
+@NotStableForInheritance
 interface EventOperation {
     val time: Time
     val cause: Cause

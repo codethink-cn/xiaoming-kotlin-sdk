@@ -16,30 +16,14 @@
 
 package cn.codethink.xiaoming.util
 
-import com.fasterxml.jackson.annotation.JsonTypeName
-
-const val STRING_MATCHER_TYPE_LITERAL = "string.literal"
-
-@JsonTypeName(STRING_MATCHER_TYPE_LITERAL)
-class LiteralStringMatcherImpl(
-    override val value: String
-) : LiteralMatcher<String>, StringMatcher {
-    val type: String = STRING_MATCHER_TYPE_LITERAL
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as LiteralStringMatcherImpl
-
-        return value == other.value
-    }
-
-    override fun hashCode(): Int {
-        return value.hashCode()
+data class LiteralStringMatcherImpl(
+    private val value: String
+) : StringMatcher {
+    override fun matches(string: String): Boolean {
+        return value == string
     }
 
     override fun toString(): String {
-        return "LiteralStringMatcher(value='$value')"
+        return value
     }
 }

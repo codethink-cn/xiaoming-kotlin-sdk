@@ -23,7 +23,7 @@ class TemplateTest {
     @Test
     fun testFormat() {
         assertEquals(
-            "Hello, xiaoming!", parseTemplate("Hello, \${name}!").format(
+            "Hello, xiaoming!", Template("Hello, \${name}!").format(
                 mapOf(
                     "name" to "xiaoming"
                 )

@@ -15,10 +15,13 @@
  */
 
 @file:JvmName("TemplateFactory")
-@file:OptIn(InternalApi::class)
 
 package cn.codethink.xiaoming.util
 
 import cn.codethink.xiaoming.api.CoreApi
 
-fun parseTemplate(format: String): Template = CoreApi.getInstance().parseTemplate(format)
+@OptIn(InternalApi::class)
+@JvmName("createTemplate")
+fun Template(format: String): Template = CoreApi.getInstance().createTemplate(format)
+
+fun String.toTemplate(): Template = Template(this)

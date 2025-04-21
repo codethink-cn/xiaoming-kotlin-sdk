@@ -17,18 +17,18 @@
 package cn.codethink.xiaoming.plugin
 
 /**
- * The mode of a plugin.
+ * 插件运行的模式。
  *
  * @author Chuanwise
  */
 enum class PluginMode {
     /**
-     * The plugin is running in another platform.
+     * 插件的代码在宿主进程之外的进程内运行，即远程模式。
      */
     REMOTE,
 
     /**
-     * The plugin is running in the same platform.
+     * 插件的代码在宿主进程中运行，即本地模式。
      */
     LOCAL
 }

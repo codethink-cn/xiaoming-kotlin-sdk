@@ -20,11 +20,7 @@ package cn.codethink.xiaoming.util
  * 插件主体描述符匹配器。
  *
  * @author Chuanwise
- * @see createPluginSubjectDescriptorMatcher
  */
-interface PluginSubjectDescriptorMatcher : Matcher<PluginSubjectDescriptor> {
-    val id: Matcher<NamespaceId>
+interface PluginSubjectDescriptorMatcher {
+    fun matches(descriptor: PluginSubjectDescriptor): Boolean
 }
-
-fun Matcher<NamespaceId>.toPluginSubjectDescriptorMatcher(): PluginSubjectDescriptorMatcher =
-    createPluginSubjectDescriptorMatcher(this)

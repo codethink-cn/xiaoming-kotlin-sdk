@@ -19,9 +19,42 @@ package cn.codethink.xiaoming.util
 import java.util.concurrent.ConcurrentHashMap
 
 class MutableMapRegistrationManagerImpl<K, E>(
-    data: MutableMap<K, Registration<E>> = ConcurrentHashMap()
-) : AbstractMutableMapRegistrationManager<K, E, Registration<E>>(data) {
-    fun register(key: K, element: E, subject: SubjectDescriptor): Registration<E>? {
-        return register(key, RegistrationImpl(element, subject))
+    data: MutableMap<K, MapRegistration<K, E>> = ConcurrentHashMap()
+) : AbstractMutableMapRegistrationManager<K, E, MapRegistration<K, E>>(data) {
+    private inner class MutableMapRegistrationImpl(
+        override val key: K,
+        override val value: E,
+        override val operation: Operation
+    ) : MutableMapRegistration<K, E> {
+        override val isRemoved: Boolean get() = getRegistration(key) == this
+
+        override fun remove() {
+            check(tryRemove()) { "Failed to remove registration for key: $key" }
+        }
+
+        override fun tryRemove(): Boolean {
+            return data.computeIfPresent(key) { _, v ->
+                if (v == this) {
+                    null
+                } else {
+                    v
+                }
+            } == null
+        }
+
+        override fun ensureRemoved() {
+            tryRemove()
+        }
+    }
+
+    fun register(key: K, value: E, operation: Operation): MutableMapRegistration<K, E> {
+        val registration = MutableMapRegistrationImpl(
+            key = key,
+            value = value,
+            operation = operation
+        )
+
+        put(key, registration)
+        return registration
     }
 }

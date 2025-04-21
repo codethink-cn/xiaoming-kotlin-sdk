@@ -14,12 +14,7 @@
  * limitations under the License.
  */
 
-@file:JvmName("Templates")
-
 package cn.codethink.xiaoming.util
-
-import java.util.Objects
-import java.util.Properties
 
 /**
  * 表示一个字符串模板。
@@ -27,24 +22,15 @@ import java.util.Properties
  * 字符串模板中可以使用 `${` 和 `}` 包围变量。
  *
  * @author Chuanwise
- * @see parseTemplate
+ * @see Template
  */
 interface Template {
     companion object {
         @JvmStatic
         @JavaFriendlyApi
-        fun parse(format: String): Template = parseTemplate(format)
+        fun parse(format: String): Template = Template(format)
     }
 
     fun format(mapper: (String) -> String): String
-
     override fun toString(): String
 }
-
-fun String.toTemplate(): Template = parseTemplate(this)
-
-fun Template.format(map: Map<String, *>): String = format { map[it].toString() }
-fun Template.format(properties: Properties): String = format { Objects.toString(properties[it]) }
-fun Template.format(pair: Pair<String, *>): String = format(mapOf(pair))
-fun Template.format(vararg pairs: Pair<String, *>): String = format(mapOf(*pairs))
-fun Template.format(raw: Raw): String = format { raw.getAsStringOrDefault(it, it) }

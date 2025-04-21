@@ -18,12 +18,13 @@ package cn.codethink.xiaoming.event.listener
 
 import cn.codethink.xiaoming.util.AbstractData
 import cn.codethink.xiaoming.util.InternalApi
-import cn.codethink.xiaoming.util.MapRaw
-import cn.codethink.xiaoming.util.Raw
+import cn.codethink.xiaoming.util.MapStoreImpl
+import cn.codethink.xiaoming.util.MutableStore
+import cn.codethink.xiaoming.util.Store
 import cn.codethink.xiaoming.util.SegmentId
 import cn.codethink.xiaoming.util.SubjectDescriptor
-import cn.codethink.xiaoming.util.getValue
-import cn.codethink.xiaoming.util.setValue
+import cn.codethink.xiaoming.util.createMapStore
+import cn.codethink.xiaoming.util.property
 
 /**
  * Describe a listener.
@@ -31,17 +32,17 @@ import cn.codethink.xiaoming.util.setValue
  * @author Chuanwise
  */
 class ListenerDescriptorImpl : AbstractData, ListenerDescriptor {
-    override var id: SegmentId by raw
-    override var subject: SubjectDescriptor by raw
+    override var id: SegmentId by raw.property()
+    override var subject: SubjectDescriptor by raw.property()
 
     @InternalApi
-    constructor(raw: Raw) : super(raw)
+    constructor(raw: MutableStore) : super(raw)
 
     @JvmOverloads
     constructor(
         id: SegmentId,
         subject: SubjectDescriptor,
-        raw: Raw = MapRaw()
+        raw: MutableStore = createMapStore()
     ) : super(raw) {
         this.id = id
         this.subject = subject

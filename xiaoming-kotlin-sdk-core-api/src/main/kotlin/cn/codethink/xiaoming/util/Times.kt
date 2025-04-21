@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-@file:JvmName("TimeMillis")
+@file:JvmName("Times")
 
 package cn.codethink.xiaoming.util
 
@@ -28,3 +28,6 @@ val currentTimeSeconds: Long
 
 val currentTimeMillis: Long
     get() = System.currentTimeMillis()
+
+fun Long.toUnixMillisecondsTime(): Time = createUnixMillisecondsTime(this)
+fun Long.toUnixSecondsTime(): Time = createUnixSecondsTime(this)

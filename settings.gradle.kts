@@ -32,7 +32,6 @@ include("xiaoming-kotlin-sdk-local-core-api")
 include("xiaoming-kotlin-sdk-local-core")
 include("xiaoming-kotlin-sdk-local-core-data-sql")
 
-include("xiaoming-kotlin-sdk-local-core-plugin-jvm")
 include("xiaoming-kotlin-sdk-local-core-plugin-jvm-classic")
 
 include("xiaoming-kotlin-sdk-remote-core")

@@ -16,12 +16,11 @@
 
 package cn.codethink.xiaoming.util
 
-interface MutableMapRegistrationManager<K, E, R : Registration<E>> : MapRegistrationManager<K, E, R>,
-    MutableRegistrationManager<E, R> {
+interface MutableMapRegistrationManager<K, E, R : MapRegistration<K, E>> : MapRegistrationManager<K, E>, MutableRegistrationManager<E, R> {
     fun toMutableRegistrationMap(): MutableMap<K, R>
 
-    fun unregister(key: K): Boolean
-    fun register(key: K, registration: R): R?
+    fun remove(key: K): R?
+    fun put(key: K, registration: R): R?
 
     fun clear(): Boolean
 }

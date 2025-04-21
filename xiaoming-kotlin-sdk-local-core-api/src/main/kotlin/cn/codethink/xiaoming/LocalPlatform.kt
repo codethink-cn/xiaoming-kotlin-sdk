@@ -16,8 +16,19 @@
 
 package cn.codethink.xiaoming
 
-import cn.codethink.xiaoming.Platform
+import cn.codethink.xiaoming.event.LocalEventManager
+import cn.codethink.xiaoming.exception.LocalExceptionManager
+import cn.codethink.xiaoming.permission.LocalPermissionManager
+import cn.codethink.xiaoming.plugin.LocalPluginManager
+import cn.codethink.xiaoming.util.Operation
 
 interface LocalPlatform : Platform {
-    val api: LocalPlatformApi
+    val state: LocalPlatformState
+
+    override val eventManager: LocalEventManager
+    override val permissionManager: LocalPermissionManager
+    override val exceptionManager: LocalExceptionManager
+    override val pluginManager: LocalPluginManager
+
+    fun start(operation: Operation)
 }

@@ -17,11 +17,11 @@
 package cn.codethink.xiaoming.util
 
 /**
- * 表示一个主体 [subject] 注册的对象 [value]。
+ * 表示一个注册信息。
  *
  * @author Chuanwise
  */
 interface Registration<out T> {
     val value: T
-    val subject: SubjectDescriptor
+    val operation: Operation
 }

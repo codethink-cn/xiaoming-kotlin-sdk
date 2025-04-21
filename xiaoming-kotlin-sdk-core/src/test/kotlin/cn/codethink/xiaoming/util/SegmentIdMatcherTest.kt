@@ -31,29 +31,29 @@ class SegmentIdMatcherTest {
         assertTrue(
             listOf(
                 "114514".toLiteralStringMatcher(),
-                MinorityOptionalWildcardStringMatcher,
+                MinorityOptionalWildCardStringMatcher,
                 "1919810".toLiteralStringMatcher()
-            ).toSegmentIdMatcher().isMatched("114514.1919810".toSegmentId())
+            ).toSegmentIdMatcher().matches("114514.1919810".toSegmentId())
         )
         assertFalse(
             listOf(
                 "114514".toLiteralStringMatcher(),
-                MinorityRequiredWildcardStringMatcher,
+                MinorityRequiredWildCardStringMatcher,
                 "1919810".toLiteralStringMatcher()
-            ).toSegmentIdMatcher().isMatched("114514.1919810".toSegmentId())
+            ).toSegmentIdMatcher().matches("114514.1919810".toSegmentId())
         )
 
         assertTrue(
             listOf(
                 "18\\d+".toRegexStringMatcher(),
-                MajorityRequiredWildcardStringMatcher
-            ).toSegmentIdMatcher().isMatched("1893.12.26".toSegmentId())
+                MajorityRequiredWildCardStringMatcher
+            ).toSegmentIdMatcher().matches("1893.12.26".toSegmentId())
         )
         assertTrue(
             listOf(
                 "18\\d+".toRegexStringMatcher(),
-                MajorityOptionalWildcardStringMatcher
-            ).toSegmentIdMatcher().isMatched("1893.12.26".toSegmentId())
+                MajorityOptionalWildCardStringMatcher
+            ).toSegmentIdMatcher().matches("1893.12.26".toSegmentId())
         )
 
         assertFalse(
@@ -61,15 +61,15 @@ class SegmentIdMatcherTest {
                 "18".toLiteralStringMatcher(),
                 AnyStringMatcher,
                 AnyStringMatcher
-            ).toSegmentIdMatcher().isMatched("1893.12.26".toSegmentId())
+            ).toSegmentIdMatcher().matches("1893.12.26".toSegmentId())
         )
 
         assertThrows<IllegalArgumentException> {
             listOf(
                 "1893".toLiteralStringMatcher(),
-                MajorityRequiredWildcardStringMatcher,
+                MajorityRequiredWildCardStringMatcher,
                 AnyStringMatcher
-            ).toSegmentIdMatcher().isMatched("1893.12.26".toSegmentId())
+            ).toSegmentIdMatcher().matches("1893.12.26".toSegmentId())
         }
     }
 
@@ -94,7 +94,7 @@ class SegmentIdMatcherTest {
         assertEquals(
             listOf(
                 "cn".toLiteralStringMatcher(),
-                MinorityRequiredOnceWildcardStringMatcher,
+                MinorityRequiredWildCardStringMatcher,
                 "xiaoming".toLiteralStringMatcher()
             ).toSegmentIdMatcher(), "cn.+.xiaoming".toSegmentIdMatcher()
         )
@@ -102,25 +102,9 @@ class SegmentIdMatcherTest {
         assertEquals(
             listOf(
                 "cn".toLiteralStringMatcher(),
-                MinorityRequiredWildcardStringMatcher,
+                MajorityRequiredWildCardStringMatcher,
                 "xiaoming".toLiteralStringMatcher()
             ).toSegmentIdMatcher(), "cn.++.xiaoming".toSegmentIdMatcher()
-        )
-
-        assertEquals(
-            listOf(
-                "cn".toLiteralStringMatcher(),
-                WildcardStringMatcher.of(majority = false, optional = false, count = 5),
-                "xiaoming".toLiteralStringMatcher()
-            ).toSegmentIdMatcher(), "cn.5++.xiaoming".toSegmentIdMatcher()
-        )
-
-        assertEquals(
-            listOf(
-                "cn".toLiteralStringMatcher(),
-                MajorityRequiredWildcardStringMatcher,
-                "xiaoming".toLiteralStringMatcher()
-            ).toSegmentIdMatcher(), "cn.+++.xiaoming".toSegmentIdMatcher()
         )
 
         assertThrows<IllegalArgumentException> {
@@ -135,54 +119,54 @@ class SegmentIdMatcherTest {
     @Test
     fun testDefaultSegmentIdIsMatched() {
         "a.b.*".toSegmentIdMatcher().apply {
-            assertTrue(isMatched("a.b.c".toSegmentId()))
-            assertTrue(isMatched("a.b".toSegmentId()))
-            assertTrue(isMatched("a.b.AAA".toSegmentId()))
-            assertTrue(isMatched("a.b.AAA.BBB".toSegmentId()))
-            assertFalse(isMatched("a".toSegmentId()))
+            assertTrue(matches("a.b.c".toSegmentId()))
+            assertTrue(matches("a.b".toSegmentId()))
+            assertTrue(matches("a.b.AAA".toSegmentId()))
+            assertTrue(matches("a.b.AAA.BBB".toSegmentId()))
+            assertFalse(matches("a".toSegmentId()))
         }
 
         "a.?".toSegmentIdMatcher().apply {
-            assertTrue(isMatched("a.b".toSegmentId()))
-            assertTrue(isMatched("a.c".toSegmentId()))
-            assertTrue(isMatched("a".toSegmentId()))
-            assertFalse(isMatched("a.B.C".toSegmentId()))
+            assertTrue(matches("a.b".toSegmentId()))
+            assertTrue(matches("a.c".toSegmentId()))
+            assertTrue(matches("a".toSegmentId()))
+            assertFalse(matches("a.B.C".toSegmentId()))
         }
 
         "a.+".toSegmentIdMatcher().apply {
-            assertTrue(isMatched("a.b".toSegmentId()))
-            assertTrue(isMatched("a.c".toSegmentId()))
-            assertFalse(isMatched("a".toSegmentId()))
-            assertFalse(isMatched("a.B.C".toSegmentId()))
+            assertTrue(matches("a.b".toSegmentId()))
+            assertTrue(matches("a.c".toSegmentId()))
+            assertFalse(matches("a".toSegmentId()))
+            assertFalse(matches("a.B.C".toSegmentId()))
         }
 
         "a.{\\\\d}".toSegmentIdMatcher().apply {
-            assertFalse(isMatched("a.b".toSegmentId()))
-            assertTrue(isMatched("a.5".toSegmentId()))
-            assertFalse(isMatched("a".toSegmentId()))
-            assertFalse(isMatched("a.B.C".toSegmentId()))
+            assertFalse(matches("a.b".toSegmentId()))
+            assertTrue(matches("a.5".toSegmentId()))
+            assertFalse(matches("a".toSegmentId()))
+            assertFalse(matches("a.B.C".toSegmentId()))
         }
 
         "a.++".toSegmentIdMatcher().apply {
-            assertTrue(isMatched("a.b".toSegmentId()))
-            assertTrue(isMatched("a.5".toSegmentId()))
-            assertFalse(isMatched("a".toSegmentId()))
-            assertTrue(isMatched("a.B.C".toSegmentId()))
+            assertTrue(matches("a.b".toSegmentId()))
+            assertTrue(matches("a.5".toSegmentId()))
+            assertFalse(matches("a".toSegmentId()))
+            assertTrue(matches("a.B.C".toSegmentId()))
         }
 
         "a.??".toSegmentIdMatcher().apply {
-            assertTrue(isMatched("a.b".toSegmentId()))
-            assertTrue(isMatched("a.5".toSegmentId()))
-            assertTrue(isMatched("a".toSegmentId()))
-            assertTrue(isMatched("a.B.C".toSegmentId()))
+            assertTrue(matches("a.b".toSegmentId()))
+            assertTrue(matches("a.5".toSegmentId()))
+            assertTrue(matches("a".toSegmentId()))
+            assertTrue(matches("a.B.C".toSegmentId()))
         }
 
         "a.??.b".toSegmentIdMatcher().apply {
-            assertTrue(isMatched("a.b".toSegmentId()))
-            assertTrue(isMatched("a.5.b".toSegmentId()))
-            assertTrue(isMatched("a.AA.BB.b".toSegmentId()))
-            assertFalse(isMatched("a.B.C".toSegmentId()))
-            assertTrue(isMatched("a.B.b".toSegmentId()))
+            assertTrue(matches("a.b".toSegmentId()))
+            assertTrue(matches("a.5.b".toSegmentId()))
+            assertTrue(matches("a.AA.BB.b".toSegmentId()))
+            assertFalse(matches("a.B.C".toSegmentId()))
+            assertTrue(matches("a.B.b".toSegmentId()))
         }
     }
 }

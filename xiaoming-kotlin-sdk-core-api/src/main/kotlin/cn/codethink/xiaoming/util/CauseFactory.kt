@@ -15,11 +15,14 @@
  */
 
 @file:JvmName("CauseFactory")
-@file:OptIn(InternalApi::class)
 
 package cn.codethink.xiaoming.util
 
 import cn.codethink.xiaoming.api.CoreApi
 
-fun createCause(message: String, subject: SubjectDescriptor): Cause =
-    CoreApi.getInstance().createCause(message, subject)
+@JvmOverloads
+@OptIn(InternalApi::class)
+@JvmName("createCause")
+fun Cause(description: String, cause: Cause? = null): Cause {
+    return CoreApi.getInstance().createCause(description, cause)
+}

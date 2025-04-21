@@ -18,8 +18,8 @@ package cn.codethink.xiaoming.util
 
 import java.util.concurrent.ConcurrentHashMap
 
-abstract class AbstractMutableMapRegistrationManager<K, E, R : Registration<E>>(
-    private val data: MutableMap<K, R> = ConcurrentHashMap()
+abstract class AbstractMutableMapRegistrationManager<K, E, R : MapRegistration<K, E>>(
+    protected val data: MutableMap<K, R> = ConcurrentHashMap()
 ) : MutableMapRegistrationManager<K, E, R> {
     override val keys: Set<K> get() = data.keys
 
@@ -39,13 +39,13 @@ abstract class AbstractMutableMapRegistrationManager<K, E, R : Registration<E>>(
 
     override fun getRegistration(key: K): R? = data[key]
 
-    override fun unregisterAll(subject: SubjectDescriptor): Boolean {
-        return data.values.removeIf { it.subject == subject }
+    override fun unregisterAll(operator: SubjectDescriptor): Boolean {
+        return data.values.removeIf { it.operation.operator == operator }
     }
 
-    override fun unregister(key: K): Boolean = data.remove(key) != null
+    override fun remove(key: K): R? = data.remove(key)
 
-    override fun register(key: K, registration: R): R? {
+    override fun put(key: K, registration: R): R? {
         return data.put(key, registration)
     }
 

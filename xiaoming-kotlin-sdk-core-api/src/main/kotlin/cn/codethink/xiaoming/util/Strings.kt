@@ -18,17 +18,26 @@
 
 package cn.codethink.xiaoming.util
 
-/**
- * Return the string with the given prefix or null if the string is null.
- *
- * @author Chuanwise
- */
-fun String?.prependOrNull(prefix: String) = this?.let { "$prefix$it" }
+import org.apache.commons.text.StringEscapeUtils
 
 /**
- * Return the string with the given suffix or null if the string is null.
+ * 添加字符串前缀，如果字符串为 null，则返回 null。
  *
  * @author Chuanwise
  */
-fun String?.appendOrNull(suffix: String) = this?.let { "$it$suffix" }
+fun String?.withPrefixOrNull(prefix: String) = this?.let { "$prefix$it" }
+
+/**
+ * 添加字符串后缀，如果字符串为 null，则返回 null。
+ *
+ * @author Chuanwise
+ */
+fun String?.withSuffixOrNull(suffix: String) = this?.let { "$it$suffix" }
+
+/**
+ * 返回一个双引号字符串，并处理其中转义字符。
+ *
+ * @author Chuanwise
+ */
+fun String.toDoubleQuotedString(): String = "\"${StringEscapeUtils.unescapeJava(this)}\""
 

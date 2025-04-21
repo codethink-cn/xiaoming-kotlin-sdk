@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,9 @@
 package cn.codethink.xiaoming.connection
 
 import cn.codethink.xiaoming.packet.ReceiptPacket
+import cn.codethink.xiaoming.util.Received
 import cn.codethink.xiaoming.util.Cause
-import cn.codethink.xiaoming.util.InternalImplementedApi
+import cn.codethink.xiaoming.util.NotStableForInheritance
 
 /**
  * 中止响应，表示一个动作的最终结果。
@@ -28,27 +29,27 @@ import cn.codethink.xiaoming.util.InternalImplementedApi
  * @see FailedRequestResult
  * @see InterruptedRequestResult
  */
-@InternalImplementedApi
+@NotStableForInheritance
 interface TerminatedRequestResult<T> : RequestResult<T> {
     val receipt: Received<ReceiptPacket>
 }
 
-@InternalImplementedApi
+@NotStableForInheritance
 interface SucceedRequestResult<T> : TerminatedRequestResult<T> {
     val data: T
 }
 
-@InternalImplementedApi
+@NotStableForInheritance
 interface FailedRequestResult<T> : TerminatedRequestResult<T> {
-    val cause: Cause
+    val cause: Cause?
 }
 
-@InternalImplementedApi
+@NotStableForInheritance
 interface InterruptedRequestResult<T> : TerminatedRequestResult<T> {
-    val cause: Cause
+    val cause: Cause?
 }
 
-@InternalImplementedApi
+@NotStableForInheritance
 interface CancelledRequestResult<T> : TerminatedRequestResult<T> {
-    val cause: Cause
+    val cause: Cause?
 }

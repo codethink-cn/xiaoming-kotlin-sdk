@@ -13,47 +13,119 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-@file:JvmName("Plugins")
-
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.util.NamespaceId
+import cn.codethink.xiaoming.util.NotStableForInheritance
+import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.PluginSubjectDescriptor
 import cn.codethink.xiaoming.util.Subject
-import cn.codethink.xiaoming.util.Version
+import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 
 /**
  * 插件是一些功能的集合，以对平台产生影响。
  *
  * @author Chuanwise
- * @see NotYetAllocatedPlugin
- * @see AllocatedPlugin
  */
-sealed interface Plugin : Subject {
+@NotStableForInheritance
+interface Plugin : Subject, PluginEntry {
     /**
      * 插件描述符。
      */
     override val descriptor: PluginSubjectDescriptor
 
-    /**
-     * 插件元数据。
-     */
-    val meta: PluginMeta
+    @JvmBlockingBridge
+    suspend fun load(operation: Operation, policy: PluginStateChangePolicy)
 
-    /**
-     * 插件源。
-     */
-    val source: PluginSource
+    @JvmBlockingBridge
+    suspend fun load(operation: Operation) = load(operation, PluginStateChangePolicy.STRICT)
+
+    @JvmBlockingBridge
+    suspend fun ensureLoaded(operation: Operation, policy: PluginStateChangePolicy)
+
+    @JvmBlockingBridge
+    suspend fun ensureLoaded(operation: Operation) = ensureLoaded(operation, PluginStateChangePolicy.STRICT)
+
+    @JvmBlockingBridge
+    suspend fun tryLoad(operation: Operation, policy: PluginStateChangePolicy): Boolean
+
+    @JvmBlockingBridge
+    suspend fun tryLoad(operation: Operation) = load(operation, PluginStateChangePolicy.STRICT)
+
+    @JvmBlockingBridge
+    suspend fun tryEnsureLoaded(operation: Operation, policy: PluginStateChangePolicy): Boolean
+
+    @JvmBlockingBridge
+    suspend fun tryEnsureLoaded(operation: Operation) = ensureLoaded(operation, PluginStateChangePolicy.STRICT)
+
+    @JvmBlockingBridge
+    suspend fun enable(operation: Operation, policy: PluginStateChangePolicy)
+
+    @JvmBlockingBridge
+    suspend fun enable(operation: Operation) = enable(operation, PluginStateChangePolicy.STRICT)
+
+    @JvmBlockingBridge
+    suspend fun ensureEnabled(operation: Operation, policy: PluginStateChangePolicy)
+
+    @JvmBlockingBridge
+    suspend fun ensureEnabled(operation: Operation) = ensureEnabled(operation, PluginStateChangePolicy.STRICT)
+
+    @JvmBlockingBridge
+    suspend fun tryEnable(operation: Operation, policy: PluginStateChangePolicy): Boolean
+
+    @JvmBlockingBridge
+    suspend fun tryEnable(operation: Operation) = enable(operation, PluginStateChangePolicy.STRICT)
+
+    @JvmBlockingBridge
+    suspend fun tryEnsureEnabled(operation: Operation, policy: PluginStateChangePolicy): Boolean
+
+    @JvmBlockingBridge
+    suspend fun tryEnsureEnabled(operation: Operation) = ensureEnabled(operation, PluginStateChangePolicy.STRICT)
+
+    @JvmBlockingBridge
+    suspend fun disable(operation: Operation, policy: PluginStateChangePolicy)
+
+    @JvmBlockingBridge
+    suspend fun disable(operation: Operation) = disable(operation, PluginStateChangePolicy.STRICT)
+
+    @JvmBlockingBridge
+    suspend fun ensureDisabled(operation: Operation, policy: PluginStateChangePolicy)
+
+    @JvmBlockingBridge
+    suspend fun ensureDisabled(operation: Operation) = ensureDisabled(operation, PluginStateChangePolicy.STRICT)
+
+    @JvmBlockingBridge
+    suspend fun tryDisable(operation: Operation, policy: PluginStateChangePolicy): Boolean
+
+    @JvmBlockingBridge
+    suspend fun tryDisable(operation: Operation) = disable(operation, PluginStateChangePolicy.STRICT)
+
+    @JvmBlockingBridge
+    suspend fun tryEnsureDisabled(operation: Operation, policy: PluginStateChangePolicy): Boolean
+
+    @JvmBlockingBridge
+    suspend fun tryEnsureDisabled(operation: Operation) = ensureDisabled(operation, PluginStateChangePolicy.STRICT)
+
+    @JvmBlockingBridge
+    suspend fun unload(operation: Operation, policy: PluginStateChangePolicy)
+
+    @JvmBlockingBridge
+    suspend fun unload(operation: Operation) = unload(operation, PluginStateChangePolicy.STRICT)
+
+    @JvmBlockingBridge
+    suspend fun ensureUnloaded(operation: Operation, policy: PluginStateChangePolicy)
+
+    @JvmBlockingBridge
+    suspend fun ensureUnloaded(operation: Operation) = ensureUnloaded(operation, PluginStateChangePolicy.STRICT)
+
+    @JvmBlockingBridge
+    suspend fun tryUnload(operation: Operation, policy: PluginStateChangePolicy): Boolean
+
+    @JvmBlockingBridge
+    suspend fun tryUnload(operation: Operation) = unload(operation, PluginStateChangePolicy.STRICT)
+
+    @JvmBlockingBridge
+    suspend fun tryEnsureUnloaded(operation: Operation, policy: PluginStateChangePolicy): Boolean
+
+    @JvmBlockingBridge
+    suspend fun tryEnsureUnloaded(operation: Operation) = ensureUnloaded(operation, PluginStateChangePolicy.STRICT)
 }
-
-val Plugin.id: NamespaceId
-    get() = meta.id
-
-val Plugin.name: String
-    get() = meta.name
-
-val Plugin.version: Version
-    get() = meta.version
-
-fun Plugin.toPluginRequirement() = meta.toPluginRequirement()

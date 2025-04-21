@@ -19,5 +19,13 @@ package cn.codethink.xiaoming.util
 data class TimeImpl(
     val milliseconds: Long
 ) : Time {
-    override fun toMilliseconds(): Long = milliseconds
+    override fun toUnixMilliseconds(): Long = milliseconds
+
+    override fun toUnixSeconds(): Long = milliseconds / 1000
+
+    override fun toString(): String = "Time(milliseconds=$milliseconds)"
+
+    override fun compareTo(other: Time): Int {
+        return milliseconds.compareTo(other.toUnixMilliseconds())
+    }
 }

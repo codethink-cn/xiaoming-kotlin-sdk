@@ -16,6 +16,7 @@
 
 package cn.codethink.xiaoming.util
 
-interface MutableRegistrationManager<E, R : Registration<E>> : RegistrationManager<E, R> {
-    fun unregisterAll(subject: SubjectDescriptor): Boolean
+interface MutableRegistrationManager<E, R : Registration<E>> : RegistrationManager<E> {
+    fun unregisterAll(operator: Subject): Boolean = unregisterAll(operator.descriptor)
+    fun unregisterAll(operator: SubjectDescriptor): Boolean
 }
