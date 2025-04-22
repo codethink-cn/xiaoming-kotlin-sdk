@@ -18,17 +18,17 @@ package cn.codethink.xiaoming.api
 
 import cn.codethink.xiaoming.permission.InheritancePermissionMatcher
 import cn.codethink.xiaoming.permission.InheritancePermissionMatcherV1
-import cn.codethink.xiaoming.permission.WildCardPermissionMatcher
-import cn.codethink.xiaoming.permission.WildCardPermissionMatcherV1
+import cn.codethink.xiaoming.permission.WildCardPermissionPattern
+import cn.codethink.xiaoming.permission.WildCardPermissionPatternV1
 import cn.codethink.xiaoming.util.Id
 import cn.codethink.xiaoming.util.InternalApi
-import cn.codethink.xiaoming.util.NamespaceIdMatcher
+import cn.codethink.xiaoming.util.NamespaceIdPattern
 
 @InternalApi
 class LocalCoreApiImpl : LocalCoreApi {
     // PermissionMatchers
-    override fun createWildCardPermissionMatcher(id: NamespaceIdMatcher, value: Boolean?): WildCardPermissionMatcher {
-        return WildCardPermissionMatcherV1(id, value)
+    override fun createWildCardPermissionMatcher(id: NamespaceIdPattern, value: Boolean?): WildCardPermissionPattern {
+        return WildCardPermissionPatternV1(id, value)
     }
 
     override fun createInheritancePermissionMatcher(inheritedId: Id): InheritancePermissionMatcher {

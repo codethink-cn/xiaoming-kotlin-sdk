@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,34 +28,33 @@ import cn.codethink.xiaoming.util.GreaterThanOrEqualVersionMatcher
 import cn.codethink.xiaoming.util.GreaterThanVersionMatcher
 import cn.codethink.xiaoming.util.Id
 import cn.codethink.xiaoming.util.IncludeVersionMatcher
-import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.InternalApi
 import cn.codethink.xiaoming.util.LessThanOrEqualVersionMatcher
 import cn.codethink.xiaoming.util.LessThanVersionMatcher
+import cn.codethink.xiaoming.util.LiteralSegmentIdPatternElement
 import cn.codethink.xiaoming.util.MajorMinorVersionPrefixMatcher
 import cn.codethink.xiaoming.util.MajorVersionPrefixMatcher
 import cn.codethink.xiaoming.util.MutableStore
 import cn.codethink.xiaoming.util.NamespaceId
-import cn.codethink.xiaoming.util.NamespaceIdMatcher
+import cn.codethink.xiaoming.util.NamespaceIdPattern
 import cn.codethink.xiaoming.util.NamingPolicy
 import cn.codethink.xiaoming.util.NumericalId
+import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.OrVersionMatcher
-import cn.codethink.xiaoming.util.PluginSubjectDescriptorMatcher
-import cn.codethink.xiaoming.util.Store
+import cn.codethink.xiaoming.util.RegexSegmentIdPatternElement
 import cn.codethink.xiaoming.util.SegmentId
-import cn.codethink.xiaoming.util.SegmentIdMatcher
+import cn.codethink.xiaoming.util.SegmentIdPattern
+import cn.codethink.xiaoming.util.SegmentIdPatternElement
+import cn.codethink.xiaoming.util.Store
 import cn.codethink.xiaoming.util.StringId
-import cn.codethink.xiaoming.util.StringMatcher
 import cn.codethink.xiaoming.util.SubjectDescriptor
 import cn.codethink.xiaoming.util.Template
-import cn.codethink.xiaoming.util.TestSubjectDescriptor
 import cn.codethink.xiaoming.util.TextualId
 import cn.codethink.xiaoming.util.Time
 import cn.codethink.xiaoming.util.TypeMeta
 import cn.codethink.xiaoming.util.UniversalUniqueId
 import cn.codethink.xiaoming.util.Version
 import cn.codethink.xiaoming.util.VersionMatcher
-import cn.codethink.xiaoming.util.WildCardStringMatcher
 import java.lang.reflect.Type
 import java.util.UUID
 import java.util.function.Supplier
@@ -90,7 +89,6 @@ interface CoreApi {
 
     fun createStringId(string: String): StringId
 
-    fun createNamespaceId(group: SegmentId, name: String): NamespaceId
     fun createNamespaceId(group: SegmentId, name: SegmentId): NamespaceId
     fun parseNamespaceId(string: String): NamespaceId
 
@@ -123,32 +121,26 @@ interface CoreApi {
     fun createUnixSecondsTime(seconds: Long): Time
 
     // PluginMetaMatcher
-    fun parsePluginRequirement(string: String): PluginRequirement
+    fun createPluginRequirement(string: String): PluginRequirement
 
     fun createPluginRequirement(
         id: NamespaceId,
         version: VersionMatcher?,
-        channel: StringMatcher?,
         optional: Boolean,
         local: Boolean
     ): PluginRequirement
 
     // StringMatcher
-    fun parseStringMatcher(string: String): StringMatcher
-    fun createLiteralStringMatcher(string: String): StringMatcher
-    fun createRegexStringMatcher(regex: String): StringMatcher
-    fun createWildcardStringMatcher(majority: Boolean, optional: Boolean): WildCardStringMatcher
+    fun createLiteralSegmentIdPatternElement(string: String): LiteralSegmentIdPatternElement
+    fun createRegexStringMatcher(regex: Regex): RegexSegmentIdPatternElement
 
-    // SegmentIdMatcher
-    fun parseSegmentIdMatcher(string: String): SegmentIdMatcher
-    fun createSegmentIdMatcher(matchers: List<StringMatcher>): SegmentIdMatcher
+    // SegmentIdPattern
+    fun createSegmentIdPattern(string: String): SegmentIdPattern
+    fun createSegmentIdPattern(matchers: List<SegmentIdPatternElement>): SegmentIdPattern
 
     // NamespaceIdMatcher
-    fun createNamespaceIdMatcher(group: SegmentIdMatcher, name: SegmentIdMatcher): NamespaceIdMatcher
-    fun parseNamespaceIdMatcher(string: String): NamespaceIdMatcher
-
-    // PluginSubjectDescriptorMatcher
-    fun createPluginSubjectDescriptorMatcher(id: NamespaceIdMatcher): PluginSubjectDescriptorMatcher
+    fun createNamespaceIdMatcher(group: SegmentIdPattern, name: SegmentIdPattern): NamespaceIdPattern
+    fun parseNamespaceIdMatcher(string: String): NamespaceIdPattern
 
     // VersionMatcher
     fun parseVersionMatcher(string: String): VersionMatcher
@@ -196,11 +188,5 @@ interface CoreApi {
     fun createPluginStateChangePolicy(ignorePreviousError: Boolean, ignoreCurrentError: Boolean): PluginStateChangePolicy
 
     // CodecResolver
-    fun findAndApplyInitializers(
-        resolver: CodecResolver,
-        operation: Operation,
-        classLoader: ClassLoader?,
-        replace: Boolean,
-        visible: Boolean
-    )
+    fun findAndApplyInitializers(resolver: CodecResolver, operation: Operation, classLoader: ClassLoader?, replace: Boolean, visible: Boolean)
 }

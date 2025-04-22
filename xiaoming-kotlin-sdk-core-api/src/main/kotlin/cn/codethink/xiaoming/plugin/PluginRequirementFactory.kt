@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,14 @@
  */
 
 @file:JvmName("PluginRequirementFactory")
-@file:OptIn(InternalApi::class)
 
-package cn.codethink.xiaoming.util
+package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.api.CoreApi
-import cn.codethink.xiaoming.plugin.PluginRequirement
+import cn.codethink.xiaoming.util.InternalApi
+import cn.codethink.xiaoming.util.NamespaceId
+import cn.codethink.xiaoming.util.VersionMatcher
+import cn.codethink.xiaoming.util.toLiteralVersionMatcher
 
 /**
  * 编译字符串为对应插件需求。
@@ -56,13 +58,35 @@ import cn.codethink.xiaoming.plugin.PluginRequirement
  * @see NamespaceId
  * @see VersionMatcher
  */
-fun parsePluginRequirement(string: String): PluginRequirement = CoreApi.getInstance().parsePluginRequirement(string)
+@OptIn(InternalApi::class)
+@JvmName("createPluginRequirement")
+fun PluginRequirement(string: String): PluginRequirement {
+    return CoreApi.getInstance().createPluginRequirement(string)
+}
 
 @JvmOverloads
-fun createPluginRequirement(
+@OptIn(InternalApi::class)
+@JvmName("createPluginRequirement")
+fun PluginRequirement(
     id: NamespaceId,
     version: VersionMatcher? = null,
-    channel: StringMatcher? = null,
     optional: Boolean = false,
     local: Boolean = false
-): PluginRequirement = CoreApi.getInstance().createPluginRequirement(id, version, channel, optional, local)
+): PluginRequirement {
+    return CoreApi.getInstance().createPluginRequirement(id, version, optional, local)
+}
+
+@JvmSynthetic
+fun PluginMeta.toPluginRequirement(optional: Boolean = false, local: Boolean = false): PluginRequirement {
+    return PluginRequirement(
+        id = id,
+        version = version.toLiteralVersionMatcher(),
+        optional = optional,
+        local = local
+    )
+}
+
+@JvmSynthetic
+fun String.toPluginRequirement(): PluginRequirement {
+    return PluginRequirement(this)
+}

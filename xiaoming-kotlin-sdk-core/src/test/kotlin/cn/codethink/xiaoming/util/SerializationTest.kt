@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,8 @@
 package cn.codethink.xiaoming.util
 
 import cn.codethink.xiaoming.serialization.CodecResolverImpl
-import cn.codethink.xiaoming.serialization.dsl.hint
-import cn.codethink.xiaoming.serialization.dsl.registering
-import cn.codethink.xiaoming.serialization.dsl.typeField
-import cn.codethink.xiaoming.serialization.dsl.versionField
 import cn.codethink.xiaoming.serialization.findAndApplyInitializers
+import cn.codethink.xiaoming.serialization.registering
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -80,12 +77,14 @@ class SerializationTest {
 
     init {
         codecResolver.registering(operation) {
-            typeField<Config> {
-                hint<ConfigSon>("son") {
-                    versionField {
-                        hint<ConfigSonV1>("1")
-                        hint<ConfigSonV2>("2")
-                        hint<ConfigSonV3>("3")
+            type<Config> {
+                type {
+                    type<ConfigSon>("son") {
+                        version {
+                            hint<ConfigSonV1>("1")
+                            hint<ConfigSonV2>("2")
+                            hint<ConfigSonV3>("3")
+                        }
                     }
                 }
             }

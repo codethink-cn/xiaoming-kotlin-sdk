@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,15 @@
 package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.LocalPlatform
+import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.Registration
 import cn.codethink.xiaoming.util.Subject
-import cn.codethink.xiaoming.util.Operation
 
 class PermissionTestContextImpl<T : Subject>(
     override val platform: LocalPlatform,
     override val manager: LocalPermissionManager,
     override val permission: Permission,
     override val subject: T,
-    val operation: Operation,
+    override val operation: Operation,
     override val handler: Registration<PermissionHandler<T>>
 ) : PermissionTestContext<T>

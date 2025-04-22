@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package cn.codethink.xiaoming.connection
 
-import cn.codethink.xiaoming.packet.ReceiptPacket
 import cn.codethink.xiaoming.packet.RequestPacket
+import cn.codethink.xiaoming.packet.ResponsePacket
 import cn.codethink.xiaoming.util.NotStableForInheritance
 
 /**
@@ -32,7 +32,7 @@ import cn.codethink.xiaoming.util.NotStableForInheritance
 interface RequestResult<T> {
     val session: Session
     val requestPacket: RequestPacket
-    val receiptPacket: ReceiptPacket?
+    val responsePacket: ResponsePacket?
 }
 
 /**

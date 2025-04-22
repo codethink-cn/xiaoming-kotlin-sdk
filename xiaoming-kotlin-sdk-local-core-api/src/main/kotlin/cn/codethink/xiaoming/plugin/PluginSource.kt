@@ -17,18 +17,27 @@
 package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.util.NamespaceId
-import cn.codethink.xiaoming.util.VersionMatcher
 
 /**
- * 插件需求。
+ * 插件源：表示一个类似于插件中心的对象。
+ *
+ * 在启动插件时，若有依赖未满足，将会诉诸插件源以尝试安装新插件。插件源应当自行保证插件的安全性。
  *
  * @author Chuanwise
- * @see PluginRequirement
- * @see PluginRequirement
  */
-interface PluginRequirement {
-    val id: NamespaceId
-    val version: VersionMatcher?
-    val optional: Boolean
-    val local: Boolean
+interface PluginSource {
+    /**
+     * 获取一个插件所有可用版本。
+     *
+     * @param id 插件 ID
+     * @return 插件可用版本列表
+     */
+    suspend fun getPluginAvailableVersions(id: NamespaceId): List<PluginAvailableVersion>
+
+    /**
+     * 获取能够提供某种插件服务的所有插件列表，不包含插件本身。
+     *
+     * @param requirement 插件需求
+     */
+    suspend fun getProviderPlugins(requirement: PluginRequirement): List<PluginAvailableVersion>
 }

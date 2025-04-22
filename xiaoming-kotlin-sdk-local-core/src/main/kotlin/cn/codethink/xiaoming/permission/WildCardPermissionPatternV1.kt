@@ -16,16 +16,16 @@
 
 package cn.codethink.xiaoming.permission
 
-import cn.codethink.xiaoming.util.NamespaceIdMatcher
+import cn.codethink.xiaoming.util.NamespaceIdPattern
 import cn.codethink.xiaoming.util.Tristate
 import cn.codethink.xiaoming.util.toTristate
 import com.fasterxml.jackson.annotation.JsonTypeName
 
-@JsonTypeName(WildCardPermissionMatcherV1.VERSION)
-class WildCardPermissionMatcherV1(
-    override val id: NamespaceIdMatcher,
+@JsonTypeName(WildCardPermissionPatternV1.VERSION)
+class WildCardPermissionPatternV1(
+    override val id: NamespaceIdPattern,
     override val value: Boolean?
-) : AbstractPermissionMatcher(), WildCardPermissionMatcher {
+) : AbstractPermissionMatcher(), WildCardPermissionPattern {
     companion object {
         const val VERSION = "1"
     }

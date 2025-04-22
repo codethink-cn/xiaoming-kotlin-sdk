@@ -25,7 +25,7 @@ import cn.codethink.xiaoming.util.Time
 
 class PluginEnableEventImpl(
     override val pluginId: NamespaceId,
-    override val cause: Cause,
+    override val cause: Cause?,
     override val operator: SubjectDescriptor,
     override val time: Time,
     override val id: Id
@@ -33,7 +33,7 @@ class PluginEnableEventImpl(
     override lateinit var plugin: Plugin
     override val description: String = buildString {
         append("Operator $operator is enabling plugin $pluginId at $time")
-        cause.let {
+        cause?.let {
             append(" due to ")
             append(it.description)
         }

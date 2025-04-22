@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,11 @@ import cn.codethink.xiaoming.util.InternalApi
 import cn.codethink.xiaoming.util.MapRegistration
 import cn.codethink.xiaoming.util.MutableMapRegistration
 import cn.codethink.xiaoming.util.MutableMapRegistrationManagerImpl
+import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.Registration
 import cn.codethink.xiaoming.util.Subject
-import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.Tristate
 import io.github.oshai.kotlinlogging.KotlinLogging
-import java.lang.IllegalArgumentException
 import kotlin.reflect.jvm.jvmName
 
 @OptIn(InternalApi::class)
@@ -82,7 +81,7 @@ class LocalPermissionManagerImpl(
                         }
                     }
 
-                    is WildCardPermissionMatcher -> {
+                    is WildCardPermissionPattern -> {
                         append("Set bundle $bundleId permission ${matcher.id} to ${matcher.value}")
                     }
 
@@ -112,7 +111,7 @@ class LocalPermissionManagerImpl(
     }
 
     override fun testPermission(subject: Subject, permission: Permission, operation: Operation): Boolean? {
-        logger.trace { "Test permission ${permission.id} of subject $subject by ${operation.operator} due to: ${operation.cause.description}" }
+        logger.trace { "Test permission ${permission.id} of subject $subject by ${operation.operator} due to: ${operation.cause?.description}" }
 
         val permissionHandler = getPermissionHandlerRegistrationOrFail(subject.descriptor.type)
         val testContext = PermissionTestContextImpl(
@@ -133,7 +132,7 @@ class LocalPermissionManagerImpl(
     }
 
     override fun testPermission(bundleId: Id, permission: Permission, operation: Operation): Tristate? {
-        logger.trace { "Test permission ${permission.id} of bundle $bundleId by ${operation.operator} due to: ${operation.cause.description}" }
+        logger.trace { "Test permission ${permission.id} of bundle $bundleId by ${operation.operator} due to: ${operation.cause?.description}" }
 
         val entries = platform.data.getPermissionEntriesByPermissionBundleId(bundleId)
         if (entries.isEmpty()) {

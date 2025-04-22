@@ -16,12 +16,10 @@
 
 package cn.codethink.xiaoming.connection
 
-import cn.codethink.xiaoming.packet.ReceiptPacket
 import cn.codethink.xiaoming.packet.RequestPacket
-import cn.codethink.xiaoming.util.Received
-import cn.codethink.xiaoming.util.Cause
+import cn.codethink.xiaoming.packet.ResponsePacket
 import cn.codethink.xiaoming.util.NotStableForInheritance
-import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
+import cn.codethink.xiaoming.util.Received
 
 /**
  * 表示会话接收到的一次请求。
@@ -34,7 +32,7 @@ import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 @NotStableForInheritance
 interface SessionRequestContext {
     val request: Received<RequestPacket>
-    val receipt: ReceiptPacket
+    val receipt: ResponsePacket
 
     val session: Session
 }

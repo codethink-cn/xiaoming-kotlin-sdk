@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,4 +23,6 @@ package cn.codethink.xiaoming.util
  *
  * @author Chuanwise
  */
-interface SubjectDescriptor
+interface SubjectDescriptor {
+    val type: String
+}

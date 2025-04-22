@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,34 +16,32 @@
 
 package cn.codethink.xiaoming.io
 
-import cn.codethink.xiaoming.util.FIELD_TYPE
-import cn.codethink.xiaoming.util.FIELD_VERSION
-import cn.codethink.xiaoming.util.SubjectDescriptor
-import cn.codethink.xiaoming.connection.ConnectionManagerConfiguration
-import cn.codethink.xiaoming.connection.ConnectionManagerConfigurationV1
-import cn.codethink.xiaoming.io.data.PolymorphicDeserializerInitializer
-import cn.codethink.xiaoming.io.data.PolymorphicDeserializers
-import cn.codethink.xiaoming.io.data.name
-import cn.codethink.xiaoming.io.data.names
-import cn.codethink.xiaoming.io.data.subject
-import cn.codethink.xiaoming.permission.WildCardPermissionMatcher
-import cn.codethink.xiaoming.permission.SimplePermissionFilterV1
 import cn.codethink.xiaoming.permission.InheritancePermissionMatcher
 import cn.codethink.xiaoming.permission.InheritancePermissionMatcherV1
+import cn.codethink.xiaoming.permission.PermissionMatcher
+import cn.codethink.xiaoming.permission.WildCardPermissionPattern
+import cn.codethink.xiaoming.permission.WildCardPermissionPatternV1
+import cn.codethink.xiaoming.serialization.CodecResolverInitializeContext
+import cn.codethink.xiaoming.serialization.CodecResolverInitializer
+import cn.codethink.xiaoming.serialization.registering
 
-class LocalPlatformPolymorphicDeserializerInitializer : PolymorphicDeserializerInitializer {
-    override fun initialize(deserializers: PolymorphicDeserializers, subject: SubjectDescriptor) {
-        deserializers.subject(subject) {
-            names<PermissionMatcher>(FIELD_TYPE) {
-                names<WildCardPermissionMatcher>(FIELD_VERSION) {
-                    name<SimplePermissionFilterV1>()
+class LocalPlatformPolymorphicDeserializerInitializer : CodecResolverInitializer {
+    override fun initialize(context: CodecResolverInitializeContext) {
+        context.registering {
+            type<PermissionMatcher> {
+                type {
+                    type<WildCardPermissionPattern>("wild_card") {
+                        version {
+                            hint<WildCardPermissionPatternV1>("1")
+                        }
+                    }
+
+                    type<InheritancePermissionMatcher>("inheritance") {
+                        version {
+                            hint<InheritancePermissionMatcherV1>("1")
+                        }
+                    }
                 }
-                names<InheritancePermissionMatcher>(FIELD_VERSION) {
-                    name<InheritancePermissionMatcherV1>()
-                }
-            }
-            names<ConnectionManagerConfiguration>(FIELD_VERSION) {
-                name<ConnectionManagerConfigurationV1>()
             }
         }
     }

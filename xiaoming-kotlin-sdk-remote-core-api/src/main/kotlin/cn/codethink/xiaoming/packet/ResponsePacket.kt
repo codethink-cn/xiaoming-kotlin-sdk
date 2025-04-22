@@ -14,27 +14,20 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.permission
+package cn.codethink.xiaoming.packet
 
-import cn.codethink.xiaoming.util.NamespaceIdMatcher
+import cn.codethink.xiaoming.util.Id
 import cn.codethink.xiaoming.util.NotStableForInheritance
-import cn.codethink.xiaoming.util.SegmentIdMatcher
-import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
- * 通配权限匹配：请求的权限节点与该过滤器的节点匹配时，返回该过滤器的值。
+ * 回执数据包。
  *
  * @author Chuanwise
+ * @see ReceiptState
  */
 @NotStableForInheritance
-@JsonTypeName(WildCardPermissionMatcher.TYPE)
-interface WildCardPermissionMatcher : PermissionMatcher {
-    companion object {
-        const val TYPE = "wild_card"
-    }
-
-    override val type: String get() = TYPE
-
-    val id: NamespaceIdMatcher
-    val value: Boolean?
+interface ResponsePacket : Packet {
+    val requestId: Id
+    val state: ReceiptState
+    val data: Any?
 }

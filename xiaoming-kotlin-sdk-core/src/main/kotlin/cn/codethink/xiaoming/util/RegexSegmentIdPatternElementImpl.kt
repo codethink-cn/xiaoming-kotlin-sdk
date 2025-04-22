@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,34 @@
 
 package cn.codethink.xiaoming.util
 
-class RegexStringMatcherImpl(
+import java.util.regex.Pattern
+
+class RegexSegmentIdPatternElementImpl(
     private val regex: Regex
-) : StringMatcher {
+) : RegexSegmentIdPatternElement {
+    private val toPatternCache by lazy { Pattern.compile(regex.pattern) }
+
+    override fun toRegex(): Regex = regex
+
+    @JavaFriendlyApi
+    override fun toPattern(): Pattern = toPatternCache
+
     override fun matches(string: String): Boolean = regex.matches(string)
 
     override fun toString(): String {
         return "{$regex}"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as RegexSegmentIdPatternElementImpl
+
+        return regex.toString() == other.regex.toString()
+    }
+
+    override fun hashCode(): Int {
+        return regex.toString().hashCode()
     }
 }

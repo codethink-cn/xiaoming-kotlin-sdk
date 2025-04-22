@@ -14,25 +14,13 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.permission
+package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.util.NotStableForInheritance
-import cn.codethink.xiaoming.util.Tristate
-
-/**
- * 权限匹配器，存储在权限管理器中，用于比较所需查询的权限 [Permission] 是否在范围内。
- *
- * @author Chuanwise
- * @see InheritancePermissionMatcher
- * @see WildCardPermissionPattern
- */
-@NotStableForInheritance
-interface PermissionMatcher {
+interface PluginAvailableVersion {
     /**
-     * 尝试匹配权限。
-     *
-     * @param context 权限检查上下文
-     * @return 若所需权限与之无关，则返回 `null`。
+     * 插件元数据。
      */
-    fun matches(context: PermissionMatcherContext): Tristate?
+    val meta: PluginMeta
+
+    suspend fun toPluginAllocator(): PluginAllocator
 }

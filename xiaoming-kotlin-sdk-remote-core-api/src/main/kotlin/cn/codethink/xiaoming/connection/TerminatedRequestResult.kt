@@ -16,10 +16,10 @@
 
 package cn.codethink.xiaoming.connection
 
-import cn.codethink.xiaoming.packet.ReceiptPacket
-import cn.codethink.xiaoming.util.Received
+import cn.codethink.xiaoming.packet.ResponsePacket
 import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.NotStableForInheritance
+import cn.codethink.xiaoming.util.Received
 
 /**
  * 中止响应，表示一个动作的最终结果。
@@ -31,7 +31,7 @@ import cn.codethink.xiaoming.util.NotStableForInheritance
  */
 @NotStableForInheritance
 interface TerminatedRequestResult<T> : RequestResult<T> {
-    val receipt: Received<ReceiptPacket>
+    val receipt: Received<ResponsePacket>
 }
 
 @NotStableForInheritance

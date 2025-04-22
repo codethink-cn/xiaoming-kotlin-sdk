@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-@file:JvmName("PluginSubjectDescriptorMatcherFactory")
+@file:JvmName("LiteralSegmentIdPatternElementFactory")
+
 package cn.codethink.xiaoming.util
 
 import cn.codethink.xiaoming.api.CoreApi
 
 @OptIn(InternalApi::class)
-@JvmName("createPluginSubjectDescriptorMatcher")
-fun PluginSubjectDescriptorMatcher(id: NamespaceIdMatcher): PluginSubjectDescriptorMatcher {
-    return CoreApi.getInstance().createPluginSubjectDescriptorMatcher(id)
+fun LiteralSegmentIdPatternElement(value: String): LiteralSegmentIdPatternElement {
+    return CoreApi.getInstance().createLiteralSegmentIdPatternElement(value)
+}
+
+@JvmSynthetic
+fun String.toLiteralSegmentIdPatternElement(): LiteralSegmentIdPatternElement {
+    return LiteralSegmentIdPatternElement(this)
 }

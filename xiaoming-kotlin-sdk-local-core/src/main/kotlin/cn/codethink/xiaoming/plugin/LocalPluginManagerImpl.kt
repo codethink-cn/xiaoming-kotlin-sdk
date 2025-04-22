@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@ import cn.codethink.xiaoming.util.InternalApi
 import cn.codethink.xiaoming.util.MutableDualKeyMapImpl
 import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.Operation
-import cn.codethink.xiaoming.util.PluginSubjectDescriptor
-import cn.codethink.xiaoming.util.PluginSubjectDescriptorImpl
+import cn.codethink.xiaoming.util.PluginDescriptor
+import cn.codethink.xiaoming.util.PluginDescriptorImpl
 import cn.codethink.xiaoming.util.Version
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -272,10 +272,9 @@ class LocalPluginManagerImpl(
             operation: Operation,
             policy: PluginStateChangePolicy
         ): PluginAllocateEvent {
-            val handlerHolder = plugin.handlerHolder as AllocatorPluginHandlerHolder
             return PluginAllocateEventImpl(
                 plugin = plugin,
-                allocator = handlerHolder.allocator,
+                allocator = plugin.allocator,
                 cause = operation.cause,
                 operator = operation.operator,
                 time = operation.time,
@@ -285,103 +284,6 @@ class LocalPluginManagerImpl(
     }
 
     private val allocatedPluginStateHandler = AllocatedPluginStateChangeHandler()
-
-    // 插件的起始状态可能是 ALLOCATED 或 NOT_YET_ALLOCATED，
-    // PluginHandlerHolder 是统一获取插件主类操作，视情况分配插件主类的工具。
-    private interface PluginHandlerHolder {
-        val initialInternalState: PluginInternalState
-
-        suspend fun getPluginHandler(
-            plugin: AbstractPlugin,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ): PluginHandler
-
-        suspend fun tryGetPluginHandler(
-            plugin: AbstractPlugin,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ): PluginHandler?
-    }
-
-    private inner class AllocatorPluginHandlerHolder(val allocator: PluginAllocator) : PluginHandlerHolder {
-        override val initialInternalState: PluginInternalState = PluginInternalState.NOT_YET_ALLOCATED
-        private var pluginHandlerNoLock: PluginHandler? = null
-
-        private fun doPluginAllocation(plugin: Plugin, event: EventContext<PluginAllocateEvent>): PluginHandler {
-            return allocator.allocatePluginHandler(
-                context = PluginAllocateContextImpl(
-                    platform = platform,
-                    event = event,
-                    allocator = allocator,
-                    meta = plugin.meta,
-                    plugin = plugin
-                )
-            )
-        }
-
-        override suspend fun getPluginHandler(
-            plugin: AbstractPlugin,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ): PluginHandler {
-            var pluginHandlerNoLockBeforeLock = pluginHandlerNoLock
-            if (pluginHandlerNoLockBeforeLock == null) {
-                pluginHandlerNoLockBeforeLock = plugin.lock.write {
-                    var pluginHandlerNoLockAfterLock = pluginHandlerNoLock
-                    if (pluginHandlerNoLockAfterLock == null) {
-                        pluginHandlerNoLockAfterLock = allocatedPluginStateHandler.changeToAfterState(
-                            plugin,
-                            operation,
-                            policy
-                        ) { doPluginAllocation(plugin, it) }
-                        pluginHandlerNoLock = pluginHandlerNoLockAfterLock
-                    }
-                    pluginHandlerNoLockAfterLock
-                }
-            }
-            return pluginHandlerNoLockBeforeLock
-        }
-
-        override suspend fun tryGetPluginHandler(
-            plugin: AbstractPlugin,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ): PluginHandler? {
-            var pluginHandlerNoLockBeforeLock = pluginHandlerNoLock
-            if (pluginHandlerNoLockBeforeLock == null) {
-                pluginHandlerNoLockBeforeLock = plugin.lock.write {
-                    var pluginHandlerNoLockAfterLock = pluginHandlerNoLock
-                    if (pluginHandlerNoLockAfterLock == null) {
-                        pluginHandlerNoLockAfterLock = allocatedPluginStateHandler.tryChangeToAfterState(
-                            plugin,
-                            operation,
-                            policy
-                        ) { doPluginAllocation(plugin, it) }
-                        pluginHandlerNoLock = pluginHandlerNoLockAfterLock
-                    }
-                    pluginHandlerNoLockAfterLock
-                }
-            }
-            return pluginHandlerNoLockBeforeLock
-        }
-    }
-
-    private class AllocatedPluginHandlerHolder(val handler: PluginHandler) : PluginHandlerHolder {
-        override val initialInternalState: PluginInternalState = PluginInternalState.ALLOCATED
-
-        override suspend fun getPluginHandler(
-            plugin: AbstractPlugin,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ): PluginHandler = handler
-
-        override suspend fun tryGetPluginHandler(
-            plugin: AbstractPlugin,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ): PluginHandler = handler
-    }
 
     private inner class LoadedPluginStateChangeHandler : PluginStateChangeHandler<PluginLoadEvent>(
         beforeStates = setOf(PluginInternalState.ALLOCATED),
@@ -478,16 +380,17 @@ class LocalPluginManagerImpl(
     private abstract inner class AbstractPlugin(
         final override val meta: PluginMeta,
         final override val mode: PluginMode,
-
-        val handlerHolder: PluginHandlerHolder
+        val allocator: PluginAllocator
     ) : Plugin {
         override val platform: LocalPlatform = this@LocalPluginManagerImpl.platform
-        override val descriptor: PluginSubjectDescriptor = PluginSubjectDescriptorImpl(meta.id)
+        override val descriptor: PluginDescriptor = PluginDescriptorImpl(meta.id)
 
-        var internalStateNoLock: PluginInternalState = handlerHolder.initialInternalState
+        var internalStateNoLock: PluginInternalState = PluginInternalState.NOT_YET_ALLOCATED
         var internalState: PluginInternalState
             get() = lock.read { internalStateNoLock }
             set(value) = lock.write { internalStateNoLock = value }
+
+        private var handlerNoLock: PluginHandler? = null
 
         override val state: PluginState get() = internalState.state ?: error("Plugin is not allocated yet")
 
@@ -528,12 +431,70 @@ class LocalPluginManagerImpl(
             }
         }
 
+        private fun doPluginAllocation(plugin: Plugin, event: EventContext<PluginAllocateEvent>): PluginHandler {
+            return allocator.allocatePluginHandler(
+                context = PluginAllocateContextImpl(
+                    platform = platform,
+                    event = event,
+                    allocator = allocator,
+                    meta = plugin.meta,
+                    plugin = plugin
+                )
+            )
+        }
+
+        suspend fun getPluginHandler(
+            plugin: AbstractPlugin,
+            operation: Operation,
+            policy: PluginStateChangePolicy
+        ): PluginHandler {
+            var pluginHandlerNoLockBeforeLock = handlerNoLock
+            if (pluginHandlerNoLockBeforeLock == null) {
+                pluginHandlerNoLockBeforeLock = plugin.lock.write {
+                    var pluginHandlerNoLockAfterLock = handlerNoLock
+                    if (pluginHandlerNoLockAfterLock == null) {
+                        pluginHandlerNoLockAfterLock = allocatedPluginStateHandler.changeToAfterState(
+                            plugin,
+                            operation,
+                            policy
+                        ) { doPluginAllocation(plugin, it) }
+                        handlerNoLock = pluginHandlerNoLockAfterLock
+                    }
+                    pluginHandlerNoLockAfterLock
+                }
+            }
+            return pluginHandlerNoLockBeforeLock
+        }
+
+        suspend fun tryGetPluginHandler(
+            plugin: AbstractPlugin,
+            operation: Operation,
+            policy: PluginStateChangePolicy
+        ): PluginHandler? {
+            var pluginHandlerNoLockBeforeLock = handlerNoLock
+            if (pluginHandlerNoLockBeforeLock == null) {
+                pluginHandlerNoLockBeforeLock = plugin.lock.write {
+                    var pluginHandlerNoLockAfterLock = handlerNoLock
+                    if (pluginHandlerNoLockAfterLock == null) {
+                        pluginHandlerNoLockAfterLock = allocatedPluginStateHandler.tryChangeToAfterState(
+                            plugin,
+                            operation,
+                            policy
+                        ) { doPluginAllocation(plugin, it) }
+                        handlerNoLock = pluginHandlerNoLockAfterLock
+                    }
+                    pluginHandlerNoLockAfterLock
+                }
+            }
+            return pluginHandlerNoLockBeforeLock
+        }
+
         private suspend fun doLoad(
             event: EventContext<PluginLoadEvent>,
             operation: Operation,
             policy: PluginStateChangePolicy
         ) {
-            val pluginHandler = handlerHolder.getPluginHandler(this, operation, policy)
+            val pluginHandler = getPluginHandler(this, operation, policy)
             pluginHandler.onLoad(
                 context = PluginLoadContextImpl(
                     platform = platform,
@@ -541,6 +502,22 @@ class LocalPluginManagerImpl(
                     plugin = this,
                 )
             )
+        }
+
+        private suspend fun tryDoLoad(
+            event: EventContext<PluginLoadEvent>,
+            operation: Operation,
+            policy: PluginStateChangePolicy
+        ): Boolean {
+            val pluginHandler = tryGetPluginHandler(this, operation, policy) ?: return false
+            pluginHandler.onLoad(
+                context = PluginLoadContextImpl(
+                    platform = platform,
+                    event = event,
+                    plugin = this,
+                )
+            )
+            return true
         }
 
         override suspend fun load(operation: Operation, policy: PluginStateChangePolicy) {
@@ -557,8 +534,8 @@ class LocalPluginManagerImpl(
                 return false
             }
             return loadedPluginStateHandler.tryChangeToAfterState(this, operation, policy) {
-                doLoad(it, operation, policy)
-            } != null
+                tryDoLoad(it, operation, policy)
+            } == true
         }
 
         override suspend fun tryEnsureLoaded(operation: Operation, policy: PluginStateChangePolicy): Boolean {
@@ -570,7 +547,7 @@ class LocalPluginManagerImpl(
             operation: Operation,
             policy: PluginStateChangePolicy
         ) {
-            val pluginHandler = handlerHolder.getPluginHandler(this, operation, policy)
+            val pluginHandler = getPluginHandler(this, operation, policy)
             pluginHandler.onEnable(
                 context = PluginEnableContextImpl(
                     platform = platform,
@@ -578,6 +555,22 @@ class LocalPluginManagerImpl(
                     plugin = this,
                 )
             )
+        }
+
+        private suspend fun tryDoEnable(
+            event: EventContext<PluginEnableEvent>,
+            operation: Operation,
+            policy: PluginStateChangePolicy
+        ): Boolean {
+            val pluginHandler = tryGetPluginHandler(this, operation, policy) ?: return false
+            pluginHandler.onEnable(
+                context = PluginEnableContextImpl(
+                    platform = platform,
+                    event = event,
+                    plugin = this,
+                )
+            )
+            return true
         }
 
         override suspend fun enable(operation: Operation, policy: PluginStateChangePolicy) {
@@ -591,15 +584,15 @@ class LocalPluginManagerImpl(
 
         override suspend fun tryEnable(operation: Operation, policy: PluginStateChangePolicy): Boolean {
             return enabledPluginStateHandler.tryChangeToAfterState(this, operation, policy) {
-                doEnable(it, operation, policy)
-            } != null
+                tryDoEnable(it, operation, policy)
+            } == true
         }
 
         override suspend fun tryEnsureEnabled(operation: Operation, policy: PluginStateChangePolicy): Boolean {
             tryEnsureLoaded(operation, policy)
             return enabledPluginStateHandler.tryChangeToAfterState(this, operation, policy) {
-                doEnable(it, operation, policy)
-            } != null
+                tryDoEnable(it, operation, policy)
+            } == true
         }
 
         private suspend fun doDisable(
@@ -607,7 +600,7 @@ class LocalPluginManagerImpl(
             operation: Operation,
             policy: PluginStateChangePolicy
         ) {
-            val pluginHandler = handlerHolder.getPluginHandler(this, operation, policy)
+            val pluginHandler = getPluginHandler(this, operation, policy)
             pluginHandler.onDisable(
                 context = PluginDisableContextImpl(
                     platform = platform,
@@ -615,6 +608,22 @@ class LocalPluginManagerImpl(
                     plugin = this,
                 )
             )
+        }
+
+        private suspend fun tryDoDisable(
+            event: EventContext<PluginDisableEvent>,
+            operation: Operation,
+            policy: PluginStateChangePolicy
+        ): Boolean {
+            val pluginHandler = tryGetPluginHandler(this, operation, policy) ?: return false
+            pluginHandler.onDisable(
+                context = PluginDisableContextImpl(
+                    platform = platform,
+                    event = event,
+                    plugin = this,
+                )
+            )
+            return true
         }
 
         override suspend fun disable(operation: Operation, policy: PluginStateChangePolicy) {
@@ -629,8 +638,8 @@ class LocalPluginManagerImpl(
 
         override suspend fun tryDisable(operation: Operation, policy: PluginStateChangePolicy): Boolean {
             return disabledPluginStateHandler.tryChangeToAfterState(this, operation, policy) {
-                doDisable(it, operation, policy)
-            } != null
+                tryDoDisable(it, operation, policy)
+            } == true
         }
 
         override suspend fun tryEnsureDisabled(operation: Operation, policy: PluginStateChangePolicy): Boolean {
@@ -642,7 +651,7 @@ class LocalPluginManagerImpl(
             operation: Operation,
             policy: PluginStateChangePolicy
         ) {
-            val pluginHandler = handlerHolder.getPluginHandler(this, operation, policy)
+            val pluginHandler = getPluginHandler(this, operation, policy)
             pluginHandler.onUnload(
                 context = PluginUnloadContextImpl(
                     platform = platform,
@@ -650,6 +659,22 @@ class LocalPluginManagerImpl(
                     plugin = this,
                 )
             )
+        }
+
+        private suspend fun tryDoUnload(
+            event: EventContext<PluginUnloadEvent>,
+            operation: Operation,
+            policy: PluginStateChangePolicy
+        ): Boolean {
+            val pluginHandler = tryGetPluginHandler(this, operation, policy) ?: return false
+            pluginHandler.onUnload(
+                context = PluginUnloadContextImpl(
+                    platform = platform,
+                    event = event,
+                    plugin = this,
+                )
+            )
+            return true
         }
 
         override suspend fun unload(operation: Operation, policy: PluginStateChangePolicy) {
@@ -668,9 +693,9 @@ class LocalPluginManagerImpl(
 
         override suspend fun tryUnload(operation: Operation, policy: PluginStateChangePolicy): Boolean {
             val result = unloadedPluginStateHandler.tryChangeToAfterState(this, operation, policy) {
-                doUnload(it, operation, policy)
-            } != null
-            if (tryReleaseUniquePluginLock() != null) {
+                tryDoUnload(it, operation, policy)
+            } == true
+            if (result && tryReleaseUniquePluginLock() != null) {
                 return false
             }
             return result
@@ -687,8 +712,8 @@ class LocalPluginManagerImpl(
     private inner class LocalPluginImpl(
         meta: PluginMeta,
         mode: PluginMode,
-        handlerHolder: PluginHandlerHolder
-    ) : AbstractPlugin(meta, mode, handlerHolder), LocalPlugin {
+        allocator: PluginAllocator
+    ) : AbstractPlugin(meta, mode, allocator), LocalPlugin {
         val mutableEntries: MutableMap<Platform, PluginEntry> = ConcurrentHashMap()
         override val entries: Map<Platform, PluginEntry> get() = mutableEntries.toMap()
     }
@@ -696,23 +721,13 @@ class LocalPluginManagerImpl(
     private inner class RemotePluginImpl(
         meta: PluginMeta,
         mode: PluginMode,
-        handlerHolder: PluginHandlerHolder
-    ) : AbstractPlugin(meta, mode, handlerHolder), RemotePlugin
+        allocator: PluginAllocator
+    ) : AbstractPlugin(meta, mode, allocator), RemotePlugin
 
     override fun registerPlugin(meta: PluginMeta, mode: PluginMode, allocator: PluginAllocator): Plugin {
-        val pluginHandlerHolder = AllocatorPluginHandlerHolder(allocator)
-        return doRegisterPlugin(meta, mode, pluginHandlerHolder)
-    }
-
-    override fun registerPlugin(meta: PluginMeta, mode: PluginMode, handler: PluginHandler): Plugin {
-        val pluginHandlerHolder = AllocatedPluginHandlerHolder(handler)
-        return doRegisterPlugin(meta, mode, pluginHandlerHolder)
-    }
-
-    private fun doRegisterPlugin(meta: PluginMeta, mode: PluginMode, handlerHolder: PluginHandlerHolder): Plugin {
         val newPlugin = when (mode) {
-            PluginMode.LOCAL -> LocalPluginImpl(meta, mode, handlerHolder)
-            PluginMode.REMOTE -> RemotePluginImpl(meta, mode, handlerHolder)
+            PluginMode.LOCAL -> LocalPluginImpl(meta, mode, allocator)
+            PluginMode.REMOTE -> RemotePluginImpl(meta, mode, allocator)
         }
 
         val nowPlugin = mutableAvailablePlugins.putIfAbsent(meta.id, meta.version, newPlugin)
@@ -722,6 +737,6 @@ class LocalPluginManagerImpl(
     }
 
     override fun getPlugin(namespaceId: NamespaceId): Plugin? {
-        return availablePlugins.toMapByKey1(namespaceId).values.singleOrNull { it.isLoaded }
+        return mutablePlugins[namespaceId]
     }
 }

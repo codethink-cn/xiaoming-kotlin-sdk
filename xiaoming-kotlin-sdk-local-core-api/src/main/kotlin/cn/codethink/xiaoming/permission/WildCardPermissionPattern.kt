@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,18 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.util
+package cn.codethink.xiaoming.permission
 
-@JvmInline
-value class PluginSubjectDescriptorMatcherImpl(
-    private val id: NamespaceIdMatcher
-) : PluginSubjectDescriptorMatcher {
-    override fun matches(descriptor: PluginSubjectDescriptor): Boolean {
-        return id.matches(descriptor.id)
-    }
+import cn.codethink.xiaoming.util.NamespaceIdPattern
+import cn.codethink.xiaoming.util.NotStableForInheritance
+
+/**
+ * 通配权限匹配：请求的权限节点与该过滤器的节点匹配时，返回该过滤器的值。
+ *
+ * @author Chuanwise
+ */
+@NotStableForInheritance
+interface WildCardPermissionPattern : PermissionMatcher {
+    val id: NamespaceIdPattern
+    val value: Boolean?
 }
-

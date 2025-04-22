@@ -19,6 +19,6 @@ package cn.codethink.xiaoming.serialization
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind.SerializerProvider
 
-fun interface Serializer<T> : Codec<T> {
+interface Serializer<T> : Codec<T> {
     fun serialize(value: T, generator: JsonGenerator, provider: SerializerProvider)
 }

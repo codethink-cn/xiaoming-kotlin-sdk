@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,28 +14,35 @@
  * limitations under the License.
  */
 
+@file:JvmName("SegmentIds")
+
 package cn.codethink.xiaoming.util
 
 /**
- * 段 ID 匹配器。
+ * 表示由一个或多个字符串片段组成的、通过 `.` 分割的 ID。
+ *
+ * 每个片段都是由英文字母、数字、下划线或减号组成的非空字符串。
  *
  * @author Chuanwise
  */
-@NotStableForInheritance
-interface SegmentIdMatcher {
+interface SegmentId : TextualId, List<String> {
     companion object {
         @JvmStatic
         @JavaFriendlyApi
-        fun parse(string: String): SegmentIdMatcher = string.toSegmentIdMatcher()
+        fun parse(string: String): SegmentId = string.toSegmentId()
 
         @JvmStatic
         @JavaFriendlyApi
-        fun of(strings: List<StringMatcher>): SegmentIdMatcher = strings.toSegmentIdMatcher()
+        fun of(segments: List<String>): SegmentId = segments.toSegmentId()
 
         @JvmStatic
         @JavaFriendlyApi
-        fun of(segmentId: SegmentId): SegmentIdMatcher = segmentId.toSegmentIdMatcher()
+        fun of(segment: String): SegmentId = segment.toSingleSegmentId()
     }
 
-    fun matches(segmentId: SegmentId): Boolean
+    fun toList(): List<String>
 }
+
+fun String.toSegmentId(): SegmentId = parseSegmentId(this)
+fun String.toSingleSegmentId(): SegmentId = listOf(this).toSegmentId()
+fun List<String>.toSegmentId(): SegmentId = createSegmentId(this)

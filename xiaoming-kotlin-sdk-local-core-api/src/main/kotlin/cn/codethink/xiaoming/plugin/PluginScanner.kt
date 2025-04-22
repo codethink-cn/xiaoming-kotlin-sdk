@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,24 +14,20 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.connection
-
-import cn.codethink.xiaoming.util.Template
+package cn.codethink.xiaoming.plugin
 
 /**
- * 语言配置。
+ * 检测当前宿主上所有已经安装的插件，或者打算安装的插件。
  *
  * @author Chuanwise
  */
-interface SessionLanguageConfiguration {
-    val unsupportedSession: Template
-    val sessionRequired: Template
-    val sessionRejected: Template
-    val unsupportedRequestMode: Template
-    val actionError: Template
-    val invalidSession: Template
-
-    val unsupportedRequestAction: Template
-    val internalActionHandlerError: Template
-    val actionHandlerTimeout: Template
+fun interface PluginScanner {
+    /**
+     * 执行一次插件检测。
+     *
+     * 实现类通过 [PluginScanContext.registerPlugin] 添加一个检测到的结果，添加前应当做安全检查。
+     *
+     * @param context 插件检测上下文。
+     */
+    fun scan(context: PluginScanContext)
 }

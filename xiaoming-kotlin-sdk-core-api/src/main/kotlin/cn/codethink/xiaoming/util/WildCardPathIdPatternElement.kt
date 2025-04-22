@@ -16,11 +16,26 @@
 
 package cn.codethink.xiaoming.util
 
-data class NamespaceIdMatcherImpl(
-    override val group: SegmentIdMatcher,
-    override val name: SegmentIdMatcher
-) : NamespaceIdMatcher {
-    override fun matches(namespaceId: NamespaceId): Boolean {
-        return group.matches(namespaceId.group) && name.matches(namespaceId.name)
+/**
+ * 通配符路径 ID 匹配器元素，可以匹配 0 个或多个路径 ID 的部分。
+ *
+ * @property isOptional 是否可以匹配 0 个部分
+ * @property isGreedy 是否贪婪匹配
+ */
+enum class WildCardSegmentIdPatternElement(
+    val isOptional: Boolean,
+    val isGreedy: Boolean
+) : SegmentIdPatternElement {
+    OPTIONAL(true, false),
+    REQUIRED(false, false),
+
+    GREEDY_OPTIONAL(true, true),
+    GREEDY_REQUIRED(false, true);
+
+    override fun toString(): String = when (this) {
+        OPTIONAL -> "?"
+        REQUIRED -> "+"
+        GREEDY_OPTIONAL -> "??"
+        GREEDY_REQUIRED -> "++"
     }
 }

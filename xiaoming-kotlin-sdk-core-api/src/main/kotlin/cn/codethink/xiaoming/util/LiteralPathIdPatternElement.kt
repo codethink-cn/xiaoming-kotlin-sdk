@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,14 @@
  * limitations under the License.
  */
 
-@file:JvmName("StringMatchers")
-@file:OptIn(InternalApi::class)
-
 package cn.codethink.xiaoming.util
 
-import cn.codethink.xiaoming.api.CoreApi
-
 /**
- * 字符串匹配器。
+ * 匹配字面值的路径 ID 匹配器元素。
  *
  * @author Chuanwise
  */
 @NotStableForInheritance
-interface StringMatcher {
-    fun matches(string: String): Boolean
+interface LiteralSegmentIdPatternElement : SingleSegmentIdPatternElement {
+    val value: String
 }
-
-val AnyStringMatcher: StringMatcher get() = MinorityRequiredWildCardStringMatcher
-
-fun String.toStringMatcher(): StringMatcher = CoreApi.getInstance().parseStringMatcher(this)
-fun String.toLiteralStringMatcher(): StringMatcher = CoreApi.getInstance().createLiteralStringMatcher(this)
-fun String.toRegexStringMatcher(): StringMatcher = CoreApi.getInstance().createRegexStringMatcher(this)

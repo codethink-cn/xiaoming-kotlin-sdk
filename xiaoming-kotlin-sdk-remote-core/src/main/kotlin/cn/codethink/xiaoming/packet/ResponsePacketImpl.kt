@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,16 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.util
+package cn.codethink.xiaoming.packet
 
-data class PluginSubjectDescriptorImpl(
-    override val id: NamespaceId
-) : PluginSubjectDescriptor
+import cn.codethink.xiaoming.util.Cause
+import cn.codethink.xiaoming.util.Id
+
+class ResponsePacketImpl(
+    override val description: String,
+    override val cause: Cause?,
+    override val type: String,
+    override val requestId: Id,
+    override val state: ReceiptState,
+    override val data: Any?
+) : ResponsePacket

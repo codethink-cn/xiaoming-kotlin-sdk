@@ -14,21 +14,11 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin
+package cn.codethink.xiaoming.util
 
-import cn.codethink.xiaoming.util.NamespaceId
-import cn.codethink.xiaoming.util.VersionMatcher
-
-/**
- * 插件需求。
- *
- * @author Chuanwise
- * @see PluginRequirement
- * @see PluginRequirement
- */
-interface PluginRequirement {
-    val id: NamespaceId
-    val version: VersionMatcher?
-    val optional: Boolean
-    val local: Boolean
+@JvmInline
+value class PluginDescriptorImpl(
+    override val id: NamespaceId
+) : PluginDescriptor {
+    override val type: String get() = "plugin"
 }

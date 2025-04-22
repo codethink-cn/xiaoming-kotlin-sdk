@@ -19,6 +19,6 @@ package cn.codethink.xiaoming.serialization
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 
-fun interface Deserializer<T> : Codec<T> {
+interface Deserializer<T> : Codec<T> {
     fun deserialize(parser: JsonParser, context: DeserializationContext): T
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,27 @@
 package cn.codethink.xiaoming.util
 
 /**
- * 插件主体描述符匹配器。
+ * 段 ID 匹配器：用于匹配由 `.` 分割的段 ID。
+ *
+ * 可被序列化为字符串，并被反序列化构造。
+ *
+ * 其中 [WildCardSegmentIdPatternElement.isSingle] 为 `false` 的元素不能连续出现。
  *
  * @author Chuanwise
+ * @see SegmentIdPatternElement
  */
-interface PluginSubjectDescriptorMatcher {
-    fun matches(descriptor: PluginSubjectDescriptor): Boolean
+@NotStableForInheritance
+interface SegmentIdPattern {
+    /**
+     * 匹配器元素列表。
+     */
+    val elements: List<SegmentIdPatternElement>
+
+    /**
+     * 是否匹配指定的段 ID。
+     *
+     * @param id 段 ID
+     * @return 是否匹配
+     */
+    fun matches(id: SegmentId): Boolean
 }

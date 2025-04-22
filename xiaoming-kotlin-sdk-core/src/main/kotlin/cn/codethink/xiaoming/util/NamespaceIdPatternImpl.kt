@@ -16,21 +16,11 @@
 
 package cn.codethink.xiaoming.util
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import org.junit.jupiter.api.Test
-
-class CauseTest {
-    val objectMapper = jacksonObjectMapper()
-
-    @Test
-    fun testSerialize() {
-        val cause = Cause("Just for Test")
-        val json = objectMapper.writeValueAsString(cause)
-
-        println(json)
-
-        val value = objectMapper.readValue(json, CauseImpl::class.java)
-        println(value)
+data class NamespaceIdPatternImpl(
+    override val group: SegmentIdPattern,
+    override val name: SegmentIdPattern
+) : NamespaceIdPattern {
+    override fun matches(namespaceId: NamespaceId): Boolean {
+        return group.matches(namespaceId.group) && name.matches(namespaceId.name)
     }
 }

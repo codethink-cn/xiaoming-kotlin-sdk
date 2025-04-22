@@ -17,7 +17,6 @@
 package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.util.Id
-import cn.codethink.xiaoming.util.TextualId
 import cn.codethink.xiaoming.util.Operation
 
 data class PermissionEntryImpl(
@@ -25,5 +24,5 @@ data class PermissionEntryImpl(
     override val bundleId: Id,
     override val matcher: PermissionMatcher,
     override val constraints: Map<String, PermissionConstraint>,
-    val operation: Operation
+    override val operation: Operation
 ) : PermissionEntry

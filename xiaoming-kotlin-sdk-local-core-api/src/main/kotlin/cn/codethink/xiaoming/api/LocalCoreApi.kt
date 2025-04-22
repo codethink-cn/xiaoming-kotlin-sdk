@@ -17,10 +17,10 @@
 package cn.codethink.xiaoming.api
 
 import cn.codethink.xiaoming.permission.InheritancePermissionMatcher
-import cn.codethink.xiaoming.permission.WildCardPermissionMatcher
+import cn.codethink.xiaoming.permission.WildCardPermissionPattern
 import cn.codethink.xiaoming.util.Id
 import cn.codethink.xiaoming.util.InternalApi
-import cn.codethink.xiaoming.util.NamespaceIdMatcher
+import cn.codethink.xiaoming.util.NamespaceIdPattern
 
 /**
  * 本地核心 API，是通过 local-core-api 模块主动调用 local-core 的桥梁。
@@ -35,6 +35,6 @@ interface LocalCoreApi {
     }
 
     // PermissionMatchers
-    fun createWildCardPermissionMatcher(id: NamespaceIdMatcher, value: Boolean?): WildCardPermissionMatcher
+    fun createWildCardPermissionMatcher(id: NamespaceIdPattern, value: Boolean?): WildCardPermissionPattern
     fun createInheritancePermissionMatcher(inheritedId: Id): InheritancePermissionMatcher
 }

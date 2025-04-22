@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,9 @@
 
 package cn.codethink.xiaoming.util
 
-import com.fasterxml.jackson.core.JsonGenerator
-import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.SerializerProvider
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.databind.annotation.JsonSerialize
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer
-import com.fasterxml.jackson.databind.ser.std.StdSerializer
-
 private const val SEGMENT_SEPARATOR = "."
 private val SEGMENT_REGEX = "[\\w-]+".toRegex()
 
-@JsonSerialize(using = SegmentIdStringSerializer::class)
-@JsonDeserialize(using = SegmentIdStringDeserializer::class)
 data class SegmentIdImpl(
     private val segments: List<String>
 ) : SegmentId, Id, List<String> by segments {
@@ -45,18 +34,4 @@ data class SegmentIdImpl(
 
     override fun hashCode(): Int = toStringCache.hashCode()
     override fun equals(other: Any?): Boolean = other is SegmentIdImpl && other.toString() == toString()
-}
-
-object SegmentIdStringSerializer : StdSerializer<SegmentIdImpl>(SegmentIdImpl::class.java) {
-    private fun readResolve(): Any = SegmentIdStringSerializer
-    override fun serialize(segmentId: SegmentIdImpl, generator: JsonGenerator, provider: SerializerProvider) {
-        generator.writeString(segmentId.toString())
-    }
-}
-
-object SegmentIdStringDeserializer : StdDeserializer<SegmentIdImpl>(SegmentIdImpl::class.java) {
-    private fun readResolve(): Any = SegmentIdStringDeserializer
-    override fun deserialize(parser: JsonParser, context: DeserializationContext): SegmentIdImpl {
-        return parser.valueAsString.toSegmentId() as SegmentIdImpl
-    }
 }

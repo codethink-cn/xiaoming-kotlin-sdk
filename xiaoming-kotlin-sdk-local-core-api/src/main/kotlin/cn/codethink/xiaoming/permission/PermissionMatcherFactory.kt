@@ -21,12 +21,12 @@ package cn.codethink.xiaoming.permission
 import cn.codethink.xiaoming.api.LocalCoreApi
 import cn.codethink.xiaoming.util.Id
 import cn.codethink.xiaoming.util.InternalApi
-import cn.codethink.xiaoming.util.NamespaceIdMatcher
+import cn.codethink.xiaoming.util.NamespaceIdPattern
 
 @JvmOverloads
 @OptIn(InternalApi::class)
 @JvmName("createWildCardPermissionMatcher")
-fun WildCardPermissionMatcher(id: NamespaceIdMatcher, value: Boolean? = true): WildCardPermissionMatcher {
+fun WildCardPermissionMatcher(id: NamespaceIdPattern, value: Boolean? = true): WildCardPermissionPattern {
     return LocalCoreApi.getInstance().createWildCardPermissionMatcher(id, value)
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,11 @@
 package cn.codethink.xiaoming.action
 
 import cn.codethink.xiaoming.connection.Session
-import cn.codethink.xiaoming.util.Cause
-import cn.codethink.xiaoming.util.SubjectDescriptor
-import cn.codethink.xiaoming.packet.ReceiptPacket
+import cn.codethink.xiaoming.packet.ResponsePacket
 import cn.codethink.xiaoming.util.Action
+import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.Store
+import cn.codethink.xiaoming.util.SubjectDescriptor
 
 /**
  * The context of a request.
@@ -38,7 +38,7 @@ interface RequestContext<P, R> {
     val time: Long
     val cause: Cause?
     val raw: Store
-    val receipt: ReceiptPacket
+    val receipt: ResponsePacket
     val session: Session
 
     var disconnect: Cause?

@@ -22,15 +22,15 @@ import cn.codethink.xiaoming.api.CoreApi
 
 @OptIn(InternalApi::class)
 @JvmName("createNamespaceIdMatcher")
-fun NamespaceIdMatcher(group: SegmentIdMatcher, name: SegmentIdMatcher): NamespaceIdMatcher {
+fun NamespaceIdMatcher(group: SegmentIdPattern, name: SegmentIdPattern): NamespaceIdPattern {
     return CoreApi.getInstance().createNamespaceIdMatcher(group, name)
 }
 
 @OptIn(InternalApi::class)
-fun parseNamespaceIdMatcher(string: String): NamespaceIdMatcher {
+fun parseNamespaceIdMatcher(string: String): NamespaceIdPattern {
     return CoreApi.getInstance().parseNamespaceIdMatcher(string)
 }
 
-fun String.toNamespaceIdMatcher(): NamespaceIdMatcher {
+fun String.toNamespaceIdMatcher(): NamespaceIdPattern {
     return parseNamespaceIdMatcher(this)
 }

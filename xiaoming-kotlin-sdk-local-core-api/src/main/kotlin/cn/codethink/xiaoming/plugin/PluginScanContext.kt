@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,11 @@
 package cn.codethink.xiaoming.plugin
 
 /**
- * 检测当前宿主上所有已经安装的插件，或者打算安装的插件。
+ * 插件检测上下文。
  *
  * @author Chuanwise
  */
-fun interface PluginDetector {
-    /**
-     * 执行一次插件检测。
-     *
-     * 实现类通过 [PluginDetectContext.addPluginAllocator] 添加一个检测到的结果。
-     * 若 [detectAll] 函数正常退出，则所有添加的结果将被使用，否则已经添加的部分将会作废。
-     *
-     * @param context 插件检测上下文。
-     */
-    fun detectAll(context: PluginDetectContext)
+interface PluginScanContext {
+    fun registerPlugin(meta: PluginMeta, mode: PluginMode, allocator: PluginAllocator)
+    fun registerPlugin(meta: PluginMeta, mode: PluginMode, handler: PluginHandler)
 }

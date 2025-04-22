@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,19 +22,19 @@ package cn.codethink.xiaoming.util
  * @author Chuanwise
  */
 @NotStableForInheritance
-interface NamespaceIdMatcher {
+interface NamespaceIdPattern {
     companion object {
         @JvmStatic
         @JavaFriendlyApi
-        fun parse(string: String): NamespaceIdMatcher = parseNamespaceIdMatcher(string)
+        fun parse(string: String): NamespaceIdPattern = parseNamespaceIdMatcher(string)
 
         @JvmStatic
         @JavaFriendlyApi
-        fun of(group: SegmentIdMatcher, name: SegmentIdMatcher): NamespaceIdMatcher = NamespaceIdMatcher(group, name)
+        fun of(group: SegmentIdPattern, name: SegmentIdPattern): NamespaceIdPattern = NamespaceIdMatcher(group, name)
     }
 
-    val group: SegmentIdMatcher
-    val name: SegmentIdMatcher
+    val group: SegmentIdPattern
+    val name: SegmentIdPattern
 
     fun matches(namespaceId: NamespaceId): Boolean
 }

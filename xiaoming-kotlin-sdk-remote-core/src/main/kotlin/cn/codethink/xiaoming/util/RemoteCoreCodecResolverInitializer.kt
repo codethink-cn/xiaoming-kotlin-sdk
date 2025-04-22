@@ -17,24 +17,27 @@
 package cn.codethink.xiaoming.util
 
 import cn.codethink.xiaoming.packet.Packet
-import cn.codethink.xiaoming.packet.ReceiptPacket
-import cn.codethink.xiaoming.packet.ReceiptPacketImpl
 import cn.codethink.xiaoming.packet.RequestPacket
 import cn.codethink.xiaoming.packet.RequestPacketImpl
+import cn.codethink.xiaoming.packet.ResponsePacket
+import cn.codethink.xiaoming.packet.ResponsePacketImpl
+import cn.codethink.xiaoming.serialization.CodecResolverInitializeContext
 import cn.codethink.xiaoming.serialization.CodecResolverInitializer
-import cn.codethink.xiaoming.serialization.forward
-import cn.codethink.xiaoming.serialization.name
-import cn.codethink.xiaoming.serialization.names
+import cn.codethink.xiaoming.serialization.registering
 
 class RemoteCoreCodecResolverInitializer : CodecResolverInitializer {
-    override fun initialize(context: SerializationHandlerManagerInitializeContext) {
-        context.deserializers.registering(context.operation) {
-            names<Packet>(FIELD_TYPE) {
-                forward<RequestPacket, RequestPacketImpl>()
-                forward<ReceiptPacket, ReceiptPacketImpl>()
+    override fun initialize(context: CodecResolverInitializeContext) {
+        context.registering {
+            type<Packet> {
+                type {
+                    type<RequestPacket>("request") {
+                        hint<RequestPacketImpl>()
+                    }
 
-                name<RequestPacketImpl>()
-                name<ReceiptPacketImpl>()
+                    type<ResponsePacket>("response") {
+                        hint<ResponsePacketImpl>()
+                    }
+                }
             }
         }
     }

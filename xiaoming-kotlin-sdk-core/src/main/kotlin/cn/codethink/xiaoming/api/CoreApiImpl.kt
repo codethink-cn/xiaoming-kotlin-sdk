@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import cn.codethink.xiaoming.plugin.PluginStateChangePolicyImpl
 import cn.codethink.xiaoming.serialization.CodecResolver
 import cn.codethink.xiaoming.serialization.CodecResolverInitializer
 import cn.codethink.xiaoming.serialization.CoreCodecResolverInitializeContextImpl
-import cn.codethink.xiaoming.serialization.findAndApplyInitializers
 import cn.codethink.xiaoming.util.AndVersionMatcher
 import cn.codethink.xiaoming.util.AndVersionMatcherImpl
 import cn.codethink.xiaoming.util.Cause
@@ -42,16 +41,14 @@ import cn.codethink.xiaoming.util.GreaterThanVersionMatcherImpl
 import cn.codethink.xiaoming.util.Id
 import cn.codethink.xiaoming.util.IncludeVersionMatcher
 import cn.codethink.xiaoming.util.IncludeVersionMatcherImpl
-import cn.codethink.xiaoming.util.Operation
-import cn.codethink.xiaoming.util.OperationImpl
 import cn.codethink.xiaoming.util.InternalApi
 import cn.codethink.xiaoming.util.KebabCaseNamingPolicy
 import cn.codethink.xiaoming.util.LessThanOrEqualVersionMatcher
 import cn.codethink.xiaoming.util.LessThanOrEqualVersionMatcherImpl
 import cn.codethink.xiaoming.util.LessThanVersionMatcher
 import cn.codethink.xiaoming.util.LessThanVersionMatcherImpl
-import cn.codethink.xiaoming.util.SegmentIdMatcherImpl
-import cn.codethink.xiaoming.util.LiteralStringMatcherImpl
+import cn.codethink.xiaoming.util.LiteralSegmentIdPatternElement
+import cn.codethink.xiaoming.util.LiteralSegmentIdPatternElementImpl
 import cn.codethink.xiaoming.util.LongIdImpl
 import cn.codethink.xiaoming.util.LowerCamelCaseNamingPolicy
 import cn.codethink.xiaoming.util.LowerCaseNamingPolicy
@@ -60,37 +57,34 @@ import cn.codethink.xiaoming.util.MajorMinorVersionPrefixMatcher
 import cn.codethink.xiaoming.util.MajorMinorVersionPrefixMatcherImpl
 import cn.codethink.xiaoming.util.MajorVersionPrefixMatcher
 import cn.codethink.xiaoming.util.MajorVersionPrefixMatcherImpl
-import cn.codethink.xiaoming.util.MajorityOptionalWildCardStringMatcher
-import cn.codethink.xiaoming.util.MajorityRequiredWildCardStringMatcher
 import cn.codethink.xiaoming.util.MapStoreImpl
 import cn.codethink.xiaoming.util.MutableStore
 import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.NamespaceIdImpl
+import cn.codethink.xiaoming.util.NamespaceIdPattern
+import cn.codethink.xiaoming.util.NamespaceIdPatternImpl
 import cn.codethink.xiaoming.util.NamingPolicy
 import cn.codethink.xiaoming.util.NumericalId
+import cn.codethink.xiaoming.util.Operation
+import cn.codethink.xiaoming.util.OperationImpl
 import cn.codethink.xiaoming.util.OrVersionMatcher
 import cn.codethink.xiaoming.util.OrVersionMatcherImpl
-import cn.codethink.xiaoming.util.PluginSubjectDescriptorMatcherImpl
-import cn.codethink.xiaoming.util.MinorityOptionalWildCardStringMatcher
-import cn.codethink.xiaoming.util.MinorityRequiredWildCardStringMatcher
-import cn.codethink.xiaoming.util.NamespaceIdMatcher
-import cn.codethink.xiaoming.util.NamespaceIdMatcherImpl
-import cn.codethink.xiaoming.util.PluginSubjectDescriptorMatcher
 import cn.codethink.xiaoming.util.ReadOnlyStorePropertyImpl
 import cn.codethink.xiaoming.util.ReadWriteStorePropertyImpl
-import cn.codethink.xiaoming.util.Store
-import cn.codethink.xiaoming.util.RegexStringMatcherImpl
+import cn.codethink.xiaoming.util.RegexSegmentIdPatternElement
+import cn.codethink.xiaoming.util.RegexSegmentIdPatternElementImpl
 import cn.codethink.xiaoming.util.SegmentId
 import cn.codethink.xiaoming.util.SegmentIdImpl
-import cn.codethink.xiaoming.util.SegmentIdMatcher
+import cn.codethink.xiaoming.util.SegmentIdPattern
+import cn.codethink.xiaoming.util.SegmentIdPatternElement
+import cn.codethink.xiaoming.util.SegmentIdPatternImpl
 import cn.codethink.xiaoming.util.SnakeCaseNamingPolicy
+import cn.codethink.xiaoming.util.Store
 import cn.codethink.xiaoming.util.StringId
 import cn.codethink.xiaoming.util.StringIdImpl
-import cn.codethink.xiaoming.util.StringMatcher
 import cn.codethink.xiaoming.util.SubjectDescriptor
 import cn.codethink.xiaoming.util.Template
 import cn.codethink.xiaoming.util.TemplateImpl
-import cn.codethink.xiaoming.util.TestSubjectDescriptor
 import cn.codethink.xiaoming.util.TextualId
 import cn.codethink.xiaoming.util.Time
 import cn.codethink.xiaoming.util.TimeImpl
@@ -103,13 +97,10 @@ import cn.codethink.xiaoming.util.UpperSnakeCaseNamingPolicy
 import cn.codethink.xiaoming.util.Version
 import cn.codethink.xiaoming.util.VersionImpl
 import cn.codethink.xiaoming.util.VersionMatcher
-import cn.codethink.xiaoming.util.WildCardStringMatcher
-import cn.codethink.xiaoming.util.WildCardStringMatcherImpl
+import cn.codethink.xiaoming.util.WildCardSegmentIdPatternElement
 import cn.codethink.xiaoming.util.toNamespaceId
 import cn.codethink.xiaoming.util.toSegmentId
-import cn.codethink.xiaoming.util.toSegmentIdMatcher
-import cn.codethink.xiaoming.util.toSingleSegmentId
-import cn.codethink.xiaoming.util.toStringMatcher
+import cn.codethink.xiaoming.util.toSegmentIdPattern
 import cn.codethink.xiaoming.util.toVersion
 import cn.codethink.xiaoming.util.toVersionMatcher
 import org.apache.commons.text.StringEscapeUtils
@@ -187,10 +178,6 @@ class CoreApiImpl : CoreApi {
         }
     }
 
-    override fun createNamespaceId(group: SegmentId, name: String): NamespaceId {
-        return NamespaceIdImpl(group, name.toSingleSegmentId())
-    }
-
     override fun createNamespaceId(group: SegmentId, name: SegmentId): NamespaceId {
         return NamespaceIdImpl(group, name)
     }
@@ -248,7 +235,7 @@ class CoreApiImpl : CoreApi {
     override fun createUnixSecondsTime(seconds: Long): Time = TimeImpl(seconds * 1000)
 
     // PluginMetaMatcher
-    override fun parsePluginRequirement(string: String): PluginRequirement {
+    override fun createPluginRequirement(string: String): PluginRequirement {
         require(string.isNotEmpty()) {
             "Plugin requirement string should not be empty."
         }
@@ -291,82 +278,69 @@ class CoreApiImpl : CoreApi {
             string.substring(colonIndexAfterGroup + 1, colonIndexAfterName)
         }
 
-        val pluginId = createNamespaceId(group, name)
+        val pluginId = NamespaceId(group, name)
 
-        val atIndex = string.lastIndexOf('@', length)
-        val channel = if (atIndex == -1) {
-            null
-        } else {
-            string.substring(atIndex + 1, length).toStringMatcher()
+        val version = if (length == colonIndexAfterName + 1) null else {
+            string.substring(colonIndexAfterName + 1, length).toVersionMatcher()
         }
 
-        val atIndexOrLength = if (atIndex == -1) length else atIndex
-        val version = if (atIndexOrLength == colonIndexAfterName + 1) null else {
-            string.substring(colonIndexAfterName + 1, atIndexOrLength).toVersionMatcher()
-        }
-
-        return PluginRequirementImpl(pluginId, version, channel, optional, local)
+        return PluginRequirementImpl(pluginId, version, optional, local)
     }
 
     override fun createPluginRequirement(
         id: NamespaceId,
         version: VersionMatcher?,
-        channel: StringMatcher?,
         optional: Boolean,
         local: Boolean
     ): PluginRequirement {
-        return PluginRequirementImpl(id, version, channel, optional, local)
+        return PluginRequirementImpl(id, version, optional, local)
     }
 
-    override fun parseStringMatcher(string: String): StringMatcher {
-        if (string.isEmpty()) {
+    private fun String.toSegmentIdPatternElement(): SegmentIdPatternElement {
+        if (isEmpty()) {
             throw IllegalArgumentException("String matcher should not be empty.")
         }
 
-        when (string) {
-            "+" -> return MinorityRequiredWildCardStringMatcher
-            "?" -> return MinorityOptionalWildCardStringMatcher
-            "++" -> return MajorityRequiredWildCardStringMatcher
-            "??", "*" -> return MajorityOptionalWildCardStringMatcher
+        when (this) {
+            "+" -> return WildCardSegmentIdPatternElement.REQUIRED
+            "?" -> return WildCardSegmentIdPatternElement.OPTIONAL
+            "++" -> return WildCardSegmentIdPatternElement.GREEDY_REQUIRED
+            "??", "*" -> return WildCardSegmentIdPatternElement.GREEDY_OPTIONAL
             else -> {
-                if (string.startsWith("{") && string.endsWith("}")) {
-                    val pattern = string.substring(1, string.length - 1)
+                if (startsWith("{") && endsWith("}")) {
+                    val pattern = substring(1, length - 1)
                     if (pattern.isEmpty()) {
                         throw IllegalArgumentException("Empty regex string matcher.")
                     }
-                    return RegexStringMatcherImpl(Regex(pattern))
+                    return RegexSegmentIdPatternElementImpl(Regex(pattern))
                 }
-                if (string.startsWith("\"") && string.endsWith("\"")) {
-                    val unescaped = StringEscapeUtils.unescapeJson(string.substring(1, string.length - 1))
+                if (startsWith("\"") && endsWith("\"")) {
+                    val unescaped = StringEscapeUtils.unescapeJson(substring(1, length - 1))
                     if (unescaped.isEmpty()) {
                         throw IllegalArgumentException("Empty literal string matcher.")
                     }
-                    return LiteralStringMatcherImpl(unescaped)
+                    return LiteralSegmentIdPatternElementImpl(unescaped)
                 }
-                return LiteralStringMatcherImpl(string)
+                return LiteralSegmentIdPatternElementImpl(this)
             }
         }
     }
 
-    override fun createLiteralStringMatcher(string: String): StringMatcher {
-        return LiteralStringMatcherImpl(string)
+    override fun createLiteralSegmentIdPatternElement(string: String): LiteralSegmentIdPatternElement {
+        return LiteralSegmentIdPatternElementImpl(string)
     }
 
-    override fun createRegexStringMatcher(regex: String): StringMatcher {
-        return RegexStringMatcherImpl(Regex(regex))
+    override fun createRegexStringMatcher(regex: Regex): RegexSegmentIdPatternElement {
+        return RegexSegmentIdPatternElementImpl(regex)
     }
 
-    override fun createWildcardStringMatcher(majority: Boolean, optional: Boolean): WildCardStringMatcher {
-        return WildCardStringMatcherImpl.of(majority, optional)
-    }
-
-    // SegmentIdMatcher
-    override fun parseSegmentIdMatcher(string: String): SegmentIdMatcher {
+    // SegmentIdPattern
+    override fun createSegmentIdPattern(string: String): SegmentIdPattern {
         if (string.isEmpty()) {
             throw IllegalArgumentException("Segment matcher should not be empty.")
         }
 
-        val matchers = mutableListOf<StringMatcher>()
+        val matchers = mutableListOf<SegmentIdPatternElement>()
         val stringBuilder = StringBuilder()
 
         val acceptNewMatcherState = 0
@@ -428,7 +402,7 @@ class CoreApiImpl : CoreApi {
                                     escaping = false
                                 }
                             }
-                            matchers.add(stringBuilder.toString().toStringMatcher())
+                            matchers.add(stringBuilder.toString().toSegmentIdPatternElement())
                             stringBuilder.clear()
                             state = acceptNewMatcherState
                         }
@@ -448,23 +422,23 @@ class CoreApiImpl : CoreApi {
             }
 
             acceptingMatcherState -> {
-                matchers.add(stringBuilder.toString().toStringMatcher())
+                matchers.add(stringBuilder.toString().toSegmentIdPatternElement())
             }
         }
 
-        return SegmentIdMatcherImpl(matchers)
+        return SegmentIdPatternImpl(matchers)
     }
 
-    override fun createSegmentIdMatcher(matchers: List<StringMatcher>): SegmentIdMatcher {
-        return SegmentIdMatcherImpl(matchers)
+    override fun createSegmentIdPattern(matchers: List<SegmentIdPatternElement>): SegmentIdPattern {
+        return SegmentIdPatternImpl(matchers)
     }
 
     // NamespaceIdMatcher
-    override fun createNamespaceIdMatcher(group: SegmentIdMatcher, name: SegmentIdMatcher): NamespaceIdMatcher {
-        return NamespaceIdMatcherImpl(group, name)
+    override fun createNamespaceIdMatcher(group: SegmentIdPattern, name: SegmentIdPattern): NamespaceIdPattern {
+        return NamespaceIdPatternImpl(group, name)
     }
 
-    override fun parseNamespaceIdMatcher(string: String): NamespaceIdMatcher {
+    override fun parseNamespaceIdMatcher(string: String): NamespaceIdPattern {
         if (string.isEmpty()) {
             throw IllegalArgumentException("Namespace id matcher should not be empty.")
         }
@@ -472,15 +446,10 @@ class CoreApiImpl : CoreApi {
         val colonIndex = string.indexOf(':')
         require(colonIndex != -1) { "Namespace id matcher string should contain a colon." }
 
-        val group = string.substring(0, colonIndex).toSegmentIdMatcher()
-        val name = string.substring(colonIndex + 1).toSegmentIdMatcher()
+        val group = string.substring(0, colonIndex).toSegmentIdPattern()
+        val name = string.substring(colonIndex + 1).toSegmentIdPattern()
 
-        return NamespaceIdMatcherImpl(group, name)
-    }
-
-    // PluginSubjectDescriptorMatcher
-    override fun createPluginSubjectDescriptorMatcher(id: NamespaceIdMatcher): PluginSubjectDescriptorMatcher {
-        return PluginSubjectDescriptorMatcherImpl(id)
+        return NamespaceIdPatternImpl(group, name)
     }
 
     // VersionMatcher

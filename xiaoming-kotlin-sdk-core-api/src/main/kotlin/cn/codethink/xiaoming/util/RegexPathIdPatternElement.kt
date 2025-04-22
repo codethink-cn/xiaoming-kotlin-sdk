@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin
+package cn.codethink.xiaoming.util
+
+import java.util.regex.Pattern
 
 /**
- * 插件检测上下文。
+ * 匹配正则表达式的路径 ID 匹配器元素。
  *
  * @author Chuanwise
  */
-interface PluginDetectContext {
-    fun addPluginAllocator(meta: PluginMeta, mode: PluginMode, allocator: PluginAllocator)
+interface RegexSegmentIdPatternElement : SingleSegmentIdPatternElement {
+    fun toRegex(): Regex
+
+    @JavaFriendlyApi
+    fun toPattern(): Pattern
 }

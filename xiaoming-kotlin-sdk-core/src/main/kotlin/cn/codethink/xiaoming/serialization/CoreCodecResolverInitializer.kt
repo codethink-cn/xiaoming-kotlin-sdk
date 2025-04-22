@@ -16,19 +16,18 @@
 
 package cn.codethink.xiaoming.serialization
 
-import cn.codethink.xiaoming.serialization.dsl.fallbackHint
-import cn.codethink.xiaoming.serialization.dsl.hint
-import cn.codethink.xiaoming.serialization.dsl.registering
-import cn.codethink.xiaoming.serialization.dsl.string
-import cn.codethink.xiaoming.serialization.dsl.type
-import cn.codethink.xiaoming.serialization.dsl.typeField
 import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.CauseImpl
-import cn.codethink.xiaoming.util.PluginSubjectDescriptor
+import cn.codethink.xiaoming.util.Id
+import cn.codethink.xiaoming.util.PluginDescriptor
+import cn.codethink.xiaoming.util.PluginDescriptorImpl
+import cn.codethink.xiaoming.util.SegmentIdPattern
 import cn.codethink.xiaoming.util.SubjectDescriptor
 import cn.codethink.xiaoming.util.Version
-import cn.codethink.xiaoming.util.VersionImpl
 import cn.codethink.xiaoming.util.VersionMatcher
+import cn.codethink.xiaoming.util.toNamespaceId
+import cn.codethink.xiaoming.util.toNumericalId
+import cn.codethink.xiaoming.util.toSegmentIdPattern
 import cn.codethink.xiaoming.util.toVersion
 import cn.codethink.xiaoming.util.toVersionMatcher
 
@@ -36,45 +35,36 @@ class CoreCodecResolverInitializer : CodecResolverInitializer {
     override fun initialize(context: CodecResolverInitializeContext) {
         context.registering {
             type<VersionMatcher> {
-                string(
-                    serializer = { it.toString() },
-                    deserializer = { it.toVersionMatcher() }
-                )
+                string { it.toVersionMatcher() }
             }
-
-            typeField<SubjectDescriptor> {
-                hint<PluginSubjectDescriptor>("plugin")
+            type<SubjectDescriptor> {
+                type {
+                    hint<PluginDescriptor>("plugin")
+                }
             }
 
             type<Version> {
-                string(
-                    serializer = { it.toString() },
-                    deserializer = { it.toVersion() }
-                )
+                string { it.toVersion() }
             }
 
             type<Cause> {
-                fallbackHint<CauseImpl>()
+                fallback<CauseImpl>()
             }
 
-//            typeField<StringMatcher> {
-//                hint<WildCardStringMatcher>()
-//                hint<RegexStringMatcherImpl>()
-//                hint<LiteralStringMatcherImpl>()
-//            }
+            type<SegmentIdPattern> {
+                string { it.toSegmentIdPattern() }
+            }
 
-//            tokens<SegmentIdMatcher> {
-//                token<SegmentIdMatcherImpl>(JsonToken.VALUE_STRING)
-//            }
-//
-//            tokens<PluginSubjectDescriptorMatcher> {
-//                token<PluginSubjectDescriptorMatcherImpl>(JsonToken.VALUE_STRING)
-//            }
-//
-//            tokens<Id> {
-//                token<LongIdImpl>(JsonToken.VALUE_NUMBER_INT)
-//                token<StringId>(JsonToken.VALUE_STRING)
-//            }
+            type<PluginDescriptor> {
+                string(
+                    serializer = { it.id.toString() },
+                    deserializer = { PluginDescriptorImpl(it.toNamespaceId()) }
+                )
+            }
+
+            type<Id> {
+                int { it.toNumericalId() }
+            }
         }
     }
 }

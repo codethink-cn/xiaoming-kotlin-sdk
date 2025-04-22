@@ -18,7 +18,6 @@ package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.util.Id
 import cn.codethink.xiaoming.util.NotStableForInheritance
-import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
  * 继承权限检查器，用于检查权限是否可被继承自另一权限包。
@@ -29,14 +28,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName
  * @author Chuanwise
  */
 @NotStableForInheritance
-@JsonTypeName(InheritancePermissionMatcher.TYPE)
 interface InheritancePermissionMatcher : PermissionMatcher {
-    companion object {
-        const val TYPE = "inheritance"
-    }
-
-    override val type: String get() = TYPE
-
     /**
      * 被继承的权限包 ID。
      */

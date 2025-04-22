@@ -809,8 +809,7 @@ class CodecResolverImpl : CodecResolver {
             override fun serialize(value: T, generator: JsonGenerator, provider: SerializerProvider) {
                 val buffer = TokenBuffer(generator.codec, false)
                 val serializer = serializerCache.compute {
-//                    provider.findValueSerializer(type, property) as JsonSerializer<T>
-                    findContextualBeanSerializer(type, property, provider) as JsonSerializer<T>
+                    findContextualBeanSerializer(type, property, provider)
                 }
 
                 serializer.serialize(value, buffer, provider)
@@ -1164,8 +1163,6 @@ class CodecResolverImpl : CodecResolver {
                 }
 
                 val deserializer = deserializerCache.compute {
-                    val hintJavaType = context.constructType(type)
-//                    context.findContextualValueDeserializer(hintJavaType, property) as JsonDeserializer<out T>
                     findContextualValueDeserializer(type, property, context)
                 }
 

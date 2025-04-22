@@ -45,7 +45,7 @@ class SqlPermissionMatcherColumns(
                 inheritedId = getOrFail(matcherInheritedId).toNumericalId()
             )
 
-            WildCardPermissionMatcher.TYPE -> WildCardPermissionMatcher(
+            WildCardPermissionPattern.TYPE -> WildCardPermissionMatcher(
                 id = getOrFail(matcherWildCardId).toNamespaceIdMatcher(),
                 value = get(matcherWildCardValue)
             )
@@ -61,7 +61,7 @@ class SqlPermissionMatcherColumns(
                 set(matcherInheritedId, matcher.inheritedId.toNumericalId().toInt())
             }
 
-            is WildCardPermissionMatcher -> {
+            is WildCardPermissionPattern -> {
                 set(matcherType, InheritancePermissionMatcher.TYPE)
                 set(matcherWildCardId, matcher.id.toString())
                 set(matcherWildCardValue, matcher.value)

@@ -21,6 +21,6 @@ package cn.codethink.xiaoming.serialization
  *
  * @author Chuanwise
  */
-fun interface CodecResolverInitializer {
+interface CodecResolverInitializer {
     fun initialize(context: CodecResolverInitializeContext)
 }

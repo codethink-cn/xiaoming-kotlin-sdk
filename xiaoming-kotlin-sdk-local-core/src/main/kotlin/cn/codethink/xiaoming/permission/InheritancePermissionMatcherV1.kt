@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,8 @@ package cn.codethink.xiaoming.permission
 
 import cn.codethink.xiaoming.util.Id
 import cn.codethink.xiaoming.util.Tristate
-import com.fasterxml.jackson.annotation.JsonTypeName
 import kotlin.concurrent.getOrSet
 
-@JsonTypeName(InheritancePermissionMatcher.TYPE)
 class InheritancePermissionMatcherV1(
     override val inheritedId: Id
 ) : AbstractPermissionMatcher(), InheritancePermissionMatcher {
@@ -30,7 +28,6 @@ class InheritancePermissionMatcherV1(
         private val INHERITANCE_LOOP_CHECKER = ThreadLocal<ArrayDeque<Id>>()
     }
 
-    override val type: String = InheritancePermissionMatcher.TYPE
     override val version: String = "1"
 
     private inline fun <reified T> PermissionMatcherContext.withInheritanceLoopChecking(action: () -> T): T {
