@@ -16,21 +16,11 @@
 
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.Platform
-
 /**
- * 表示代码在当前进程里运行的插件。
+ * 表示一个代码不在当前进程运行的插件。
  *
  * @author Chuanwise
  */
-interface LocalPlugin : Plugin {
-    /**
-     * 插件是否被分配。
-     */
-    val isAllocated: Boolean
-
-    /**
-     * 本地插件可以为多个宿主服务，此为其对应于不同宿主的对象。
-     */
-    val instances: Map<Platform, Plugin>
+interface RemoteRunningPlugin : Plugin {
+    override val state: PluginState?
 }

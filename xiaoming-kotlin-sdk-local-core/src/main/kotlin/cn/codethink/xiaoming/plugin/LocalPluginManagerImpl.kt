@@ -708,27 +708,27 @@ class LocalPluginManagerImpl(
         }
     }
 
-    private inner class LocalPluginImpl(
+    private inner class LocalRunningPluginImpl(
         meta: PluginMeta,
         mode: PluginMode,
         allocator: PluginAllocator
-    ) : AbstractPlugin(meta, mode, allocator), LocalPlugin {
+    ) : AbstractPlugin(meta, mode, allocator), LocalRunningPlugin {
         override val isAllocated: Boolean get() = internalState >= PluginInternalState.ALLOCATED
 
         val mutableInstances: MutableMap<Platform, AbstractPlugin> = ConcurrentHashMap()
         override val instances: Map<Platform, AbstractPlugin> get() = mutableInstances.toMap()
     }
 
-    private inner class RemotePluginImpl(
+    private inner class RemoteRunningPluginImpl(
         meta: PluginMeta,
         mode: PluginMode,
         allocator: PluginAllocator
-    ) : AbstractPlugin(meta, mode, allocator), RemotePlugin
+    ) : AbstractPlugin(meta, mode, allocator), RemoteRunningPlugin
 
     override fun registerPlugin(meta: PluginMeta, mode: PluginMode, allocator: PluginAllocator): Plugin {
         val newPlugin = when (mode) {
-            PluginMode.LOCAL -> LocalPluginImpl(meta, mode, allocator)
-            PluginMode.REMOTE -> RemotePluginImpl(meta, mode, allocator)
+            PluginMode.LOCAL -> LocalRunningPluginImpl(meta, mode, allocator)
+            PluginMode.REMOTE -> RemoteRunningPluginImpl(meta, mode, allocator)
         }
 
         val nowPlugin = mutableAvailablePlugins.putIfAbsent(meta.id, meta.version, newPlugin)
