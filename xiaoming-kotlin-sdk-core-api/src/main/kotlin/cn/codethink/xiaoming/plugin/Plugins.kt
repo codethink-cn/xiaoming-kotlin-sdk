@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-@file:JvmName("PluginEntries")
+@file:JvmName("Plugins")
 
 package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.Version
 
-val PluginEntry.id: NamespaceId get() = meta.id
-val PluginEntry.name: String get() = meta.name
-val PluginEntry.version: Version get() = meta.version
+val Plugin.id: NamespaceId get() = meta.id
+val Plugin.name: String get() = meta.name
+val Plugin.version: Version get() = meta.version
 
-fun PluginEntry.toPluginRequirement() = meta.toPluginRequirement()
+fun Plugin.toPluginRequirement() = meta.toPluginRequirement()
 
-val PluginEntry.isRemotePlugin: Boolean get() = mode == PluginMode.REMOTE
-val PluginEntry.isLocalPlugin: Boolean get() = mode == PluginMode.LOCAL
+val Plugin.isRemotePlugin: Boolean get() = mode == PluginMode.REMOTE
+val Plugin.isLocalPlugin: Boolean get() = mode == PluginMode.LOCAL

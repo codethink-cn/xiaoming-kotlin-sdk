@@ -22,5 +22,5 @@ interface PluginAvailableVersion {
      */
     val meta: PluginMeta
 
-    suspend fun toPluginAllocator(): PluginAllocator
+    suspend fun toPluginAllocator(): PluginAllocator?
 }

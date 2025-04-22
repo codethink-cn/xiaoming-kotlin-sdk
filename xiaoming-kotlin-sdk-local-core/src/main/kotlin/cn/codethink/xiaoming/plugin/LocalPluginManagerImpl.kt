@@ -392,9 +392,8 @@ class LocalPluginManagerImpl(
 
         private var handlerNoLock: PluginHandler? = null
 
-        override val state: PluginState get() = internalState.state ?: error("Plugin is not allocated yet")
+        override val state: PluginState? get() = internalState.state
 
-        override val isAllocated: Boolean get() = internalState >= PluginInternalState.ALLOCATED
         override val isLoaded: Boolean get() = lock.read { internalStateNoLock >= PluginInternalState.LOADED && internalStateNoLock < PluginInternalState.UNLOADING }
         override val isEnabled: Boolean get() = internalState == PluginInternalState.ENABLED
 
@@ -714,8 +713,10 @@ class LocalPluginManagerImpl(
         mode: PluginMode,
         allocator: PluginAllocator
     ) : AbstractPlugin(meta, mode, allocator), LocalPlugin {
-        val mutableEntries: MutableMap<Platform, PluginEntry> = ConcurrentHashMap()
-        override val entries: Map<Platform, PluginEntry> get() = mutableEntries.toMap()
+        override val isAllocated: Boolean get() = internalState >= PluginInternalState.ALLOCATED
+
+        val mutableInstances: MutableMap<Platform, AbstractPlugin> = ConcurrentHashMap()
+        override val instances: Map<Platform, AbstractPlugin> get() = mutableInstances.toMap()
     }
 
     private inner class RemotePluginImpl(

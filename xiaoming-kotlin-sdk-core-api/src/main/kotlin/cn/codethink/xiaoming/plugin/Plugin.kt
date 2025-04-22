@@ -15,10 +15,13 @@
  */
 package cn.codethink.xiaoming.plugin
 
+import cn.codethink.xiaoming.Platform
+import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.NotStableForInheritance
 import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.PluginDescriptor
 import cn.codethink.xiaoming.util.Subject
+import cn.codethink.xiaoming.util.Version
 import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 
 /**
@@ -27,11 +30,46 @@ import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
  * @author Chuanwise
  */
 @NotStableForInheritance
-interface Plugin : Subject, PluginEntry {
+interface Plugin : Subject {
     /**
      * 插件描述符。
      */
     override val descriptor: PluginDescriptor
+
+    /**
+     * 插件元数据。
+     */
+    val meta: PluginMeta
+
+    /**
+     * 插件状态。若暂未分配，则为 `null`。
+     */
+    val state: PluginState?
+
+    /**
+     * 插件模式。
+     */
+    val mode: PluginMode
+
+    /**
+     * 插件服务的宿主。
+     */
+    val platform: Platform
+
+    /**
+     * 插件提供的功能列表。
+     */
+    val provisions: Map<NamespaceId, Version>
+
+    /**
+     * 插件是否被加载。
+     */
+    val isLoaded: Boolean
+
+    /**
+     * 插件是否被启用。
+     */
+    val isEnabled: Boolean
 
     @JvmBlockingBridge
     suspend fun load(operation: Operation, policy: PluginStateChangePolicy = PluginStateChangePolicy.STRICT)

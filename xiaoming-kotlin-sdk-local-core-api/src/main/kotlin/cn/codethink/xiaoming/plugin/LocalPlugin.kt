@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.Platform
-import cn.codethink.xiaoming.util.Operation
 
 /**
  * 表示代码在当前进程里运行的插件。
@@ -26,8 +25,12 @@ import cn.codethink.xiaoming.util.Operation
  */
 interface LocalPlugin : Plugin {
     /**
-     * 插件的运行时元数据。
-     * 本地插件可以为多个宿主服务，每个宿主都有一份元数据。
+     * 插件是否被分配。
      */
-    val entries: Map<Platform, PluginEntry>
+    val isAllocated: Boolean
+
+    /**
+     * 本地插件可以为多个宿主服务，此为其对应于不同宿主的对象。
+     */
+    val instances: Map<Platform, Plugin>
 }

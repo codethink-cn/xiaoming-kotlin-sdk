@@ -27,11 +27,6 @@ import cn.codethink.xiaoming.util.VersionMatcher
  */
 interface PluginMeta {
     /**
-     * 插件类型。
-     */
-    val type: String
-
-    /**
      * 插件 ID。
      */
     val id: NamespaceId
@@ -59,7 +54,7 @@ interface PluginMeta {
     /**
      * 插件所需的小明标准版本。
      */
-    val xiaoming: VersionMatcher?
+    val standard: VersionMatcher?
 
     /**
      * 插件能够提供的功能。
@@ -70,10 +65,4 @@ interface PluginMeta {
      * 插件的依赖。
      */
     val dependencies: List<PluginRequirement>
-
-    /**
-     * 插件的类别。
-     */
-    val categories: List<NamespaceId>
 }
-
