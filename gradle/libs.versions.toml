@@ -18,7 +18,7 @@ jackson = "2.17.1"
 ktorm = "4.1.1"
 hikari-cp = "5.1.0"
 
-build-config = "4.0.4"  # 404 is Good
+build-config = "4.0.4"  # 404 is good
 
 [libraries]
 kotlin-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin-coroutines" }
