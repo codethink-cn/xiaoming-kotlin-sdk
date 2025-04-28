@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,14 @@
 
 package cn.codethink.xiaoming.plugin.jvm.classic
 
-import cn.codethink.xiaoming.plugin.PluginMeta
-import cn.codethink.xiaoming.util.FIELD_TYPE
+import cn.codethink.xiaoming.serialization.CodecResolverInitializeContext
 import cn.codethink.xiaoming.serialization.CodecResolverInitializer
-import cn.codethink.xiaoming.serialization.name
-import cn.codethink.xiaoming.serialization.names
 
 /**
  * @see CodecResolverInitializer
  * @author Chuanwise
  */
 class LocalJvmClassicPluginCodecResolverInitializer : CodecResolverInitializer {
-    override fun initialize(context: SerializationHandlerManagerInitializeContext) {
-        context.deserializers.registering(context.operation) {
-            names<PluginMeta>(FIELD_TYPE) {
-                name<LocalJvmClassicPluginMeta>()
-            }
-        }
+    override fun initialize(context: CodecResolverInitializeContext) {
     }
 }

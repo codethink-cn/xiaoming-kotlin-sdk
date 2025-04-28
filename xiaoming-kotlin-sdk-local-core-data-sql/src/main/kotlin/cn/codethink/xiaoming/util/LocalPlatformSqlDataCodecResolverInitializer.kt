@@ -21,20 +21,26 @@ import cn.codethink.xiaoming.data.sql.HikariCpSqlDataSource
 import cn.codethink.xiaoming.data.sql.SqlDataSource
 import cn.codethink.xiaoming.data.sql.SqlPlatformDataConfiguration
 import cn.codethink.xiaoming.data.sql.v1.SqlPlatformDataConfigurationV1
+import cn.codethink.xiaoming.serialization.CodecResolverInitializeContext
 import cn.codethink.xiaoming.serialization.CodecResolverInitializer
-import cn.codethink.xiaoming.serialization.name
-import cn.codethink.xiaoming.serialization.names
+import cn.codethink.xiaoming.serialization.registering
 
 class LocalPlatformSqlDataCodecResolverInitializer : CodecResolverInitializer {
-    override fun initialize(context: SerializationHandlerManagerInitializeContext) {
-        context.deserializers.registering(context.operation) {
-            names<PlatformDataConfiguration>(FIELD_TYPE) {
-                names<SqlPlatformDataConfiguration>(FIELD_VERSION) {
-                    name<SqlPlatformDataConfigurationV1>()
+    override fun initialize(context: CodecResolverInitializeContext) {
+        context.registering {
+            type<PlatformDataConfiguration> {
+                type {
+                    type<SqlPlatformDataConfiguration>("sql") {
+                        version {
+                            hint<SqlPlatformDataConfigurationV1>("1")
+                        }
+                    }
                 }
             }
-            names<SqlDataSource>(FIELD_TYPE) {
-                name<HikariCpSqlDataSource>()
+            type<SqlDataSource> {
+                type {
+                    hint<HikariCpSqlDataSource>("hikari_cp")
+                }
             }
         }
     }

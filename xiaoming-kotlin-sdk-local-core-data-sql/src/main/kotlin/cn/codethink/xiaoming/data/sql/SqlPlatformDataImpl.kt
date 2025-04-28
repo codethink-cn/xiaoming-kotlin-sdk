@@ -39,7 +39,7 @@ class SqlPlatformDataImpl(
     private val platform: LocalPlatform,
     override val tableNamePrefix: String,
     override val database: Database,
-    override val objectMapper: ObjectMapper = platform.serializationManager.internalJsonObjectMapper
+    override val objectMapper: ObjectMapper = platform.serializationManager.jsonDataObjectMapper
 ) : SqlPlatformData {
     private val subjectDescriptorHandlers = MutableMapRegistrationManagerImpl<String, SqlSubjectHandler>()
 

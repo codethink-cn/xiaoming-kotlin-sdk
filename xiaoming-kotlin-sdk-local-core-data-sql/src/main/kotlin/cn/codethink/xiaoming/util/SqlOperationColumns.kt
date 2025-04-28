@@ -35,27 +35,10 @@ class SqlOperationColumns(
     private val operatorId = table.int("${columnNamePrefix}operator_id")
     private val cause = table.json<Cause>("${columnNamePrefix}cause", data.objectMapper)
     private val time = table.long("${columnNamePrefix}time")
-
-    private class LazyQueryOperation(
-        override val cause: Cause,
-        override val time: Time,
-        private val operatorId: Id,
-        override val id: Id,
-        private val data: SqlPlatformData
-    ) : Operation {
-        override val operator: SqlSubjectTable by lazy {
-            data.getSubjectById(operatorId) ?: throw NoSuchElementException("operator $operatorId not found")
-        }
-    }
+    private val operation = table.json<Operation>("${columnNamePrefix}operation", data.objectMapper)
 
     fun getOperation(row: QueryRowSet): Operation = with(row) {
-        LazyQueryOperation(
-            id = getOrFail(id).toUniversalUniqueId(),
-            operatorId = getOrFail(operatorId).toNumericalId(),
-            cause = getOrFail(cause),
-            time = getOrFail(time).toUnixMillisecondsTime(),
-            data = data
-        )
+        return getOrFail(operation)
     }
 
     fun setOperation(builder: AssignmentsBuilder, operation: Operation) = with(builder) {
@@ -64,5 +47,6 @@ class SqlOperationColumns(
         set(operatorId, data.getOrInsertSubjectId(operation.operator).toNumericalId().toInt())
         set(cause, operation.cause)
         set(time, operation.time.toUnixMilliseconds())
+        set(this@SqlOperationColumns.operation, operation)
     }
 }

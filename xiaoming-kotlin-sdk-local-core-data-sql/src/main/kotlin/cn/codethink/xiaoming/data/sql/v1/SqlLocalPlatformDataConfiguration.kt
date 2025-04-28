@@ -21,20 +21,12 @@ import cn.codethink.xiaoming.data.PlatformData
 import cn.codethink.xiaoming.data.sql.SqlDataSource
 import cn.codethink.xiaoming.data.sql.SqlPlatformDataConfiguration
 import cn.codethink.xiaoming.data.sql.SqlPlatformDataImpl
-import com.fasterxml.jackson.annotation.JsonTypeName
 import org.ktorm.database.Database
 
-@JsonTypeName(SqlPlatformDataConfigurationV1.VERSION)
 class SqlPlatformDataConfigurationV1(
     override val source: SqlDataSource,
     override val tableNamePrefix: String
 ) : SqlPlatformDataConfiguration {
-    companion object {
-        const val VERSION = "1"
-    }
-
-    override val version: String get() = VERSION
-
     override fun toData(platform: LocalPlatform): PlatformData {
         return SqlPlatformDataImpl(platform, tableNamePrefix, Database.connect(source.toDataSource()))
     }

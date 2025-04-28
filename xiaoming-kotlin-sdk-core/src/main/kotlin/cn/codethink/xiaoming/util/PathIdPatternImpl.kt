@@ -114,7 +114,7 @@ class SegmentIdPatternImpl(
 
         // 如果还剩下了一些段落，检查最后一个元素是否是通配符元素，且能匹配剩余所有元素
         if (segmentIndex < id.size) {
-            return when (val lastElement = elements.last()) {
+            return when (elements.last()) {
                 is SingleSegmentIdPatternElement -> false
                 is WildCardSegmentIdPatternElement -> true
                 else -> throwUnexpectedElementException(elements.size - 1)

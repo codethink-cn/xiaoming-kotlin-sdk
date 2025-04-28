@@ -17,20 +17,14 @@
 
 package cn.codethink.xiaoming.data.sql
 
-import com.fasterxml.jackson.annotation.JsonTypeName
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import java.util.Properties
 import javax.sql.DataSource
 
-@JsonTypeName(HikariCpSqlDataSource.TYPE)
 class HikariCpSqlDataSource(
     private val properties: Properties
 ) : SqlDataSource {
-    companion object {
-        const val TYPE = "hikari_cp"
-    }
-
     override fun toDataSource(): DataSource = HikariDataSource(
         HikariConfig(properties)
     )

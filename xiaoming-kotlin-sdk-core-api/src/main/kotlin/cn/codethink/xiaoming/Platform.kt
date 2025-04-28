@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import cn.codethink.xiaoming.event.EventManager
 import cn.codethink.xiaoming.exception.ExceptionManager
 import cn.codethink.xiaoming.permission.PermissionManager
 import cn.codethink.xiaoming.plugin.PluginManager
-import cn.codethink.xiaoming.serialization.CodecResolver
+import cn.codethink.xiaoming.serialization.SerializationManager
 import cn.codethink.xiaoming.util.Subject
 import kotlinx.coroutines.CoroutineScope
 
@@ -34,7 +34,7 @@ interface Platform : Subject, CoroutineScope {
 
     val exceptionManager: ExceptionManager
 
-    val serializationManager: CodecResolver
+    val serializationManager: SerializationManager
 
     val eventManager: EventManager
 

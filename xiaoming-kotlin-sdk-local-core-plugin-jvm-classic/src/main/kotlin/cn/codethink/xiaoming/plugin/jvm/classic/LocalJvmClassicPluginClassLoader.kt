@@ -52,13 +52,10 @@ class LocalJvmClassicPluginClassLoader(
     private val uniqueResourcesFilter: Predicate<String>,
     private var pluginClassLoaders: Map<NamespaceId, LocalJvmClassicPluginClassLoader>,
     private var logger: KLogger,
-    platform: LocalPlatform
+    private val platform: LocalPlatform
 ) : URLClassLoader(
     distributionFile.name, arrayOf(distributionFile.toURI().toURL()), null
 ), LocalJvmClassicPluginClassPath {
-    private val platformClassLoader by platform.pluginManager::platformClassLoader
-    private val environmentClassLoader by platform.pluginManager::environmentClassLoader
-
     override val pluginClassLoader: ClassLoader = this
 
     /**
@@ -75,20 +72,20 @@ class LocalJvmClassicPluginClassLoader(
      * 保护类加载器。依赖于此插件的其他本地插件也可以使用。
      */
     private val protectedLibrariesClassLoader = DynamicLibrariesClassLoader(
-        environmentClassLoader = environmentClassLoader,
+        environmentClassLoader = platform.pluginManager.environmentClassLoader,
         classLoaderName = "${distributionFile}[protected]",
         toStringName = "ProtectedLibrariesClassLoader(file=${distributionFile})",
-        parent = platformClassLoader
+        parent = platform.pluginManager.platformClassLoader
     )
 
     /**
      * 私有类加载器，只有插件自身可以使用。
      */
     private val privateLibrariesClassLoader = DynamicLibrariesClassLoader(
-        environmentClassLoader = environmentClassLoader,
+        environmentClassLoader = platform.pluginManager.environmentClassLoader,
         classLoaderName = "${distributionFile}[private]",
         toStringName = "ProtectedLibrariesClassLoader(file=${distributionFile})",
-        parent = platformClassLoader
+        parent = platform.pluginManager.platformClassLoader
     )
 
     /**
@@ -147,8 +144,8 @@ class LocalJvmClassicPluginClassLoader(
     override fun loadClass(name: String, resolve: Boolean): Class<*> = loadClass(name)
 
     override fun loadClass(name: String): Class<*> {
-        ignoreClassNotFoundException { platformClassLoader.loadClass(name) }?.let { return it }
-        ignoreClassNotFoundException { environmentClassLoader.loadClass(name) }?.let { return it }
+        ignoreClassNotFoundException { platform.pluginManager.platformClassLoader.loadClass(name) }?.let { return it }
+        ignoreClassNotFoundException { platform.pluginManager.environmentClassLoader.loadClass(name) }?.let { return it }
 
         // Load class in protected libraries.
         protectedLibrariesClassLoader.loadClassInThisClassLoaderAndLibraries(name)?.let { return it }
@@ -214,11 +211,11 @@ class LocalJvmClassicPluginClassLoader(
         privateLibrariesClassLoader.getResource(name)?.let { return it }
 
         if (resolveEnvironmentResources) {
-            environmentClassLoader.getResource(name)?.let { return it }
+            platform.pluginManager.environmentClassLoader.getResource(name)?.let { return it }
         }
 
         if (resolvePlatformResources) {
-            platformClassLoader.getResource(name)?.let { return it }
+            platform.pluginManager.platformClassLoader.getResource(name)?.let { return it }
         }
 
         return null
@@ -243,15 +240,15 @@ class LocalJvmClassicPluginClassLoader(
 
         // Find resource from environment class loader.
         if (resolveEnvironmentResources) {
-            if (!trace.add(environmentClassLoader)) {
-                sources += environmentClassLoader.getResources(name)
+            if (!trace.add(platform.pluginManager.environmentClassLoader)) {
+                sources += platform.pluginManager.environmentClassLoader.getResources(name)
             }
         }
 
         // Find resource from platform class loader.
         if (resolvePlatformResources) {
-            if (!trace.add(platformClassLoader)) {
-                sources += platformClassLoader.getResources(name)
+            if (!trace.add(platform.pluginManager.platformClassLoader)) {
+                sources += platform.pluginManager.platformClassLoader.getResources(name)
             }
         }
 

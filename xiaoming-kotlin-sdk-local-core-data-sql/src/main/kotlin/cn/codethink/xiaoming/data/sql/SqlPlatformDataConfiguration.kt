@@ -17,23 +17,13 @@
 package cn.codethink.xiaoming.data.sql
 
 import cn.codethink.xiaoming.data.PlatformDataConfiguration
-import com.fasterxml.jackson.annotation.JsonTypeName
 
 /**
  * SQL 本地平台数据配置。
  *
  * @author Chuanwise
  */
-@JsonTypeName(SqlPlatformDataConfiguration.TYPE)
 interface SqlPlatformDataConfiguration : PlatformDataConfiguration {
-    companion object {
-        const val TYPE = "sql"
-    }
-
-    override val type: String get() = TYPE
-
-    val version: String
-
     val source: SqlDataSource
     val tableNamePrefix: String
 }

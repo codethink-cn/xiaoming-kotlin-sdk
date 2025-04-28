@@ -22,7 +22,6 @@ import cn.codethink.xiaoming.util.InternalApi
 import cn.codethink.xiaoming.util.NumericalId
 import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.SqlOperationColumns
-import cn.codethink.xiaoming.util.TextualId
 import cn.codethink.xiaoming.util.getOrFail
 import cn.codethink.xiaoming.util.toNumericalId
 import org.ktorm.dsl.QueryRowSet
@@ -45,8 +44,8 @@ class SqlPermissionEntryTable(
 ) : BaseTable<PermissionEntry>(data.tableNamePrefix + "permission_entry") {
     private val id = int("id").primaryKey()
     private val bundleId = int("bundle_id")
-    private val matcherColumns = SqlPermissionMatcherColumns(data, this)
-    private val constraints = json<Map<String, PermissionConstraint>>("constraints")
+    private val matcher = json<PermissionMatcher>("matcher", data.objectMapper)
+    private val constraints = json<Map<String, PermissionConstraint>>("constraints", data.objectMapper)
     private val operationColumns = SqlOperationColumns(data, this)
     private val remove = boolean("remove")
 
@@ -54,7 +53,7 @@ class SqlPermissionEntryTable(
         PermissionEntryImpl(
             id = getOrFail(id).toNumericalId(),
             bundleId = getOrFail(bundleId).toNumericalId(),
-            matcher = matcherColumns.getPermissionMatcher(row),
+            matcher = getOrFail(matcher),
             constraints = getOrFail(constraints),
             operation = operationColumns.getOperation(row),
         )
@@ -93,7 +92,7 @@ class SqlPermissionEntryTable(
         bundleId as NumericalId
         return data.database.insert(this) {
             set(this@SqlPermissionEntryTable.bundleId, bundleId.toInt())
-            matcherColumns.setPermissionMatcher(this, matcher)
+            set(this@SqlPermissionEntryTable.matcher, matcher)
             set(this@SqlPermissionEntryTable.constraints, constraints)
             operationColumns.setOperation(this, operation)
         }.toNumericalId()
