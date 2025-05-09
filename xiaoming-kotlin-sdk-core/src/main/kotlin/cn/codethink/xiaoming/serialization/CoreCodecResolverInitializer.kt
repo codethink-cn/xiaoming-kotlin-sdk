@@ -24,18 +24,18 @@ import cn.codethink.xiaoming.util.PluginDescriptorImpl
 import cn.codethink.xiaoming.util.SegmentIdPattern
 import cn.codethink.xiaoming.util.SubjectDescriptor
 import cn.codethink.xiaoming.util.Version
-import cn.codethink.xiaoming.util.VersionMatcher
+import cn.codethink.xiaoming.util.VersionPattern
 import cn.codethink.xiaoming.util.toNamespaceId
 import cn.codethink.xiaoming.util.toNumericalId
 import cn.codethink.xiaoming.util.toSegmentIdPattern
 import cn.codethink.xiaoming.util.toVersion
-import cn.codethink.xiaoming.util.toVersionMatcher
+import cn.codethink.xiaoming.util.toVersionPattern
 
 class CoreCodecResolverInitializer : CodecResolverInitializer {
     override fun initialize(context: CodecResolverInitializeContext) {
         context.registering {
-            type<VersionMatcher> {
-                string { it.toVersionMatcher() }
+            type<VersionPattern> {
+                string { it.toVersionPattern() }
             }
             type<SubjectDescriptor> {
                 type {

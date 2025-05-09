@@ -63,9 +63,9 @@ class SerializationTest {
     }
 
     @Test
-    fun testVersionMatcher() {
-        objectMapper.assertEquals(">=0.1.0".toDoubleQuotedString(), VersionMatcher(">=0.1.0"))
-        objectMapper.assertEquals(">=0.1.0-SNAPSHOT".toDoubleQuotedString(), VersionMatcher(">=0.1.0-SNAPSHOT"))
+    fun testVersionPattern() {
+        objectMapper.assertEquals(">=0.1.0".toDoubleQuotedString(), VersionPattern(">=0.1.0"))
+        objectMapper.assertEquals(">=0.1.0-SNAPSHOT".toDoubleQuotedString(), VersionPattern(">=0.1.0-SNAPSHOT"))
     }
 
     interface Config

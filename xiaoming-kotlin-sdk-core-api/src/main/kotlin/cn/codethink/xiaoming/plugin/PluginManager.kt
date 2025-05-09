@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,7 @@
 package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.Platform
-import cn.codethink.xiaoming.util.DualKeyMap
 import cn.codethink.xiaoming.util.NamespaceId
-import cn.codethink.xiaoming.util.Version
 
 /**
  * 插件管理器。
@@ -44,6 +42,7 @@ interface PluginManager {
      * @return 插件。
      */
     fun getPlugin(namespaceId: NamespaceId): Plugin?
+
     fun getPluginOrFail(namespaceId: NamespaceId): Plugin {
         return getPlugin(namespaceId) ?: throw NoSuchElementException("No plugin found for namespace ID: $namespaceId")
     }

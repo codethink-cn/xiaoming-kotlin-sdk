@@ -19,6 +19,7 @@ package cn.codethink.xiaoming.plugin
 import cn.codethink.xiaoming.LocalPlatform
 import cn.codethink.xiaoming.util.DualKeyMap
 import cn.codethink.xiaoming.util.NamespaceId
+import cn.codethink.xiaoming.util.Registration
 import cn.codethink.xiaoming.util.Version
 
 /**
@@ -38,14 +39,13 @@ interface LocalPluginManager : PluginManager {
     val availablePlugins: DualKeyMap<NamespaceId, Version, Plugin>
 
     /**
-     * 平台类加载器，负责加载 `java.` 或 `cn.codethink.xiaoming.` 开头的所有插件必须共用的类。
+     * 插件源。
      */
-    val platformClassLoader: ClassLoader
-
-    /**
-     * 环境类加载器，负责加载虽然非核心类型，但所有插件也应当共用的类。
-     */
-    val environmentClassLoader: ClassLoader
+    val sources: List<Registration<PluginSource>>
 
     fun registerPlugin(meta: PluginMeta, mode: PluginMode, allocator: PluginAllocator): Plugin
+
+    fun resolvePlugin(requirement: PluginRequirement): Plugin
+
+    fun tryResolvePlugin()
 }

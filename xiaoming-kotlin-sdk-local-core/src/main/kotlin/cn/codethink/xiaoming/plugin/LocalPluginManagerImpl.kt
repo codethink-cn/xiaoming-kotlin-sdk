@@ -43,9 +43,6 @@ class LocalPluginManagerImpl(
     override val platform: LocalPlatform,
     configuration: LocalPlatformConfiguration
 ) : LocalPluginManager {
-    override val platformClassLoader: ClassLoader = configuration.platformClassLoader
-    override val environmentClassLoader: ClassLoader = configuration.environmentClassLoader
-
     private val logger: KLogger = KotlinLogging.logger(PluginManager::class.jvmName)
 
     // 具有相同 ID，但用不同版本的插件可以并存，但是只有一个可以加载。

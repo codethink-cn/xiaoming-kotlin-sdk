@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,15 @@ package cn.codethink.xiaoming
 
 import cn.codethink.xiaoming.event.LocalEventManager
 import cn.codethink.xiaoming.exception.LocalExceptionManager
+import cn.codethink.xiaoming.library.LibraryManager
 import cn.codethink.xiaoming.permission.LocalPermissionManager
 import cn.codethink.xiaoming.plugin.LocalPluginManager
 import cn.codethink.xiaoming.util.Operation
 
 interface LocalPlatform : Platform {
     val state: LocalPlatformState
+
+    val libraryManager: LibraryManager
 
     override val eventManager: LocalEventManager
     override val permissionManager: LocalPermissionManager

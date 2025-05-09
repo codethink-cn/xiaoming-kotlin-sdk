@@ -39,5 +39,5 @@ interface PluginSource {
      *
      * @param requirement 插件需求
      */
-    suspend fun getProviderPlugins(requirement: PluginRequirement): List<PluginAvailableVersion>
+    suspend fun getProviderPlugins(requirement: PluginDependency): List<PluginAvailableVersion>
 }

@@ -17,18 +17,21 @@
 package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.util.NamespaceId
-import cn.codethink.xiaoming.util.VersionMatcher
+import cn.codethink.xiaoming.util.VersionPattern
 
 /**
  * 插件需求。
  *
  * @author Chuanwise
- * @see PluginRequirement
- * @see PluginRequirement
  */
 interface PluginRequirement {
+    /**
+     * 插件 ID。
+     */
     val id: NamespaceId
-    val version: VersionMatcher?
-    val optional: Boolean
-    val local: Boolean
+
+    /**
+     * 插件版本。
+     */
+    val version: VersionPattern?
 }

@@ -25,7 +25,7 @@ val Plugin.id: NamespaceId get() = meta.id
 val Plugin.name: String get() = meta.name
 val Plugin.version: Version get() = meta.version
 
-fun Plugin.toPluginRequirement() = meta.toPluginRequirement()
+fun Plugin.toPluginDependency() = meta.toPluginDependency()
 
 val Plugin.isRemotePlugin: Boolean get() = mode == PluginMode.REMOTE
 val Plugin.isLocalPlugin: Boolean get() = mode == PluginMode.LOCAL

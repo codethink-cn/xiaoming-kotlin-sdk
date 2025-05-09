@@ -14,35 +14,31 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.permission
+package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.plugin.PluginRequirement
 import cn.codethink.xiaoming.util.NamespaceId
-import cn.codethink.xiaoming.util.VersionMatcher
+import cn.codethink.xiaoming.util.VersionPattern
 
-class PluginRequirementImpl(
+class PluginDependencyImpl(
     override val id: NamespaceId,
-    override val version: VersionMatcher?,
-    override val optional: Boolean,
-    override val local: Boolean
-) : PluginRequirement {
+    override val version: VersionPattern?,
+    override val required: Boolean
+) : PluginDependency {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as PluginRequirementImpl
+        other as PluginDependencyImpl
 
         if (id != other.id) return false
         if (version != other.version) return false
-        if (optional != other.optional) return false
-        return local == other.local
+        return required == other.required
     }
 
     private val hashCodeCache: Int = run {
         var result = id.hashCode()
         result = 31 * result + (version?.hashCode() ?: 0)
-        result = 31 * result + optional.hashCode()
-        result = 31 * result + local.hashCode()
+        result = 31 * result + required.hashCode()
         result
     }
 
@@ -50,13 +46,12 @@ class PluginRequirementImpl(
 
     private val toStringCache: String = buildString {
         append(id)
-        append(':')
-        append(version)
-        if (optional) {
-            append("?")
+        if (version != null) {
+            append(':')
+            append(version)
         }
-        if (local) {
-            append('!')
+        if (!required) {
+            append("?")
         }
     }
 

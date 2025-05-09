@@ -14,20 +14,30 @@
  * limitations under the License.
  */
 
-@file:JvmName("TextualIdFactory")
+package cn.codethink.xiaoming.plugin
 
-package cn.codethink.xiaoming.util
-
-import cn.codethink.xiaoming.api.CoreApi
+import cn.codethink.xiaoming.util.NamespaceId
+import cn.codethink.xiaoming.util.VersionPattern
 
 /**
- * 解析字符串为 ID。
+ * 插件依赖。
  *
- * 算法优先将字符串转化为 [NamespaceId]。若失败，尝试转化为 [SegmentId]。否则，使用 [StringId]。
- *
- * @param string 字符串
- * @return ID
+ * @author Chuanwise
+ * @see PluginDependency
  */
-@OptIn(InternalApi::class)
-@JvmName("parseTextualId")
-fun TextualId(string: String): TextualId = CoreApi.getInstance().createTextualId(string)
+interface PluginDependency {
+    /**
+     * 插件 ID。
+     */
+    val id: NamespaceId
+
+    /**
+     * 插件版本。
+     */
+    val version: VersionPattern?
+
+    /**
+     * 是否为必要依赖。
+     */
+    val required: Boolean
+}

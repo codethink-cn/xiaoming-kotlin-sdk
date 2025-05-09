@@ -28,14 +28,9 @@ interface LocalJvmPluginClassPath {
     var classAccessPolicy: LocalJvmPluginClassAccessPolicy
 
     /**
-     * 是否从平台类加载器中解析资源，默认为 `true`。
+     * 是否从系统类加载器中解析资源，默认为 `true`。
      */
-    var resolvePlatformResources: Boolean
-
-    /**
-     * 是否从环境类加载器中解析资源，默认为 `true`。
-     */
-    var resolveEnvironmentResources: Boolean
+    var resolveSystemResources: Boolean
 
     /**
      * 是否在类加载失败时，尝试从其他无关插件中解析类，默认为 `false`。

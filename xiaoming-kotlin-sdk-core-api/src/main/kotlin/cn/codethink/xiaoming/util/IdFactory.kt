@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,4 +24,4 @@ fun createNumericalId(number: Int): NumericalId = CoreApi.getInstance().createNu
 fun createNumericalId(number: Long): NumericalId = CoreApi.getInstance().createNumericalId(number)
 
 fun createSegmentId(segments: List<String>): SegmentId = CoreApi.getInstance().createSegmentId(segments)
-fun parseSegmentId(string: String): SegmentId = CoreApi.getInstance().parseSegmentId(string)
+fun parseSegmentId(string: String): SegmentId = CoreApi.getInstance().createSegmentId(string)

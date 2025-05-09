@@ -44,10 +44,5 @@ interface LocalPlatformConfiguration : PlatformConfiguration {
     /**
      * 用于插件类加载隔离时，加载 `java.` 和 `cn.codethink.xiaoming.` 开头的运行平台类。
      */
-    val platformClassLoader: ClassLoader
-
-    /**
-     * 用于插件类加载隔离时，加载其他虽然不是系统类和小明核心类，但也必须所有插件公用的类。
-     */
-    val environmentClassLoader: ClassLoader
+    val systemClassLoader: ClassLoader
 }

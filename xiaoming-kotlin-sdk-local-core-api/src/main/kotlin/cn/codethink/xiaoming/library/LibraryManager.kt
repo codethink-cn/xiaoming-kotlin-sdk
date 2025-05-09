@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-@file:JvmName("TextualIdFactory")
+package cn.codethink.xiaoming.library
 
-package cn.codethink.xiaoming.util
+interface LibraryManager {
+    /**
+     * 系统类加载器，加载 Java 和小明系统等系统类。
+     */
+    val systemClassLoader: ClassLoader
 
-import cn.codethink.xiaoming.api.CoreApi
+    /**
+     * 公共库加载器，插件之间共享的公共库。
+     */
+    val publicClassLoader: ClassLoader
 
-/**
- * 解析字符串为 ID。
- *
- * 算法优先将字符串转化为 [NamespaceId]。若失败，尝试转化为 [SegmentId]。否则，使用 [StringId]。
- *
- * @param string 字符串
- * @return ID
- */
-@OptIn(InternalApi::class)
-@JvmName("parseTextualId")
-fun TextualId(string: String): TextualId = CoreApi.getInstance().createTextualId(string)
+    /**
+     * 已经加载的公共库。
+     */
+    val publicLibraries: List<Library>
+}

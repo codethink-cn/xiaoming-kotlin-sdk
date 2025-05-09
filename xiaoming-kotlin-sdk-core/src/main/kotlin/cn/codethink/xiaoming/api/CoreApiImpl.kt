@@ -18,45 +18,49 @@ package cn.codethink.xiaoming.api
 
 import cn.codethink.xiaoming.event.EventPublishPolicy
 import cn.codethink.xiaoming.event.EventPublishPolicyImpl
-import cn.codethink.xiaoming.permission.PluginRequirementImpl
+import cn.codethink.xiaoming.message.Text
+import cn.codethink.xiaoming.message.TextImpl
+import cn.codethink.xiaoming.plugin.PluginDependency
+import cn.codethink.xiaoming.plugin.PluginDependencyImpl
 import cn.codethink.xiaoming.plugin.PluginRequirement
+import cn.codethink.xiaoming.plugin.PluginRequirementImpl
 import cn.codethink.xiaoming.plugin.PluginStateChangePolicy
 import cn.codethink.xiaoming.plugin.PluginStateChangePolicyImpl
 import cn.codethink.xiaoming.serialization.CodecResolver
 import cn.codethink.xiaoming.serialization.CodecResolverInitializer
 import cn.codethink.xiaoming.serialization.CoreCodecResolverInitializeContextImpl
-import cn.codethink.xiaoming.util.AndVersionMatcher
-import cn.codethink.xiaoming.util.AndVersionMatcherImpl
+import cn.codethink.xiaoming.util.AndVersionPattern
+import cn.codethink.xiaoming.util.AndVersionPatternImpl
 import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.CauseImpl
 import cn.codethink.xiaoming.util.Data
 import cn.codethink.xiaoming.util.DataImpl
 import cn.codethink.xiaoming.util.EmptyStoreImpl
-import cn.codethink.xiaoming.util.ExcludeVersionMatcher
-import cn.codethink.xiaoming.util.ExcludeVersionMatcherImpl
-import cn.codethink.xiaoming.util.GreaterThanOrEqualVersionMatcher
-import cn.codethink.xiaoming.util.GreaterThanOrEqualVersionMatcherImpl
-import cn.codethink.xiaoming.util.GreaterThanVersionMatcher
-import cn.codethink.xiaoming.util.GreaterThanVersionMatcherImpl
+import cn.codethink.xiaoming.util.ExcludeVersionPattern
+import cn.codethink.xiaoming.util.ExcludeVersionPatternImpl
+import cn.codethink.xiaoming.util.GreaterThanOrEqualVersionPattern
+import cn.codethink.xiaoming.util.GreaterThanOrEqualVersionPatternImpl
+import cn.codethink.xiaoming.util.GreaterThanVersionPattern
+import cn.codethink.xiaoming.util.GreaterThanVersionPatternImpl
 import cn.codethink.xiaoming.util.Id
-import cn.codethink.xiaoming.util.IncludeVersionMatcher
-import cn.codethink.xiaoming.util.IncludeVersionMatcherImpl
+import cn.codethink.xiaoming.util.IncludeVersionPattern
+import cn.codethink.xiaoming.util.IncludeVersionPatternImpl
 import cn.codethink.xiaoming.util.InternalApi
 import cn.codethink.xiaoming.util.KebabCaseNamingPolicy
-import cn.codethink.xiaoming.util.LessThanOrEqualVersionMatcher
-import cn.codethink.xiaoming.util.LessThanOrEqualVersionMatcherImpl
-import cn.codethink.xiaoming.util.LessThanVersionMatcher
-import cn.codethink.xiaoming.util.LessThanVersionMatcherImpl
+import cn.codethink.xiaoming.util.LessThanOrEqualVersionPattern
+import cn.codethink.xiaoming.util.LessThanOrEqualVersionPatternImpl
+import cn.codethink.xiaoming.util.LessThanVersionPattern
+import cn.codethink.xiaoming.util.LessThanVersionPatternImpl
 import cn.codethink.xiaoming.util.LiteralSegmentIdPatternElement
 import cn.codethink.xiaoming.util.LiteralSegmentIdPatternElementImpl
 import cn.codethink.xiaoming.util.LongIdImpl
 import cn.codethink.xiaoming.util.LowerCamelCaseNamingPolicy
 import cn.codethink.xiaoming.util.LowerCaseNamingPolicy
 import cn.codethink.xiaoming.util.LowerDotCaseNamingPolicy
-import cn.codethink.xiaoming.util.MajorMinorVersionPrefixMatcher
-import cn.codethink.xiaoming.util.MajorMinorVersionPrefixMatcherImpl
-import cn.codethink.xiaoming.util.MajorVersionPrefixMatcher
-import cn.codethink.xiaoming.util.MajorVersionPrefixMatcherImpl
+import cn.codethink.xiaoming.util.MajorMinorVersionPrefixPattern
+import cn.codethink.xiaoming.util.MajorMinorVersionPrefixPatternImpl
+import cn.codethink.xiaoming.util.MajorVersionPrefixPattern
+import cn.codethink.xiaoming.util.MajorVersionPrefixPatternImpl
 import cn.codethink.xiaoming.util.MapStoreImpl
 import cn.codethink.xiaoming.util.MutableStore
 import cn.codethink.xiaoming.util.NamespaceId
@@ -67,8 +71,8 @@ import cn.codethink.xiaoming.util.NamingPolicy
 import cn.codethink.xiaoming.util.NumericalId
 import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.OperationImpl
-import cn.codethink.xiaoming.util.OrVersionMatcher
-import cn.codethink.xiaoming.util.OrVersionMatcherImpl
+import cn.codethink.xiaoming.util.OrVersionPattern
+import cn.codethink.xiaoming.util.OrVersionPatternImpl
 import cn.codethink.xiaoming.util.ReadOnlyStorePropertyImpl
 import cn.codethink.xiaoming.util.ReadWriteStorePropertyImpl
 import cn.codethink.xiaoming.util.RegexSegmentIdPatternElement
@@ -96,13 +100,13 @@ import cn.codethink.xiaoming.util.UpperCamelCaseNamingPolicy
 import cn.codethink.xiaoming.util.UpperSnakeCaseNamingPolicy
 import cn.codethink.xiaoming.util.Version
 import cn.codethink.xiaoming.util.VersionImpl
-import cn.codethink.xiaoming.util.VersionMatcher
+import cn.codethink.xiaoming.util.VersionPattern
 import cn.codethink.xiaoming.util.WildCardSegmentIdPatternElement
 import cn.codethink.xiaoming.util.toNamespaceId
 import cn.codethink.xiaoming.util.toSegmentId
 import cn.codethink.xiaoming.util.toSegmentIdPattern
 import cn.codethink.xiaoming.util.toVersion
-import cn.codethink.xiaoming.util.toVersionMatcher
+import cn.codethink.xiaoming.util.toVersionPattern
 import org.apache.commons.text.StringEscapeUtils
 import java.lang.reflect.Type
 import java.util.ServiceLoader
@@ -114,11 +118,11 @@ import kotlin.properties.ReadWriteProperty
 @InternalApi
 class CoreApiImpl : CoreApi {
     // Id
-    override fun parseTextualId(string: String): TextualId {
+    override fun createTextualId(string: String): TextualId {
         return if (':' in string) {
-            parseNamespaceId(string)
+            createNamespaceId(string)
         } else if ('.' in string) {
-            parseSegmentId(string)
+            createSegmentId(string)
         } else {
             createStringId(string)
         }
@@ -156,7 +160,7 @@ class CoreApiImpl : CoreApi {
         return SegmentIdImpl(segments)
     }
 
-    override fun parseSegmentId(string: String): SegmentId {
+    override fun createSegmentId(string: String): SegmentId {
         return SegmentIdImpl(string.split("."))
     }
 
@@ -182,7 +186,7 @@ class CoreApiImpl : CoreApi {
         return NamespaceIdImpl(group, name)
     }
 
-    override fun parseNamespaceId(string: String): NamespaceId {
+    override fun createNamespaceId(string: String): NamespaceId {
         val split = string.split(':')
         require(split.size == 2) {
             "Namespace id string should contain exactly one colon."
@@ -234,35 +238,20 @@ class CoreApiImpl : CoreApi {
 
     override fun createUnixSecondsTime(seconds: Long): Time = TimeImpl(seconds * 1000)
 
-    // PluginMetaMatcher
-    override fun createPluginRequirement(string: String): PluginRequirement {
+    // PluginDependency
+    override fun createPluginDependency(string: String): PluginDependency {
         require(string.isNotEmpty()) {
-            "Plugin requirement string should not be empty."
+            "Plugin dependency string should not be empty."
         }
 
         var length = string.length
+        val required: Boolean
 
-        val optional: Boolean
-        val local: Boolean
-
-        if (string.endsWith("?!") || string.endsWith("!?")) {
-            local = true
-            optional = true
-
-            length -= 2
-        } else if (string.endsWith("!")) {
-            local = true
-            optional = false
-
-            length -= 1
-        } else if (string.endsWith("?")) {
-            local = false
-            optional = true
-
+        if (string.endsWith("?")) {
+            required = false
             length -= 1
         } else {
-            local = false
-            optional = false
+            required = true
         }
 
         val colonIndexAfterGroup = string.indexOf(':', 0)
@@ -281,19 +270,14 @@ class CoreApiImpl : CoreApi {
         val pluginId = NamespaceId(group, name)
 
         val version = if (length == colonIndexAfterName + 1) null else {
-            string.substring(colonIndexAfterName + 1, length).toVersionMatcher()
+            string.substring(colonIndexAfterName + 1, length).toVersionPattern()
         }
 
-        return PluginRequirementImpl(pluginId, version, optional, local)
+        return PluginDependencyImpl(pluginId, version, required)
     }
 
-    override fun createPluginRequirement(
-        id: NamespaceId,
-        version: VersionMatcher?,
-        optional: Boolean,
-        local: Boolean
-    ): PluginRequirement {
-        return PluginRequirementImpl(id, version, optional, local)
+    override fun createPluginDependency(id: NamespaceId, version: VersionPattern?, optional: Boolean): PluginDependency {
+        return PluginDependencyImpl(id, version, optional)
     }
 
     private fun String.toSegmentIdPatternElement(): SegmentIdPatternElement {
@@ -324,6 +308,37 @@ class CoreApiImpl : CoreApi {
                 return LiteralSegmentIdPatternElementImpl(this)
             }
         }
+    }
+
+    override fun createPluginRequirement(id: NamespaceId, version: VersionPattern?): PluginRequirement {
+        return PluginRequirementImpl(id, version)
+    }
+
+    override fun createPluginRequirement(string: String): PluginRequirement {
+        require(string.isNotEmpty()) {
+            "Plugin requirement string should not be empty."
+        }
+
+        val colonIndexAfterGroup = string.indexOf(':', 0)
+        require(colonIndexAfterGroup != -1) {
+            "Plugin requirement string should contain a colon."
+        }
+        val group = string.substring(0, colonIndexAfterGroup).toSegmentId()
+
+        val colonIndexAfterName = string.indexOf(':', colonIndexAfterGroup + 1)
+        val name = if (colonIndexAfterName == -1) {
+            string.substring(colonIndexAfterGroup + 1)
+        } else {
+            string.substring(colonIndexAfterGroup + 1, colonIndexAfterName)
+        }
+
+        val pluginId = NamespaceId(group, name)
+
+        val version = if (string.length == colonIndexAfterName + 1) null else {
+            string.substring(colonIndexAfterName + 1).toVersionPattern()
+        }
+
+        return PluginRequirementImpl(pluginId, version)
     }
 
     override fun createLiteralSegmentIdPatternElement(string: String): LiteralSegmentIdPatternElement {
@@ -452,22 +467,22 @@ class CoreApiImpl : CoreApi {
         return NamespaceIdPatternImpl(group, name)
     }
 
-    // VersionMatcher
-    override fun parseVersionMatcher(string: String): VersionMatcher {
+    // VersionPattern
+    override fun createVersionPattern(string: String): VersionPattern {
         string.apply {
             require(isNotEmpty()) { "Version matcher string must not be empty." }
 
             // 1. Tokenize.
             abstract class Token
             class OperatorToken(val operator: String) : Token()
-            class VersionMatcherToken(val matcher: String) : Token()
+            class VersionPatternToken(val matcher: String) : Token()
 
             val tokens = mutableListOf<Token>()
             val current = StringBuilder()
 
             fun String.toToken(): Token = when (this) {
                 "(", ")", "&", "|" -> OperatorToken(this)
-                else -> VersionMatcherToken(this)
+                else -> VersionPatternToken(this)
             }
             for (char in this) {
                 if (char == ' ') {
@@ -493,7 +508,7 @@ class CoreApiImpl : CoreApi {
             }
 
             // 2. Parse.
-            val stack = mutableListOf<VersionMatcher>()
+            val stack = mutableListOf<VersionPattern>()
             val operatorStack = mutableListOf<String>()
 
             // After tokenize, all possible tokens:
@@ -507,8 +522,8 @@ class CoreApiImpl : CoreApi {
 
                     stack.add(
                         when (operator) {
-                            "&" -> AndVersionMatcherImpl(left, right)
-                            "|" -> OrVersionMatcherImpl(left, right)
+                            "&" -> AndVersionPatternImpl(left, right)
+                            "|" -> OrVersionPatternImpl(left, right)
                             else -> throw IllegalArgumentException("Invalid operator: $operator")
                         }
                     )
@@ -521,7 +536,7 @@ class CoreApiImpl : CoreApi {
 
             for (token in tokens) {
                 when (token) {
-                    is VersionMatcherToken -> stack.add(parseSingleVersionMatcher(token.matcher))
+                    is VersionPatternToken -> stack.add(parseSingleVersionPattern(token.matcher))
                     is OperatorToken -> when (token.operator) {
                         "(" -> operatorStack.add(token.operator)
                         ")" -> popUntilLeftParentheses()
@@ -533,8 +548,8 @@ class CoreApiImpl : CoreApi {
 
                                 stack.add(
                                     when (operator) {
-                                        "&" -> AndVersionMatcherImpl(left, right)
-                                        "|" -> OrVersionMatcherImpl(left, right)
+                                        "&" -> AndVersionPatternImpl(left, right)
+                                        "|" -> OrVersionPatternImpl(left, right)
                                         else -> throw IllegalArgumentException("Invalid operator: $operator")
                                     }
                                 )
@@ -555,8 +570,8 @@ class CoreApiImpl : CoreApi {
 
                 stack.add(
                     when (operator) {
-                        "&" -> AndVersionMatcherImpl(left, right)
-                        "|" -> OrVersionMatcherImpl(left, right)
+                        "&" -> AndVersionPatternImpl(left, right)
+                        "|" -> OrVersionPatternImpl(left, right)
                         else -> throw IllegalArgumentException("Invalid operator: $operator")
                     }
                 )
@@ -570,38 +585,38 @@ class CoreApiImpl : CoreApi {
         }
     }
 
-    override fun createAndVersionMatcher(left: VersionMatcher, right: VersionMatcher): AndVersionMatcher =
-        AndVersionMatcherImpl(left, right)
+    override fun createAndVersionPattern(left: VersionPattern, right: VersionPattern): AndVersionPattern =
+        AndVersionPatternImpl(left, right)
 
-    override fun createOrVersionMatcher(left: VersionMatcher, right: VersionMatcher): OrVersionMatcher =
-        OrVersionMatcherImpl(left, right)
+    override fun createOrVersionPattern(left: VersionPattern, right: VersionPattern): OrVersionPattern =
+        OrVersionPatternImpl(left, right)
 
-    override fun createIncludeVersionMatcher(value: Version): IncludeVersionMatcher = IncludeVersionMatcherImpl(value)
+    override fun createIncludeVersionPattern(value: Version): IncludeVersionPattern = IncludeVersionPatternImpl(value)
 
-    override fun createExcludeVersionMatcher(value: Version): ExcludeVersionMatcher = ExcludeVersionMatcherImpl(value)
+    override fun createExcludeVersionPattern(value: Version): ExcludeVersionPattern = ExcludeVersionPatternImpl(value)
 
-    override fun createGreaterThanVersionMatcher(version: Version): GreaterThanVersionMatcher =
-        GreaterThanVersionMatcherImpl(version)
+    override fun createGreaterThanVersionPattern(version: Version): GreaterThanVersionPattern =
+        GreaterThanVersionPatternImpl(version)
 
-    override fun createGreaterThanOrEqualVersionMatcher(version: Version): GreaterThanOrEqualVersionMatcher =
-        GreaterThanOrEqualVersionMatcherImpl(version)
+    override fun createGreaterThanOrEqualVersionPattern(version: Version): GreaterThanOrEqualVersionPattern =
+        GreaterThanOrEqualVersionPatternImpl(version)
 
-    override fun createLessThanVersionMatcher(version: Version): LessThanVersionMatcher =
-        LessThanVersionMatcherImpl(version)
+    override fun createLessThanVersionPattern(version: Version): LessThanVersionPattern =
+        LessThanVersionPatternImpl(version)
 
-    override fun createLessThanOrEqualVersionMatcher(version: Version): LessThanOrEqualVersionMatcher =
-        LessThanOrEqualVersionMatcherImpl(version)
+    override fun createLessThanOrEqualVersionPattern(version: Version): LessThanOrEqualVersionPattern =
+        LessThanOrEqualVersionPatternImpl(version)
 
-    override fun createMajorVersionPrefixMatcher(major: Int): MajorVersionPrefixMatcher =
-        MajorVersionPrefixMatcherImpl(major)
+    override fun createMajorVersionPrefixPattern(major: Int): MajorVersionPrefixPattern =
+        MajorVersionPrefixPatternImpl(major)
 
-    override fun createMajorMinorVersionPrefixMatcher(major: Int, minor: Int): MajorMinorVersionPrefixMatcher =
-        MajorMinorVersionPrefixMatcherImpl(major, minor)
+    override fun createMajorMinorVersionPrefixPattern(major: Int, minor: Int): MajorMinorVersionPrefixPattern =
+        MajorMinorVersionPrefixPatternImpl(major, minor)
 
     private val MAJOR_PREFIX_REGEX = """(\d+)\.\+""".toRegex()
     private val MAJOR_MINOR_PREFIX_REGEX = """(\d+)\.(\d+)\.\+""".toRegex()
 
-    private fun parseSingleVersionMatcher(string: String): VersionMatcher {
+    private fun parseSingleVersionPattern(string: String): VersionPattern {
         string.apply {
             require(isNotEmpty()) {
                 "Version matcher string must not be empty."
@@ -609,58 +624,58 @@ class CoreApiImpl : CoreApi {
 
             return when {
                 // Not equal.
-                startsWith('!') || startsWith('~') -> ExcludeVersionMatcherImpl(substring(1).toVersion())
+                startsWith('!') || startsWith('~') -> ExcludeVersionPatternImpl(substring(1).toVersion())
 
                 // Greater than or equal.
-                startsWith(">=") || startsWith("=>") -> GreaterThanOrEqualVersionMatcherImpl(substring(2).toVersion())
-                startsWith(']') -> GreaterThanOrEqualVersionMatcherImpl(substring(1).toVersion())
+                startsWith(">=") || startsWith("=>") -> GreaterThanOrEqualVersionPatternImpl(substring(2).toVersion())
+                startsWith(']') -> GreaterThanOrEqualVersionPatternImpl(substring(1).toVersion())
 
-                endsWith("<=") || endsWith("=<") -> GreaterThanOrEqualVersionMatcherImpl(
+                endsWith("<=") || endsWith("=<") -> GreaterThanOrEqualVersionPatternImpl(
                     substring(
                         0,
                         length - 2
                     ).toVersion()
                 )
 
-                endsWith('[') -> GreaterThanOrEqualVersionMatcherImpl(substring(0, length - 1).toVersion())
+                endsWith('[') -> GreaterThanOrEqualVersionPatternImpl(substring(0, length - 1).toVersion())
 
                 // Greater than.
-                startsWith('>') -> GreaterThanVersionMatcherImpl(substring(1).toVersion())
-                endsWith('<') -> GreaterThanVersionMatcherImpl(substring(0, length - 1).toVersion())
+                startsWith('>') -> GreaterThanVersionPatternImpl(substring(1).toVersion())
+                endsWith('<') -> GreaterThanVersionPatternImpl(substring(0, length - 1).toVersion())
 
                 // Less than or equal.
-                startsWith("<=") || startsWith("=<") -> LessThanOrEqualVersionMatcherImpl(substring(2).toVersion())
-                startsWith('[') -> LessThanOrEqualVersionMatcherImpl(substring(1).toVersion())
+                startsWith("<=") || startsWith("=<") -> LessThanOrEqualVersionPatternImpl(substring(2).toVersion())
+                startsWith('[') -> LessThanOrEqualVersionPatternImpl(substring(1).toVersion())
 
-                endsWith(">=") || endsWith("=>") -> LessThanOrEqualVersionMatcherImpl(
+                endsWith(">=") || endsWith("=>") -> LessThanOrEqualVersionPatternImpl(
                     substring(
                         0,
                         length - 2
                     ).toVersion()
                 )
 
-                endsWith(']') -> LessThanOrEqualVersionMatcherImpl(substring(0, length - 1).toVersion())
+                endsWith(']') -> LessThanOrEqualVersionPatternImpl(substring(0, length - 1).toVersion())
 
                 // Less than.
-                startsWith('<') -> LessThanVersionMatcherImpl(substring(1).toVersion())
-                endsWith('>') -> LessThanVersionMatcherImpl(substring(0, length - 1).toVersion())
+                startsWith('<') -> LessThanVersionPatternImpl(substring(1).toVersion())
+                endsWith('>') -> LessThanVersionPatternImpl(substring(0, length - 1).toVersion())
 
                 // Prefix matcher.
                 endsWith(".+") -> when {
                     matches(MAJOR_MINOR_PREFIX_REGEX) -> {
                         val (major, minor) = MAJOR_MINOR_PREFIX_REGEX.matchEntire(this)!!.destructured
-                        MajorMinorVersionPrefixMatcherImpl(major.toInt(), minor.toInt())
+                        MajorMinorVersionPrefixPatternImpl(major.toInt(), minor.toInt())
                     }
 
                     matches(MAJOR_PREFIX_REGEX) -> {
                         val (major) = MAJOR_PREFIX_REGEX.matchEntire(this)!!.destructured
-                        MajorVersionPrefixMatcherImpl(major.toInt())
+                        MajorVersionPrefixPatternImpl(major.toInt())
                     }
 
                     else -> throw IllegalArgumentException("Invalid version prefix: $this")
                 }
 
-                else -> IncludeVersionMatcherImpl(toVersion())
+                else -> IncludeVersionPatternImpl(toVersion())
             }
         }
     }
@@ -683,7 +698,7 @@ class CoreApiImpl : CoreApi {
         return VersionImpl(major, minor, patch, preRelease, build)
     }
 
-    override fun parseVersion(string: String): Version = VERSION_STRING_REGEX.matchEntire(string)?.let { it ->
+    override fun createVersion(string: String): Version = VERSION_STRING_REGEX.matchEntire(string)?.let { it ->
         val (major, minor, patch, preRelease, build) = it.destructured
         VersionImpl(
             major.toInt(), minor.toInt(), patch.toInt(),
@@ -762,5 +777,10 @@ class CoreApiImpl : CoreApi {
         for (initializer in loader) {
             initializer.initialize(context)
         }
+    }
+
+    // Text
+    override fun createText(string: String): Text {
+        return TextImpl(string)
     }
 }

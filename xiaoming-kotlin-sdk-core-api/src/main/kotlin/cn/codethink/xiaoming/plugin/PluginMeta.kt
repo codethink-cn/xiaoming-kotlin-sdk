@@ -18,7 +18,7 @@ package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.Version
-import cn.codethink.xiaoming.util.VersionMatcher
+import cn.codethink.xiaoming.util.VersionPattern
 
 /**
  * 插件静态元数据。
@@ -54,15 +54,15 @@ interface PluginMeta {
     /**
      * 插件所需的小明标准版本。
      */
-    val standard: VersionMatcher?
+    val standard: VersionPattern?
 
     /**
      * 插件能够提供的功能。
      */
-    val provisions: List<PluginRequirement>
+    val provisions: List<PluginDependency>
 
     /**
      * 插件的依赖。
      */
-    val dependencies: List<PluginRequirement>
+    val dependencies: List<PluginDependency>
 }

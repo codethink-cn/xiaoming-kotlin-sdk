@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
 
 package cn.codethink.xiaoming.util
 
-abstract class AbstractVersionMatcher : VersionMatcher
+abstract class AbstractVersionPattern : VersionPattern
 
-class AndVersionMatcherImpl(
-    override val left: VersionMatcher,
-    override val right: VersionMatcher
-) : AbstractVersionMatcher(), AndVersionMatcher {
+class AndVersionPatternImpl(
+    override val left: VersionPattern,
+    override val right: VersionPattern
+) : AbstractVersionPattern(), AndVersionPattern {
     override fun matches(version: Version): Boolean {
         return left.matches(version) && right.matches(version)
     }
@@ -32,7 +32,7 @@ class AndVersionMatcherImpl(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as AndVersionMatcher
+        other as AndVersionPattern
 
         if (left != other.left) return false
         return right == other.right
@@ -47,10 +47,10 @@ class AndVersionMatcherImpl(
     override fun hashCode(): Int = hashCodeCache
 }
 
-class OrVersionMatcherImpl(
-    override val left: VersionMatcher,
-    override val right: VersionMatcher
-) : AbstractVersionMatcher(), OrVersionMatcher {
+class OrVersionPatternImpl(
+    override val left: VersionPattern,
+    override val right: VersionPattern
+) : AbstractVersionPattern(), OrVersionPattern {
     override fun matches(target: Version): Boolean {
         return left.matches(target) || right.matches(target)
     }
@@ -61,7 +61,7 @@ class OrVersionMatcherImpl(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as OrVersionMatcher
+        other as OrVersionPattern
 
         if (left != other.left) return false
         if (right != other.right) return false
@@ -79,18 +79,18 @@ class OrVersionMatcherImpl(
 }
 
 @JvmInline
-value class IncludeVersionMatcherImpl(
+value class IncludeVersionPatternImpl(
     override val value: Version
-) : IncludeVersionMatcher {
+) : IncludeVersionPattern {
     override fun matches(version: Version): Boolean {
         return value == version
     }
 }
 
 @JvmInline
-value class ExcludeVersionMatcherImpl(
+value class ExcludeVersionPatternImpl(
     override val value: Version
-) : ExcludeVersionMatcher {
+) : ExcludeVersionPattern {
     override fun matches(version: Version): Boolean {
         return version != value
     }
@@ -99,9 +99,9 @@ value class ExcludeVersionMatcherImpl(
 }
 
 @JvmInline
-value class GreaterThanVersionMatcherImpl(
+value class GreaterThanVersionPatternImpl(
     override val version: Version
-) : GreaterThanVersionMatcher {
+) : GreaterThanVersionPattern {
     override fun matches(target: Version): Boolean {
         return target > version
     }
@@ -110,9 +110,9 @@ value class GreaterThanVersionMatcherImpl(
 }
 
 @JvmInline
-value class GreaterThanOrEqualVersionMatcherImpl(
+value class GreaterThanOrEqualVersionPatternImpl(
     override val version: Version
-) : GreaterThanOrEqualVersionMatcher {
+) : GreaterThanOrEqualVersionPattern {
     override fun matches(version: Version): Boolean {
         return version >= this.version
     }
@@ -121,9 +121,9 @@ value class GreaterThanOrEqualVersionMatcherImpl(
 }
 
 @JvmInline
-value class LessThanVersionMatcherImpl(
+value class LessThanVersionPatternImpl(
     override val version: Version
-) : LessThanVersionMatcher {
+) : LessThanVersionPattern {
     override fun matches(version: Version): Boolean {
         return version < this.version
     }
@@ -132,9 +132,9 @@ value class LessThanVersionMatcherImpl(
 }
 
 @JvmInline
-value class LessThanOrEqualVersionMatcherImpl(
+value class LessThanOrEqualVersionPatternImpl(
     override val version: Version
-) : LessThanOrEqualVersionMatcher {
+) : LessThanOrEqualVersionPattern {
     override fun matches(version: Version): Boolean {
         return version <= this.version
     }
@@ -143,9 +143,9 @@ value class LessThanOrEqualVersionMatcherImpl(
 }
 
 @JvmInline
-value class MajorVersionPrefixMatcherImpl(
+value class MajorVersionPrefixPatternImpl(
     override val major: Int
-) : MajorVersionPrefixMatcher {
+) : MajorVersionPrefixPattern {
     override fun matches(version: Version): Boolean {
         return version.major == major
     }
@@ -153,10 +153,10 @@ value class MajorVersionPrefixMatcherImpl(
     override fun toString(): String = "$major.+"
 }
 
-data class MajorMinorVersionPrefixMatcherImpl(
+data class MajorMinorVersionPrefixPatternImpl(
     override val major: Int,
     override val minor: Int
-) : MajorMinorVersionPrefixMatcher {
+) : MajorMinorVersionPrefixPattern {
     override fun matches(version: Version): Boolean {
         return version.major == major && version.minor == minor
     }

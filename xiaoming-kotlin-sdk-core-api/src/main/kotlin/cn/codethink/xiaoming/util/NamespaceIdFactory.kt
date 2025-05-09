@@ -44,7 +44,7 @@ fun NamespaceId(group: String, name: SegmentId): NamespaceId {
 @OptIn(InternalApi::class)
 @JvmName("createNamespaceId")
 fun NamespaceId(string: String): NamespaceId {
-    return CoreApi.getInstance().parseNamespaceId(string)
+    return CoreApi.getInstance().createNamespaceId(string)
 }
 
 @JvmSynthetic

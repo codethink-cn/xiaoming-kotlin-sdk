@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,5 +43,5 @@ interface Version : Comparable<Version> {
     }
 }
 
-fun Version.toLiteralVersionMatcher() = IncludeVersionMatcher(this)
+fun Version.toLiteralVersionPattern() = IncludeVersionPattern(this)
 fun String.toVersion(): Version = Version(this)

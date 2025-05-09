@@ -17,30 +17,32 @@
 package cn.codethink.xiaoming.api
 
 import cn.codethink.xiaoming.event.EventPublishPolicy
+import cn.codethink.xiaoming.message.Text
+import cn.codethink.xiaoming.plugin.PluginDependency
 import cn.codethink.xiaoming.plugin.PluginRequirement
 import cn.codethink.xiaoming.plugin.PluginStateChangePolicy
 import cn.codethink.xiaoming.serialization.CodecResolver
-import cn.codethink.xiaoming.util.AndVersionMatcher
+import cn.codethink.xiaoming.util.AndVersionPattern
 import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.Data
-import cn.codethink.xiaoming.util.ExcludeVersionMatcher
-import cn.codethink.xiaoming.util.GreaterThanOrEqualVersionMatcher
-import cn.codethink.xiaoming.util.GreaterThanVersionMatcher
+import cn.codethink.xiaoming.util.ExcludeVersionPattern
+import cn.codethink.xiaoming.util.GreaterThanOrEqualVersionPattern
+import cn.codethink.xiaoming.util.GreaterThanVersionPattern
 import cn.codethink.xiaoming.util.Id
-import cn.codethink.xiaoming.util.IncludeVersionMatcher
+import cn.codethink.xiaoming.util.IncludeVersionPattern
 import cn.codethink.xiaoming.util.InternalApi
-import cn.codethink.xiaoming.util.LessThanOrEqualVersionMatcher
-import cn.codethink.xiaoming.util.LessThanVersionMatcher
+import cn.codethink.xiaoming.util.LessThanOrEqualVersionPattern
+import cn.codethink.xiaoming.util.LessThanVersionPattern
 import cn.codethink.xiaoming.util.LiteralSegmentIdPatternElement
-import cn.codethink.xiaoming.util.MajorMinorVersionPrefixMatcher
-import cn.codethink.xiaoming.util.MajorVersionPrefixMatcher
+import cn.codethink.xiaoming.util.MajorMinorVersionPrefixPattern
+import cn.codethink.xiaoming.util.MajorVersionPrefixPattern
 import cn.codethink.xiaoming.util.MutableStore
 import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.NamespaceIdPattern
 import cn.codethink.xiaoming.util.NamingPolicy
 import cn.codethink.xiaoming.util.NumericalId
 import cn.codethink.xiaoming.util.Operation
-import cn.codethink.xiaoming.util.OrVersionMatcher
+import cn.codethink.xiaoming.util.OrVersionPattern
 import cn.codethink.xiaoming.util.RegexSegmentIdPatternElement
 import cn.codethink.xiaoming.util.SegmentId
 import cn.codethink.xiaoming.util.SegmentIdPattern
@@ -54,7 +56,7 @@ import cn.codethink.xiaoming.util.Time
 import cn.codethink.xiaoming.util.TypeMeta
 import cn.codethink.xiaoming.util.UniversalUniqueId
 import cn.codethink.xiaoming.util.Version
-import cn.codethink.xiaoming.util.VersionMatcher
+import cn.codethink.xiaoming.util.VersionPattern
 import java.lang.reflect.Type
 import java.util.UUID
 import java.util.function.Supplier
@@ -74,7 +76,7 @@ interface CoreApi {
     }
 
     // Id
-    fun parseTextualId(string: String): TextualId
+    fun createTextualId(string: String): TextualId
 
     fun toStringId(id: Id): StringId
     fun toNumericalId(id: Id): NumericalId
@@ -82,7 +84,7 @@ interface CoreApi {
     fun toSegmentId(id: Id): SegmentId
 
     fun createSegmentId(segments: List<String>): SegmentId
-    fun parseSegmentId(string: String): SegmentId
+    fun createSegmentId(string: String): SegmentId
 
     fun createNumericalId(value: Long): NumericalId
     fun createNumericalId(value: Int): NumericalId
@@ -90,7 +92,7 @@ interface CoreApi {
     fun createStringId(string: String): StringId
 
     fun createNamespaceId(group: SegmentId, name: SegmentId): NamespaceId
-    fun parseNamespaceId(string: String): NamespaceId
+    fun createNamespaceId(string: String): NamespaceId
 
     fun createRandomUniversalUniqueId(): UniversalUniqueId
     fun createUniversalUniqueId(uuid: UUID): UniversalUniqueId
@@ -121,14 +123,16 @@ interface CoreApi {
     fun createUnixSecondsTime(seconds: Long): Time
 
     // PluginMetaMatcher
-    fun createPluginRequirement(string: String): PluginRequirement
+    fun createPluginDependency(string: String): PluginDependency
 
-    fun createPluginRequirement(
+    fun createPluginDependency(
         id: NamespaceId,
-        version: VersionMatcher?,
-        optional: Boolean,
-        local: Boolean
-    ): PluginRequirement
+        version: VersionPattern?,
+        optional: Boolean
+    ): PluginDependency
+
+    fun createPluginRequirement(string: String): PluginRequirement
+    fun createPluginRequirement(id: NamespaceId, version: VersionPattern?): PluginRequirement
 
     // StringMatcher
     fun createLiteralSegmentIdPatternElement(string: String): LiteralSegmentIdPatternElement
@@ -142,23 +146,23 @@ interface CoreApi {
     fun createNamespaceIdMatcher(group: SegmentIdPattern, name: SegmentIdPattern): NamespaceIdPattern
     fun parseNamespaceIdMatcher(string: String): NamespaceIdPattern
 
-    // VersionMatcher
-    fun parseVersionMatcher(string: String): VersionMatcher
+    // VersionPattern
+    fun createVersionPattern(string: String): VersionPattern
 
-    fun createAndVersionMatcher(left: VersionMatcher, right: VersionMatcher): AndVersionMatcher
-    fun createOrVersionMatcher(left: VersionMatcher, right: VersionMatcher): OrVersionMatcher
-    fun createIncludeVersionMatcher(value: Version): IncludeVersionMatcher
-    fun createExcludeVersionMatcher(value: Version): ExcludeVersionMatcher
-    fun createGreaterThanVersionMatcher(version: Version): GreaterThanVersionMatcher
-    fun createGreaterThanOrEqualVersionMatcher(version: Version): GreaterThanOrEqualVersionMatcher
-    fun createLessThanVersionMatcher(version: Version): LessThanVersionMatcher
-    fun createLessThanOrEqualVersionMatcher(version: Version): LessThanOrEqualVersionMatcher
-    fun createMajorVersionPrefixMatcher(major: Int): MajorVersionPrefixMatcher
-    fun createMajorMinorVersionPrefixMatcher(major: Int, minor: Int): MajorMinorVersionPrefixMatcher
+    fun createAndVersionPattern(left: VersionPattern, right: VersionPattern): AndVersionPattern
+    fun createOrVersionPattern(left: VersionPattern, right: VersionPattern): OrVersionPattern
+    fun createIncludeVersionPattern(value: Version): IncludeVersionPattern
+    fun createExcludeVersionPattern(value: Version): ExcludeVersionPattern
+    fun createGreaterThanVersionPattern(version: Version): GreaterThanVersionPattern
+    fun createGreaterThanOrEqualVersionPattern(version: Version): GreaterThanOrEqualVersionPattern
+    fun createLessThanVersionPattern(version: Version): LessThanVersionPattern
+    fun createLessThanOrEqualVersionPattern(version: Version): LessThanOrEqualVersionPattern
+    fun createMajorVersionPrefixPattern(major: Int): MajorVersionPrefixPattern
+    fun createMajorMinorVersionPrefixPattern(major: Int, minor: Int): MajorMinorVersionPrefixPattern
 
     // Version
     fun createVersion(major: Int, minor: Int, patch: Int, preRelease: String?, build: String?): Version
-    fun parseVersion(string: String): Version
+    fun createVersion(string: String): Version
 
     // Store
     fun createMapStore(map: MutableMap<String, Any?>): MutableStore
@@ -189,4 +193,7 @@ interface CoreApi {
 
     // CodecResolver
     fun findAndApplyInitializers(resolver: CodecResolver, operation: Operation, classLoader: ClassLoader?, replace: Boolean, visible: Boolean)
+
+    // Text
+    fun createText(string: String): Text
 }

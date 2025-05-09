@@ -14,20 +14,12 @@
  * limitations under the License.
  */
 
-@file:JvmName("TextualIdFactory")
-
-package cn.codethink.xiaoming.util
-
-import cn.codethink.xiaoming.api.CoreApi
+package cn.codethink.xiaoming.message
 
 /**
- * 解析字符串为 ID。
+ * 消息：所收在线消息和所构造消息内容的公共父类。
  *
- * 算法优先将字符串转化为 [NamespaceId]。若失败，尝试转化为 [SegmentId]。否则，使用 [StringId]。
  *
- * @param string 字符串
- * @return ID
  */
-@OptIn(InternalApi::class)
-@JvmName("parseTextualId")
-fun TextualId(string: String): TextualId = CoreApi.getInstance().createTextualId(string)
+interface Message {
+}
