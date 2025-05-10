@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,8 +36,8 @@ abstract class AbstractLocalPlatform(
     override val coroutineContext: CoroutineContext = scope.coroutineContext
 
     private val lock = ReentrantReadWriteLock()
-    private var stateNoLock: LocalPlatformState = LocalPlatformState.ALLOCATED
-    override val state: LocalPlatformState get() = lock.read { stateNoLock }
+    private var stateNoLock: PlatformState = PlatformState.ALLOCATED
+    override val state: PlatformState get() = lock.read { stateNoLock }
 
     val data: PlatformData = configuration.data
     val logger: KLogger = configuration.logger
@@ -47,10 +47,10 @@ abstract class AbstractLocalPlatform(
     private inline fun withStartingState(action: () -> Unit) {
         lock.write {
             stateNoLock = when (stateNoLock) {
-                LocalPlatformState.ALLOCATED -> LocalPlatformState.STARTING
-                LocalPlatformState.STARTING -> error("Concurrent start of platform is not allowed.")
-                LocalPlatformState.STARTED -> error("Platform is already started.")
-                LocalPlatformState.STARTING_ERRORED -> error("Platform is starting, but an error occurred.")
+                PlatformState.ALLOCATED -> PlatformState.STARTING
+                PlatformState.STARTING -> error("Concurrent start of platform is not allowed.")
+                PlatformState.STARTED -> error("Platform is already started.")
+                PlatformState.STARTING_ERRORED -> error("Platform is starting, but an error occurred.")
                 else -> error("Unexpected state while starting: $stateNoLock.")
             }
         }
@@ -60,20 +60,20 @@ abstract class AbstractLocalPlatform(
 
             lock.write {
                 stateNoLock = when (stateNoLock) {
-                    LocalPlatformState.STARTING -> LocalPlatformState.STARTED
-                    LocalPlatformState.STARTING_ERRORED -> LocalPlatformState.STARTING_ERRORED
+                    PlatformState.STARTING -> PlatformState.STARTED
+                    PlatformState.STARTING_ERRORED -> PlatformState.STARTING_ERRORED
 
-                    LocalPlatformState.STARTED -> error("Platform is already started.")
+                    PlatformState.STARTED -> error("Platform is already started.")
                     else -> error("Unexpected state after starting: $stateNoLock.")
                 }
             }
         } catch (e: Exception) {
             lock.write {
                 stateNoLock = when (stateNoLock) {
-                    LocalPlatformState.STARTING,
-                    LocalPlatformState.STARTING_ERRORED -> LocalPlatformState.STARTING_ERRORED
+                    PlatformState.STARTING,
+                    PlatformState.STARTING_ERRORED -> PlatformState.STARTING_ERRORED
 
-                    LocalPlatformState.STARTED -> error("Platform is already started.")
+                    PlatformState.STARTED -> error("Platform is already started.")
                     else -> error("Unexpected state while trying to set staring error: $stateNoLock.")
                 }
             }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,24 @@
 
 package cn.codethink.xiaoming.util
 
+import java.util.function.BiFunction
+import java.util.function.Function
+
 @InternalApi
-interface MutableDualKeyMap<K1, K2, V> : DualKeyMap<K1, K2, V> {
-    interface MutableEntry<K1, K2, V> : DualKeyMap.Entry<K1, K2, V> {
-        override var value: V
-    }
+interface MutableDualKeyMap<F, S, V> : DualKeyMap<F, S, V>, MutableMap<Pair<F, S>, V> {
+    override val firstKeys: MutableSet<F>
+    override val firstEntries: MutableSet<MutableMap.MutableEntry<F, MutableMap<S, V>>>
 
-    fun put(key1: K1, key2: K2, value: V): V?
-    fun put(key: DualKeyMap.Key<K1, K2>, value: V): V?
+    fun put(firstKey: F, secondKey: S, value: V): V?
+    operator fun set(firstKey: F, secondKey: S, value: V): V? = put(firstKey, secondKey, value)
 
-    operator fun set(key1: K1, key2: K2, value: V): V? = put(key1, key2, value)
-    operator fun set(key: DualKeyMap.Key<K1, K2>, value: V): V? = put(key, value)
+    fun putIfAbsent(firstKey: F, secondKey: S, value: V): V?
 
-    fun putIfAbsent(key: DualKeyMap.Key<K1, K2>, value: V): V?
-    fun putIfAbsent(key1: K1, key2: K2, value: V): V?
+    fun computeIfAbsent(firstKey: F, secondKey: S, mappingFunction: Function<in Pair<F, S>, out V>): V
+    fun computeIfPresent(firstKey: F, secondKey: S, remappingFunction: BiFunction<in Pair<F, S>, in V & Any, out V?>): V?
 
-    fun remove(key1: K1, key2: K2): V?
-    fun remove(key: DualKeyMap.Key<K1, K2>): V?
+    fun remove(firstKey: F, secondKey: S): V?
+    override fun clone(): MutableDualKeyMap<F, S, V>
 
-    fun clear()
+    fun putAllFromFirstMap(map: Map<F, Map<S, V>>)
 }

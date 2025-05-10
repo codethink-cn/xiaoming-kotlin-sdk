@@ -21,8 +21,8 @@ import cn.codethink.xiaoming.util.Jacksons
 import cn.codethink.xiaoming.util.MutableRegistration
 import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.compareAndRemove
-import cn.codethink.xiaoming.util.computeIfReplace
 import cn.codethink.xiaoming.util.inheritedClasses
+import cn.codethink.xiaoming.util.putIfAbsentOrReplace
 import cn.codethink.xiaoming.util.withValue
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
@@ -285,7 +285,7 @@ class CodecResolverImpl : CodecResolver {
             replace: Boolean
         ): MutableRegistration<TypeHint<F, T>>? {
             val registration = MutableHintRegistrationImpl(TypeHintImpl(type, hint), operation)
-            return hints.computeIfReplace(type, registration, replace) as MutableRegistration<TypeHint<F, T>>?
+            return hints.putIfAbsentOrReplace(type, replace, registration) as MutableRegistration<TypeHint<F, T>>?
         }
 
         fun <T> findTypeHint(type: Class<T>): MutableRegistration<TypeHint<T, out T>>? {
@@ -451,7 +451,7 @@ class CodecResolverImpl : CodecResolver {
             lock.write {
                 val typeHints = hints.computeIfAbsent(type) { HashMap() }
                 val nameFieldHints = typeHints.computeIfAbsent(nameField) { HashMap() }
-                return nameFieldHints.computeIfReplace(name, registration, replace) as MutableHintRegistration<F, T>?
+                return nameFieldHints.putIfAbsentOrReplace(name, replace, registration) as MutableHintRegistration<F, T>?
             }
         }
 

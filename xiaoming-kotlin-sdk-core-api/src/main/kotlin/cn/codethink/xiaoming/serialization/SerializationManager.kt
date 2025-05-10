@@ -18,15 +18,15 @@ package cn.codethink.xiaoming.serialization
 
 import com.fasterxml.jackson.databind.ObjectMapper
 
+/**
+ * 序列化管理器。
+ *
+ * @author Chuanwise
+ */
 interface SerializationManager {
     val handlerManager: CodecResolver
 
-    val prettyJsonFileObjectMapper: ObjectMapper
     val jsonFileObjectMapper: ObjectMapper
-
-    val prettyJsonDataObjectMapper: ObjectMapper
     val jsonDataObjectMapper: ObjectMapper
-
-    val prettyYamlFileObjectMapper: ObjectMapper
     val yamlFileObjectMapper: ObjectMapper
 }

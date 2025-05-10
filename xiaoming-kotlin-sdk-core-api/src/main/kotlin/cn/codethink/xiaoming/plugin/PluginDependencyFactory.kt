@@ -40,7 +40,7 @@ import cn.codethink.xiaoming.util.toLiteralVersionPattern
  * BNF 范式如下：
  *
  * ```bnf
- * requirement := id versionMatcherOrAny channelOrAny modeOrAny;
+ * pattern := id versionMatcherOrAny channelOrAny modeOrAny;
  *
  * versionMatcherOrAny :=                           // 任意版本。
  *                     | ":" versionMatcher         // 指定范围的版本。
@@ -70,17 +70,19 @@ fun PluginDependency(string: String): PluginDependency {
 fun PluginDependency(
     id: NamespaceId,
     version: VersionPattern? = null,
-    required: Boolean = true
+    required: Boolean = true,
+    original: Boolean = false
 ): PluginDependency {
-    return CoreApi.getInstance().createPluginDependency(id, version, required)
+    return CoreApi.getInstance().createPluginDependency(id, version, required, original)
 }
 
 @JvmSynthetic
-fun PluginMeta.toPluginDependency(required: Boolean = true): PluginDependency {
+fun PluginMeta.toPluginDependency(required: Boolean = true, original: Boolean = false): PluginDependency {
     return PluginDependency(
         id = id,
         version = version.toLiteralVersionPattern(),
-        required = required
+        required = required,
+        original = original
     )
 }
 

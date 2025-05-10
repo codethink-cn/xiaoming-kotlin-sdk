@@ -42,11 +42,6 @@ interface PluginMeta {
     val version: Version
 
     /**
-     * 插件的更新频道。
-     */
-    val channel: String
-
-    /**
      * 插件描述。
      */
     val description: String?
@@ -59,7 +54,7 @@ interface PluginMeta {
     /**
      * 插件能够提供的功能。
      */
-    val provisions: List<PluginDependency>
+    val provisions: List<PluginProvision>
 
     /**
      * 插件的依赖。

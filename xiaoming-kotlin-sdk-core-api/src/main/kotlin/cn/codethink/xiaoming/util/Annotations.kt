@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,10 @@ import java.lang.annotation.Inherited
 @Inherited
 @MustBeDocumented
 @Retention(AnnotationRetention.BINARY)
-@RequiresOptIn(level = RequiresOptIn.Level.ERROR)
+@RequiresOptIn(
+    level = RequiresOptIn.Level.ERROR,
+    message = "This API is for internal use only. It may be changed at any time without warning. It is not recommended to use this API unless you are developing Xiaoming itself or a plugin that is closely related to Xiaoming."
+)
 annotation class InternalApi
 
 /**
@@ -57,7 +60,10 @@ annotation class JavaFriendlyApi
 @Inherited
 @MustBeDocumented
 @Retention(AnnotationRetention.BINARY)
-@RequiresOptIn(level = RequiresOptIn.Level.WARNING)
+@RequiresOptIn(
+    level = RequiresOptIn.Level.WARNING,
+    message = "This API is experimental and may be changed at any time. It is not recommended to use this API in production."
+)
 annotation class ExperimentalApi
 
 /**

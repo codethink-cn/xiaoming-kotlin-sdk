@@ -27,5 +27,6 @@ val Plugin.version: Version get() = meta.version
 
 fun Plugin.toPluginDependency() = meta.toPluginDependency()
 
-val Plugin.isRemotePlugin: Boolean get() = mode == PluginMode.REMOTE
-val Plugin.isLocalPlugin: Boolean get() = mode == PluginMode.LOCAL
+fun Plugin.isMatchedBy(pattern: PluginPattern): Boolean {
+    return pattern.matches(this)
+}

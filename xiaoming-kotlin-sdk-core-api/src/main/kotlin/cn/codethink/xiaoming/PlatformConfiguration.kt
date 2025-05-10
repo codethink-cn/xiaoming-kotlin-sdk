@@ -16,8 +16,9 @@
 
 package cn.codethink.xiaoming
 
-import cn.codethink.xiaoming.serialization.CodecResolver
+import cn.codethink.xiaoming.serialization.SerializationManager
 import cn.codethink.xiaoming.util.SubjectDescriptor
+import io.github.oshai.kotlinlogging.KLogger
 import kotlinx.coroutines.Job
 import java.util.Locale
 import kotlin.coroutines.CoroutineContext
@@ -28,6 +29,11 @@ import kotlin.coroutines.CoroutineContext
  * @author Chuanwise
  */
 interface PlatformConfiguration {
+    /**
+     * 平台的日志。
+     */
+    val logger: KLogger
+
     /**
      * 平台的地区设置，决定语言等信息。
      */
@@ -51,5 +57,5 @@ interface PlatformConfiguration {
     /**
      * 平台的序列化管理器。
      */
-    val serializationManager: CodecResolver
+    val serializationManager: SerializationManager
 }

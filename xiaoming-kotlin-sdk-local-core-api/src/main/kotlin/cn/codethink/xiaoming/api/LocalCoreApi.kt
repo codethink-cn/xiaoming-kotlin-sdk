@@ -18,6 +18,7 @@ package cn.codethink.xiaoming.api
 
 import cn.codethink.xiaoming.permission.InheritancePermissionMatcher
 import cn.codethink.xiaoming.permission.WildCardPermissionPattern
+import cn.codethink.xiaoming.plugin.PluginConfiguration
 import cn.codethink.xiaoming.util.Id
 import cn.codethink.xiaoming.util.InternalApi
 import cn.codethink.xiaoming.util.NamespaceIdPattern
@@ -37,4 +38,6 @@ interface LocalCoreApi {
     // PermissionMatchers
     fun createWildCardPermissionMatcher(id: NamespaceIdPattern, value: Boolean?): WildCardPermissionPattern
     fun createInheritancePermissionMatcher(inheritedId: Id): InheritancePermissionMatcher
+
+    fun createPluginConfiguration(sharable: Boolean, debug: Boolean, crashOnRemoved: Boolean): PluginConfiguration
 }

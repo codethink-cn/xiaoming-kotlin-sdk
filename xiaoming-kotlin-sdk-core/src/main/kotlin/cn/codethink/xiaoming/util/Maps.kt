@@ -53,10 +53,25 @@ fun <K, V> MutableMap<K, V>.compareAndRemove(key: K, expect: V): Boolean {
  * @return 操作后该键对应的值引用。若成功替换，返回新值引用，否则返回当前对应于该键的值引用。
  */
 @InternalApi
-fun <K, V> MutableMap<K, V>.computeIfReplace(key: K, newValue: V, replace: Boolean): V? {
+fun <K, V> MutableMap<K, V>.putIfAbsentOrReplace(key: K, replace: Boolean, newValue: V): V? {
+    return computeIfAbsentOrReplace(key, replace) { newValue }
+}
+
+/**
+ * 原子地比较 [Map] 中的值，并在此前没有值，或 [replace] 为 `true` 时替换它。
+ *
+ * @param K 键类型
+ * @param V 值类型
+ * @param key 键
+ * @param replace 是否在存在老值时替换
+ * @param mappingFunction 映射函数
+ * @return 操作后该键对应的值引用。若成功替换，返回新值引用，否则返回当前对应于该键的值引用。
+ */
+@InternalApi
+fun <K, V> MutableMap<K, V>.computeIfAbsentOrReplace(key: K, replace: Boolean, mappingFunction: (K) -> V): V? {
     return compute(key) { _, oldValue ->
         if (oldValue === null || replace) {
-            newValue
+            mappingFunction(key)
         } else {
             oldValue
         }

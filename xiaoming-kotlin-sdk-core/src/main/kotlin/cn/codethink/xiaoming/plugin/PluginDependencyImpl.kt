@@ -22,8 +22,9 @@ import cn.codethink.xiaoming.util.VersionPattern
 class PluginDependencyImpl(
     override val id: NamespaceId,
     override val version: VersionPattern?,
-    override val required: Boolean
-) : PluginDependency {
+    override val required: Boolean,
+    override val original: Boolean
+) : AbstractPluginPattern(id, version), PluginDependency {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -32,6 +33,7 @@ class PluginDependencyImpl(
 
         if (id != other.id) return false
         if (version != other.version) return false
+        if (original != other.original) return false
         return required == other.required
     }
 
@@ -39,6 +41,7 @@ class PluginDependencyImpl(
         var result = id.hashCode()
         result = 31 * result + (version?.hashCode() ?: 0)
         result = 31 * result + required.hashCode()
+        result = 31 * result + original.hashCode()
         result
     }
 
@@ -53,7 +56,12 @@ class PluginDependencyImpl(
         if (!required) {
             append("?")
         }
+        if (original) {
+            append("!")
+        }
     }
 
-    override fun toString(): String = toStringCache
+    override fun toString(): String {
+        return toStringCache
+    }
 }

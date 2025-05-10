@@ -22,13 +22,16 @@ import cn.codethink.xiaoming.message.Text
 import cn.codethink.xiaoming.message.TextImpl
 import cn.codethink.xiaoming.plugin.PluginDependency
 import cn.codethink.xiaoming.plugin.PluginDependencyImpl
-import cn.codethink.xiaoming.plugin.PluginRequirement
-import cn.codethink.xiaoming.plugin.PluginRequirementImpl
-import cn.codethink.xiaoming.plugin.PluginStateChangePolicy
-import cn.codethink.xiaoming.plugin.PluginStateChangePolicyImpl
+import cn.codethink.xiaoming.plugin.PluginMeta
+import cn.codethink.xiaoming.plugin.PluginMetaImpl
+import cn.codethink.xiaoming.plugin.PluginPattern
+import cn.codethink.xiaoming.plugin.PluginPatternImpl
+import cn.codethink.xiaoming.plugin.PluginProvision
+import cn.codethink.xiaoming.plugin.PluginProvisionImpl
+import cn.codethink.xiaoming.plugin.ProvisionPriority
 import cn.codethink.xiaoming.serialization.CodecResolver
+import cn.codethink.xiaoming.serialization.CodecResolverInitializeContextImpl
 import cn.codethink.xiaoming.serialization.CodecResolverInitializer
-import cn.codethink.xiaoming.serialization.CoreCodecResolverInitializeContextImpl
 import cn.codethink.xiaoming.util.AndVersionPattern
 import cn.codethink.xiaoming.util.AndVersionPatternImpl
 import cn.codethink.xiaoming.util.Cause
@@ -38,6 +41,7 @@ import cn.codethink.xiaoming.util.DataImpl
 import cn.codethink.xiaoming.util.EmptyStoreImpl
 import cn.codethink.xiaoming.util.ExcludeVersionPattern
 import cn.codethink.xiaoming.util.ExcludeVersionPatternImpl
+import cn.codethink.xiaoming.util.ExperimentalApi
 import cn.codethink.xiaoming.util.GreaterThanOrEqualVersionPattern
 import cn.codethink.xiaoming.util.GreaterThanOrEqualVersionPatternImpl
 import cn.codethink.xiaoming.util.GreaterThanVersionPattern
@@ -73,6 +77,8 @@ import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.OperationImpl
 import cn.codethink.xiaoming.util.OrVersionPattern
 import cn.codethink.xiaoming.util.OrVersionPatternImpl
+import cn.codethink.xiaoming.util.PluginDescriptor
+import cn.codethink.xiaoming.util.PluginDescriptorImpl
 import cn.codethink.xiaoming.util.ReadOnlyStorePropertyImpl
 import cn.codethink.xiaoming.util.ReadWriteStorePropertyImpl
 import cn.codethink.xiaoming.util.RegexSegmentIdPatternElement
@@ -116,6 +122,7 @@ import kotlin.properties.ReadOnlyProperty
 import kotlin.properties.ReadWriteProperty
 
 @InternalApi
+@OptIn(ExperimentalApi::class)
 class CoreApiImpl : CoreApi {
     // Id
     override fun createTextualId(string: String): TextualId {
@@ -244,40 +251,43 @@ class CoreApiImpl : CoreApi {
             "Plugin dependency string should not be empty."
         }
 
-        var length = string.length
+        val length: Int
         val required: Boolean
+        val original: Boolean
 
-        if (string.endsWith("?")) {
+        if (string.endsWith("?!") || string.endsWith("!?")) {
             required = false
-            length -= 1
+            original = true
+            length = string.length - 2
+        } else if (string.endsWith("?")) {
+            required = false
+            original = false
+            length = string.length - 1
+        } else if (string.endsWith("!")) {
+            required = true
+            original = true
+            length = string.length - 1
         } else {
             required = true
+            original = false
+            length = string.length
         }
 
-        val colonIndexAfterGroup = string.indexOf(':', 0)
-        require(colonIndexAfterGroup != -1) {
-            "Plugin dependency string should contain a colon."
-        }
-        val group = string.substring(0, colonIndexAfterGroup).toSegmentId()
-
-        val colonIndexAfterName = string.indexOf(':', colonIndexAfterGroup + 1)
-        val name = if (colonIndexAfterName == -1) {
-            string.substring(colonIndexAfterGroup + 1)
-        } else {
-            string.substring(colonIndexAfterGroup + 1, colonIndexAfterName)
-        }
-
-        val pluginId = NamespaceId(group, name)
-
-        val version = if (length == colonIndexAfterName + 1) null else {
-            string.substring(colonIndexAfterName + 1, length).toVersionPattern()
-        }
-
-        return PluginDependencyImpl(pluginId, version, required)
+        val pattern = createPluginPattern(string.substring(0, length))
+        return PluginDependencyImpl(pattern.id, pattern.version, required, original)
     }
 
-    override fun createPluginDependency(id: NamespaceId, version: VersionPattern?, optional: Boolean): PluginDependency {
-        return PluginDependencyImpl(id, version, optional)
+    override fun createPluginDependency(id: NamespaceId, version: VersionPattern?, required: Boolean, original: Boolean): PluginDependency {
+        return PluginDependencyImpl(id, version, required, original)
+    }
+
+    override fun createPluginProvision(string: String): PluginProvision {
+        val pattern = createPluginPattern(string)
+        return PluginProvisionImpl(pattern.id, pattern.version, ProvisionPriority.NORMAL)
+    }
+
+    override fun createPluginProvision(id: NamespaceId, version: VersionPattern?, priority: ProvisionPriority): PluginProvision {
+        return PluginProvisionImpl(id, version, priority)
     }
 
     private fun String.toSegmentIdPatternElement(): SegmentIdPatternElement {
@@ -310,18 +320,18 @@ class CoreApiImpl : CoreApi {
         }
     }
 
-    override fun createPluginRequirement(id: NamespaceId, version: VersionPattern?): PluginRequirement {
-        return PluginRequirementImpl(id, version)
+    override fun createPluginPattern(id: NamespaceId, version: VersionPattern?): PluginPattern {
+        return PluginPatternImpl(id, version)
     }
 
-    override fun createPluginRequirement(string: String): PluginRequirement {
+    override fun createPluginPattern(string: String): PluginPattern {
         require(string.isNotEmpty()) {
-            "Plugin requirement string should not be empty."
+            "Plugin pattern string should not be empty."
         }
 
         val colonIndexAfterGroup = string.indexOf(':', 0)
         require(colonIndexAfterGroup != -1) {
-            "Plugin requirement string should contain a colon."
+            "Plugin pattern string should contain a colon."
         }
         val group = string.substring(0, colonIndexAfterGroup).toSegmentId()
 
@@ -334,11 +344,11 @@ class CoreApiImpl : CoreApi {
 
         val pluginId = NamespaceId(group, name)
 
-        val version = if (string.length == colonIndexAfterName + 1) null else {
+        val version = if (colonIndexAfterName == -1) null else {
             string.substring(colonIndexAfterName + 1).toVersionPattern()
         }
 
-        return PluginRequirementImpl(pluginId, version)
+        return PluginPatternImpl(pluginId, version)
     }
 
     override fun createLiteralSegmentIdPatternElement(string: String): LiteralSegmentIdPatternElement {
@@ -760,11 +770,6 @@ class CoreApiImpl : CoreApi {
 
     override fun getLowerDotCaseNamingPolicy(): NamingPolicy = LowerDotCaseNamingPolicy
 
-    // PluginStateChangePolicy
-    override fun createPluginStateChangePolicy(ignorePreviousError: Boolean, ignoreCurrentError: Boolean): PluginStateChangePolicy {
-        return PluginStateChangePolicyImpl.of(ignorePreviousError, ignoreCurrentError)
-    }
-
     // CodecResolver
     override fun findAndApplyInitializers(resolver: CodecResolver, operation: Operation, classLoader: ClassLoader?, replace: Boolean, visible: Boolean) {
         val initializerClass = CodecResolverInitializer::class.java
@@ -773,7 +778,7 @@ class CoreApiImpl : CoreApi {
             else -> ServiceLoader.load(initializerClass, classLoader)
         }
 
-        val context = CoreCodecResolverInitializeContextImpl(resolver, operation, replace, visible)
+        val context = CodecResolverInitializeContextImpl(resolver, operation, replace, visible)
         for (initializer in loader) {
             initializer.initialize(context)
         }
@@ -782,5 +787,21 @@ class CoreApiImpl : CoreApi {
     // Text
     override fun createText(string: String): Text {
         return TextImpl(string)
+    }
+
+    override fun createPluginMeta(
+        id: NamespaceId,
+        name: String,
+        version: Version,
+        description: String?,
+        standard: VersionPattern?,
+        provisions: List<PluginProvision>,
+        dependencies: List<PluginDependency>
+    ): PluginMeta {
+        return PluginMetaImpl(id, name, version, description, standard, provisions, dependencies)
+    }
+
+    override fun createPluginDescriptor(id: NamespaceId): PluginDescriptor {
+        return PluginDescriptorImpl(id)
     }
 }

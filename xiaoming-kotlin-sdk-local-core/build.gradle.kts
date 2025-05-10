@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,8 +29,7 @@ dependencies {
 
     api(libs.kotlin.logging)
     testImplementation(libs.slf4j.api)
-    testRuntimeOnly(libs.log4j.slf4j2.impl)
-    testRuntimeOnly(libs.log4j.core)
+    testRuntimeOnly(libs.slf4j.simple)
 
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)

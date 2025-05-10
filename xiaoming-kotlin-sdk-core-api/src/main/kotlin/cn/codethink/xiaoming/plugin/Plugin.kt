@@ -16,6 +16,7 @@
 package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.Platform
+import cn.codethink.xiaoming.util.ExperimentalApi
 import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.NotStableForInheritance
 import cn.codethink.xiaoming.util.Operation
@@ -42,14 +43,14 @@ interface Plugin : Subject {
     val meta: PluginMeta
 
     /**
-     * 插件状态。若暂未分配，则为 `null`。
+     * 插件状态。
      */
-    val state: PluginState?
+    val state: PluginState
 
     /**
-     * 插件模式。
+     * 导致插件进入当前状态的原因。
      */
-    val mode: PluginMode
+    val operation: Operation
 
     /**
      * 插件服务的宿主。
@@ -62,6 +63,11 @@ interface Plugin : Subject {
     val provisions: Map<NamespaceId, Version>
 
     /**
+     * 插件是否被分配。
+     */
+    val isAllocated: Boolean
+
+    /**
      * 插件是否被加载。
      */
     val isLoaded: Boolean
@@ -71,51 +77,56 @@ interface Plugin : Subject {
      */
     val isEnabled: Boolean
 
-    @JvmBlockingBridge
-    suspend fun load(operation: Operation, policy: PluginStateChangePolicy = PluginStateChangePolicy.STRICT)
+    /**
+     * 插件是否已崩溃。
+     */
+    val isCrashed: Boolean
 
+    @ExperimentalApi
     @JvmBlockingBridge
-    suspend fun ensureLoaded(operation: Operation, policy: PluginStateChangePolicy = PluginStateChangePolicy.STRICT)
+    suspend fun allocate(operation: Operation)
 
+    @ExperimentalApi
     @JvmBlockingBridge
-    suspend fun tryLoad(operation: Operation, policy: PluginStateChangePolicy = PluginStateChangePolicy.STRICT): Boolean
+    suspend fun ensureAllocated(operation: Operation)
 
+    @ExperimentalApi
     @JvmBlockingBridge
-    suspend fun tryEnsureLoaded(operation: Operation, policy: PluginStateChangePolicy = PluginStateChangePolicy.STRICT): Boolean
+    suspend fun load(operation: Operation)
 
+    @ExperimentalApi
     @JvmBlockingBridge
-    suspend fun enable(operation: Operation, policy: PluginStateChangePolicy = PluginStateChangePolicy.STRICT)
+    suspend fun ensureLoaded(operation: Operation)
 
+    @ExperimentalApi
     @JvmBlockingBridge
-    suspend fun ensureEnabled(operation: Operation, policy: PluginStateChangePolicy = PluginStateChangePolicy.STRICT)
+    suspend fun enable(operation: Operation)
 
+    @ExperimentalApi
     @JvmBlockingBridge
-    suspend fun tryEnable(operation: Operation, policy: PluginStateChangePolicy = PluginStateChangePolicy.STRICT): Boolean
+    suspend fun ensureEnabled(operation: Operation)
 
+    @ExperimentalApi
     @JvmBlockingBridge
-    suspend fun tryEnsureEnabled(operation: Operation, policy: PluginStateChangePolicy = PluginStateChangePolicy.STRICT): Boolean
+    suspend fun disable(operation: Operation)
 
+    @ExperimentalApi
     @JvmBlockingBridge
-    suspend fun disable(operation: Operation, policy: PluginStateChangePolicy = PluginStateChangePolicy.STRICT)
+    suspend fun ensureDisabled(operation: Operation)
 
+    @ExperimentalApi
     @JvmBlockingBridge
-    suspend fun ensureDisabled(operation: Operation, policy: PluginStateChangePolicy = PluginStateChangePolicy.STRICT)
+    suspend fun unload(operation: Operation)
 
+    @ExperimentalApi
     @JvmBlockingBridge
-    suspend fun tryDisable(operation: Operation, policy: PluginStateChangePolicy = PluginStateChangePolicy.STRICT): Boolean
+    suspend fun ensureUnloaded(operation: Operation)
 
+    @ExperimentalApi
     @JvmBlockingBridge
-    suspend fun tryEnsureDisabled(operation: Operation, policy: PluginStateChangePolicy = PluginStateChangePolicy.STRICT): Boolean
+    suspend fun release(operation: Operation)
 
+    @ExperimentalApi
     @JvmBlockingBridge
-    suspend fun unload(operation: Operation, policy: PluginStateChangePolicy = PluginStateChangePolicy.STRICT)
-
-    @JvmBlockingBridge
-    suspend fun ensureUnloaded(operation: Operation, policy: PluginStateChangePolicy = PluginStateChangePolicy.STRICT)
-
-    @JvmBlockingBridge
-    suspend fun tryUnload(operation: Operation, policy: PluginStateChangePolicy = PluginStateChangePolicy.STRICT): Boolean
-
-    @JvmBlockingBridge
-    suspend fun tryEnsureUnloaded(operation: Operation, policy: PluginStateChangePolicy = PluginStateChangePolicy.STRICT): Boolean
+    suspend fun ensureReleased(operation: Operation)
 }

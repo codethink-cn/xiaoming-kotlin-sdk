@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.util.NamespaceId
+import cn.codethink.xiaoming.util.Cause
 
 /**
  * 插件源：表示一个类似于插件中心的对象。
@@ -27,17 +27,9 @@ import cn.codethink.xiaoming.util.NamespaceId
  */
 interface PluginSource {
     /**
-     * 获取一个插件所有可用版本。
+     * 获取能够提供某种插件服务的所有插件列表，包含这一插件本身（若存在）。
      *
-     * @param id 插件 ID
-     * @return 插件可用版本列表
+     * @param pattern 插件需求
      */
-    suspend fun getPluginAvailableVersions(id: NamespaceId): List<PluginAvailableVersion>
-
-    /**
-     * 获取能够提供某种插件服务的所有插件列表，不包含插件本身。
-     *
-     * @param requirement 插件需求
-     */
-    suspend fun getProviderPlugins(requirement: PluginDependency): List<PluginAvailableVersion>
+    suspend fun getProviderPlugins(pattern: PluginPattern, cause: Cause): List<PluginEntry>
 }

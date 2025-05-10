@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,20 +22,25 @@ package cn.codethink.xiaoming.plugin
  * @author Chuanwise
  */
 enum class PluginState {
+    UNALLOCATED,
+
+    ALLOCATING,
     ALLOCATED,
 
     LOADING,
-    LOADING_ERRORED,
     LOADED,
 
     ENABLING,
-    ENABLING_ERRORED,
     ENABLED,
 
     DISABLING,
-    DISABLING_ERRORED,
     DISABLED,
 
     UNLOADING,
-    UNLOADING_ERRORED
+    UNLOADED,
+
+    RELEASING,
+    RELEASED,
+
+    CRASHED
 }

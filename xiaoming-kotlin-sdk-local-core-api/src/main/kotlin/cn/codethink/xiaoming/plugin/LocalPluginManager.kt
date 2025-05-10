@@ -17,10 +17,12 @@
 package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.LocalPlatform
-import cn.codethink.xiaoming.util.DualKeyMap
+import cn.codethink.xiaoming.util.ExperimentalApi
 import cn.codethink.xiaoming.util.NamespaceId
+import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.Registration
 import cn.codethink.xiaoming.util.Version
+import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 
 /**
  * 本地插件管理器。
@@ -34,18 +36,82 @@ interface LocalPluginManager : PluginManager {
     override val platform: LocalPlatform
 
     /**
-     * 宿主的所有插件，其中包括已识别，但未加载的插件。
+     * 宿主的所有插件，其中可能包括已识别，但未加载的插件。
      */
-    val availablePlugins: DualKeyMap<NamespaceId, Version, Plugin>
+    @ExperimentalApi
+    val availablePlugins: Collection<Plugin>
 
     /**
-     * 插件源。
+     * 插件扫描器，用于在必要时扫描一次宿主上的所有插件。
      */
-    val sources: List<Registration<PluginSource>>
+    val pluginScanners: Map<String, Registration<PluginScanner>>
 
-    fun registerPlugin(meta: PluginMeta, mode: PluginMode, allocator: PluginAllocator): Plugin
+    /**
+     * 插件源，用于在必要时安装插件。
+     */
+    val pluginSources: Map<String, Registration<PluginSource>>
 
-    fun resolvePlugin(requirement: PluginRequirement): Plugin
+    /**
+     * 通过 ID 和版本获取插件。
+     *
+     * @param id 插件 ID
+     * @param version 插件版本
+     * @return 插件
+     */
+    @ExperimentalApi
+    fun getAvailablePlugin(id: NamespaceId, version: Version): Plugin?
 
-    fun tryResolvePlugin()
+    /**
+     * 获取已经分配的一个插件的所有版本。
+     *
+     * @param id 插件 ID
+     * @return 插件版本
+     */
+    @ExperimentalApi
+    fun getAvailablePlugins(id: NamespaceId): Map<Version, Plugin>
+
+    /**
+     * 获取已经分配的一个插件的所有版本。
+     *
+     * @param pattern 插件模式
+     * @return 插件版本
+     */
+    @ExperimentalApi
+    fun getAvailablePlugins(pattern: PluginPattern): Map<Version, Plugin>
+
+    /**
+     * 注册一个插件。
+     *
+     * @param meta 插件元数据
+     * @param configuration 插件配置
+     * @param operation 操作原因
+     * @param handler 插件处理器
+     * @return 插件
+     */
+    @ExperimentalApi
+    fun registerPlugin(meta: PluginMeta, configuration: PluginConfiguration, handler: PluginHandler, operation: Operation): Plugin
+
+    /**
+     * 解析一个插件，其将执行一次扫描和插件源请求。
+     *
+     * @param pattern 插件模式
+     * @param operation 解析插件的原因
+     * @return 插件
+     */
+    @ExperimentalApi
+    @JvmBlockingBridge
+    suspend fun resolvePlugins(pattern: PluginPattern, operation: Operation): Map<Version, Plugin>
+
+    /**
+     * 刷新插件列表。
+     *
+     * @param operation 操作原因
+     */
+    @ExperimentalApi
+    @JvmBlockingBridge
+    suspend fun flushAvailablePlugins(operation: Operation)
+
+    @ExperimentalApi
+    @JvmBlockingBridge
+    suspend fun loadPlugins(operation: Operation)
 }

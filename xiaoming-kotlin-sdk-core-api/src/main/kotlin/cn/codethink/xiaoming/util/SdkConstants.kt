@@ -21,9 +21,12 @@ import cn.codethink.xiaoming_kotlin_sdk_core_api.BuildConfig
 @Suppress("MemberVisibilityCanBePrivate")
 class SdkConstants {
     companion object {
-        const val SDK_VERSION_STRING = BuildConfig.SDK_VERSION
         const val SDK_GROUP = BuildConfig.SDK_GROUP
 
+        const val SDK_VERSION_STRING = BuildConfig.SDK_VERSION
         val SDK_VERSION = SDK_VERSION_STRING.toVersion()
+
+        const val STANDARD_VERSION_STRING = BuildConfig.STANDARD_VERSION
+        val STANDARD_VERSION = STANDARD_VERSION_STRING.toVersion()
     }
 }

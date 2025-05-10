@@ -16,12 +16,15 @@
 
 package cn.codethink.xiaoming.plugin
 
+import cn.codethink.xiaoming.util.Operation
+
 /**
  * 插件检测上下文。
  *
  * @author Chuanwise
  */
 interface PluginScanContext {
-    fun registerPlugin(meta: PluginMeta, mode: PluginMode, allocator: PluginAllocator)
-    fun registerPlugin(meta: PluginMeta, mode: PluginMode, handler: PluginHandler)
+    val operation: Operation
+
+    fun registerPlugin(meta: PluginMeta, configuration: PluginConfiguration, operation: Operation, handler: PluginHandler)
 }

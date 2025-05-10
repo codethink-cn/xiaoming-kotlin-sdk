@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ abstract class AbstractMutableMapRegistrationManager<K, E, R : MapRegistration<K
     override val keys: Set<K> get() = data.keys
 
     override val elements: Collection<E> get() = data.values.map { it.value }
-    override val registrations: Collection<R> get() = data.values
+    override val registrations: Collection<R> get() = data.values.toList()
 
     override val size: Int get() = data.size
     override val isEmpty: Boolean get() = data.isEmpty()

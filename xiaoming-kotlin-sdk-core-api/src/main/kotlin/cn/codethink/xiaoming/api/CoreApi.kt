@@ -19,13 +19,16 @@ package cn.codethink.xiaoming.api
 import cn.codethink.xiaoming.event.EventPublishPolicy
 import cn.codethink.xiaoming.message.Text
 import cn.codethink.xiaoming.plugin.PluginDependency
-import cn.codethink.xiaoming.plugin.PluginRequirement
-import cn.codethink.xiaoming.plugin.PluginStateChangePolicy
+import cn.codethink.xiaoming.plugin.PluginMeta
+import cn.codethink.xiaoming.plugin.PluginPattern
+import cn.codethink.xiaoming.plugin.PluginProvision
+import cn.codethink.xiaoming.plugin.ProvisionPriority
 import cn.codethink.xiaoming.serialization.CodecResolver
 import cn.codethink.xiaoming.util.AndVersionPattern
 import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.Data
 import cn.codethink.xiaoming.util.ExcludeVersionPattern
+import cn.codethink.xiaoming.util.ExperimentalApi
 import cn.codethink.xiaoming.util.GreaterThanOrEqualVersionPattern
 import cn.codethink.xiaoming.util.GreaterThanVersionPattern
 import cn.codethink.xiaoming.util.Id
@@ -43,6 +46,7 @@ import cn.codethink.xiaoming.util.NamingPolicy
 import cn.codethink.xiaoming.util.NumericalId
 import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.OrVersionPattern
+import cn.codethink.xiaoming.util.PluginDescriptor
 import cn.codethink.xiaoming.util.RegexSegmentIdPatternElement
 import cn.codethink.xiaoming.util.SegmentId
 import cn.codethink.xiaoming.util.SegmentIdPattern
@@ -69,6 +73,7 @@ import kotlin.properties.ReadWriteProperty
  * @author Chuanwise
  */
 @InternalApi
+@OptIn(ExperimentalApi::class)
 interface CoreApi {
     companion object {
         @JvmStatic
@@ -128,11 +133,20 @@ interface CoreApi {
     fun createPluginDependency(
         id: NamespaceId,
         version: VersionPattern?,
-        optional: Boolean
+        required: Boolean,
+        original: Boolean
     ): PluginDependency
 
-    fun createPluginRequirement(string: String): PluginRequirement
-    fun createPluginRequirement(id: NamespaceId, version: VersionPattern?): PluginRequirement
+    fun createPluginProvision(string: String): PluginProvision
+
+    fun createPluginProvision(
+        id: NamespaceId,
+        version: VersionPattern?,
+        priority: ProvisionPriority
+    ): PluginProvision
+
+    fun createPluginPattern(string: String): PluginPattern
+    fun createPluginPattern(id: NamespaceId, version: VersionPattern?): PluginPattern
 
     // StringMatcher
     fun createLiteralSegmentIdPatternElement(string: String): LiteralSegmentIdPatternElement
@@ -188,12 +202,21 @@ interface CoreApi {
     fun getLowerCaseNamingPolicy(): NamingPolicy
     fun getLowerDotCaseNamingPolicy(): NamingPolicy
 
-    // PluginStateChangePolicy
-    fun createPluginStateChangePolicy(ignorePreviousError: Boolean, ignoreCurrentError: Boolean): PluginStateChangePolicy
-
     // CodecResolver
     fun findAndApplyInitializers(resolver: CodecResolver, operation: Operation, classLoader: ClassLoader?, replace: Boolean, visible: Boolean)
 
     // Text
     fun createText(string: String): Text
+
+    fun createPluginMeta(
+        id: NamespaceId,
+        name: String,
+        version: Version,
+        description: String?,
+        standard: VersionPattern?,
+        provisions: List<PluginProvision>,
+        dependencies: List<PluginDependency>
+    ): PluginMeta
+
+    fun createPluginDescriptor(id: NamespaceId): PluginDescriptor
 }

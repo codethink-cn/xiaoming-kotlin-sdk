@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,9 @@ plugins {
 fun Any.toDoubleQuotedString() = "\"$this\""
 
 buildConfig {
-    buildConfigField("String", "SDK_VERSION", project.version.toDoubleQuotedString())
-    buildConfigField("String", "SDK_GROUP", project.group.toDoubleQuotedString())
+    buildConfigField("kotlin.String", "SDK_VERSION", project.version.toDoubleQuotedString())
+    buildConfigField("kotlin.String", "SDK_GROUP", project.group.toDoubleQuotedString())
+    buildConfigField("kotlin.String", "STANDARD_VERSION", "0.1.0".toDoubleQuotedString())
 }
 
 dependencies {

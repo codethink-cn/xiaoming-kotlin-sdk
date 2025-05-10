@@ -18,9 +18,26 @@ package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.PlatformContext
 import cn.codethink.xiaoming.event.EventContext
-import cn.codethink.xiaoming.util.NamespaceId
+import cn.codethink.xiaoming.util.Operation
+import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 
 interface PluginContext : PlatformContext {
     val event: EventContext<PluginEvent>
     val plugin: Plugin
+
+    /**
+     * 标记插件已产生无法恢复的严重错误，其状态混乱。
+     *
+     * @param operation 操作
+     */
+    @JvmBlockingBridge
+    suspend fun crash(operation: Operation)
+
+    /**
+     * 标记插件已产生无法恢复的严重错误，其状态混乱。
+     *
+     * @param operation 操作
+     */
+    @JvmBlockingBridge
+    suspend fun ensureCrashed(operation: Operation)
 }

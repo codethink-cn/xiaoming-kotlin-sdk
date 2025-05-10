@@ -24,7 +24,7 @@ import cn.codethink.xiaoming.plugin.LocalPluginManager
 import cn.codethink.xiaoming.util.Operation
 
 interface LocalPlatform : Platform {
-    val state: LocalPlatformState
+    val state: PlatformState
 
     val libraryManager: LibraryManager
 

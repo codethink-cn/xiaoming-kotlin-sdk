@@ -16,28 +16,20 @@
 
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.util.NamespaceId
-import cn.codethink.xiaoming.util.VersionPattern
-
 /**
  * 插件依赖。
  *
  * @author Chuanwise
  * @see PluginDependency
  */
-interface PluginDependency {
-    /**
-     * 插件 ID。
-     */
-    val id: NamespaceId
-
-    /**
-     * 插件版本。
-     */
-    val version: VersionPattern?
-
+interface PluginDependency : PluginPattern {
     /**
      * 是否为必要依赖。
      */
     val required: Boolean
+
+    /**
+     * 是否无法接受其他插件提供的情况。
+     */
+    val original: Boolean
 }

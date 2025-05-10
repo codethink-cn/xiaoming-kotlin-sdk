@@ -17,724 +17,599 @@
 package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.LocalPlatform
-import cn.codethink.xiaoming.LocalPlatformConfiguration
-import cn.codethink.xiaoming.Platform
-import cn.codethink.xiaoming.event.CancellableEvent
-import cn.codethink.xiaoming.event.EventContext
-import cn.codethink.xiaoming.util.DualKeyMap
+import cn.codethink.xiaoming.RemotePlatform
+import cn.codethink.xiaoming.util.Cause
+import cn.codethink.xiaoming.util.DAG
+import cn.codethink.xiaoming.util.ExperimentalApi
 import cn.codethink.xiaoming.util.InternalApi
+import cn.codethink.xiaoming.util.MutableDualKeyMap
 import cn.codethink.xiaoming.util.MutableDualKeyMapImpl
+import cn.codethink.xiaoming.util.MutableMapRegistrationManagerImpl
 import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.Operation
-import cn.codethink.xiaoming.util.PluginDescriptor
-import cn.codethink.xiaoming.util.PluginDescriptorImpl
+import cn.codethink.xiaoming.util.Registration
+import cn.codethink.xiaoming.util.SdkConstants
 import cn.codethink.xiaoming.util.Version
+import cn.codethink.xiaoming.util.productSize
+import cn.codethink.xiaoming.util.products
+import cn.codethink.xiaoming.util.runIf
+import cn.codethink.xiaoming.util.runIfNotNull
+import cn.codethink.xiaoming.util.toMutableDualKeyMap
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.locks.ReentrantReadWriteLock
-import kotlin.concurrent.read
-import kotlin.concurrent.write
-import kotlin.coroutines.cancellation.CancellationException
+import java.util.function.Consumer
 import kotlin.reflect.jvm.jvmName
 
-@OptIn(InternalApi::class)
+@OptIn(InternalApi::class, ExperimentalApi::class)
 class LocalPluginManagerImpl(
-    override val platform: LocalPlatform,
-    configuration: LocalPlatformConfiguration
+    override val platform: LocalPlatform
 ) : LocalPluginManager {
     private val logger: KLogger = KotlinLogging.logger(PluginManager::class.jvmName)
 
     // 具有相同 ID，但用不同版本的插件可以并存，但是只有一个可以加载。
-    private val mutableAvailablePlugins = MutableDualKeyMapImpl<NamespaceId, Version, AbstractPlugin>()
-    override val availablePlugins: DualKeyMap<NamespaceId, Version, Plugin> get() = mutableAvailablePlugins
+    private var mutableAvailablePlugins = MutableDualKeyMapImpl<NamespaceId, Version, AbstractLocalServingPlugin>()
+    override val availablePlugins: Collection<Plugin> get() = mutableAvailablePlugins.values.toList()
 
     // 插件一旦加载，便需先将自己置于其中。以免相同 ID，不同版本的插件被同时加载。
     private var mutablePlugins = ConcurrentHashMap<NamespaceId, Plugin>()
     override val plugins: Map<NamespaceId, Plugin> get() = mutablePlugins.toMap()
 
-    private enum class PluginInternalState(val state: PluginState? = null) {
-        NOT_YET_ALLOCATED,
+    private val mutablePluginScanners = MutableMapRegistrationManagerImpl<String, PluginScanner>()
+    override val pluginScanners: Map<String, Registration<PluginScanner>> get() = mutablePluginScanners.toRegistrationMap()
 
-        ALLOCATING,
-        ALLOCATING_ERRORED,
+    private val mutablePluginSources = MutableMapRegistrationManagerImpl<String, PluginSource>()
+    override val pluginSources: Map<String, Registration<PluginSource>> get() = mutablePluginSources.toRegistrationMap()
 
-        ALLOCATED(PluginState.ALLOCATED),
-
-        LOADING(PluginState.LOADING),
-        LOADING_ERRORED(PluginState.LOADING_ERRORED),
-        LOADED(PluginState.LOADED),
-
-        ENABLING(PluginState.ENABLING),
-        ENABLING_ERRORED(PluginState.ENABLING_ERRORED),
-        ENABLED(PluginState.ENABLED),
-
-        DISABLING(PluginState.DISABLING),
-        DISABLING_ERRORED(PluginState.DISABLING_ERRORED),
-        DISABLED(PluginState.DISABLED),
-
-        UNLOADING(PluginState.UNLOADING),
-        UNLOADING_ERRORED(PluginState.UNLOADING_ERRORED),
+    // 尝试为本插件获取 LOAD 锁。返回持有独占当前 ID 启动权的插件。若为 this 表示获取成功。
+    private fun tryAcquireUniquePluginLock(plugin: Plugin): Plugin {
+        return mutablePlugins.computeIfAbsent(plugin.id) { plugin }
     }
 
-    // 插件稳定状态：NotYetAllocated、Allocated、Loaded、Enabled 中的某个状态。
-    private abstract inner class PluginStateChangeHandler<E : CancellableEvent>(
-        val beforeStates: Set<PluginInternalState>,
-        val changingState: PluginInternalState,
-        val changingErrorState: PluginInternalState,
-        val afterState: PluginInternalState
-    ) {
-        fun checkAndSetChangingState(plugin: AbstractPlugin, policy: PluginStateChangePolicy): PluginInternalState {
-            return with(plugin) {
-                lock.write {
-                    val oldState = internalStateNoLock
-                    if (oldState in beforeStates) {
-                        internalStateNoLock = changingState
-                    } else {
-                        internalStateNoLock = when (internalStateNoLock) {
-                            changingState -> error("Concurrent state transition to $changingState")
-                            changingErrorState -> {
-                                if (policy.ignorePreviousError) {
-                                    logger.warn {
-                                        "Plugin ${plugin.meta.id} is in $changingErrorState state. " +
-                                                "Retrying to change state caused by policy `ignorePreviousError` set to true. "
-                                    }
-                                    changingState
-                                } else {
-                                    throw IllegalArgumentException(
-                                        "Last plugin state transition failed, resulting in $changingErrorState state. " +
-                                                "Try to set `force` to true and try again. " +
-                                                "Note that `force` will ignore the error and may cause unexpected behavior."
-                                    )
-                                }
-                            }
-
-                            afterState -> error("Plugin is already in $afterState state")
-                            else -> error("Unexpected plugin state: $internalStateNoLock. Note that only $beforeStates and $changingErrorState states can be changed to $changingState.")
-                        }
-                    }
-                    oldState
-                }
-            }
+    private fun acquireUniquePluginLock(plugin: Plugin) {
+        val oldPlugin = tryAcquireUniquePluginLock(plugin)
+        check(oldPlugin === plugin) {
+            "There is another plugin ${oldPlugin.meta.id} with version ${oldPlugin.version} is already loaded. " +
+                    "Note that multiple plugins with the same ID are not allowed to be loaded at the same time. " +
+                    "Please unload the old one first."
         }
+    }
 
-        fun tryCheckAndSetTransferState(plugin: AbstractPlugin, policy: PluginStateChangePolicy): PluginInternalState? {
-            return with(plugin) {
-                lock.write {
-                    val oldState = internalStateNoLock
-                    if (oldState in beforeStates) {
-                        internalStateNoLock = changingState
-                    } else {
-                        internalStateNoLock = when (internalStateNoLock) {
-                            changingState -> return null
-                            changingErrorState -> {
-                                if (policy.ignorePreviousError) {
-                                    logger.warn {
-                                        "Plugin ${plugin.meta.id} is in $changingErrorState state. " +
-                                                "Retrying to change state caused by policy `ignorePreviousError` set to true. "
-                                    }
-                                    changingState
-                                } else {
-                                    return null
-                                }
-                            }
-
-                            afterState -> return null
-                            else -> return null
-                        }
-                    }
-                    oldState
-                }
-            }
-        }
-
-        fun checkAndSetAfterState(plugin: AbstractPlugin): Unit = with(plugin) {
-            lock.write {
-                internalStateNoLock = when (internalStateNoLock) {
-                    changingState -> afterState
-                    changingErrorState -> changingErrorState
-
-                    else -> error("Unexpected plugin state: $internalStateNoLock. Plugin is not in $changingState state while trying to set $afterState state.")
-                }
-            }
-        }
-
-        fun checkAndSetErrorState(plugin: AbstractPlugin): Unit = with(plugin) {
-            plugin.lock.write {
-                plugin.internalStateNoLock = when (plugin.internalStateNoLock) {
-                    changingState,
-                    changingErrorState -> changingErrorState
-
-                    else -> error("Unexpected plugin state: $internalStateNoLock. Plugin is not in $changingState state while trying to set $changingErrorState state.")
-                }
-            }
-        }
-
-        fun checkAndSetOldState(plugin: AbstractPlugin, oldState: PluginInternalState): Unit = with(plugin) {
-            lock.write {
-                internalStateNoLock = when (internalStateNoLock) {
-                    changingState -> oldState
-                    else -> error(
-                        "Unexpected plugin state: $internalStateNoLock. " +
-                                "Plugin is not in $changingState state while trying to set to old state $oldState."
-                    )
-                }
-            }
-        }
-
-        abstract fun createEvent(
-            plugin: AbstractPlugin,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ): E
-
-        suspend inline fun <T> changeToAfterState(
-            plugin: AbstractPlugin,
-            operation: Operation,
-            policy: PluginStateChangePolicy,
-            block: (EventContext<E>) -> T
-        ): T {
-            val oldState = checkAndSetChangingState(plugin, policy)
-
-            val event = createEvent(plugin, operation, policy)
-            val eventContext = plugin.platform.eventManager.publishCancellableEvent(event)
-
-            if (eventContext.isCancelled) {
-                checkAndSetOldState(plugin, oldState)
-                throw CancellationException("Plugin state changing cancelled")
-            }
-
-            try {
-                return block(eventContext).also {
-                    checkAndSetAfterState(plugin)
-                }
-            } catch (t: Throwable) {
-                if (policy.ignoreCurrentError) {
-                    logger.warn(t) {
-                        "Plugin state changing failed, but policy `ignoreCurrentError` is true." +
-                                " The exception will be ignored, and the plugin will be set to $afterState state."
-                    }
-                    checkAndSetAfterState(plugin)
-                } else {
-                    checkAndSetErrorState(plugin)
-                }
-                throw t
-            }
-        }
-
-        suspend inline fun <T> tryChangeToAfterState(
-            plugin: AbstractPlugin,
-            operation: Operation,
-            policy: PluginStateChangePolicy,
-            block: (EventContext<E>) -> T
-        ): T? {
-            val oldState = tryCheckAndSetTransferState(plugin, policy) ?: return null
-
-            val event = createEvent(plugin, operation, policy)
-            val eventContext = plugin.platform.eventManager.publishCancellableEvent(event)
-
-            if (eventContext.isCancelled) {
-                checkAndSetOldState(plugin, oldState)
-                return null
-            }
-
-            try {
-                return block(eventContext).also {
-                    checkAndSetAfterState(plugin)
-                }
-            } catch (t: Throwable) {
-                if (policy.ignoreCurrentError) {
-                    logger.warn(t) {
-                        "Plugin state changing failed, but policy `ignoreCurrentError` is true." +
-                                " The exception will be ignored, and the plugin will be set to $afterState state."
-                    }
-                    checkAndSetAfterState(plugin)
-                    return null
-                } else {
-                    checkAndSetErrorState(plugin)
-                }
-                throw t
+    // 插件被成功 UNLOAD，释放独占当前 ID 的锁。若返回 null 表示成功（也可能从未获取），否则失败。
+    private fun tryReleaseUniquePluginLock(plugin: Plugin): Plugin? {
+        return mutablePlugins.computeIfPresent(plugin.id) { _, nowPlugin ->
+            if (nowPlugin === plugin) {
+                null
+            } else {
+                nowPlugin
             }
         }
     }
 
-    private inner class AllocatedPluginStateChangeHandler : PluginStateChangeHandler<PluginAllocateEvent>(
-        beforeStates = setOf(PluginInternalState.NOT_YET_ALLOCATED),
-        changingState = PluginInternalState.ALLOCATING,
-        changingErrorState = PluginInternalState.ALLOCATING_ERRORED,
-        afterState = PluginInternalState.ALLOCATED
-    ) {
-        override fun createEvent(
-            plugin: AbstractPlugin,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ): PluginAllocateEvent {
-            return PluginAllocateEventImpl(
-                plugin = plugin,
-                allocator = plugin.allocator,
-                cause = operation.cause,
-                operator = operation.operator,
-                time = operation.time,
-                id = operation.id
-            )
+    private fun releaseUniquePluginLock(plugin: Plugin) {
+        val nowPlugin = tryReleaseUniquePluginLock(plugin)
+        check(nowPlugin == null) {
+            "Plugin ${plugin.meta.id} is not loaded and its version is ${nowPlugin?.version}. " +
+                    "Fail to release unique plugin lock for another version ${plugin.version}."
         }
     }
 
-    private val allocatedPluginStateHandler = AllocatedPluginStateChangeHandler()
+    private val onLocalServingPluginLoad: Consumer<AbstractPlugin> = Consumer { acquireUniquePluginLock(it) }
+    private val onLocalServingPluginUnloadedOrCrashed: Consumer<AbstractPlugin> = Consumer { releaseUniquePluginLock(it) }
+    private val onLocalPluginReleased: Consumer<AbstractPlugin> = Consumer { mutableAvailablePlugins.remove(it.id, it.version) }
 
-    private inner class LoadedPluginStateChangeHandler : PluginStateChangeHandler<PluginLoadEvent>(
-        beforeStates = setOf(PluginInternalState.ALLOCATED),
-        changingState = PluginInternalState.LOADING,
-        changingErrorState = PluginInternalState.LOADING_ERRORED,
-        afterState = PluginInternalState.LOADED
-    ) {
-        override fun createEvent(
-            plugin: AbstractPlugin,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ): PluginLoadEvent {
-            return PluginLoadEventImpl(
-                pluginId = plugin.id,
-                cause = operation.cause,
-                operator = operation.operator,
-                time = operation.time,
-                id = operation.id
-            )
+    private abstract inner class AbstractLocalServingPlugin(
+        meta: PluginMeta, val configuration: PluginConfiguration, handler: PluginHandler, operation: Operation
+    ) : AbstractPlugin(
+        meta, handler, this, operation, PluginState.UNALLOCATED, platform,
+        onLocalServingPluginLoad, onLocalServingPluginUnloadedOrCrashed, onLocalPluginReleased
+    )
+
+    private inner class SharablePluginImpl(
+        meta: PluginMeta, configuration: PluginConfiguration, operation: Operation, handler: PluginHandler
+    ) : AbstractLocalServingPlugin(meta, configuration, handler, operation), SharablePlugin {
+        private val mutableInstances: MutableMap<RemotePlatform, RemoteServingPlugin> = ConcurrentHashMap()
+        override val instances: Map<RemotePlatform, RemoteServingPlugin> get() = mutableInstances.toMap()
+
+        private val onRemoteServingPluginLoad = Consumer<AbstractPlugin> { }
+        private val onRemoteServingPluginUnloadedOrCrashed = Consumer<AbstractPlugin> { }
+        private val onRemotePluginReleased = Consumer<AbstractPlugin> { mutableInstances.remove(it.platform) }
+
+        private inner class RemoteServingPluginImpl(
+            meta: PluginMeta, operation: Operation, handler: PluginHandler, platform: RemotePlatform
+        ) : AbstractPlugin(
+            meta, handler, this@LocalPluginManagerImpl, operation, PluginState.ALLOCATED, platform,
+            onRemoteServingPluginLoad, onRemoteServingPluginUnloadedOrCrashed, onRemotePluginReleased
+        ), RemoteServingPlugin {
+            override val backend: SharablePlugin get() = this@SharablePluginImpl
+        }
+
+        override fun registerInstance(platform: RemotePlatform, handler: PluginHandler, operation: Operation): RemoteServingPlugin {
+            val newPlugin = RemoteServingPluginImpl(meta, operation, handler, platform)
+            val oldPlugin = mutableInstances.computeIfAbsent(platform) { newPlugin }
+            require(oldPlugin === newPlugin) { "Plugin ${meta.id} is already registered" }
+            return newPlugin
         }
     }
 
-    private val loadedPluginStateHandler = LoadedPluginStateChangeHandler()
+    private inner class PluginImpl(
+        meta: PluginMeta, configuration: PluginConfiguration, operation: Operation, handler: PluginHandler
+    ) : AbstractLocalServingPlugin(meta, configuration, handler, operation)
 
-    private inner class EnabledPluginStateChangeHandler : PluginStateChangeHandler<PluginEnableEvent>(
-        beforeStates = setOf(PluginInternalState.LOADED),
-        changingState = PluginInternalState.ENABLING,
-        changingErrorState = PluginInternalState.ENABLING_ERRORED,
-        afterState = PluginInternalState.ENABLED
-    ) {
-        override fun createEvent(
-            plugin: AbstractPlugin,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ): PluginEnableEvent {
-            return PluginEnableEventImpl(
-                pluginId = plugin.id,
-                cause = operation.cause,
-                operator = operation.operator,
-                time = operation.time,
-                id = operation.id
-            )
+    private fun createPlugin(meta: PluginMeta, configuration: PluginConfiguration, operation: Operation, handler: PluginHandler): AbstractLocalServingPlugin {
+        return when (configuration.sharable) {
+            true -> SharablePluginImpl(meta, configuration, operation, handler)
+            false -> PluginImpl(meta, configuration, operation, handler)
         }
     }
 
-    private val enabledPluginStateHandler = EnabledPluginStateChangeHandler()
-
-    private inner class DisabledPluginStateChangeHandler : PluginStateChangeHandler<PluginDisableEvent>(
-        beforeStates = setOf(PluginInternalState.ENABLED),
-        changingState = PluginInternalState.DISABLING,
-        changingErrorState = PluginInternalState.DISABLING_ERRORED,
-        afterState = PluginInternalState.DISABLED
-    ) {
-        override fun createEvent(
-            plugin: AbstractPlugin,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ): PluginDisableEvent {
-            return PluginDisableEventImpl(
-                pluginId = plugin.id,
-                cause = operation.cause,
-                operator = operation.operator,
-                time = operation.time,
-                id = operation.id
-            )
-        }
-    }
-
-    private val disabledPluginStateHandler = DisabledPluginStateChangeHandler()
-
-    private inner class UnloadedPluginStateChangeHandler : PluginStateChangeHandler<PluginUnloadEvent>(
-        beforeStates = setOf(PluginInternalState.LOADED),
-        changingState = PluginInternalState.UNLOADING,
-        changingErrorState = PluginInternalState.UNLOADING_ERRORED,
-        afterState = PluginInternalState.ALLOCATED
-    ) {
-        override fun createEvent(
-            plugin: AbstractPlugin,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ): PluginUnloadEvent {
-            return PluginUnloadEventImpl(
-                pluginId = plugin.id,
-                cause = operation.cause,
-                operator = operation.operator,
-                time = operation.time,
-                id = operation.id
-            )
-        }
-    }
-
-    private val unloadedPluginStateHandler = UnloadedPluginStateChangeHandler()
-
-    private abstract inner class AbstractPlugin(
-        final override val meta: PluginMeta,
-        final override val mode: PluginMode,
-        val allocator: PluginAllocator
-    ) : Plugin {
-        override val platform: LocalPlatform = this@LocalPluginManagerImpl.platform
-        override val descriptor: PluginDescriptor = PluginDescriptorImpl(meta.id)
-
-        var internalStateNoLock: PluginInternalState = PluginInternalState.NOT_YET_ALLOCATED
-        var internalState: PluginInternalState
-            get() = lock.read { internalStateNoLock }
-            set(value) = lock.write { internalStateNoLock = value }
-
-        private var handlerNoLock: PluginHandler? = null
-
-        override val state: PluginState? get() = internalState.state
-
-        override val isLoaded: Boolean get() = lock.read { internalStateNoLock >= PluginInternalState.LOADED && internalStateNoLock < PluginInternalState.UNLOADING }
-        override val isEnabled: Boolean get() = internalState == PluginInternalState.ENABLED
-
-        override val provisions: MutableMap<NamespaceId, Version> = ConcurrentHashMap()
-        val lock = ReentrantReadWriteLock()
-
-        // 尝试为本插件获取 LOAD 锁。返回持有独占当前 ID 启动权的插件。若为 this 表示获取成功。
-        private fun tryAcquireUniquePluginLock(): Plugin {
-            return mutablePlugins.computeIfAbsent(id) { this }
-        }
-
-        private fun acquireUniquePluginLock() {
-            val nowPlugin = tryAcquireUniquePluginLock()
-            check(nowPlugin == this) {
-                "Plugin ${meta.id} is already loaded and its version is ${nowPlugin.version}. Fail to acquire unique plugin lock for another version $version."
-            }
-        }
-
-        // 插件被成功 UNLOAD，释放独占当前 ID 的锁。若返回 null 表示成功（也可能从未获取），否则失败。
-        private fun tryReleaseUniquePluginLock(): Plugin? {
-            return mutablePlugins.computeIfPresent(id) { _, nowPlugin ->
-                if (nowPlugin === this) {
-                    null
-                } else {
-                    nowPlugin
-                }
-            }
-        }
-
-        private fun releaseUniquePluginLock() {
-            val nowPlugin = tryReleaseUniquePluginLock()
-            check(nowPlugin == null) {
-                "Plugin ${meta.id} is not loaded and its version is ${nowPlugin?.version}. Fail to release unique plugin lock for another version $version."
-            }
-        }
-
-        private fun doPluginAllocation(plugin: Plugin, event: EventContext<PluginAllocateEvent>): PluginHandler {
-            return allocator.allocatePluginHandler(
-                context = PluginAllocateContextImpl(
-                    platform = platform,
-                    event = event,
-                    allocator = allocator,
-                    meta = plugin.meta,
-                    plugin = plugin
-                )
-            )
-        }
-
-        suspend fun getPluginHandler(
-            plugin: AbstractPlugin,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ): PluginHandler {
-            var pluginHandlerNoLockBeforeLock = handlerNoLock
-            if (pluginHandlerNoLockBeforeLock == null) {
-                pluginHandlerNoLockBeforeLock = plugin.lock.write {
-                    var pluginHandlerNoLockAfterLock = handlerNoLock
-                    if (pluginHandlerNoLockAfterLock == null) {
-                        pluginHandlerNoLockAfterLock = allocatedPluginStateHandler.changeToAfterState(
-                            plugin,
-                            operation,
-                            policy
-                        ) { doPluginAllocation(plugin, it) }
-                        handlerNoLock = pluginHandlerNoLockAfterLock
-                    }
-                    pluginHandlerNoLockAfterLock
-                }
-            }
-            return pluginHandlerNoLockBeforeLock
-        }
-
-        suspend fun tryGetPluginHandler(
-            plugin: AbstractPlugin,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ): PluginHandler? {
-            var pluginHandlerNoLockBeforeLock = handlerNoLock
-            if (pluginHandlerNoLockBeforeLock == null) {
-                pluginHandlerNoLockBeforeLock = plugin.lock.write {
-                    var pluginHandlerNoLockAfterLock = handlerNoLock
-                    if (pluginHandlerNoLockAfterLock == null) {
-                        pluginHandlerNoLockAfterLock = allocatedPluginStateHandler.tryChangeToAfterState(
-                            plugin,
-                            operation,
-                            policy
-                        ) { doPluginAllocation(plugin, it) }
-                        handlerNoLock = pluginHandlerNoLockAfterLock
-                    }
-                    pluginHandlerNoLockAfterLock
-                }
-            }
-            return pluginHandlerNoLockBeforeLock
-        }
-
-        private suspend fun doLoad(
-            event: EventContext<PluginLoadEvent>,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ) {
-            val pluginHandler = getPluginHandler(this, operation, policy)
-            pluginHandler.onLoad(
-                context = PluginLoadContextImpl(
-                    platform = platform,
-                    event = event,
-                    plugin = this,
-                )
-            )
-        }
-
-        private suspend fun tryDoLoad(
-            event: EventContext<PluginLoadEvent>,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ): Boolean {
-            val pluginHandler = tryGetPluginHandler(this, operation, policy) ?: return false
-            pluginHandler.onLoad(
-                context = PluginLoadContextImpl(
-                    platform = platform,
-                    event = event,
-                    plugin = this,
-                )
-            )
-            return true
-        }
-
-        override suspend fun load(operation: Operation, policy: PluginStateChangePolicy) {
-            acquireUniquePluginLock()
-            loadedPluginStateHandler.changeToAfterState(this, operation, policy) { doLoad(it, operation, policy) }
-        }
-
-        override suspend fun ensureLoaded(operation: Operation, policy: PluginStateChangePolicy) {
-            tryLoad(operation, policy)
-        }
-
-        override suspend fun tryLoad(operation: Operation, policy: PluginStateChangePolicy): Boolean {
-            if (tryAcquireUniquePluginLock() !== this) {
-                return false
-            }
-            return loadedPluginStateHandler.tryChangeToAfterState(this, operation, policy) {
-                tryDoLoad(it, operation, policy)
-            } == true
-        }
-
-        override suspend fun tryEnsureLoaded(operation: Operation, policy: PluginStateChangePolicy): Boolean {
-            return tryLoad(operation, policy)
-        }
-
-        private suspend fun doEnable(
-            event: EventContext<PluginEnableEvent>,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ) {
-            val pluginHandler = getPluginHandler(this, operation, policy)
-            pluginHandler.onEnable(
-                context = PluginEnableContextImpl(
-                    platform = platform,
-                    event = event,
-                    plugin = this,
-                )
-            )
-        }
-
-        private suspend fun tryDoEnable(
-            event: EventContext<PluginEnableEvent>,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ): Boolean {
-            val pluginHandler = tryGetPluginHandler(this, operation, policy) ?: return false
-            pluginHandler.onEnable(
-                context = PluginEnableContextImpl(
-                    platform = platform,
-                    event = event,
-                    plugin = this,
-                )
-            )
-            return true
-        }
-
-        override suspend fun enable(operation: Operation, policy: PluginStateChangePolicy) {
-            enabledPluginStateHandler.changeToAfterState(this, operation, policy) { doEnable(it, operation, policy) }
-        }
-
-        override suspend fun ensureEnabled(operation: Operation, policy: PluginStateChangePolicy) {
-            ensureLoaded(operation, policy)
-            tryEnable(operation, policy)
-        }
-
-        override suspend fun tryEnable(operation: Operation, policy: PluginStateChangePolicy): Boolean {
-            return enabledPluginStateHandler.tryChangeToAfterState(this, operation, policy) {
-                tryDoEnable(it, operation, policy)
-            } == true
-        }
-
-        override suspend fun tryEnsureEnabled(operation: Operation, policy: PluginStateChangePolicy): Boolean {
-            tryEnsureLoaded(operation, policy)
-            return enabledPluginStateHandler.tryChangeToAfterState(this, operation, policy) {
-                tryDoEnable(it, operation, policy)
-            } == true
-        }
-
-        private suspend fun doDisable(
-            event: EventContext<PluginDisableEvent>,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ) {
-            val pluginHandler = getPluginHandler(this, operation, policy)
-            pluginHandler.onDisable(
-                context = PluginDisableContextImpl(
-                    platform = platform,
-                    event = event,
-                    plugin = this,
-                )
-            )
-        }
-
-        private suspend fun tryDoDisable(
-            event: EventContext<PluginDisableEvent>,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ): Boolean {
-            val pluginHandler = tryGetPluginHandler(this, operation, policy) ?: return false
-            pluginHandler.onDisable(
-                context = PluginDisableContextImpl(
-                    platform = platform,
-                    event = event,
-                    plugin = this,
-                )
-            )
-            return true
-        }
-
-        override suspend fun disable(operation: Operation, policy: PluginStateChangePolicy) {
-            disabledPluginStateHandler.changeToAfterState(this, operation, policy) { doDisable(it, operation, policy) }
-        }
-
-        override suspend fun ensureDisabled(operation: Operation, policy: PluginStateChangePolicy) {
-            if (isEnabled) {
-                disable(operation, policy)
-            }
-        }
-
-        override suspend fun tryDisable(operation: Operation, policy: PluginStateChangePolicy): Boolean {
-            return disabledPluginStateHandler.tryChangeToAfterState(this, operation, policy) {
-                tryDoDisable(it, operation, policy)
-            } == true
-        }
-
-        override suspend fun tryEnsureDisabled(operation: Operation, policy: PluginStateChangePolicy): Boolean {
-            return tryDisable(operation, policy)
-        }
-
-        private suspend fun doUnload(
-            event: EventContext<PluginUnloadEvent>,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ) {
-            val pluginHandler = getPluginHandler(this, operation, policy)
-            pluginHandler.onUnload(
-                context = PluginUnloadContextImpl(
-                    platform = platform,
-                    event = event,
-                    plugin = this,
-                )
-            )
-        }
-
-        private suspend fun tryDoUnload(
-            event: EventContext<PluginUnloadEvent>,
-            operation: Operation,
-            policy: PluginStateChangePolicy
-        ): Boolean {
-            val pluginHandler = tryGetPluginHandler(this, operation, policy) ?: return false
-            pluginHandler.onUnload(
-                context = PluginUnloadContextImpl(
-                    platform = platform,
-                    event = event,
-                    plugin = this,
-                )
-            )
-            return true
-        }
-
-        override suspend fun unload(operation: Operation, policy: PluginStateChangePolicy) {
-            unloadedPluginStateHandler.changeToAfterState(this, operation, policy) { doUnload(it, operation, policy) }
-            releaseUniquePluginLock()
-        }
-
-        override suspend fun ensureUnloaded(operation: Operation, policy: PluginStateChangePolicy) {
-            if (isEnabled) {
-                disable(operation, policy)
-            }
-            if (isLoaded) {
-                unload(operation, policy)
-            }
-        }
-
-        override suspend fun tryUnload(operation: Operation, policy: PluginStateChangePolicy): Boolean {
-            val result = unloadedPluginStateHandler.tryChangeToAfterState(this, operation, policy) {
-                tryDoUnload(it, operation, policy)
-            } == true
-            if (result && tryReleaseUniquePluginLock() != null) {
-                return false
-            }
-            return result
-        }
-
-        override suspend fun tryEnsureUnloaded(operation: Operation, policy: PluginStateChangePolicy): Boolean {
-            if (isEnabled) {
-                tryDisable(operation, policy)
-            }
-            return tryUnload(operation, policy)
-        }
-    }
-
-    private inner class LocalRunningPluginImpl(
-        meta: PluginMeta,
-        mode: PluginMode,
-        allocator: PluginAllocator
-    ) : AbstractPlugin(meta, mode, allocator), LocalRunningPlugin {
-        override val isAllocated: Boolean get() = internalState >= PluginInternalState.ALLOCATED
-
-        val mutableInstances: MutableMap<Platform, AbstractPlugin> = ConcurrentHashMap()
-        override val instances: Map<Platform, AbstractPlugin> get() = mutableInstances.toMap()
-    }
-
-    private inner class RemoteRunningPluginImpl(
-        meta: PluginMeta,
-        mode: PluginMode,
-        allocator: PluginAllocator
-    ) : AbstractPlugin(meta, mode, allocator), RemoteRunningPlugin
-
-    override fun registerPlugin(meta: PluginMeta, mode: PluginMode, allocator: PluginAllocator): Plugin {
-        val newPlugin = when (mode) {
-            PluginMode.LOCAL -> LocalRunningPluginImpl(meta, mode, allocator)
-            PluginMode.REMOTE -> RemoteRunningPluginImpl(meta, mode, allocator)
-        }
-
-        val nowPlugin = mutableAvailablePlugins.putIfAbsent(meta.id, meta.version, newPlugin)
-        require(nowPlugin === newPlugin) { "Plugin ${meta.id} is already registered" }
-
+    override fun registerPlugin(meta: PluginMeta, configuration: PluginConfiguration, handler: PluginHandler, operation: Operation): Plugin {
+        val newPlugin = createPlugin(meta, configuration, operation, handler)
+        val oldPlugin = mutableAvailablePlugins.putIfAbsent(meta.id, meta.version, newPlugin)
+        require(oldPlugin == null) { "Plugin ${meta.id} is already registered" }
         return newPlugin
     }
 
     override fun getPlugin(namespaceId: NamespaceId): Plugin? {
         return mutablePlugins[namespaceId]
+    }
+
+    override fun getAvailablePlugin(id: NamespaceId, version: Version): Plugin? {
+        return mutableAvailablePlugins[id, version]
+    }
+
+    override fun getAvailablePlugins(id: NamespaceId): Map<Version, Plugin> {
+        return mutableAvailablePlugins[id]
+    }
+
+    override fun getAvailablePlugins(pattern: PluginPattern): Map<Version, Plugin> {
+        return getAvailablePlugins(pattern.id).runIfNotNull(pattern.version) { p -> filterKeys { p.matches(it) } }
+    }
+
+    private inner class PluginScanContextImpl(override val operation: Operation) : PluginScanContext {
+        val newAvailablePlugins: MutableDualKeyMapImpl<NamespaceId, Version, AbstractLocalServingPlugin> = MutableDualKeyMapImpl()
+
+        override fun registerPlugin(meta: PluginMeta, configuration: PluginConfiguration, operation: Operation, handler: PluginHandler) {
+            val newPlugin = createPlugin(meta, configuration, operation, handler)
+            val oldPlugin = newAvailablePlugins.putIfAbsent(meta.id, meta.version, newPlugin)
+            require(oldPlugin == null) { "Plugin ${meta.id} is already registered" }
+        }
+    }
+
+    override suspend fun resolvePlugins(pattern: PluginPattern, operation: Operation): Map<Version, Plugin> {
+        flushAvailablePlugins(operation)
+        getProviderPluginsFromSources(pattern, operation)
+        return getAvailablePlugins(pattern)
+    }
+
+    override suspend fun flushAvailablePlugins(operation: Operation) {
+        val pluginScanContext = PluginScanContextImpl(operation)
+        for (registration in mutablePluginScanners.registrations) {
+            registration.value.scan(pluginScanContext)
+        }
+
+        val oldAvailablePlugins = mutableAvailablePlugins
+        val newAvailablePlugins = pluginScanContext.newAvailablePlugins
+
+        val removedPlugins = oldAvailablePlugins.filterKeys { !newAvailablePlugins.containsKey(it) }
+        for (removedPlugin in removedPlugins) {
+            if (removedPlugin.value.configuration.crashOnRemoved) {
+                removedPlugin.value.ensureCrashed(operation)
+            }
+        }
+    }
+
+    private suspend fun getProviderPluginsFromSources(pattern: PluginPattern, cause: Cause): Map<String, List<PluginEntry>> {
+        val results = mutableMapOf<String, List<PluginEntry>>()
+        for (registration in mutablePluginSources.registrations) {
+            logger.trace {
+                "Getting providable plugins from plugin source: ${registration.key} " +
+                        "(plugin source registered due to ${registration.operation.description})"
+            }
+
+            val pluginAvailableVersions = try {
+                registration.value.getProviderPlugins(pattern, cause)
+            } catch (t: Throwable) {
+                logger.warn(t) {
+                    "Fail to get providable plugins for $pattern from plugin source: ${registration.key} " +
+                            "(plugin source registered due to ${registration.operation.description}, operation due to ${cause.description})."
+                }
+                continue
+            }
+
+            val sourceResults = mutableListOf<PluginEntry>()
+            for (entry in pluginAvailableVersions) {
+                // 检查插件所需的小明协议最低版本是否符合要求。
+                val standardPattern = entry.meta.standard
+                if (standardPattern != null && !standardPattern.matches(SdkConstants.STANDARD_VERSION)) {
+                    logger.trace {
+                        "Plugin ${entry.meta.id} is not compatible with current SDK (SDK version: ${SdkConstants.SDK_VERSION_STRING}). " +
+                                "The highest standard version supported by the SDK is ${SdkConstants.STANDARD_VERSION}, " +
+                                "but the plugin required standard version pattern is $standardPattern."
+                    }
+                    continue
+                }
+
+                sourceResults.add(entry)
+            }
+            results[registration.key] = sourceResults
+        }
+        return results
+    }
+
+    sealed interface AvailablePluginEntry {
+        val plugin: AbstractPlugin
+    }
+
+    // 原本就存在于系统中的插件 Entry
+    class OriginalPluginEntry(
+        override val plugin: AbstractPlugin
+    ) : AvailablePluginEntry
+
+    // 将会被安装的插件 Entry
+    class InstallingPluginEntry(
+        override val plugin: AbstractPlugin,
+        val pluginSourceKey: String
+    ) : AvailablePluginEntry
+
+    private class PluginDependencyGraph {
+        class PluginNode(val id: NamespaceId) {
+            val versionNodes: MutableMap<Version, PluginVersionNode> = mutableMapOf()
+
+            fun getOrCreateVersionNode(version: Version): PluginVersionNode {
+                return versionNodes.computeIfAbsent(version) { PluginVersionNode(this, it) }
+            }
+        }
+
+        class PluginVersionNode(
+            val pluginNode: PluginNode,
+            val version: Version
+        ) {
+            // 谁可以提供这个版本？包括这个插件本身。
+            val providerNodes: MutableList<AvailablePluginNode> = mutableListOf()
+        }
+
+        class AvailablePluginNode(
+            val pluginVersionNode: PluginVersionNode,
+            val pluginEntry: AvailablePluginEntry
+        ) {
+            // 这个插件依赖于哪些其他的插件？
+            val dependencyNodes: MutableList<AvailablePluginDependencyNode> = mutableListOf()
+
+            // 这个插件的依赖关系有可能被满足吗（true 不一定就能满足，但 false 一定不能满足）
+            var mayDependencySatisfied = true
+
+            // 这个插件提供了哪些其他插件？
+            val providableVersionNodes: MutableList<PluginVersionNode> = mutableListOf()
+        }
+
+        class AvailablePluginDependencyNode(
+            val pluginNode: PluginNode,
+            val dependency: PluginDependency
+        ) {
+            // 这个依赖需求可以被哪些插件的哪些版本满足？
+            val providableVersionNodes: MutableList<AvailablePluginNode> = mutableListOf()
+        }
+
+        val pluginNodes: MutableMap<NamespaceId, PluginNode> = mutableMapOf()
+
+        val availablePluginNodesByKey: MutableDualKeyMap<NamespaceId, Version, AvailablePluginNode> = MutableDualKeyMapImpl()
+        val availablePluginNodesByPlugin: MutableMap<AbstractPlugin, AvailablePluginNode> = mutableMapOf()
+
+        // 可以提供某个插件某个版本的所有插件（包含它自己）的节点。
+        val providablePluginVersionNodes: MutableDualKeyMap<NamespaceId, Version, MutableList<AvailablePluginNode>> = MutableDualKeyMapImpl()
+
+        fun getOrCreatePluginNode(id: NamespaceId): PluginNode {
+            return pluginNodes.computeIfAbsent(id) { PluginNode(id) }
+        }
+
+        fun getPluginNode(id: NamespaceId): PluginNode? {
+            return pluginNodes[id]
+        }
+
+        fun getOrCreateAvailablePluginNode(pluginVersionNode: PluginVersionNode, entry: AvailablePluginEntry): AvailablePluginNode {
+            val plugin = entry.plugin
+            var value = availablePluginNodesByPlugin[plugin]
+            if (value == null) {
+                value = AvailablePluginNode(pluginVersionNode, entry)
+
+                availablePluginNodesByKey[plugin.id, plugin.version] = value
+                availablePluginNodesByPlugin[plugin] = value
+            }
+            return value
+        }
+
+        fun appendAvailablePlugins(availablePlugins: Map<Pair<NamespaceId, Version>, AvailablePluginEntry>) {
+            val additionalAvailablePlugins = availablePlugins.filterKeys { !availablePluginNodesByKey.containsKey(it) }
+
+            // 构造节点并连接提供关系。
+            for (entry in additionalAvailablePlugins) {
+                val id = entry.key.first
+                val version = entry.key.second
+
+                val pluginNode = getOrCreatePluginNode(id)
+                val versionNode = pluginNode.getOrCreateVersionNode(version)
+
+                val availablePluginNode = getOrCreateAvailablePluginNode(versionNode, entry.value)
+
+                // 通过 provisions 列表连接插件之间的提供关系。
+                for (provision in availablePluginNode.pluginEntry.plugin.meta.provisions) {
+                    // 查找当前插件能够提供的其他插件的版本节点。
+                    // 此处使用 getOrCreate 的原因是被提供的插件可能本来并不存在。
+                    val providablePluginNode = getOrCreatePluginNode(provision.id)
+
+                    val provisionVersionPattern = provision.version
+                    val provisionVersionNodes = providablePluginNode
+                        .versionNodes
+                        .values
+                        .runIfNotNull(provisionVersionPattern) { pattern -> filter { pattern.matches(it.version) } }
+
+                    for (provisionVersionNode in provisionVersionNodes) {
+                        provisionVersionNode.providerNodes.add(availablePluginNode)
+                        availablePluginNode.providableVersionNodes.add(provisionVersionNode)
+                    }
+                }
+
+                // 连接插件和它自己的提供关系。
+                versionNode.providerNodes.add(availablePluginNode)
+                availablePluginNode.providableVersionNodes.add(versionNode)
+
+                // 添加提供列表。
+                for (providableVersion in availablePluginNode.providableVersionNodes) {
+                    providablePluginVersionNodes.computeIfAbsent(
+                        providableVersion.pluginNode.id, providableVersion.version
+                    ) { mutableListOf() }.add(availablePluginNode)
+                }
+            }
+
+            // 构造依赖关系。
+            for (entry in additionalAvailablePlugins) {
+                val id = entry.key.first
+                val version = entry.key.second
+
+                val pluginNode = getOrCreatePluginNode(id)
+                val versionNode = pluginNode.getOrCreateVersionNode(version)
+
+                val availablePluginNode = getOrCreateAvailablePluginNode(versionNode, entry.value)
+
+                for (dependency in availablePluginNode.pluginEntry.plugin.meta.dependencies) {
+                    val dependencyNode = AvailablePluginDependencyNode(pluginNode, dependency)
+                    availablePluginNode.dependencyNodes.add(dependencyNode)
+
+                    val dependencyVersionPattern = dependency.version
+
+                    // 找到当前插件依赖的上游插件节点，此时该插件应当已被提供。
+                    val dependencyPluginVersionNodes = providablePluginVersionNodes[dependency.id]
+                        .runIfNotNull(dependencyVersionPattern) { pattern -> filterKeys { pattern.matches(it) } }
+                        .flatMap { it.value }
+                        .runIf(dependency.original) { filter { it.pluginEntry.plugin.id == dependency.id } }
+
+                    for (value in dependencyPluginVersionNodes) {
+                        dependencyNode.providableVersionNodes.add(value)
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun loadPlugins(operation: Operation) {
+        val availablePluginEntries: MutableDualKeyMap<NamespaceId, Version, AvailablePluginEntry> = mutableAvailablePlugins
+            .mapValues { OriginalPluginEntry(it.value) }
+            .toMutableDualKeyMap()
+
+        doActivatePlugins(availablePluginEntries, operation) {
+
+        }
+    }
+
+    private suspend fun doActivatePlugins(
+        availablePluginEntries: MutableDualKeyMap<NamespaceId, Version, AvailablePluginEntry>,
+        operation: Operation, block: suspend (AbstractLocalServingPlugin) -> Unit
+    ) {
+        // 对于每个插件，我们不停地获取它们的所有版本的可提供插件，并递归地获取它们的依赖插件，直到 availablePlugins 不再增加为止。
+        var newAvailablePluginEntries: Collection<AvailablePluginEntry> = availablePluginEntries.values
+        do {
+            val nextNewAvailablePluginEntries = mutableListOf<AvailablePluginEntry>()
+            for (availablePluginEntry in newAvailablePluginEntries) {
+                for (dependency in availablePluginEntry.plugin.meta.dependencies) {
+                    val cause = Cause(
+                        description = "Fetch plugin ${availablePluginEntry.plugin.meta.id} dependency: $dependency",
+                        cause = operation
+                    )
+
+                    val providerPluginsFromSources = getProviderPluginsFromSources(dependency, cause)
+                    for ((key, entries) in providerPluginsFromSources) {
+                        for (entry in entries) {
+                            val meta = entry.meta
+                            val handler = try {
+                                entry.toPluginHandler()
+                            } catch (t: Throwable) {
+                                logger.warn(t) {
+                                    "Fail to get plugin handler for ${meta.id} from plugin source: $key " +
+                                            "(plugin source registered due to ${key}, operation due to ${cause.description})."
+                                }
+                                continue
+                            }
+
+                            val newPlugin = createPlugin(meta, entry.configuration, operation, handler)
+                            val newPluginEntry = InstallingPluginEntry(newPlugin, key)
+
+                            val nowPluginEntry = availablePluginEntries.compute(Pair(meta.id, meta.version)) { _, now ->
+                                when (now) {
+                                    null -> newPluginEntry
+                                    is InstallingPluginEntry -> {
+                                        if (now.pluginSourceKey == key) {
+                                            error("Plugin source $key returned at least two plugins with the same ID and version: ${meta.id}:${meta.version}.")
+                                        } else {
+                                            // 如果有多个插件源提供了相同的插件，则只取第一个插件源的结果。
+                                            now
+                                        }
+                                    }
+
+                                    is OriginalPluginEntry -> {
+                                        if (now.plugin.isLoaded || now.plugin.isCrashed) {
+                                            // 如果插件已经被加载，则不会更新它。
+                                            // 如果 CRASHED 且还在表内，可能是有意为之（因为默认情况下会释放）
+                                            now
+                                        } else {
+                                            logger.trace {
+                                                "Plugin ${now.plugin.meta.id}:${now.plugin.version} is already registered, " +
+                                                        "but it is not loaded and not crashed. It will be replaced by the new plugin from source $key."
+                                            }
+                                            newPluginEntry
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 如果当前插件确实被添加进表，则准备在下一轮迭代时收集它的依赖插件。
+                            if (newPluginEntry === nowPluginEntry) {
+                                nextNewAvailablePluginEntries.add(newPluginEntry)
+                            }
+                        }
+                    }
+                }
+            }
+            newAvailablePluginEntries = nextNewAvailablePluginEntries
+        } while (newAvailablePluginEntries.isNotEmpty())
+
+        // 构造依赖关系图。
+        val dependencyGraph = PluginDependencyGraph().apply {
+            appendAvailablePlugins(availablePluginEntries)
+        }
+
+        // 根据依赖关系能否满足为插件染色。
+        // 此检查只检查插件的依赖关系是否有人提供，并不检查依赖插件能否被提供。
+        // 此时检查出无法满足，则必定无法满足。但若能满足，也未必其依赖能被提供。
+        logger.trace { "Check dependency resolution..." }
+        for (availablePluginNode in dependencyGraph.availablePluginNodesByPlugin.values) {
+            val dependencyNodeCount = availablePluginNode.dependencyNodes.size
+            for (i in 0 until dependencyNodeCount) {
+                val dependencyNode = availablePluginNode.dependencyNodes[i]
+                if (dependencyNode.providableVersionNodes.isEmpty() && dependencyNode.dependency.required) {
+                    val id = availablePluginNode.pluginVersionNode.pluginNode.id
+                    val version = availablePluginNode.pluginVersionNode.version
+
+                    logger.trace { "The ${i + 1}-th dependency of plugin $id:$version is not satisfied." }
+                    availablePluginNode.mayDependencySatisfied = false
+                    break
+                }
+            }
+        }
+
+        // 插件 ID -> 插件版本 -> [ 上述 ID + 版本的所有提供商 ]
+        val providablePluginVersionNodes = dependencyGraph.providablePluginVersionNodes
+
+        // 为每个插件选择启动的候选版本。其按照其所能提供的功能的版本号降序排列，排除无法提供的插件。
+        val pluginAvailableNodeCandidates = mutableMapOf<NamespaceId, List<Pair<Version, PluginDependencyGraph.AvailablePluginNode>>>()
+        for ((pluginId, versionProviders) in providablePluginVersionNodes.firstEntries) {
+            val candidatesBeforeFiltering = versionProviders
+                .flatMap { it.value.map { e -> it.key to e } }
+
+            val candidates = candidatesBeforeFiltering
+                .filter { it.second.mayDependencySatisfied }
+                .sortedByDescending { it.first }
+
+            if (candidates.isEmpty()) {
+                logger.trace {
+                    val beforeFiltering = candidatesBeforeFiltering.joinToString {
+                        val plugin = it.second.pluginEntry.plugin
+                        "${plugin.id}:${plugin.version}"
+                    }
+                    "Plugin $pluginId has no available plugin candidates. Before filtering: $beforeFiltering"
+                }
+                continue
+            }
+            pluginAvailableNodeCandidates[pluginId] = candidates
+        }
+
+        // 插件 ID -> [ 能够提供该插件的可达插件列表，且必定非空 ]
+        val pluginAvailableNodeCandidateList = pluginAvailableNodeCandidates.entries.toList()
+        val availablePluginNodeCandidates = pluginAvailableNodeCandidateList.map { it.value }
+
+        // 构造笛卡尔积数量个依赖解析方案。
+        val solutionCount = availablePluginNodeCandidates.productSize()
+        if (solutionCount == 0) {
+            logger.trace { "No solution found for plugin dependency resolution." }
+            return
+        }
+
+        // 尝试每一种方案。
+        var solutionIndex = 1
+        logger.trace { "Found $solutionCount solutions for plugin dependency resolution." }
+        for (availablePluginNodes in availablePluginNodeCandidates.products()) {
+            logger.trace {
+                val solution = availablePluginNodes.joinToString {
+                    val plugin = it.second.pluginEntry.plugin
+                    "${plugin.id}:${plugin.version}"
+                }
+                "Try to resolve plugin dependency with the $solutionIndex / $solutionCount solution: $solution"
+            }
+
+            val availablePluginNodeCount = availablePluginNodes.size
+            val availablePluginNodeSet = availablePluginNodes.map { it.second }.toSet()
+
+            // 计算插件都是被谁提供的：插件 ID -> ( 插件版本, 提供者 )
+            val providers = mutableMapOf<NamespaceId, Pair<Version, PluginDependencyGraph.AvailablePluginNode>>()
+//            val provisions = mutableMapOf<>()
+            for (i in 0 until availablePluginNodeCount) {
+                val pair = availablePluginNodes[i]
+
+                val provisionId = pluginAvailableNodeCandidateList[i].key
+                val provisionVersion = pair.first
+
+                providers[provisionId] = pair
+            }
+
+            // 计算依赖关系，构建依赖关系遍历图，以便开始激活插件。
+            val traversingDependencyGraph = DAG<Pair<Version, PluginDependencyGraph.AvailablePluginNode>>()
+            val traversingDependencyGraphNodes = availablePluginNodes.map { traversingDependencyGraph.allocate(it) }
+
+            val availablePluginNodesToIndex = availablePluginNodes.mapIndexed { index, pair -> pair.second.pluginEntry to index }.toMap()
+            for (i in 0 until availablePluginNodeCount) {
+                val pair = availablePluginNodes[i]
+
+                val dependencyNodes = pair.second.dependencyNodes
+                val dependencyNodeCount = dependencyNodes.size
+
+                val traversingDependencyGraphNode = traversingDependencyGraphNodes[i]
+
+                for (j in 0 until dependencyNodeCount) {
+                    val dependencyNode = dependencyNodes[j]
+                    val dependsOn = dependencyNode.providableVersionNodes.singleOrNull { it in availablePluginNodeSet }
+
+                    // 若被依赖的插件存在，或并非硬性依赖，则视为此依赖可以被满足。
+                    // 此时不需要检查 original，因为在前面构造依赖图的时候已经筛去相关边。
+                    val dependencySatisfied = dependsOn != null || !dependencyNode.dependency.required
+
+                    if (dependencySatisfied) {
+                        if (dependsOn != null) {
+                            val dependsOnPlugin = dependsOn.pluginEntry.plugin
+                            val dependsOnIndex = availablePluginNodesToIndex[dependsOn.pluginEntry]
+                                ?: error("Plugin ${dependsOnPlugin.id}:${dependsOnPlugin.version} not found in available plugin nodes.")
+
+                            // 连接依赖关系，在此过程中会检查循环依赖。
+                            val dependsOnDependencyGraphNode = traversingDependencyGraphNodes[dependsOnIndex]
+                            traversingDependencyGraph.link(traversingDependencyGraphNode, dependsOnDependencyGraphNode)
+                        }
+                    } else {
+                        logger.trace {
+                            val plugin = pair.second.pluginEntry.plugin
+                            "The ${j + 1}-th dependency of plugin ${plugin.meta.id}:${plugin.version} is not satisfied: ${dependencyNode.dependency}"
+                        }
+                    }
+                }
+            }
+
+            // 此处需要考虑被间接依赖的插件能否满足。例如，自己的依赖插件满足，但是它们却无法启动，那最终还是无法启动。
+            traversingDependencyGraph.traverse(platform) {
+                // 检查依赖关系是否满足。
+
+            }
+
+            solutionIndex++
+        }
+
+        println(dependencyGraph)
     }
 }
