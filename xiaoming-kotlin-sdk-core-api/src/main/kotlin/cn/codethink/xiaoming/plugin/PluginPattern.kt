@@ -41,4 +41,6 @@ interface PluginPattern {
     fun matches(plugin: Plugin): Boolean
 
     fun matches(id: NamespaceId, version: Version): Boolean
+
+    fun matches(signature: PluginSignature): Boolean
 }

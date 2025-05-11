@@ -37,5 +37,9 @@ abstract class AbstractPluginPattern(
         return id == this.id && (pattern == null || pattern.matches(version))
     }
 
+    override fun matches(signature: PluginSignature): Boolean {
+        return matches(signature.id, signature.version)
+    }
+
     abstract override fun toString(): String
 }
