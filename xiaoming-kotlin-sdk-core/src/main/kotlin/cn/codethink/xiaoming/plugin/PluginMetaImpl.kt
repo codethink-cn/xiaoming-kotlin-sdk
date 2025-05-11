@@ -28,4 +28,6 @@ data class PluginMetaImpl(
     override val standard: VersionPattern?,
     override val provisions: List<PluginProvision>,
     override val dependencies: List<PluginDependency>
-) : PluginMeta
+) : PluginMeta {
+    override val signature: PluginSignature = PluginSignature(id, version)
+}

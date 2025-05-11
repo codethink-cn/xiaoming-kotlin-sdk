@@ -18,14 +18,7 @@
 
 package cn.codethink.xiaoming.event
 
-val EventContext<*>.isPublishing: Boolean
-    get() = state == EventState.PUBLISHING
-
-val EventContext<*>.isPublished: Boolean
-    get() = state == EventState.PUBLISHED
-
-val EventContext<*>.isInterrupted: Boolean
-    get() = state == EventState.INTERRUPTED
-
-val EventContext<*>.isPublishedOrInterrupted: Boolean
-    get() = isPublished || isInterrupted
+val EventContext<*>.isPublishing: Boolean get() = state == EventState.PUBLISHING
+val EventContext<*>.isPublished: Boolean get() = state == EventState.PUBLISHED
+val EventContext<*>.isInterrupted: Boolean get() = state == EventState.INTERRUPTED
+val EventContext<*>.isPublishedOrInterrupted: Boolean get() = isPublished || isInterrupted

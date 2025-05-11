@@ -18,23 +18,23 @@ package cn.codethink.xiaoming.event
 
 import com.fasterxml.jackson.annotation.JsonCreator
 
-class EventPublishPolicyImpl private constructor(
+class EventPolicyImpl private constructor(
     override val mutable: Boolean,
-    override val interceptable: Boolean
-) : EventPublishPolicy {
+    override val sticky: Boolean
+) : EventPolicy {
     companion object {
-        private val MUTABLE_INTERCEPTABLE = EventPublishPolicyImpl(mutable = true, interceptable = true)
-        private val IMMUTABLE_INTERCEPTABLE = EventPublishPolicyImpl(mutable = false, interceptable = true)
-        private val MUTABLE_NON_INTERCEPTABLE = EventPublishPolicyImpl(mutable = true, interceptable = false)
-        private val IMMUTABLE_NON_INTERCEPTABLE = EventPublishPolicyImpl(mutable = false, interceptable = false)
+        private val MUTABLE_INTERCEPTABLE = EventPolicyImpl(mutable = true, sticky = true)
+        private val IMMUTABLE_INTERCEPTABLE = EventPolicyImpl(mutable = false, sticky = true)
+        private val MUTABLE_NON_INTERCEPTABLE = EventPolicyImpl(mutable = true, sticky = false)
+        private val IMMUTABLE_NON_INTERCEPTABLE = EventPolicyImpl(mutable = false, sticky = false)
 
         @JvmStatic
         @JsonCreator
-        fun of(mutable: Boolean = false, interceptable: Boolean = false): EventPublishPolicy {
+        fun of(mutable: Boolean = false, sticky: Boolean = false): EventPolicy {
             return when {
-                mutable && interceptable -> MUTABLE_INTERCEPTABLE
-                !mutable && interceptable -> IMMUTABLE_INTERCEPTABLE
-                mutable && !interceptable -> MUTABLE_NON_INTERCEPTABLE
+                mutable && sticky -> MUTABLE_INTERCEPTABLE
+                !mutable && sticky -> IMMUTABLE_INTERCEPTABLE
+                mutable && !sticky -> MUTABLE_NON_INTERCEPTABLE
                 else -> IMMUTABLE_NON_INTERCEPTABLE
             }
         }

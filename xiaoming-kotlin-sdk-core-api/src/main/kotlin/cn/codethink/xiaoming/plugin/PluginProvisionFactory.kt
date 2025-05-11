@@ -32,13 +32,17 @@ import cn.codethink.xiaoming.util.toLiteralVersionPattern
 fun PluginProvision(
     id: NamespaceId,
     version: VersionPattern? = null,
-    priority: ProvisionPriority = ProvisionPriority.NORMAL
+    optional: Boolean = false,
+    superior: Boolean = false
 ): PluginProvision {
-    return CoreApi.getInstance().createPluginProvision(id, version, priority)
+    return CoreApi.getInstance().createPluginProvision(id, version, optional, superior)
 }
 
 @JvmSynthetic
 @ExperimentalApi
-fun PluginMeta.toPluginProvision(priority: ProvisionPriority = ProvisionPriority.NORMAL): PluginProvision {
-    return PluginProvision(id, version.toLiteralVersionPattern(), priority)
+fun PluginMeta.toPluginProvision(
+    optional: Boolean = false,
+    superior: Boolean = false
+): PluginProvision {
+    return PluginProvision(id, version.toLiteralVersionPattern(), optional, superior)
 }

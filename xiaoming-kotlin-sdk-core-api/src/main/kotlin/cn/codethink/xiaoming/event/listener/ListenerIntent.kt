@@ -16,10 +16,26 @@
 
 package cn.codethink.xiaoming.event.listener
 
-import cn.codethink.xiaoming.util.SegmentId
-import cn.codethink.xiaoming.util.SubjectDescriptor
+/**
+ * 监听器意图：监听器用于声明其是否能读写事件。
+ *
+ * 发布事件时，事件管理器会检查 [EventPolicy.mutable]，并根据监听器意图决定需要回调哪些监听器。
+ *
+ * @author Chuanwise
+ */
+enum class ListenerIntent {
+    /**
+     * 监听器总是会收到事件，但它只能读事件。
+     */
+    READ,
 
-data class ListenerDescriptorImpl(
-    override val id: SegmentId,
-    override val subject: SubjectDescriptor
-) : ListenerDescriptor
+    /**
+     * 监听器总是会收到事件，当事件只读时，监听器不会修改事件；否则，监听器**可能**修改事件。
+     */
+    WRITE_OPTIONAL,
+
+    /**
+     * 监听器只能收到可写事件，无法收到只读事件，因为它一定会写事件。
+     */
+    WRITE_REQUIRED
+}

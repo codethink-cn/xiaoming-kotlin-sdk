@@ -175,9 +175,9 @@ sealed class PluginStateTransition<E : CancellableEvent>(
         val oldState = checkAndSetTransitingState(plugin, operation)
 
         val event = createEvent(plugin, operation)
-        val eventContext = plugin.platform.eventManager.publishCancellableEvent(event)
+        val eventContext = plugin.platform.eventManager.publishEvent(event)
 
-        if (eventContext.isCancelled) {
+        if (eventContext.event.isCancelled) {
             checkAndSetOldState(plugin, oldState)
             throw CancellationException("Plugin state transiting cancelled")
         }

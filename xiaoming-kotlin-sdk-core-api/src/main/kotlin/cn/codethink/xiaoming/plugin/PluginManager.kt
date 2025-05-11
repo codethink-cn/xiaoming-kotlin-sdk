@@ -36,14 +36,25 @@ interface PluginManager {
     val plugins: Map<NamespaceId, Plugin>
 
     /**
+     * 已经加载的插件，包含提供者信息。
+     */
+    val providerPlugins: Map<NamespaceId, Plugin>
+
+    /**
      * 根据插件 ID 获取插件。
      *
-     * @param namespaceId 插件 ID。
+     * @param id 插件 ID。
      * @return 插件。
      */
-    fun getPlugin(namespaceId: NamespaceId): Plugin?
+    fun getPlugin(id: NamespaceId): Plugin?
 
-    fun getPluginOrFail(namespaceId: NamespaceId): Plugin {
-        return getPlugin(namespaceId) ?: throw NoSuchElementException("No plugin found for namespace ID: $namespaceId")
+    fun getPluginOrFail(id: NamespaceId): Plugin {
+        return getPlugin(id) ?: throw NoSuchElementException("No plugin found for namespace ID: $id")
+    }
+
+    fun getProviderPlugin(id: NamespaceId): Plugin?
+
+    fun getProviderPluginOrFail(id: NamespaceId): Plugin {
+        return getProviderPlugin(id) ?: throw NoSuchElementException("No provider plugin found for namespace ID: $id")
     }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-@file:JvmName("EventPublishPolicyFactory")
+@file:JvmName("EventPolicyFactory")
 
 package cn.codethink.xiaoming.event
 
@@ -22,7 +22,7 @@ import cn.codethink.xiaoming.api.CoreApi
 import cn.codethink.xiaoming.util.InternalApi
 
 @OptIn(InternalApi::class)
-@JvmName("createEventPublishPolicy")
-fun EventPublishPolicy(mutable: Boolean, interceptable: Boolean): EventPublishPolicy {
-    return CoreApi.getInstance().createEventPublishPolicy(mutable, interceptable)
+@JvmName("createEventPolicy")
+fun EventPolicy(mutable: Boolean, sticky: Boolean): EventPolicy {
+    return CoreApi.getInstance().createEventPolicy(mutable, sticky)
 }

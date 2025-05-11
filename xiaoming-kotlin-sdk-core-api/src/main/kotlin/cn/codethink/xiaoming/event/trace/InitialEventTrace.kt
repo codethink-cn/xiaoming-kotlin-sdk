@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,24 +14,15 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.event.operation
+package cn.codethink.xiaoming.event.trace
 
-import cn.codethink.xiaoming.event.listener.ListenerDescriptor
-import cn.codethink.xiaoming.util.Cause
+import cn.codethink.xiaoming.event.Event
 import cn.codethink.xiaoming.util.NotStableForInheritance
-import cn.codethink.xiaoming.util.Time
 
 /**
- * 对事件进行的操作。
- *
- * 平台在调用每个监听器处理事件的前后，对比事件的差异并将其记录，得到事件的修改历史表，
- * 以便后续监听器使用和方便调试。
+ * 初始事件追踪。
  *
  * @author Chuanwise
  */
 @NotStableForInheritance
-interface EventOperation {
-    val time: Time
-    val cause: Cause
-    val listener: ListenerDescriptor
-}
+interface InitialEventTrace<E : Event> : EventTrace<E>

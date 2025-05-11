@@ -32,27 +32,25 @@ import cn.codethink.xiaoming.util.toLiteralVersionPattern
  * ```
  * cn.codethink.xiaoming:lexicons                   // 任意版本的 lexicons 插件均可符合需求。
  * cn.codethink.xiaoming:lexicons:1.0.0             // 版本为 1.0.0 的 lexicons 插件。
- * cn.codethink.xiaoming:lexicons@stable            // 任意版本的 stable 频道的 lexicons 插件。
- * cn.codethink.xiaoming:lexicons:1.0.0@stable      // 版本为 1.0.0 的 stable 频道的 lexicons 插件。
- * cn.codethink.xiaoming:lexicons:1.0.0@stable!     // 版本为 1.0.0 的 stable 频道的 lexicons 插件，且必须是本地插件。
+ * cn.codethink.xiaoming:lexicons:1.0.0!            // 版本为 1.0.0 的 stable 频道的 lexicons 插件，且必须是这个插件而非其他插件提供的功能。
  * ```
  *
  * BNF 范式如下：
  *
  * ```bnf
- * pattern := id versionMatcherOrAny channelOrAny modeOrAny;
+ * pattern := id versionPatternOrAny originalOrAny requiredOrAny;
  *
- * versionMatcherOrAny :=                           // 任意版本。
- *                     | ":" versionMatcher         // 指定范围的版本。
+ * versionPatternOrAny :=                           // 任意版本。
+ *                     | ":" versionPattern         // 指定范围的版本。
  *                     ;
+
+ * originalOrAny :=                                 // 任意模式。
+ *               | "!"                              // 必须由原始插件提供。
+ *               ;
  *
- * channelOrAny :=                                  // 任意频道。
- *              | "@" channel                       // 指定频道。
- *              ;
- *
- * modeOrAny :=                                     // 任意模式。
- *           | "!";                                 // 本地模式。
- *           ;
+ * requiredOrAny :=                                 // 任意模式。
+ *               | "?"                              // 可选插件。
+ *               ;
  * ```
  *
  * @see NamespaceId

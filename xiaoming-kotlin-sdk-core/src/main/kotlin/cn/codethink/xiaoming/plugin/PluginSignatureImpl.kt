@@ -14,20 +14,38 @@
  * limitations under the License.
  */
 
-@file:JvmName("Plugins")
-
 package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.Version
 
-val Plugin.id: NamespaceId get() = meta.id
-val Plugin.name: String get() = meta.name
-val Plugin.version: Version get() = meta.version
-val Plugin.signature: PluginSignature get() = meta.signature
+class PluginSignatureImpl(
+    override val id: NamespaceId,
+    override val version: Version
+) : PluginSignature {
+    private val toPairCache = Pair(id, version)
 
-fun Plugin.toPluginDependency() = meta.toPluginDependency()
+    override fun toPair(): Pair<NamespaceId, Version> {
+        return toPairCache
+    }
 
-fun Plugin.isMatchedBy(pattern: PluginPattern): Boolean {
-    return pattern.matches(this)
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as PluginSignatureImpl
+
+        if (id != other.id) return false
+        return version == other.version
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + version.hashCode()
+        return result
+    }
+
+    override fun toString(): String {
+        return "$id:$version"
+    }
 }

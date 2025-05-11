@@ -14,34 +14,26 @@
  * limitations under the License.
  */
 
-
 package cn.codethink.xiaoming.event
 
 import cn.codethink.xiaoming.util.Cause
+import java.util.concurrent.atomic.AtomicBoolean
 
-/**
- * 事件接口。其实现类必须继承 [AbstractEvent]。
- *
- * @author Chuanwise
- * @see EventContext
- */
-interface Event : Cause {
-    /**
-     * 事件是否被拦截。
-     */
-    val isIntercepted: Boolean
+abstract class AbstractCancellableEvent @JvmOverloads constructor(
+    override val cause: Cause? = null,
+    initialCancelled: Boolean = false,
+    initialIntercepted: Boolean = false
+) : AbstractEvent(cause, initialIntercepted), CancellableEvent {
+    @Transient
+    private val mutableCancelled = AtomicBoolean(initialCancelled)
 
-    /**
-     * 拦截事件。
-     *
-     * @throws IllegalStateException 事件本已被拦截
-     */
-    fun intercept()
+    override val isCancelled: Boolean get() = mutableCancelled.get()
 
-    /**
-     * 确保事件被拦截。
-     *
-     * @return 事件是否因本次操作被拦截
-     */
-    fun ensureIntercepted(): Boolean
+    override fun cancel() {
+        check(ensureCancelled()) { "Event $this is already cancelled" }
+    }
+
+    override fun ensureCancelled(): Boolean {
+        return mutableCancelled.compareAndSet(false, true)
+    }
 }

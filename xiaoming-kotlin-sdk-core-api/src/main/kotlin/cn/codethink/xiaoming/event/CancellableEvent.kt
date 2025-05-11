@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,22 @@ package cn.codethink.xiaoming.event
 /**
  * 可取消事件。
  *
- * 事件若实现了本接口，可通过可取消的方式发布，亦可通过无法取消的方式发布。
- *
- * 当使用可取消的方式发布时，将会产生一个 [CancellableEventContext]。
- *
  * @author Chuanwise
- * @see CancellableEventContext
  */
-interface CancellableEvent : Event
+interface CancellableEvent : Event {
+    val isCancelled: Boolean
+
+    /**
+     * 取消事件。
+     *
+     * @throws IllegalStateException 事件本已被取消
+     */
+    fun cancel()
+
+    /**
+     * 确保事件被取消。
+     *
+     * @return 事件是否因本次操作被取消
+     */
+    fun ensureCancelled(): Boolean
+}

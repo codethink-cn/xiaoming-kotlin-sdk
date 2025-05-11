@@ -17,11 +17,7 @@
 package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.event.EventContext
-import cn.codethink.xiaoming.util.NamespaceId
-import cn.codethink.xiaoming.util.Version
 
 interface PluginEnableContext : PluginContext {
     override val event: EventContext<PluginEnableEvent>
-
-    val provisions: MutableMap<NamespaceId, Version>
 }

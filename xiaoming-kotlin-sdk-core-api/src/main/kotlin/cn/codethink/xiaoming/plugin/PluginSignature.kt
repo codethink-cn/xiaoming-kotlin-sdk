@@ -16,9 +16,27 @@
 
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.util.ExperimentalApi
+import cn.codethink.xiaoming.util.NamespaceId
+import cn.codethink.xiaoming.util.Version
 
-@ExperimentalApi
-enum class ProvisionPriority {
-    NORMAL
+/**
+ * 插件签名。
+ *
+ * @author Chuanwise
+ */
+interface PluginSignature {
+    /**
+     * 插件 ID。
+     */
+    val id: NamespaceId
+
+    /**
+     * 插件版本。
+     */
+    val version: Version
+
+    /**
+     * 插件 ID 和版本的组合。
+     */
+    fun toPair(): Pair<NamespaceId, Version>
 }

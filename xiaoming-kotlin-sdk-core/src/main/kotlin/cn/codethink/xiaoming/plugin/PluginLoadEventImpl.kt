@@ -16,6 +16,7 @@
 
 package cn.codethink.xiaoming.plugin
 
+import cn.codethink.xiaoming.event.AbstractCancellableEvent
 import cn.codethink.xiaoming.event.EventContext
 import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.Id
@@ -29,7 +30,7 @@ class PluginLoadEventImpl(
     override val operator: SubjectDescriptor,
     override val time: Time,
     override val id: Id
-) : PluginLoadEvent {
+) : AbstractCancellableEvent(), PluginLoadEvent {
     override lateinit var plugin: Plugin
     override val description: String = buildString {
         append("Operator $operator is loading plugin $pluginId at $time")

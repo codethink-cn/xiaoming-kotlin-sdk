@@ -17,35 +17,49 @@
 package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.LocalPlatform
-import cn.codethink.xiaoming.event.CancellableEvent
-import cn.codethink.xiaoming.event.CancellableEventContext
+import cn.codethink.xiaoming.Platform
+import cn.codethink.xiaoming.event.AbstractEvent
+import cn.codethink.xiaoming.event.ContextAwareEvent
 import cn.codethink.xiaoming.event.Event
 import cn.codethink.xiaoming.event.EventContext
-import cn.codethink.xiaoming.event.EventPublishPolicy
+import cn.codethink.xiaoming.event.EventPolicy
+import cn.codethink.xiaoming.event.EventState
 import cn.codethink.xiaoming.event.LocalEventManager
+import cn.codethink.xiaoming.event.trace.EventTrace
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.atomic.AtomicReference
 
 class LocalEventManagerImpl(
     override val platform: LocalPlatform
 ) : LocalEventManager {
-    override suspend fun <E : Event> publishLocalEvent(event: E, policy: EventPublishPolicy): EventContext<E> {
+    private inner class EventContextImpl<E : Event>(
+        override val event: E,
+        override val policy: EventPolicy
+    ) : EventContext<E> {
+        override val platform: Platform = this@LocalEventManagerImpl.platform
+
+        private val mutableState = AtomicReference<EventState>(EventState.ALLOCATED)
+        override val state: EventState get() = mutableState.get()
+
+        private val mutableTraces = CopyOnWriteArrayList<EventTrace<E>>()
+        override val traces: List<EventTrace<E>> get() = mutableTraces.toList()
+    }
+
+    override suspend fun <E : Event> publishLocalEvent(event: E, policy: EventPolicy): EventContext<E> {
         TODO("Not yet implemented")
     }
 
-    override suspend fun <E : CancellableEvent> publishLocalCancellableEvent(
-        event: E,
-        policy: EventPublishPolicy
-    ): CancellableEventContext<E> {
-        TODO("Not yet implemented")
-    }
+    @Suppress("UNCHECKED_CAST")
+    override suspend fun <E : Event> publishEvent(event: E, policy: EventPolicy): EventContext<E> {
+        require(event is AbstractEvent) { "Event must be an instance of AbstractEvent" }
 
-    override suspend fun <E : Event> publishEvent(event: E, policy: EventPublishPolicy): EventContext<E> {
-        TODO("Not yet implemented")
-    }
+        val context = EventContextImpl(event, policy)
+        if (event is ContextAwareEvent<*>) {
+            event.applyEventContext(context as EventContext<Nothing>)
+        }
 
-    override suspend fun <E : CancellableEvent> publishCancellableEvent(
-        event: E,
-        policy: EventPublishPolicy
-    ): CancellableEventContext<E> {
-        TODO("Not yet implemented")
+        // TODO: publish event.
+
+        return context
     }
 }

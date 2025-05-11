@@ -16,21 +16,23 @@
 
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.util.ExperimentalApi
 import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.VersionPattern
 
-@OptIn(ExperimentalApi::class)
 class PluginProvisionImpl(
     override val id: NamespaceId,
     override val version: VersionPattern?,
-    override val priority: ProvisionPriority
+    override val optional: Boolean,
+    override val superior: Boolean
 ) : AbstractPluginPattern(id, version), PluginProvision {
     private val toStringCache = buildString {
         append(id)
         version?.let {
-            append(":")
+            append(':')
             append(it)
+        }
+        if (optional) {
+            append('?')
         }
     }
 
@@ -40,15 +42,19 @@ class PluginProvisionImpl(
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is PluginProvision) return false
+        if (other !is PluginProvisionImpl) return false
 
         if (id != other.id) return false
-        return version != other.version
+        if (version != other.version) return false
+        if (optional != other.optional) return false
+        return superior == other.superior
     }
 
     override fun hashCode(): Int {
         var result = id.hashCode()
         result = 31 * result + (version?.hashCode() ?: 0)
+        result = 31 * result + optional.hashCode()
+        result = 31 * result + superior.hashCode()
         return result
     }
 }

@@ -16,9 +16,8 @@
 
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.util.ExperimentalApi
-
 interface PluginProvision : PluginPattern {
-    @ExperimentalApi
-    val priority: ProvisionPriority
+    val optional: Boolean
+
+    val superior: Boolean
 }

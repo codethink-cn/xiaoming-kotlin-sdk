@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.event
+@file:JvmName("MutableDirectedAcyclicGraphs")
 
-import cn.codethink.xiaoming.event.operation.SetCancelledEventOperation
-import cn.codethink.xiaoming.util.Operation
+package cn.codethink.xiaoming.util
 
-interface CancellableEventContext<E : CancellableEvent> : EventContext<E> {
-    val isCancelled: Boolean
-
-    /**
-     * 设置事件的取消状态。
-     *
-     * @param cancelled 新的取消状态
-     * @param operation 取消的跟踪信息
-     * @see SetCancelledEventOperation
-     */
-    fun setCancelled(cancelled: Boolean, operation: Operation)
+fun <N> MutableDirectedAcyclicGraph<N, Unit>.link(
+    tail: MutableDirectedAcyclicGraph.MutableNode<N, Unit>,
+    head: MutableDirectedAcyclicGraph.MutableNode<N, Unit>,
+): MutableDirectedAcyclicGraph.MutableEdge<N, Unit> {
+    return link(tail, head, Unit)
 }

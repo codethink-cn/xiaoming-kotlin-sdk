@@ -17,12 +17,10 @@ package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.Platform
 import cn.codethink.xiaoming.util.ExperimentalApi
-import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.NotStableForInheritance
 import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.PluginDescriptor
 import cn.codethink.xiaoming.util.Subject
-import cn.codethink.xiaoming.util.Version
 import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 
 /**
@@ -58,9 +56,14 @@ interface Plugin : Subject {
     val platform: Platform
 
     /**
-     * 插件提供的功能列表。
+     * 插件提供的其他插件功能列表，与 [PluginMeta.provisions] 一一对应。`null` 表示不需要提供。
      */
-    val provisions: Map<NamespaceId, Version>
+    val provisions: List<PluginSignature?>
+
+    /**
+     * 与 [PluginMeta.dependencies] 一一对应，`null` 表示对应条目未满足。
+     */
+    val dependencies: List<Plugin?>
 
     /**
      * 插件是否被分配。
@@ -68,14 +71,29 @@ interface Plugin : Subject {
     val isAllocated: Boolean
 
     /**
+     * 插件是否正在分配或已分配。
+     */
+    val isAllocatingOrAllocated: Boolean
+
+    /**
      * 插件是否被加载。
      */
     val isLoaded: Boolean
 
     /**
+     * 插件是否正在加载或已加载。
+     */
+    val isLoadingOrLoaded: Boolean
+
+    /**
      * 插件是否被启用。
      */
     val isEnabled: Boolean
+
+    /**
+     * 插件是否正在启用或已启用。
+     */
+    val isEnablingOrEnabled: Boolean
 
     /**
      * 插件是否已崩溃。

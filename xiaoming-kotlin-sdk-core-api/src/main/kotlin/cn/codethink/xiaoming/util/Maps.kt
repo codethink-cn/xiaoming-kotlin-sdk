@@ -20,6 +20,14 @@ package cn.codethink.xiaoming.util
 
 private object Null
 
+/**
+ * 从 [Map] 中获取值，如果没有找到，则抛出异常。
+ *
+ * @param K 键类型
+ * @param V 值类型
+ * @param key 键
+ * @return 值
+ */
 @InternalApi
 @Suppress("UNCHECKED_CAST")
 fun <K, V> Map<K, V>.getOrFail(key: K): V {
@@ -28,5 +36,65 @@ fun <K, V> Map<K, V>.getOrFail(key: K): V {
         throw NoSuchElementException("Key $key not found in map")
     } else {
         return value
+    }
+}
+
+/**
+ * 原子地比较 [Map] 中的值，并在它与值引用相同的时候删除它，否则不做任何变动。
+ *
+ * @param K 键类型
+ * @param V 值类型
+ * @param key 键
+ * @param expect 预期值
+ * @return 是否成功删除。
+ */
+@InternalApi
+fun <K, V> MutableMap<K, V>.compareAndRemove(key: K, expect: V): Boolean {
+    var result = false
+    computeIfPresent(key) { _, actual ->
+        if (actual === expect) {
+            result = true
+            null
+        } else {
+            result = false
+            actual
+        }
+    }
+    return result
+}
+
+/**
+ * 原子地比较 [Map] 中的值，并在此前没有值，或 [replace] 为 `true` 时替换它。
+ *
+ * @param K 键类型
+ * @param V 值类型
+ * @param key 键
+ * @param newValue 新值
+ * @param replace 是否在存在老值时替换
+ * @return 操作后该键对应的值引用。若成功替换，返回新值引用，否则返回当前对应于该键的值引用。
+ */
+@InternalApi
+fun <K, V> MutableMap<K, V>.putIfAbsentOrReplace(key: K, replace: Boolean, newValue: V): V? {
+    return computeIfAbsentOrReplace(key, replace) { newValue }
+}
+
+/**
+ * 原子地比较 [Map] 中的值，并在此前没有值，或 [replace] 为 `true` 时替换它。
+ *
+ * @param K 键类型
+ * @param V 值类型
+ * @param key 键
+ * @param replace 是否在存在老值时替换
+ * @param mappingFunction 映射函数
+ * @return 操作后该键对应的值引用。若成功替换，返回新值引用，否则返回当前对应于该键的值引用。
+ */
+@InternalApi
+fun <K, V> MutableMap<K, V>.computeIfAbsentOrReplace(key: K, replace: Boolean, mappingFunction: (K) -> V): V? {
+    return compute(key) { _, oldValue ->
+        if (oldValue === null || replace) {
+            mappingFunction(key)
+        } else {
+            oldValue
+        }
     }
 }

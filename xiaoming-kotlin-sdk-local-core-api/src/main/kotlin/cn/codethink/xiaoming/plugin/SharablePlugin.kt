@@ -17,8 +17,6 @@
 package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.RemotePlatform
-import cn.codethink.xiaoming.util.ExperimentalApi
-import cn.codethink.xiaoming.util.Operation
 
 /**
  * 可以在多个宿主间共享的插件。
@@ -30,15 +28,4 @@ interface SharablePlugin : Plugin {
      * 插件可以为多个宿主服务，此为其对应于不同宿主的插件对象。其中不包含当前宿主本身。
      */
     val instances: Map<RemotePlatform, RemoteServingPlugin>
-
-    /**
-     * 注册一个宿主服务实例。
-     *
-     * @param platform 宿主平台。
-     * @param handler 插件处理器。
-     * @param operation 操作。
-     * @return 注册的宿主服务实例。
-     */
-    @ExperimentalApi
-    fun registerInstance(platform: RemotePlatform, handler: PluginHandler, operation: Operation): RemoteServingPlugin
 }

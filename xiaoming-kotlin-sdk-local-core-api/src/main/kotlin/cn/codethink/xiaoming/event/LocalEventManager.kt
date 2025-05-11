@@ -17,7 +17,6 @@
 package cn.codethink.xiaoming.event
 
 import cn.codethink.xiaoming.LocalPlatform
-import cn.codethink.xiaoming.Platform
 import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 
 /**
@@ -37,14 +36,5 @@ interface LocalEventManager : EventManager {
      * @return 事件上下文
      */
     @JvmBlockingBridge
-    suspend fun <E : Event> publishLocalEvent(
-        event: E,
-        policy: EventPublishPolicy = EventPublishPolicy.MUTABLE_INTERCEPTABLE
-    ): EventContext<E>
-
-    @JvmBlockingBridge
-    suspend fun <E : CancellableEvent> publishLocalCancellableEvent(
-        event: E,
-        policy: EventPublishPolicy = EventPublishPolicy.MUTABLE_INTERCEPTABLE
-    ): CancellableEventContext<E>
+    suspend fun <E : Event> publishLocalEvent(event: E, policy: EventPolicy = EventPolicy.DEFAULT): EventContext<E>
 }

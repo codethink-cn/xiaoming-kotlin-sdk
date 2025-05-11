@@ -22,6 +22,9 @@ import cn.codethink.xiaoming.util.InternalApi
 import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.TestSubjectDescriptor
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 @OptIn(InternalApi::class, ExperimentalApi::class)
@@ -67,10 +70,22 @@ class LocalPluginManagerTest {
         val operation = Operation("Just for Test", TestSubjectDescriptor)
         val configuration = PluginConfiguration(crashOnRemoved = false)
 
-        val mcPlugin = platform.pluginManager.registerPlugin(TestPluginConstants.mc100, configuration, TestPluginHandler, operation)
-        val mcChatPlugin = platform.pluginManager.registerPlugin(TestPluginConstants.mcChat100, configuration, TestPluginHandler, operation)
-        val mcProPlugin = platform.pluginManager.registerPlugin(TestPluginConstants.mcPro100, configuration, TestPluginHandler, operation)
+        val pluginManager = platform.pluginManager
 
-        platform.pluginManager.loadPlugins(operation)
+        val mcPlugin = pluginManager.registerPlugin(TestPluginConstants.mc100, configuration, TestPluginHandler, operation)
+        val mcChatPlugin = pluginManager.registerPlugin(TestPluginConstants.mcChat100, configuration, TestPluginHandler, operation)
+        val mcProPlugin = pluginManager.registerPlugin(TestPluginConstants.mcPro100, configuration, TestPluginHandler, operation)
+
+        assertFalse(mcPlugin.isLoaded)
+        assertFalse(mcChatPlugin.isLoaded)
+        assertFalse(mcProPlugin.isLoaded)
+
+        pluginManager.loadPlugins(operation)
+
+        assertFalse(mcPlugin.isLoaded)
+        assertTrue(mcChatPlugin.isLoaded)
+        assertTrue(mcProPlugin.isLoaded)
+
+        assertEquals(mcProPlugin, pluginManager.getProviderPlugin(mcPlugin.id))
     }
 }

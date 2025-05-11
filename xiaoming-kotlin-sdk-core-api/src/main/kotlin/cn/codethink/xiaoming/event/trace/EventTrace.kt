@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.event.operation
+package cn.codethink.xiaoming.event.trace
 
-/**
- * 表示拦截事件的操作，通过。
- *
- * @author Chuanwise
- */
-interface InterruptEventOperation : EventOperation
+import cn.codethink.xiaoming.event.Event
+import cn.codethink.xiaoming.util.NotStableForInheritance
+import cn.codethink.xiaoming.util.Time
+
+@NotStableForInheritance
+interface EventTrace<out E : Event> {
+    val time: Time
+    val event: E
+}

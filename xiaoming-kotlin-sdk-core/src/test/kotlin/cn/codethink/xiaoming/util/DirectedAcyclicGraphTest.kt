@@ -17,17 +17,16 @@
 package cn.codethink.xiaoming.util
 
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 @OptIn(InternalApi::class, DelicateCoroutinesApi::class)
-class DAGTest {
-    private fun <T> DAG<T>.traverseToList(): List<T> {
+class DirectedAcyclicGraphTest {
+    private fun <T> MutableDirectedAcyclicGraph<T, Unit>.traverseToList(): List<T> {
         val result = mutableListOf<T>()
-        traverse { result.add(it.value) }
+        forEach { result.add(it.value) }
         return result
     }
 
@@ -44,7 +43,7 @@ class DAGTest {
 
     @Test
     fun testDAG(): Unit = runBlocking {
-        val graph = DAG<String>()
+        val graph = MutableDirectedAcyclicGraphImpl<String, Unit>()
 
         val a = graph.allocate("A")
         val b = graph.allocate("B")
@@ -88,7 +87,7 @@ class DAGTest {
         traverse.assertRelativeLocation("E", "F")
         traverse.assertRelativeLocation("D", "G")
 
-        graph.traverse(GlobalScope) {
+        graph.forEachConcurrently {
             println(it)
             delay(2000)
             println("$it done")

@@ -16,8 +16,8 @@
 
 package cn.codethink.xiaoming.api
 
-import cn.codethink.xiaoming.event.EventPublishPolicy
-import cn.codethink.xiaoming.event.EventPublishPolicyImpl
+import cn.codethink.xiaoming.event.EventPolicy
+import cn.codethink.xiaoming.event.EventPolicyImpl
 import cn.codethink.xiaoming.message.Text
 import cn.codethink.xiaoming.message.TextImpl
 import cn.codethink.xiaoming.plugin.PluginDependency
@@ -28,7 +28,8 @@ import cn.codethink.xiaoming.plugin.PluginPattern
 import cn.codethink.xiaoming.plugin.PluginPatternImpl
 import cn.codethink.xiaoming.plugin.PluginProvision
 import cn.codethink.xiaoming.plugin.PluginProvisionImpl
-import cn.codethink.xiaoming.plugin.ProvisionPriority
+import cn.codethink.xiaoming.plugin.PluginSignature
+import cn.codethink.xiaoming.plugin.PluginSignatureImpl
 import cn.codethink.xiaoming.serialization.CodecResolver
 import cn.codethink.xiaoming.serialization.CodecResolverInitializeContextImpl
 import cn.codethink.xiaoming.serialization.CodecResolverInitializer
@@ -230,9 +231,9 @@ class CoreApiImpl : CoreApi {
         return OperationImpl(message, cause, operator, time, id)
     }
 
-    // EventPublishPolicy
-    override fun createEventPublishPolicy(mutable: Boolean, interceptable: Boolean): EventPublishPolicy {
-        return EventPublishPolicyImpl.of(mutable, interceptable)
+    // EventPolicy
+    override fun createEventPolicy(mutable: Boolean, sticky: Boolean): EventPolicy {
+        return EventPolicyImpl.of(mutable, sticky)
     }
 
     // Data
@@ -282,12 +283,12 @@ class CoreApiImpl : CoreApi {
     }
 
     override fun createPluginProvision(string: String): PluginProvision {
-        val pattern = createPluginPattern(string)
-        return PluginProvisionImpl(pattern.id, pattern.version, ProvisionPriority.NORMAL)
+        val asDependency = createPluginDependency(string)
+        return PluginProvisionImpl(asDependency.id, asDependency.version, !asDependency.required, asDependency.original)
     }
 
-    override fun createPluginProvision(id: NamespaceId, version: VersionPattern?, priority: ProvisionPriority): PluginProvision {
-        return PluginProvisionImpl(id, version, priority)
+    override fun createPluginProvision(id: NamespaceId, version: VersionPattern?, optional: Boolean, superior: Boolean): PluginProvision {
+        return PluginProvisionImpl(id, version, optional, superior)
     }
 
     private fun String.toSegmentIdPatternElement(): SegmentIdPatternElement {
@@ -803,5 +804,9 @@ class CoreApiImpl : CoreApi {
 
     override fun createPluginDescriptor(id: NamespaceId): PluginDescriptor {
         return PluginDescriptorImpl(id)
+    }
+
+    override fun createPluginSignature(id: NamespaceId, version: Version): PluginSignature {
+        return PluginSignatureImpl(id, version)
     }
 }

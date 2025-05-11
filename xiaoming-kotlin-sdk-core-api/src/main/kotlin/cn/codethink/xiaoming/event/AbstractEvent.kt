@@ -16,38 +16,30 @@
 
 package cn.codethink.xiaoming.event
 
-import cn.codethink.xiaoming.Platform
-import cn.codethink.xiaoming.event.trace.EventTrace
+import cn.codethink.xiaoming.util.Cause
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * 事件环境，用于管理发布一次事件后的相关状态。例如分发状态、监听器修改记录、取消记录、拦截记录等等。
+ * 抽象事件。
  *
- * @param E 事件类型
+ * @property cause 事件的原因
  * @author Chuanwise
+ * @see Event
  */
-interface EventContext<out E : Event> {
-    /**
-     * 事件发布的平台。
-     */
-    val platform: Platform
+abstract class AbstractEvent @JvmOverloads constructor(
+    override val cause: Cause? = null,
+    initialIntercepted: Boolean = false
+) : Event {
+    @Transient
+    private val mutableIntercepted = AtomicBoolean(initialIntercepted)
 
-    /**
-     * 事件发布策略。
-     */
-    val policy: EventPolicy
+    override val isIntercepted: Boolean get() = mutableIntercepted.get()
 
-    /**
-     * 目前最新的事件对象。
-     */
-    val event: E
+    override fun intercept() {
+        check(ensureIntercepted()) { "Event $this is already intercepted" }
+    }
 
-    /**
-     * 事件的状态。
-     */
-    val state: EventState
-
-    /**
-     * 事件轨迹。
-     */
-    val traces: List<EventTrace<E>>
+    override fun ensureIntercepted(): Boolean {
+        return mutableIntercepted.compareAndSet(false, true)
+    }
 }

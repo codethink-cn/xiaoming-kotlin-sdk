@@ -42,6 +42,11 @@ interface PluginMeta {
     val version: Version
 
     /**
+     * 插件签名。
+     */
+    val signature: PluginSignature
+
+    /**
      * 插件描述。
      */
     val description: String?

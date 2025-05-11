@@ -20,14 +20,10 @@ import cn.codethink.xiaoming.Platform
 import cn.codethink.xiaoming.event.EventContext
 import cn.codethink.xiaoming.util.ExperimentalApi
 import cn.codethink.xiaoming.util.InternalApi
-import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.PluginDescriptor
-import cn.codethink.xiaoming.util.Version
 import cn.codethink.xiaoming.util.toPluginDescriptor
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantReadWriteLock
-import java.util.function.Consumer
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 
@@ -45,11 +41,7 @@ abstract class AbstractPlugin(
     // 若 platform === manager.platform，表明插件的服务对象是当前宿主。
     // 在插件加载和卸载时，需要获取 manager 内的插件独占锁，以免同 ID 插件冲突。
     // 否则，说明本“插件”只是表示一个正在为远程宿主服务的插件实例，不需要获取这些锁。
-    override val platform: Platform,
-
-    private val onLoad: Consumer<AbstractPlugin>,
-    private val onUnloadedOrCrashed: Consumer<AbstractPlugin>,
-    private val onReleased: Consumer<AbstractPlugin>
+    override val platform: Platform
 ) : Plugin {
     internal val lock: ReentrantReadWriteLock = ReentrantReadWriteLock()
     override val descriptor: PluginDescriptor = meta.id.toPluginDescriptor()
@@ -67,24 +59,33 @@ abstract class AbstractPlugin(
     // 如果插件状态正在被改变，则此为导致状态改变的操作，用于另一方打印错误信息。
     internal var transitingCauseNoLock: Operation? = null
 
+    override val isAllocatingOrAllocated: Boolean get() = lock.read { stateNoLock >= PluginState.ALLOCATING && stateNoLock < PluginState.RELEASING }
     override val isAllocated: Boolean get() = lock.read { stateNoLock >= PluginState.ALLOCATED && stateNoLock < PluginState.RELEASING }
+
+    override val isLoadingOrLoaded: Boolean get() = lock.read { stateNoLock >= PluginState.LOADING && stateNoLock < PluginState.UNLOADING }
     override val isLoaded: Boolean get() = lock.read { stateNoLock >= PluginState.LOADED && stateNoLock < PluginState.UNLOADING }
+
+    override val isEnablingOrEnabled: Boolean get() = lock.read { stateNoLock >= PluginState.ENABLING && stateNoLock < PluginState.DISABLING }
     override val isEnabled: Boolean get() = state == PluginState.ENABLED
+
     override val isCrashed: Boolean get() = state == PluginState.CRASHED
 
-    override val provisions: MutableMap<NamespaceId, Version> = ConcurrentHashMap()
+    // 下面的函数分为四类：action, doAction 和 onDoAction
+    // 1. action 即对外暴露的 API，调用可能导致依赖解析、锁获取和动作执行等等。
+    // 2. onAction 是对外暴露 API 在动作执行（doAction）之前可以执行的一些操作，通常是依赖检查或解除。
+    // 3. doAction 是真正执行操作的函数，其中在操作前或后执行 onDoAction，以便维护内部状态（如锁）。
 
-    private fun onLoad() {
-        onLoad.accept(this)
-    }
+    protected open suspend fun onDoLoad(operation: Operation) {}
 
-    private fun onUnloadedOrCrashed() {
-        onUnloadedOrCrashed.accept(this)
-    }
+    protected open suspend fun onDoEnable(operation: Operation) {}
 
-    private fun onReleased() {
-        onReleased.accept(this)
-    }
+    protected open suspend fun onDoDisable(operation: Operation) {}
+
+    protected open suspend fun onDoUnloaded(operation: Operation) {}
+
+    protected open suspend fun onDoCrashed(operation: Operation) {}
+
+    protected open suspend fun onDoReleased(operation: Operation) {}
 
     private abstract inner class AbstractPluginContext : PluginContext {
         override val platform: Platform = this@AbstractPlugin.platform
@@ -103,9 +104,7 @@ abstract class AbstractPlugin(
 
     private inner class PluginLoadContextImpl(override val event: EventContext<PluginLoadEvent>) : PluginLoadContext, AbstractPluginContext()
 
-    private inner class PluginEnableContextImpl(override val event: EventContext<PluginEnableEvent>) : PluginEnableContext, AbstractPluginContext() {
-        override val provisions: MutableMap<NamespaceId, Version> = this@AbstractPlugin.provisions
-    }
+    private inner class PluginEnableContextImpl(override val event: EventContext<PluginEnableEvent>) : PluginEnableContext, AbstractPluginContext()
 
     private inner class PluginDisableContextImpl(override val event: EventContext<PluginDisableEvent>) : PluginDisableContext, AbstractPluginContext()
 
@@ -125,14 +124,8 @@ abstract class AbstractPlugin(
         }
     }
 
-    private fun checkDependencies(operation: Operation, block: suspend (AbstractPlugin) -> Unit) {
-        for (dependency in meta.dependencies) {
-//            manager.
-        }
-    }
-
-    override suspend fun load(operation: Operation) {
-        onLoad()
+    internal suspend fun doLoad(operation: Operation) {
+        onDoLoad(operation)
         PluginStateTransition.Loaded.transit(this, operation) {
             handler.onLoad(PluginLoadContextImpl(it))
         }
@@ -145,7 +138,15 @@ abstract class AbstractPlugin(
         }
     }
 
-    override suspend fun enable(operation: Operation) {
+    internal suspend fun ensureDoLoad(operation: Operation) {
+        ensureAllocated(operation)
+        if (!isLoaded) {
+            doLoad(operation)
+        }
+    }
+
+    internal suspend fun doEnable(operation: Operation) {
+        onDoEnable(operation)
         PluginStateTransition.Enabled.transit(this, operation) {
             handler.onEnable(PluginEnableContextImpl(it))
         }
@@ -158,7 +159,15 @@ abstract class AbstractPlugin(
         }
     }
 
-    override suspend fun disable(operation: Operation) {
+    internal suspend fun ensureDoEnable(operation: Operation) {
+        ensureDoLoad(operation)
+        if (!isEnabled) {
+            doEnable(operation)
+        }
+    }
+
+    internal suspend fun doDisable(operation: Operation) {
+        onDoDisable(operation)
         PluginStateTransition.Disabled.transit(this, operation) {
             handler.onDisable(PluginDisableContextImpl(it))
         }
@@ -170,11 +179,17 @@ abstract class AbstractPlugin(
         }
     }
 
-    override suspend fun unload(operation: Operation) {
+    internal suspend fun ensureDoDisable(operation: Operation) {
+        if (isEnabled) {
+            doDisable(operation)
+        }
+    }
+
+    internal suspend fun doUnload(operation: Operation) {
+        onDoUnloaded(operation)
         PluginStateTransition.Unloaded.transit(this, operation) {
             handler.onUnload(PluginUnloadContextImpl(it))
         }
-        onUnloadedOrCrashed()
     }
 
     override suspend fun ensureUnloaded(operation: Operation) {
@@ -184,11 +199,18 @@ abstract class AbstractPlugin(
         }
     }
 
-    override suspend fun release(operation: Operation) {
+    internal suspend fun ensureDoUnload(operation: Operation) {
+        ensureDoDisable(operation)
+        if (isLoaded) {
+            doUnload(operation)
+        }
+    }
+
+    internal suspend fun doRelease(operation: Operation) {
+        onDoReleased(operation)
         PluginStateTransition.Released.transit(this, operation) {
             handler.onRelease(PluginReleaseContextImpl(it))
         }
-        onReleased()
     }
 
     override suspend fun ensureReleased(operation: Operation) {
@@ -198,10 +220,19 @@ abstract class AbstractPlugin(
         }
     }
 
-    internal suspend fun crash(operation: Operation) {
-        state = PluginState.CRASHED
-        onUnloadedOrCrashed()
+    internal suspend fun ensureDoRelease(operation: Operation) {
+        ensureDoUnload(operation)
+        if (isAllocated) {
+            doRelease(operation)
+        }
+    }
 
+    abstract suspend fun crash(operation: Operation)
+
+    internal suspend fun doCrash(operation: Operation) {
+        state = PluginState.CRASHED
+
+        onDoCrashed(operation)
         release(operation)
     }
 
@@ -209,5 +240,9 @@ abstract class AbstractPlugin(
         if (!isCrashed) {
             crash(operation)
         }
+    }
+
+    override fun toString(): String {
+        return "Plugin(id=$id, state=$state, operation=$operation)"
     }
 }

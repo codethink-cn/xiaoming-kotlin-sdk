@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.event.listener
+package cn.codethink.xiaoming.event.trace
 
-import cn.codethink.xiaoming.util.SegmentId
-import cn.codethink.xiaoming.util.SubjectDescriptor
+import cn.codethink.xiaoming.event.Event
+import cn.codethink.xiaoming.event.listener.ListenerDescriptor
+import cn.codethink.xiaoming.util.NotStableForInheritance
 
-data class ListenerDescriptorImpl(
-    override val id: SegmentId,
-    override val subject: SubjectDescriptor
-) : ListenerDescriptor
+@NotStableForInheritance
+interface MutationEventTrace<E : Event> : EventTrace<E> {
+    val listener: ListenerDescriptor
+}

@@ -16,6 +16,7 @@
 
 package cn.codethink.xiaoming.plugin
 
+import cn.codethink.xiaoming.event.AbstractCancellableEvent
 import cn.codethink.xiaoming.event.EventContext
 import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.Id
@@ -29,7 +30,7 @@ class PluginEnableEventImpl(
     override val operator: SubjectDescriptor,
     override val time: Time,
     override val id: Id
-) : PluginEnableEvent {
+) : AbstractCancellableEvent(), PluginEnableEvent {
     override lateinit var plugin: Plugin
     override val description: String = buildString {
         append("Operator $operator is enabling plugin $pluginId at $time")

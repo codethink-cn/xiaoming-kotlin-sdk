@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.event.operation
+@file:JvmName("PluginSignatureFactory")
 
-import cn.codethink.xiaoming.event.CancellableEventContext
+package cn.codethink.xiaoming.plugin
 
-/**
- * 表示设置事件取消状态的操作，在监听器调用 [CancellableEventContext.setCancelled] 时产生。
- *
- * @author Chuanwise
- */
-interface SetCancelledEventOperation : EventOperation {
-    var cancelled: Boolean
+import cn.codethink.xiaoming.api.CoreApi
+import cn.codethink.xiaoming.util.InternalApi
+import cn.codethink.xiaoming.util.NamespaceId
+import cn.codethink.xiaoming.util.Version
+
+@OptIn(InternalApi::class)
+@JvmName("createPluginSignature")
+fun PluginSignature(id: NamespaceId, version: Version): PluginSignature {
+    return CoreApi.getInstance().createPluginSignature(id, version)
 }

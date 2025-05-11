@@ -16,7 +16,7 @@
 
 package cn.codethink.xiaoming.event
 
-import cn.codethink.xiaoming.util.JavaFriendlyApi
+import cn.codethink.xiaoming.event.listener.ListenerIntent
 import cn.codethink.xiaoming.util.NotStableForInheritance
 
 /**
@@ -25,25 +25,21 @@ import cn.codethink.xiaoming.util.NotStableForInheritance
  * @author Chuanwise
  */
 @NotStableForInheritance
-interface EventPublishPolicy {
+interface EventPolicy {
     companion object {
         @JvmStatic
-        val MUTABLE_INTERCEPTABLE = EventPublishPolicy(mutable = true, interceptable = true)
-
-        @JvmStatic
-        val IMMUTABLE_INTERCEPTABLE = EventPublishPolicy(mutable = false, interceptable = true)
-
-        @JvmStatic
-        val MUTABLE_NON_INTERCEPTABLE = EventPublishPolicy(mutable = true, interceptable = false)
-
-        @JvmStatic
-        val IMMUTABLE_NON_INTERCEPTABLE = EventPublishPolicy(mutable = false, interceptable = false)
-
-        @JvmStatic
-        @JavaFriendlyApi
-        fun of(mutable: Boolean, interceptable: Boolean): EventPublishPolicy = EventPublishPolicy(mutable, interceptable)
+        val DEFAULT = EventPolicy(mutable = false, sticky = false)
     }
 
+    /**
+     * 事件是否可被修改。
+     *
+     * @see ListenerIntent
+     */
     val mutable: Boolean
-    val interceptable: Boolean
+
+    /**
+     * 事件是否粘性发布。
+     */
+    val sticky: Boolean
 }

@@ -16,13 +16,13 @@
 
 package cn.codethink.xiaoming.api
 
-import cn.codethink.xiaoming.event.EventPublishPolicy
+import cn.codethink.xiaoming.event.EventPolicy
 import cn.codethink.xiaoming.message.Text
 import cn.codethink.xiaoming.plugin.PluginDependency
 import cn.codethink.xiaoming.plugin.PluginMeta
 import cn.codethink.xiaoming.plugin.PluginPattern
 import cn.codethink.xiaoming.plugin.PluginProvision
-import cn.codethink.xiaoming.plugin.ProvisionPriority
+import cn.codethink.xiaoming.plugin.PluginSignature
 import cn.codethink.xiaoming.serialization.CodecResolver
 import cn.codethink.xiaoming.util.AndVersionPattern
 import cn.codethink.xiaoming.util.Cause
@@ -117,8 +117,8 @@ interface CoreApi {
         id: Id
     ): Operation
 
-    // EventPublishPolicy
-    fun createEventPublishPolicy(mutable: Boolean, interceptable: Boolean): EventPublishPolicy
+    // EventPolicy
+    fun createEventPolicy(mutable: Boolean, sticky: Boolean): EventPolicy
 
     // Data
     fun createData(raw: MutableStore): Data
@@ -142,7 +142,8 @@ interface CoreApi {
     fun createPluginProvision(
         id: NamespaceId,
         version: VersionPattern?,
-        priority: ProvisionPriority
+        optional: Boolean,
+        superior: Boolean
     ): PluginProvision
 
     fun createPluginPattern(string: String): PluginPattern
@@ -219,4 +220,9 @@ interface CoreApi {
     ): PluginMeta
 
     fun createPluginDescriptor(id: NamespaceId): PluginDescriptor
+
+    fun createPluginSignature(
+        id: NamespaceId,
+        version: Version,
+    ): PluginSignature
 }

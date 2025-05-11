@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,13 @@
 
 package cn.codethink.xiaoming.internal.event
 
+import cn.codethink.xiaoming.event.AbstractCancellableEvent
 import cn.codethink.xiaoming.event.PlatformStartEvent
 import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.withPrefixOrNull
-import com.fasterxml.jackson.annotation.JsonTypeName
 
-const val EVENT_TYPE_PLATFORM_START = "platform.start"
-
-@JsonTypeName(EVENT_TYPE_PLATFORM_START)
 class PlatformStartEventImpl(
-    override val cause: Cause? = null,
+    override val cause: Cause? = null
+) : AbstractCancellableEvent(), PlatformStartEvent {
     override val description: String = "Platform starting${cause?.description.withPrefixOrNull(": ").orEmpty()}"
-) : PlatformStartEvent
+}
