@@ -16,17 +16,28 @@
 
 package cn.codethink.xiaoming.plugin.jvm.classic
 
+import cn.codethink.xiaoming.plugin.PluginAllocateContext
 import cn.codethink.xiaoming.plugin.PluginDisableContext
 import cn.codethink.xiaoming.plugin.PluginEnableContext
+import cn.codethink.xiaoming.plugin.PluginExitContext
 import cn.codethink.xiaoming.plugin.PluginLoadContext
 import cn.codethink.xiaoming.plugin.PluginUnloadContext
 
 class LocalJvmClassicKotlinPluginHandler(
-    private val main: KotlinPluginMain,
     override val classPath: LocalJvmClassicPluginClassPath
 ) : LocalJvmClassicPluginHandler {
+    private lateinit var main: KotlinPluginMain
+
+    override suspend fun onAllocate(context: PluginAllocateContext) {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun onLoad(context: PluginLoadContext) = main.onLoad(context)
     override suspend fun onEnable(context: PluginEnableContext) = main.onEnable(context)
     override suspend fun onDisable(context: PluginDisableContext) = main.onDisable(context)
     override suspend fun onUnload(context: PluginUnloadContext) = main.onUnload(context)
+
+    override suspend fun onExit(context: PluginExitContext) {
+        TODO("Not yet implemented")
+    }
 }
