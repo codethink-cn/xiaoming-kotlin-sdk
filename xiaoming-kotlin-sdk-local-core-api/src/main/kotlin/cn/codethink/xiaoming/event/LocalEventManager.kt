@@ -17,7 +17,6 @@
 package cn.codethink.xiaoming.event
 
 import cn.codethink.xiaoming.LocalPlatform
-import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 
 /**
  * 本地事件管理器。
@@ -26,15 +25,4 @@ import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
  */
 interface LocalEventManager : EventManager {
     override val platform: LocalPlatform
-
-    /**
-     * 发布本地事件，事件将只会在本地注册的监听器出回调。事件不需要可被序列化和反序列化。
-     *
-     * @param E 事件类型
-     * @param event 事件
-     * @param policy 事件发布策略
-     * @return 事件上下文
-     */
-    @JvmBlockingBridge
-    suspend fun <E : Event> publishLocalEvent(event: E, policy: EventPolicy = EventPolicy.DEFAULT): EventContext<E>
 }

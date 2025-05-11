@@ -14,23 +14,25 @@
  * limitations under the License.
  */
 
-@file:JvmName("NamespaceIdMatcherFactory")
+@file:JvmName("Closures")
 
 package cn.codethink.xiaoming.util
 
-import cn.codethink.xiaoming.api.CoreApi
+@InternalApi
+fun <T> transitiveClosure(nodes: Iterable<T>, closure: (T) -> List<T>): List<T> {
+    val result = mutableSetOf<T>()
+    val queue = ArrayDeque<T>()
+    queue.addAll(nodes)
 
-@OptIn(InternalApi::class)
-@JvmName("createNamespaceIdMatcher")
-fun NamespaceIdMatcher(group: SegmentIdPattern, name: SegmentIdPatternElement): NamespaceIdPattern {
-    return CoreApi.getInstance().createNamespaceIdMatcher(group, name)
-}
+    while (queue.isNotEmpty()) {
+        val current = queue.removeFirst()
+        val children = closure(current)
+        for (child in children) {
+            if (result.add(child)) {
+                queue.add(child)
+            }
+        }
+    }
 
-@OptIn(InternalApi::class)
-fun parseNamespaceIdMatcher(string: String): NamespaceIdPattern {
-    return CoreApi.getInstance().parseNamespaceIdMatcher(string)
-}
-
-fun String.toNamespaceIdMatcher(): NamespaceIdPattern {
-    return parseNamespaceIdMatcher(this)
+    return result.toList()
 }

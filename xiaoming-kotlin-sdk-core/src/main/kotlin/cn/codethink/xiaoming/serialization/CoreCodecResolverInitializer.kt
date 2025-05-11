@@ -16,6 +16,11 @@
 
 package cn.codethink.xiaoming.serialization
 
+import cn.codethink.xiaoming.event.Event
+import cn.codethink.xiaoming.plugin.PluginDisableEventImpl
+import cn.codethink.xiaoming.plugin.PluginEnableEventImpl
+import cn.codethink.xiaoming.plugin.PluginLoadEventImpl
+import cn.codethink.xiaoming.plugin.PluginUnloadEventImpl
 import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.CauseImpl
 import cn.codethink.xiaoming.util.Id
@@ -54,7 +59,6 @@ class CoreCodecResolverInitializer : CodecResolverInitializer {
             type<SegmentIdPattern> {
                 string { it.toSegmentIdPattern() }
             }
-
             type<PluginDescriptor> {
                 string(
                     serializer = { it.id.toString() },
@@ -64,6 +68,15 @@ class CoreCodecResolverInitializer : CodecResolverInitializer {
 
             type<Id> {
                 int { it.toNumericalId() }
+            }
+
+            type<Event> {
+                type {
+                    hint<PluginLoadEventImpl>("plugin_load")
+                    hint<PluginEnableEventImpl>("plugin_enable")
+                    hint<PluginDisableEventImpl>("plugin_disable")
+                    hint<PluginUnloadEventImpl>("plugin_unload")
+                }
             }
         }
     }

@@ -18,6 +18,10 @@ package cn.codethink.xiaoming.api
 
 import cn.codethink.xiaoming.event.EventPolicy
 import cn.codethink.xiaoming.event.EventPolicyImpl
+import cn.codethink.xiaoming.event.listener.ListenerConfiguration
+import cn.codethink.xiaoming.event.listener.ListenerConfigurationImpl
+import cn.codethink.xiaoming.event.listener.ListenerDescriptor
+import cn.codethink.xiaoming.event.listener.ListenerPriority
 import cn.codethink.xiaoming.message.Text
 import cn.codethink.xiaoming.message.TextImpl
 import cn.codethink.xiaoming.plugin.PluginDependency
@@ -169,7 +173,7 @@ class CoreApiImpl : CoreApi {
     }
 
     override fun createSegmentId(string: String): SegmentId {
-        return SegmentIdImpl(string.split("."))
+        return SegmentIdImpl(string.split(SegmentId.SEPARATOR))
     }
 
     override fun createNumericalId(value: Long): NumericalId {
@@ -190,7 +194,7 @@ class CoreApiImpl : CoreApi {
         }
     }
 
-    override fun createNamespaceId(group: SegmentId, name: SegmentId): NamespaceId {
+    override fun createNamespaceId(group: SegmentId, name: String): NamespaceId {
         return NamespaceIdImpl(group, name)
     }
 
@@ -199,7 +203,7 @@ class CoreApiImpl : CoreApi {
         require(split.size == 2) {
             "Namespace id string should contain exactly one colon."
         }
-        return NamespaceIdImpl(split[0].toSegmentId(), split[1].toSegmentId())
+        return NamespaceIdImpl(split[0].toSegmentId(), split[1])
     }
 
     override fun createRandomUniversalUniqueId(): UniversalUniqueId {
@@ -460,7 +464,7 @@ class CoreApiImpl : CoreApi {
     }
 
     // NamespaceIdMatcher
-    override fun createNamespaceIdMatcher(group: SegmentIdPattern, name: SegmentIdPattern): NamespaceIdPattern {
+    override fun createNamespaceIdMatcher(group: SegmentIdPattern, name: SegmentIdPatternElement): NamespaceIdPattern {
         return NamespaceIdPatternImpl(group, name)
     }
 
@@ -473,7 +477,7 @@ class CoreApiImpl : CoreApi {
         require(colonIndex != -1) { "Namespace id matcher string should contain a colon." }
 
         val group = string.substring(0, colonIndex).toSegmentIdPattern()
-        val name = string.substring(colonIndex + 1).toSegmentIdPattern()
+        val name = string.substring(colonIndex + 1).toSegmentIdPatternElement()
 
         return NamespaceIdPatternImpl(group, name)
     }
@@ -808,5 +812,23 @@ class CoreApiImpl : CoreApi {
 
     override fun createPluginSignature(id: NamespaceId, version: Version): PluginSignature {
         return PluginSignatureImpl(id, version)
+    }
+
+    private val defaultListenerConfiguration = ListenerConfigurationImpl(ListenerPriority.DEFAULT, emptyList(), emptyList())
+
+    override fun createListenerConfiguration(
+        priority: ListenerPriority,
+        before: List<ListenerDescriptor>,
+        after: List<ListenerDescriptor>
+    ): ListenerConfiguration {
+        return if (
+            (before === emptyList<Nothing>()) &&
+            (after === emptyList<Nothing>()) &&
+            (priority === ListenerPriority.DEFAULT)
+        ) {
+            defaultListenerConfiguration
+        } else {
+            ListenerConfigurationImpl(priority, before, after)
+        }
     }
 }

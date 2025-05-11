@@ -22,22 +22,12 @@ import cn.codethink.xiaoming.api.CoreApi
 
 @OptIn(InternalApi::class)
 @JvmName("createNamespaceId")
-fun NamespaceId(group: SegmentId, name: SegmentId): NamespaceId {
+fun NamespaceId(group: SegmentId, name: String): NamespaceId {
     return CoreApi.getInstance().createNamespaceId(group, name)
 }
 
 @JvmName("createNamespaceId")
 fun NamespaceId(group: String, name: String): NamespaceId {
-    return NamespaceId(group.toSegmentId(), name.toSegmentId())
-}
-
-@JvmName("createNamespaceId")
-fun NamespaceId(group: SegmentId, name: String): NamespaceId {
-    return NamespaceId(group, name.toSegmentId())
-}
-
-@JvmName("createNamespaceId")
-fun NamespaceId(group: String, name: SegmentId): NamespaceId {
     return NamespaceId(group.toSegmentId(), name)
 }
 

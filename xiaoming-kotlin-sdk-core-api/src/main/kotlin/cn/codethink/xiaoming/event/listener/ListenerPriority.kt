@@ -14,23 +14,21 @@
  * limitations under the License.
  */
 
-@file:JvmName("NamespaceIdMatcherFactory")
+package cn.codethink.xiaoming.event.listener
 
-package cn.codethink.xiaoming.util
+/**
+ * 监听器优先级。
+ *
+ * @author Chuanwise
+ */
+enum class ListenerPriority {
+    LOWEST,
 
-import cn.codethink.xiaoming.api.CoreApi
+    LOW,
 
-@OptIn(InternalApi::class)
-@JvmName("createNamespaceIdMatcher")
-fun NamespaceIdMatcher(group: SegmentIdPattern, name: SegmentIdPatternElement): NamespaceIdPattern {
-    return CoreApi.getInstance().createNamespaceIdMatcher(group, name)
-}
+    DEFAULT,
 
-@OptIn(InternalApi::class)
-fun parseNamespaceIdMatcher(string: String): NamespaceIdPattern {
-    return CoreApi.getInstance().parseNamespaceIdMatcher(string)
-}
+    HIGH,
 
-fun String.toNamespaceIdMatcher(): NamespaceIdPattern {
-    return parseNamespaceIdMatcher(this)
+    HIGHEST
 }

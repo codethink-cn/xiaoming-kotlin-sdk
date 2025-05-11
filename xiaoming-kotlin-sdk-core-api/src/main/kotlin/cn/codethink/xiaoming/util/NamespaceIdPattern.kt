@@ -30,11 +30,11 @@ interface NamespaceIdPattern {
 
         @JvmStatic
         @JavaFriendlyApi
-        fun of(group: SegmentIdPattern, name: SegmentIdPattern): NamespaceIdPattern = NamespaceIdMatcher(group, name)
+        fun of(group: SegmentIdPattern, name: SegmentIdPatternElement): NamespaceIdPattern = NamespaceIdMatcher(group, name)
     }
 
     val group: SegmentIdPattern
-    val name: SegmentIdPattern
+    val name: SegmentIdPatternElement
 
     fun matches(namespaceId: NamespaceId): Boolean
 }

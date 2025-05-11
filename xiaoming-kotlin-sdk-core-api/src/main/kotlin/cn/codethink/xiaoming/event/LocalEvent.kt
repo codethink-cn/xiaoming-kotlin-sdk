@@ -14,23 +14,11 @@
  * limitations under the License.
  */
 
-@file:JvmName("NamespaceIdMatcherFactory")
+package cn.codethink.xiaoming.event
 
-package cn.codethink.xiaoming.util
-
-import cn.codethink.xiaoming.api.CoreApi
-
-@OptIn(InternalApi::class)
-@JvmName("createNamespaceIdMatcher")
-fun NamespaceIdMatcher(group: SegmentIdPattern, name: SegmentIdPatternElement): NamespaceIdPattern {
-    return CoreApi.getInstance().createNamespaceIdMatcher(group, name)
-}
-
-@OptIn(InternalApi::class)
-fun parseNamespaceIdMatcher(string: String): NamespaceIdPattern {
-    return CoreApi.getInstance().parseNamespaceIdMatcher(string)
-}
-
-fun String.toNamespaceIdMatcher(): NamespaceIdPattern {
-    return parseNamespaceIdMatcher(this)
-}
+/**
+ * 标记本地事件的接口。这些事件只会发布到本地的监听器上。
+ *
+ * @author Chuanwise
+ */
+interface LocalEvent : Event

@@ -21,8 +21,6 @@ package cn.codethink.xiaoming.util
  *
  * 可被序列化为字符串，并被反序列化构造。
  *
- * 其中 [WildCardSegmentIdPatternElement.isSingle] 为 `false` 的元素不能连续出现。
- *
  * @author Chuanwise
  * @see SegmentIdPatternElement
  */

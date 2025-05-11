@@ -27,6 +27,8 @@ package cn.codethink.xiaoming.util
  */
 interface SegmentId : TextualId, List<String> {
     companion object {
+        const val SEPARATOR = "."
+
         @JvmStatic
         @JavaFriendlyApi
         fun parse(string: String): SegmentId = string.toSegmentId()

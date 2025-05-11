@@ -18,9 +18,12 @@ package cn.codethink.xiaoming.util
 
 data class NamespaceIdPatternImpl(
     override val group: SegmentIdPattern,
-    override val name: SegmentIdPattern
+    override val name: SegmentIdPatternElement
 ) : NamespaceIdPattern {
     override fun matches(namespaceId: NamespaceId): Boolean {
-        return group.matches(namespaceId.group) && name.matches(namespaceId.name)
+        return group.matches(namespaceId.group) && when (name) {
+            is SingleSegmentIdPatternElement -> name.matches(namespaceId.name)
+            is WildCardSegmentIdPatternElement -> true
+        }
     }
 }

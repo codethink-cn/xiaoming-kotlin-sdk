@@ -25,4 +25,4 @@ package cn.codethink.xiaoming.util
  * @see WildCardSegmentIdPatternElement
  */
 @NotStableForInheritance
-interface SegmentIdPatternElement
+sealed interface SegmentIdPatternElement

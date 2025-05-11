@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package cn.codethink.xiaoming.event.listener
 
-import cn.codethink.xiaoming.util.SegmentId
-import cn.codethink.xiaoming.util.SubjectDescriptor
+import cn.codethink.xiaoming.util.NamespaceId
 
 /**
  * 监听器描述符，用于唯一地指定一个监听器，通过 [Listener.descriptor] 获取。
@@ -26,6 +25,5 @@ import cn.codethink.xiaoming.util.SubjectDescriptor
  * @see Listener
  */
 interface ListenerDescriptor {
-    val id: SegmentId
-    val subject: SubjectDescriptor
+    val id: NamespaceId
 }

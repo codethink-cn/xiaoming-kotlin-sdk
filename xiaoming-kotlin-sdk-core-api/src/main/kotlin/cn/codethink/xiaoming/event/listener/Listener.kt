@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,14 @@
 
 package cn.codethink.xiaoming.event.listener
 
-interface Listener {
+import cn.codethink.xiaoming.event.Event
+
+interface Listener<E : Event> {
     val descriptor: ListenerDescriptor
+
+    val type: String
+
+    var handler: ListenerHandler<E>
+
+    val configuration: ListenerConfiguration
 }

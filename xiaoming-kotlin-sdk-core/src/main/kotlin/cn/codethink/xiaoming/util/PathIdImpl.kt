@@ -16,12 +16,13 @@
 
 package cn.codethink.xiaoming.util
 
-private const val SEGMENT_SEPARATOR = "."
-private val SEGMENT_REGEX = "[\\w-]+".toRegex()
-
 data class SegmentIdImpl(
     private val segments: List<String>
 ) : SegmentId, Id, List<String> by segments {
+    companion object {
+        val SEGMENT_REGEX = "[\\w-]+".toRegex()
+    }
+
     init {
         assert(segments.isNotEmpty()) { "Segments should not be empty." }
         assert(segments.all { it.matches(SEGMENT_REGEX) }) { "Segments should match the regexp: $SEGMENT_REGEX." }
@@ -29,7 +30,7 @@ data class SegmentIdImpl(
 
     override fun toList(): List<String> = segments
 
-    private val toStringCache: String = segments.joinToString(SEGMENT_SEPARATOR)
+    private val toStringCache: String = segments.joinToString(SegmentId.SEPARATOR)
     override fun toString(): String = toStringCache
 
     override fun hashCode(): Int = toStringCache.hashCode()

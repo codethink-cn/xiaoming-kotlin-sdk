@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,8 +29,12 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer
 @JsonDeserialize(using = NamespaceIdDeserializer::class)
 class NamespaceIdImpl(
     override val group: SegmentId,
-    override val name: SegmentId
+    override val name: String
 ) : NamespaceId {
+    init {
+        check(SegmentIdImpl.SEGMENT_REGEX.matches(name)) { "Name should match the regexp: ${SegmentIdImpl.SEGMENT_REGEX}." }
+    }
+
     private val toStringCache = "$group:$name"
 
     override fun toString(): String = toStringCache

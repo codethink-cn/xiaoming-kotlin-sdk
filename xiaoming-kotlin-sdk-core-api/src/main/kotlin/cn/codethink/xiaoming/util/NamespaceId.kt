@@ -24,5 +24,5 @@ package cn.codethink.xiaoming.util
  */
 interface NamespaceId : TextualId {
     val group: SegmentId
-    val name: SegmentId
+    val name: String
 }

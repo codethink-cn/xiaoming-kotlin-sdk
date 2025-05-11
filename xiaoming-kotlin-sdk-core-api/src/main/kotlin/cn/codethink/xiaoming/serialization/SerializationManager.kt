@@ -24,7 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
  * @author Chuanwise
  */
 interface SerializationManager {
-    val handlerManager: CodecResolver
+    val codecResolver: CodecResolver
 
     val jsonFileObjectMapper: ObjectMapper
     val jsonDataObjectMapper: ObjectMapper

@@ -20,6 +20,7 @@ package cn.codethink.xiaoming.event
  * 可取消事件。
  *
  * @author Chuanwise
+ * @see Event
  */
 interface CancellableEvent : Event {
     val isCancelled: Boolean

@@ -20,7 +20,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicReference
 
-
 @InternalApi
 class MutableDirectedAcyclicGraphImpl<N, E> : MutableDirectedAcyclicGraph<N, E> {
     private class NodeImpl<N, E>(override var value: N) : MutableDirectedAcyclicGraph.MutableNode<N, E> {
@@ -183,23 +182,4 @@ class MutableDirectedAcyclicGraphImpl<N, E> : MutableDirectedAcyclicGraph<N, E> 
             }
         }
     }
-}
-
-@InternalApi
-fun <T> transitiveClosure(nodes: Iterable<T>, closure: (T) -> List<T>): List<T> {
-    val result = mutableSetOf<T>()
-    val queue = ArrayDeque<T>()
-    queue.addAll(nodes)
-
-    while (queue.isNotEmpty()) {
-        val current = queue.removeFirst()
-        val children = closure(current)
-        for (child in children) {
-            if (result.add(child)) {
-                queue.add(child)
-            }
-        }
-    }
-
-    return result.toList()
 }

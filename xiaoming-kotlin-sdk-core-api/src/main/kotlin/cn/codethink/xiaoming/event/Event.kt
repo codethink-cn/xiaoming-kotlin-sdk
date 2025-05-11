@@ -23,7 +23,9 @@ import cn.codethink.xiaoming.util.Cause
  * 事件接口。其实现类必须继承 [AbstractEvent]。
  *
  * @author Chuanwise
+ * @see LocalEvent
  * @see EventContext
+ * @see CancellableEvent
  */
 interface Event : Cause {
     /**

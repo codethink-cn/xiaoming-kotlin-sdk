@@ -22,7 +22,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 
 class SerializationManagerImpl(
-    override val handlerManager: CodecResolver = CodecResolverImpl()
+    override val codecResolver: CodecResolver = CodecResolverImpl()
 ) : SerializationManager {
     override val jsonFileObjectMapper: ObjectMapper = createJsonObjectMapper().apply {
         enable(SerializationFeature.INDENT_OUTPUT)

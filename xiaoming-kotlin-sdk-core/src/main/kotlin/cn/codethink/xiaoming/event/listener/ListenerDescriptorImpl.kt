@@ -16,10 +16,9 @@
 
 package cn.codethink.xiaoming.event.listener
 
-import cn.codethink.xiaoming.util.SegmentId
-import cn.codethink.xiaoming.util.SubjectDescriptor
+import cn.codethink.xiaoming.util.NamespaceId
 
-data class ListenerDescriptorImpl(
-    override val id: SegmentId,
-    override val subject: SubjectDescriptor
+@JvmInline
+value class ListenerDescriptorImpl(
+    override val id: NamespaceId
 ) : ListenerDescriptor

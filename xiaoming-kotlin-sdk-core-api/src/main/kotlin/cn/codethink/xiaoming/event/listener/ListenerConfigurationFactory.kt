@@ -14,23 +14,20 @@
  * limitations under the License.
  */
 
-@file:JvmName("NamespaceIdMatcherFactory")
+@file:JvmName("ListenerConfigurationFactory")
 
-package cn.codethink.xiaoming.util
+package cn.codethink.xiaoming.event.listener
 
 import cn.codethink.xiaoming.api.CoreApi
+import cn.codethink.xiaoming.util.InternalApi
 
+@JvmOverloads
 @OptIn(InternalApi::class)
-@JvmName("createNamespaceIdMatcher")
-fun NamespaceIdMatcher(group: SegmentIdPattern, name: SegmentIdPatternElement): NamespaceIdPattern {
-    return CoreApi.getInstance().createNamespaceIdMatcher(group, name)
-}
-
-@OptIn(InternalApi::class)
-fun parseNamespaceIdMatcher(string: String): NamespaceIdPattern {
-    return CoreApi.getInstance().parseNamespaceIdMatcher(string)
-}
-
-fun String.toNamespaceIdMatcher(): NamespaceIdPattern {
-    return parseNamespaceIdMatcher(this)
+@JvmName("createListenerConfiguration")
+fun ListenerConfiguration(
+    priority: ListenerPriority = ListenerPriority.DEFAULT,
+    before: List<ListenerDescriptor> = emptyList(),
+    after: List<ListenerDescriptor> = emptyList(),
+): ListenerConfiguration {
+    return CoreApi.getInstance().createListenerConfiguration(priority, before, after)
 }

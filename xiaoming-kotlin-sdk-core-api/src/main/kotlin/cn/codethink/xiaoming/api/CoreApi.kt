@@ -17,6 +17,9 @@
 package cn.codethink.xiaoming.api
 
 import cn.codethink.xiaoming.event.EventPolicy
+import cn.codethink.xiaoming.event.listener.ListenerConfiguration
+import cn.codethink.xiaoming.event.listener.ListenerDescriptor
+import cn.codethink.xiaoming.event.listener.ListenerPriority
 import cn.codethink.xiaoming.message.Text
 import cn.codethink.xiaoming.plugin.PluginDependency
 import cn.codethink.xiaoming.plugin.PluginMeta
@@ -96,7 +99,7 @@ interface CoreApi {
 
     fun createStringId(string: String): StringId
 
-    fun createNamespaceId(group: SegmentId, name: SegmentId): NamespaceId
+    fun createNamespaceId(group: SegmentId, name: String): NamespaceId
     fun createNamespaceId(string: String): NamespaceId
 
     fun createRandomUniversalUniqueId(): UniversalUniqueId
@@ -158,7 +161,7 @@ interface CoreApi {
     fun createSegmentIdPattern(matchers: List<SegmentIdPatternElement>): SegmentIdPattern
 
     // NamespaceIdMatcher
-    fun createNamespaceIdMatcher(group: SegmentIdPattern, name: SegmentIdPattern): NamespaceIdPattern
+    fun createNamespaceIdMatcher(group: SegmentIdPattern, name: SegmentIdPatternElement): NamespaceIdPattern
     fun parseNamespaceIdMatcher(string: String): NamespaceIdPattern
 
     // VersionPattern
@@ -225,4 +228,10 @@ interface CoreApi {
         id: NamespaceId,
         version: Version,
     ): PluginSignature
+
+    fun createListenerConfiguration(
+        priority: ListenerPriority,
+        before: List<ListenerDescriptor>,
+        after: List<ListenerDescriptor>,
+    ): ListenerConfiguration
 }

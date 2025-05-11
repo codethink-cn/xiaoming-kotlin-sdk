@@ -18,6 +18,7 @@ package cn.codethink.xiaoming
 
 import cn.codethink.xiaoming.data.PlatformData
 import cn.codethink.xiaoming.event.LocalEventManager
+import cn.codethink.xiaoming.event.LocalEventManagerImpl
 import cn.codethink.xiaoming.exception.LocalExceptionManager
 import cn.codethink.xiaoming.library.LibraryManager
 import cn.codethink.xiaoming.permission.LocalPermissionManager
@@ -25,7 +26,6 @@ import cn.codethink.xiaoming.permission.PermissionBundle
 import cn.codethink.xiaoming.permission.PermissionConstraint
 import cn.codethink.xiaoming.permission.PermissionEntry
 import cn.codethink.xiaoming.permission.PermissionMatcher
-import cn.codethink.xiaoming.plugin.LocalEventManagerImpl
 import cn.codethink.xiaoming.plugin.LocalPluginManager
 import cn.codethink.xiaoming.plugin.LocalPluginManagerImpl
 import cn.codethink.xiaoming.serialization.SerializationManager
@@ -102,7 +102,7 @@ class TestLocalPlatformConfiguration(
 class TestLocalPlatform(
     configuration: LocalPlatformConfiguration = TestLocalPlatformConfiguration()
 ) : AbstractLocalPlatform(configuration) {
-    override val serializationManager: SerializationManager get() = TODO()
+    override val serializationManager: SerializationManager = SerializationManagerImpl()
     override val libraryManager: LibraryManager get() = TODO()
     override val eventManager: LocalEventManager = LocalEventManagerImpl(this)
     override val permissionManager: LocalPermissionManager get() = TODO()
