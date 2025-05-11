@@ -62,6 +62,15 @@ interface LocalPluginManager : PluginManager {
     fun getAvailablePlugin(id: NamespaceId, version: Version): Plugin?
 
     /**
+     * 通过插件签名获取插件。
+     *
+     * @param signature 插件签名
+     * @return 插件
+     */
+    @ExperimentalApi
+    fun getAvailablePlugin(signature: PluginSignature): Plugin?
+
+    /**
      * 获取已经分配的一个插件的所有版本。
      *
      * @param id 插件 ID
@@ -114,4 +123,20 @@ interface LocalPluginManager : PluginManager {
     @ExperimentalApi
     @JvmBlockingBridge
     suspend fun loadPlugins(operation: Operation)
+
+    @ExperimentalApi
+    @JvmBlockingBridge
+    suspend fun enablePlugins(operation: Operation)
+
+    @ExperimentalApi
+    @JvmBlockingBridge
+    suspend fun disablePlugins(operation: Operation)
+
+    @ExperimentalApi
+    @JvmBlockingBridge
+    suspend fun unloadPlugins(operation: Operation)
+
+    @ExperimentalApi
+    @JvmBlockingBridge
+    suspend fun releasePlugins(operation: Operation)
 }

@@ -40,4 +40,9 @@ interface PluginConfiguration {
      * 若新插件列表不包含当前插件，是否标记当前插件为崩溃。
      */
     val crashOnRemoved: Boolean
+
+    /**
+     * 是否在插件冲突时保留当前插件。
+     */
+    val retainOnConflict: Boolean
 }

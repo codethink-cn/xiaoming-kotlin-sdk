@@ -66,6 +66,11 @@ interface Plugin : Subject {
     val dependencies: List<Plugin?>
 
     /**
+     * 当前插件的所有依赖插件。
+     */
+    val allDependencies: List<Plugin>
+
+    /**
      * 插件是否被分配。
      */
     val isAllocated: Boolean
@@ -99,6 +104,31 @@ interface Plugin : Subject {
      * 插件是否已崩溃。
      */
     val isCrashed: Boolean
+
+    /**
+     * 插件是否正在崩溃或已崩溃。
+     */
+    val isCrashingOrCrashed: Boolean
+
+    /**
+     * 插件是否已释放。
+     */
+    val isReleased: Boolean
+
+    /**
+     * 插件是否正在释放或已释放。
+     */
+    val isReleasingOrReleased: Boolean
+
+    /**
+     * 插件是否已经退出。退出指 release 或 crash。
+     */
+    val isExited: Boolean
+
+    /**
+     * 插件是否正在退出或已退出。退出指 release 或 crash。
+     */
+    val isExitingOrExited: Boolean
 
     @ExperimentalApi
     @JvmBlockingBridge

@@ -88,5 +88,5 @@ interface PluginHandler {
      * @param context 插件释放上下文
      */
     @Throws(Exception::class)
-    suspend fun onRelease(context: PluginReleaseContext)
+    suspend fun onExit(context: PluginExitContext)
 }

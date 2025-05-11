@@ -19,5 +19,6 @@ package cn.codethink.xiaoming.plugin
 class PluginConfigurationImpl(
     override val sharable: Boolean,
     override val debug: Boolean,
-    override val crashOnRemoved: Boolean
+    override val crashOnRemoved: Boolean,
+    override val retainOnConflict: Boolean
 ) : PluginConfiguration

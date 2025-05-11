@@ -27,7 +27,8 @@ import cn.codethink.xiaoming.util.InternalApi
 fun PluginConfiguration(
     sharable: Boolean = false,
     debug: Boolean = false,
-    crashOnRemoved: Boolean = true
+    crashOnRemoved: Boolean = true,
+    retainOnConflict: Boolean = false
 ): PluginConfiguration {
-    return LocalCoreApi.getInstance().createPluginConfiguration(sharable, debug, crashOnRemoved)
+    return LocalCoreApi.getInstance().createPluginConfiguration(sharable, debug, crashOnRemoved, retainOnConflict)
 }

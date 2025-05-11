@@ -29,6 +29,12 @@ object TestPluginConstants {
         version = "1.0.0".toVersion()
     )
 
+    val mc200 = PluginMeta(
+        id = "com.example:mc".toNamespaceId(),
+        name = "MC",
+        version = "2.0.0".toVersion()
+    )
+
     val mcPro100 = PluginMeta(
         id = "com.example:mc-pro".toNamespaceId(),
         name = "MC Pro",
@@ -38,12 +44,55 @@ object TestPluginConstants {
         )
     )
 
+    val im100 = PluginMeta(
+        id = "com.example:im".toNamespaceId(),
+        name = "IM",
+        version = "1.0.0".toVersion()
+    )
+
+    val imPro100 = PluginMeta(
+        id = "com.example:im-pro".toNamespaceId(),
+        name = "IM Pro",
+        version = "1.0.0".toVersion(),
+        provisions = listOf(
+            im100.toPluginProvision()
+        )
+    )
+
     val mcChat100 = PluginMeta(
         id = "com.example:mc-chat".toNamespaceId(),
         name = "MC Chat",
         version = "1.0.0".toVersion(),
         dependencies = listOf(
             mc100.toPluginDependency()
+        )
+    )
+
+    val mcChat200 = PluginMeta(
+        id = "com.example:mc-chat".toNamespaceId(),
+        name = "MC Chat",
+        version = "2.0.0".toVersion(),
+        dependencies = listOf(
+            mc200.toPluginDependency(),
+            im100.toPluginDependency()
+        )
+    )
+
+    val cmi100 = PluginMeta(
+        id = "com.example:cmi".toNamespaceId(),
+        name = "CMI",
+        version = "1.0.0".toVersion(),
+        dependencies = listOf(
+            mcChat200.toPluginDependency()
+        )
+    )
+
+    val cmi200 = PluginMeta(
+        id = "com.example:cmi".toNamespaceId(),
+        name = "CMI",
+        version = "2.0.0".toVersion(),
+        dependencies = listOf(
+            mcChat200.toPluginDependency()
         )
     )
 }

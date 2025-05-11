@@ -23,16 +23,16 @@ import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.SubjectDescriptor
 import cn.codethink.xiaoming.util.Time
 
-class PluginReleaseEventImpl(
+class PluginExitEventImpl(
     override val plugin: Plugin,
     override val cause: Cause?,
     override val operator: SubjectDescriptor,
     override val time: Time,
     override val id: Id
-) : AbstractCancellableEvent(), PluginReleaseEvent {
+) : AbstractCancellableEvent(), PluginExitEvent {
     override val pluginId: NamespaceId = plugin.id
     override val description: String = buildString {
-        append("Operator $operator is releasing plugin $pluginId at $time")
+        append("Operator $operator is exiting plugin $pluginId at $time")
         cause?.let {
             append(" due to ")
             append(it.description)

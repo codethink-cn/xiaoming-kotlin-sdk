@@ -39,5 +39,10 @@ interface LocalCoreApi {
     fun createWildCardPermissionMatcher(id: NamespaceIdPattern, value: Boolean?): WildCardPermissionPattern
     fun createInheritancePermissionMatcher(inheritedId: Id): InheritancePermissionMatcher
 
-    fun createPluginConfiguration(sharable: Boolean, debug: Boolean, crashOnRemoved: Boolean): PluginConfiguration
+    fun createPluginConfiguration(
+        sharable: Boolean,
+        debug: Boolean,
+        crashOnRemoved: Boolean,
+        retainOnConflict: Boolean
+    ): PluginConfiguration
 }

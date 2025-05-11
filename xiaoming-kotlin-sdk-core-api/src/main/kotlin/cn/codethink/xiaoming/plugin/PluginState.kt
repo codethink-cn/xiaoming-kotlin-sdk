@@ -42,5 +42,6 @@ enum class PluginState {
     RELEASING,
     RELEASED,
 
+    CRASHING,
     CRASHED
 }

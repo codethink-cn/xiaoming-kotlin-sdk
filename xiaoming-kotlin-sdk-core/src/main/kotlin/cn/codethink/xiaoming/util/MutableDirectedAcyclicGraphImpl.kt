@@ -193,7 +193,8 @@ fun <T> transitiveClosure(nodes: Iterable<T>, closure: (T) -> List<T>): List<T> 
 
     while (queue.isNotEmpty()) {
         val current = queue.removeFirst()
-        for (child in closure(current)) {
+        val children = closure(current)
+        for (child in children) {
             if (result.add(child)) {
                 queue.add(child)
             }

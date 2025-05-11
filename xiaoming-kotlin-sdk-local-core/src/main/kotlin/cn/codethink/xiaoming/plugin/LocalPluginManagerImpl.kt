@@ -60,11 +60,11 @@ class LocalPluginManagerImpl(
     private val lock = ReentrantReadWriteLock()
 
     // 插件一旦加载，便需先将自己置于其中。以免相同 ID，不同版本的插件被同时加载。
-    private var mutablePlugins = mutableMapOf<NamespaceId, Plugin>()
+    private var mutablePlugins = mutableMapOf<NamespaceId, AbstractLocalServingPlugin>()
     override val plugins: Map<NamespaceId, Plugin> get() = lock.read { mutablePlugins.toMap() }
 
     // 插件的提供者插件。
-    private var mutableProviderPlugins = mutableMapOf<NamespaceId, Plugin>()
+    private var mutableProviderPlugins = mutableMapOf<NamespaceId, AbstractLocalServingPlugin>()
     override val providerPlugins: Map<NamespaceId, Plugin> get() = lock.read { mutableProviderPlugins.toMap() }
 
     private val mutablePluginScanners = MutableMapRegistrationManagerImpl<String, PluginScanner>()
@@ -384,7 +384,7 @@ class LocalPluginManagerImpl(
                 val candidates = candidatesBeforeFiltering
                     .filter { it.second.second.mayDependencySatisfied }
                     .sortedWith { left, right ->
-                        val compareVersion = left.first.compareTo(right.first)
+                        val compareVersion = right.first.compareTo(left.first)
                         if (compareVersion != 0) {
                             return@sortedWith compareVersion
                         }
@@ -625,13 +625,16 @@ class LocalPluginManagerImpl(
                     plugin.provisions = it.value.provisions
                 }
 
-                try {
-                    block(it.value.entry.plugin)
-                } catch (t: Throwable) {
-                    logger.warn(t) { "Plugin ${plugin.meta.id}:${plugin.version} failed to activate. " }
-                    result = false
-                    return@forEachConcurrently
-                }
+                // 直接让把异常往调用者那边抛。
+                block(it.value.entry.plugin)
+
+//                try {
+//                    block(it.value.entry.plugin)
+//                } catch (t: Throwable) {
+//                    logger.warn(t) { "Exception thrown while activating ${plugin.signature}. " }
+//                    result = false
+//                    return@forEachConcurrently
+//                }
             }
 
             return result
@@ -674,7 +677,7 @@ class LocalPluginManagerImpl(
         }
 
         override suspend fun onDoLoad(operation: Operation) {
-            acquireUniquePluginLock()
+            acquireUniquePluginLock(operation)
         }
 
         override suspend fun enable(operation: Operation) {
@@ -682,15 +685,27 @@ class LocalPluginManagerImpl(
         }
 
         override suspend fun disable(operation: Operation) {
-            TODO()
+            allDependencies.forEach { it.ensureDisabled(operation) }
+            doDisable(operation)
         }
 
         override suspend fun unload(operation: Operation) {
-            TODO()
+            allDependencies.forEach { it.ensureUnloaded(operation) }
+            doUnload(operation)
         }
 
         override suspend fun release(operation: Operation) {
+            ensureUnloaded(operation)
             doRelease(operation)
+        }
+
+        override suspend fun onDoUnloaded(operation: Operation) {
+            onDoUnloadedOrCrashed()
+        }
+
+        override suspend fun onDoCrashed(operation: Operation) {
+            onDoUnloadedOrCrashed()
+            onDoReleasedOrCrashed()
         }
 
         private fun onDoUnloadedOrCrashed() {
@@ -701,6 +716,10 @@ class LocalPluginManagerImpl(
         }
 
         override suspend fun onDoReleased(operation: Operation) {
+            onDoReleasedOrCrashed()
+        }
+
+        private fun onDoReleasedOrCrashed() {
             mutableAvailablePlugins.remove(id, version)
         }
 
@@ -712,29 +731,44 @@ class LocalPluginManagerImpl(
         }
 
         // 尝试为本插件获取 LOAD 锁。返回持有独占当前 ID 启动权的插件。若为 this 表示获取成功。
-        private fun tryAcquireUniquePluginLock(): Plugin {
+        private fun tryAcquireUniquePluginLock(): AbstractLocalServingPlugin {
             return lock.write {
-                val nowPlugin = mutablePlugins.computeIfAbsent(id) { this }
-                if (nowPlugin !== this) {
-                    return nowPlugin
+                val oldPlugin = mutablePlugins[id]
+                val oldProvider = mutableProviderPlugins[id]
+
+                if (oldPlugin != null) {
+                    return oldPlugin
+                }
+                if (oldProvider != null) {
+                    return oldProvider
                 }
 
+                mutablePlugins[id] = this
                 mutableProviderPlugins[id] = this
                 for (provision in provisions) {
                     val provisionId = provision?.id ?: continue
                     mutableProviderPlugins[provisionId] = this
                 }
 
-                nowPlugin
+                this
             }
         }
 
-        private fun acquireUniquePluginLock() {
-            val oldPlugin = tryAcquireUniquePluginLock()
-            check(oldPlugin === this) {
-                "There is another plugin ${oldPlugin.meta.id} with version ${oldPlugin.version} is already loaded. " +
-                        "Note that multiple plugins with the same ID are not allowed to be loaded at the same time. " +
-                        "Please unload the old one first."
+        private suspend fun acquireUniquePluginLock(operation: Operation) {
+            var oldPlugin = tryAcquireUniquePluginLock()
+            while (oldPlugin !== this) {
+                if (oldPlugin.configuration.retainOnConflict) {
+                    error(
+                        "There is another plugin ${oldPlugin.meta.id} with version ${oldPlugin.version} is already loaded, " +
+                                "and its `retainOnConflict` is set to true. " +
+                                "Note that multiple plugins with the same ID are not allowed to be loaded at the same time. " +
+                                "Please unload the old one explicitly first."
+                    )
+                }
+
+                // 抢夺插件锁，需要先把对方插件卸载。
+                oldPlugin.ensureUnloaded(operation)
+                oldPlugin = tryAcquireUniquePluginLock()
             }
         }
 
@@ -871,6 +905,10 @@ class LocalPluginManagerImpl(
         return mutableAvailablePlugins[id, version]
     }
 
+    override fun getAvailablePlugin(signature: PluginSignature): Plugin? {
+        return getAvailablePlugin(signature.id, signature.version)
+    }
+
     override fun getAvailablePlugins(id: NamespaceId): Map<Version, Plugin> {
         return mutableAvailablePlugins[id]
     }
@@ -963,5 +1001,25 @@ class LocalPluginManagerImpl(
 
     override suspend fun loadPlugins(operation: Operation) {
         ActivateAvailablePluginsDependencyResolver(operation) { it.ensureDoLoad(operation) }.resolveAndActivateDependencies()
+    }
+
+    override suspend fun enablePlugins(operation: Operation) {
+        ActivateAvailablePluginsDependencyResolver(operation) { it.ensureDoEnable(operation) }.resolveAndActivateDependencies()
+    }
+
+    override suspend fun disablePlugins(operation: Operation) {
+        ActivateAvailablePluginsDependencyResolver(operation) { it.ensureDoDisable(operation) }.resolveAndActivateDependencies()
+    }
+
+    override suspend fun unloadPlugins(operation: Operation) {
+        for (availablePlugin in availablePlugins) {
+            availablePlugin.ensureUnloaded(operation)
+        }
+    }
+
+    override suspend fun releasePlugins(operation: Operation) {
+        for (availablePlugin in availablePlugins) {
+            availablePlugin.ensureReleased(operation)
+        }
     }
 }

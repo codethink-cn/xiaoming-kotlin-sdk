@@ -23,6 +23,7 @@ import cn.codethink.xiaoming.util.InternalApi
 import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.PluginDescriptor
 import cn.codethink.xiaoming.util.toPluginDescriptor
+import cn.codethink.xiaoming.util.transitiveClosure
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
@@ -57,18 +58,33 @@ abstract class AbstractPlugin(
         set(value) = lock.write { causeNoLock = value }
 
     // 如果插件状态正在被改变，则此为导致状态改变的操作，用于另一方打印错误信息。
-    internal var transitingCauseNoLock: Operation? = null
+    internal var transitingOperationNoLock: Operation? = null
+    internal var transitingOperation: Operation?
+        get() = lock.read { transitingOperationNoLock }
+        set(value) = lock.write { transitingOperationNoLock = value }
 
-    override val isAllocatingOrAllocated: Boolean get() = lock.read { stateNoLock >= PluginState.ALLOCATING && stateNoLock < PluginState.RELEASING }
+    override val allDependencies: List<Plugin> get() = transitiveClosure(dependencies.filterNotNull()) { it.dependencies.filterNotNull() }
+
     override val isAllocated: Boolean get() = lock.read { stateNoLock >= PluginState.ALLOCATED && stateNoLock < PluginState.RELEASING }
+    override val isAllocatingOrAllocated: Boolean get() = lock.read { stateNoLock >= PluginState.ALLOCATING && stateNoLock < PluginState.RELEASING }
 
-    override val isLoadingOrLoaded: Boolean get() = lock.read { stateNoLock >= PluginState.LOADING && stateNoLock < PluginState.UNLOADING }
     override val isLoaded: Boolean get() = lock.read { stateNoLock >= PluginState.LOADED && stateNoLock < PluginState.UNLOADING }
+    override val isLoadingOrLoaded: Boolean get() = lock.read { stateNoLock >= PluginState.LOADING && stateNoLock < PluginState.UNLOADING }
 
-    override val isEnablingOrEnabled: Boolean get() = lock.read { stateNoLock >= PluginState.ENABLING && stateNoLock < PluginState.DISABLING }
     override val isEnabled: Boolean get() = state == PluginState.ENABLED
+    override val isEnablingOrEnabled: Boolean get() = lock.read { stateNoLock >= PluginState.ENABLING && stateNoLock < PluginState.DISABLING }
 
     override val isCrashed: Boolean get() = state == PluginState.CRASHED
+    override val isCrashingOrCrashed: Boolean get() = lock.read { stateNoLock == PluginState.CRASHING || stateNoLock == PluginState.CRASHED }
+
+    override val isReleased: Boolean get() = state == PluginState.RELEASED
+    override val isReleasingOrReleased: Boolean get() = lock.read { stateNoLock >= PluginState.RELEASING && stateNoLock < PluginState.RELEASED }
+
+    override val isExited: Boolean get() = lock.read { stateNoLock == PluginState.RELEASED || stateNoLock == PluginState.CRASHED }
+    override val isExitingOrExited: Boolean
+        get() = lock.read {
+            stateNoLock == PluginState.RELEASING || stateNoLock == PluginState.RELEASED || stateNoLock == PluginState.CRASHING || stateNoLock == PluginState.CRASHED
+        }
 
     // 下面的函数分为四类：action, doAction 和 onDoAction
     // 1. action 即对外暴露的 API，调用可能导致依赖解析、锁获取和动作执行等等。
@@ -110,7 +126,7 @@ abstract class AbstractPlugin(
 
     private inner class PluginUnloadContextImpl(override val event: EventContext<PluginUnloadEvent>) : PluginUnloadContext, AbstractPluginContext()
 
-    private inner class PluginReleaseContextImpl(override val event: EventContext<PluginReleaseEvent>) : PluginReleaseContext, AbstractPluginContext()
+    private inner class PluginExitContextImpl(override val event: EventContext<PluginExitEvent>) : PluginExitContext, AbstractPluginContext()
 
     override suspend fun allocate(operation: Operation) {
         PluginStateTransition.Allocated.transit(this, operation) {
@@ -170,7 +186,12 @@ abstract class AbstractPlugin(
         onDoDisable(operation)
         PluginStateTransition.Disabled.transit(this, operation) {
             handler.onDisable(PluginDisableContextImpl(it))
+            unregisterRegistrationsOnDisabled()
         }
+    }
+
+    private fun unregisterRegistrationsOnDisabled() {
+        // TODO: 在插件关闭时，注销所有插件注册的对象。
     }
 
     override suspend fun ensureDisabled(operation: Operation) {
@@ -186,10 +207,10 @@ abstract class AbstractPlugin(
     }
 
     internal suspend fun doUnload(operation: Operation) {
-        onDoUnloaded(operation)
         PluginStateTransition.Unloaded.transit(this, operation) {
             handler.onUnload(PluginUnloadContextImpl(it))
         }
+        onDoUnloaded(operation)
     }
 
     override suspend fun ensureUnloaded(operation: Operation) {
@@ -199,7 +220,7 @@ abstract class AbstractPlugin(
         }
     }
 
-    internal suspend fun ensureDoUnload(operation: Operation) {
+    private suspend fun ensureDoUnload(operation: Operation) {
         ensureDoDisable(operation)
         if (isLoaded) {
             doUnload(operation)
@@ -207,10 +228,10 @@ abstract class AbstractPlugin(
     }
 
     internal suspend fun doRelease(operation: Operation) {
-        onDoReleased(operation)
         PluginStateTransition.Released.transit(this, operation) {
-            handler.onRelease(PluginReleaseContextImpl(it))
+            handler.onExit(PluginExitContextImpl(it))
         }
+        onDoReleased(operation)
     }
 
     override suspend fun ensureReleased(operation: Operation) {
@@ -220,20 +241,20 @@ abstract class AbstractPlugin(
         }
     }
 
-    internal suspend fun ensureDoRelease(operation: Operation) {
-        ensureDoUnload(operation)
+    private suspend fun ensureDoRelease(operation: Operation) {
         if (isAllocated) {
             doRelease(operation)
         }
+        ensureDoUnload(operation)
     }
 
     abstract suspend fun crash(operation: Operation)
 
     internal suspend fun doCrash(operation: Operation) {
-        state = PluginState.CRASHED
-
+        PluginStateTransition.Crashed.transit(this, operation) {
+            handler.onExit(PluginExitContextImpl(it))
+        }
         onDoCrashed(operation)
-        release(operation)
     }
 
     internal suspend fun ensureCrashed(operation: Operation) {
@@ -243,6 +264,6 @@ abstract class AbstractPlugin(
     }
 
     override fun toString(): String {
-        return "Plugin(id=$id, state=$state, operation=$operation)"
+        return "Plugin(signature=$signature, state=$state, operation=$operation)"
     }
 }

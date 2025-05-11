@@ -25,12 +25,12 @@ import kotlin.concurrent.write
 
 @InternalApi
 sealed class PluginStateTransition<E : CancellableEvent>(
-    private val beforeStates: Set<PluginState>,
+    private val beforeState: PluginState?,
     private val transitingState: PluginState,
     private val afterState: PluginState
 ) {
     object Allocated : PluginStateTransition<PluginAllocateEvent>(
-        setOf(PluginState.UNALLOCATED), PluginState.ALLOCATING, PluginState.ALLOCATED
+        PluginState.UNALLOCATED, PluginState.ALLOCATING, PluginState.ALLOCATED
     ) {
         override fun createEvent(plugin: AbstractPlugin, operation: Operation): PluginAllocateEvent {
             return PluginAllocateEventImpl(
@@ -44,7 +44,7 @@ sealed class PluginStateTransition<E : CancellableEvent>(
     }
 
     object Loaded : PluginStateTransition<PluginLoadEvent>(
-        setOf(PluginState.ALLOCATED), PluginState.LOADING, PluginState.LOADED
+        PluginState.ALLOCATED, PluginState.LOADING, PluginState.LOADED
     ) {
         override fun createEvent(plugin: AbstractPlugin, operation: Operation): PluginLoadEvent {
             return PluginLoadEventImpl(
@@ -58,7 +58,7 @@ sealed class PluginStateTransition<E : CancellableEvent>(
     }
 
     object Enabled : PluginStateTransition<PluginEnableEvent>(
-        setOf(PluginState.LOADED), PluginState.ENABLING, PluginState.ENABLED
+        PluginState.LOADED, PluginState.ENABLING, PluginState.ENABLED
     ) {
         override fun createEvent(plugin: AbstractPlugin, operation: Operation): PluginEnableEvent {
             return PluginEnableEventImpl(
@@ -72,7 +72,7 @@ sealed class PluginStateTransition<E : CancellableEvent>(
     }
 
     object Disabled : PluginStateTransition<PluginDisableEvent>(
-        setOf(PluginState.ENABLED), PluginState.DISABLING, PluginState.DISABLED
+        PluginState.ENABLED, PluginState.DISABLING, PluginState.DISABLED
     ) {
         override fun createEvent(plugin: AbstractPlugin, operation: Operation): PluginDisableEvent {
             return PluginDisableEventImpl(
@@ -86,7 +86,7 @@ sealed class PluginStateTransition<E : CancellableEvent>(
     }
 
     object Unloaded : PluginStateTransition<PluginUnloadEvent>(
-        setOf(PluginState.LOADED), PluginState.UNLOADING, PluginState.ALLOCATED
+        PluginState.LOADED, PluginState.UNLOADING, PluginState.UNLOADED
     ) {
         override fun createEvent(plugin: AbstractPlugin, operation: Operation): PluginUnloadEvent {
             return PluginUnloadEventImpl(
@@ -99,11 +99,25 @@ sealed class PluginStateTransition<E : CancellableEvent>(
         }
     }
 
-    object Released : PluginStateTransition<PluginReleaseEvent>(
-        setOf(PluginState.UNALLOCATED, PluginState.CRASHED), PluginState.RELEASING, PluginState.RELEASED
+    object Released : PluginStateTransition<PluginExitEvent>(
+        PluginState.UNLOADED, PluginState.RELEASING, PluginState.RELEASED
     ) {
-        override fun createEvent(plugin: AbstractPlugin, operation: Operation): PluginReleaseEvent {
-            return PluginReleaseEventImpl(
+        override fun createEvent(plugin: AbstractPlugin, operation: Operation): PluginExitEvent {
+            return PluginExitEventImpl(
+                plugin = plugin,
+                cause = operation.cause,
+                operator = operation.operator,
+                time = operation.time,
+                id = operation.id
+            )
+        }
+    }
+
+    object Crashed : PluginStateTransition<PluginExitEvent>(
+        beforeState = null, PluginState.CRASHING, PluginState.CRASHED
+    ) {
+        override fun createEvent(plugin: AbstractPlugin, operation: Operation): PluginExitEvent {
+            return PluginExitEventImpl(
                 plugin = plugin,
                 cause = operation.cause,
                 operator = operation.operator,
@@ -117,36 +131,38 @@ sealed class PluginStateTransition<E : CancellableEvent>(
         return with(plugin) {
             lock.write {
                 val oldState = stateNoLock
-                if (oldState in beforeStates) {
-                    stateNoLock = transitingState
-                } else {
-                    val details = "Details: current operation: ${operation.description}; current state: $stateNoLock; expected state(s): $beforeStates. "
-                    when (stateNoLock) {
-                        transitingState -> error(
-                            "Concurrent state transition to $transitingState (due to: ${plugin.transitingCauseNoLock?.description}) is not allowed. $details"
-                        )
+                val details = "Details: current operation: ${operation.description}; current state: $stateNoLock; expected state: $beforeState. "
 
-                        PluginState.CRASHED -> error("Plugin was crashed due to ${plugin.causeNoLock.description}. $details")
-                        afterState -> error("Plugin is already in $afterState state. $details")
-                        else -> error("Unexpected plugin state: $stateNoLock. $details")
-                    }
+                when (stateNoLock) {
+                    transitingState -> error(
+                        "Concurrent state transition to $transitingState (due to: ${plugin.transitingOperationNoLock?.description}) is not allowed. $details"
+                    )
+
+                    PluginState.CRASHED -> error("Plugin was crashed due to ${plugin.causeNoLock.description}. $details")
+                    afterState -> error("Plugin is already in $afterState state. $details")
+                    else -> check(beforeState == null || stateNoLock == beforeState) { "Unexpected plugin state: $stateNoLock. $details" }
                 }
+                stateNoLock = transitingState
+
+                plugin.transitingOperationNoLock = operation
                 oldState
             }
         }
     }
 
-    private fun checkAndSetAfterStateOrErrorState(plugin: AbstractPlugin): Unit = with(plugin) {
+    private fun checkAndSetAfterStateOrErrorState(plugin: AbstractPlugin, operation: Operation): Unit = with(plugin) {
         lock.write {
             stateNoLock = when (stateNoLock) {
                 transitingState -> afterState
                 PluginState.CRASHED -> PluginState.CRASHED
                 else -> error("Unexpected plugin state: $stateNoLock. Plugin is not in $transitingState state while trying to set $afterState state.")
             }
+            transitingOperationNoLock = null
+            causeNoLock = operation
         }
     }
 
-    private fun checkAndSetErrorState(plugin: AbstractPlugin): Unit = with(plugin) {
+    private fun checkAndSetErrorState(plugin: AbstractPlugin, operation: Operation): Unit = with(plugin) {
         lock.write {
             stateNoLock = when (stateNoLock) {
                 transitingState,
@@ -154,6 +170,8 @@ sealed class PluginStateTransition<E : CancellableEvent>(
 
                 else -> error("Unexpected plugin state: $stateNoLock. Plugin is not in $transitingState state while trying to set ${PluginState.CRASHED} state.")
             }
+            transitingOperationNoLock = null
+            causeNoLock = operation
         }
     }
 
@@ -184,10 +202,10 @@ sealed class PluginStateTransition<E : CancellableEvent>(
 
         try {
             return block(eventContext).also {
-                checkAndSetAfterStateOrErrorState(plugin)
+                checkAndSetAfterStateOrErrorState(plugin, operation)
             }
         } catch (t: Throwable) {
-            checkAndSetErrorState(plugin)
+            checkAndSetErrorState(plugin, operation)
             throw t
         }
     }

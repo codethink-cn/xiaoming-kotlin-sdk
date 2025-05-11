@@ -16,8 +16,11 @@
 
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.event.EventContext
+import cn.codethink.xiaoming.event.CancellableEvent
 
-interface PluginReleaseContext : PluginContext {
-    override val event: EventContext<PluginReleaseEvent>
-}
+/**
+ * 插件释放事件，仅在本地发布。
+ *
+ * @author Chuanwise
+ */
+interface PluginExitEvent : PluginStateChangeEvent, CancellableEvent

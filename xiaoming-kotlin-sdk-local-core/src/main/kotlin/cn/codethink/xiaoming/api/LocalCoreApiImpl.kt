@@ -37,7 +37,7 @@ class LocalCoreApiImpl : LocalCoreApi {
         return InheritancePermissionMatcherV1(inheritedId)
     }
 
-    override fun createPluginConfiguration(sharable: Boolean, debug: Boolean, crashOnRemoved: Boolean): PluginConfiguration {
-        return PluginConfigurationImpl(sharable, debug, crashOnRemoved)
+    override fun createPluginConfiguration(sharable: Boolean, debug: Boolean, crashOnRemoved: Boolean, retainOnConflict: Boolean): PluginConfiguration {
+        return PluginConfigurationImpl(sharable, debug, crashOnRemoved, retainOnConflict)
     }
 }
