@@ -116,10 +116,10 @@ class LocalEventManagerImpl(
         override val isRemoved: Boolean get() = listeners[value.descriptor.id] !== value
 
         override fun remove() {
-            check(tryRemove()) { "Listener ${value.descriptor.id} is already removed" }
+            check(ensureRemoved()) { "Listener ${value.descriptor.id} is already removed" }
         }
 
-        override fun tryRemove(): Boolean {
+        override fun ensureRemoved(): Boolean {
             return runBlocking {
                 mutex.withLock {
                     val nowListener = listeners[value.descriptor.id]

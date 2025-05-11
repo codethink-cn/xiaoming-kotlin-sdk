@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,10 +29,10 @@ class MutableMapRegistrationManagerImpl<K, E>(
         override val isRemoved: Boolean get() = getRegistration(key) == this
 
         override fun remove() {
-            check(tryRemove()) { "Failed to remove registration for key: $key" }
+            check(ensureRemoved()) { "Failed to remove registration for key: $key" }
         }
 
-        override fun tryRemove(): Boolean {
+        override fun ensureRemoved(): Boolean {
             return data.computeIfPresent(key) { _, v ->
                 if (v == this) {
                     null
@@ -40,10 +40,6 @@ class MutableMapRegistrationManagerImpl<K, E>(
                     v
                 }
             } == null
-        }
-
-        override fun ensureRemoved() {
-            tryRemove()
         }
     }
 

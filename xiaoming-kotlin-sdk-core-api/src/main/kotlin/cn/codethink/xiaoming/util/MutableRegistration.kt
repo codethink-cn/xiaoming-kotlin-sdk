@@ -26,8 +26,5 @@ interface MutableRegistration<out T> : Registration<T> {
     val isRemoved: Boolean
 
     fun remove()
-    fun tryRemove(): Boolean
-    fun ensureRemoved() {
-        tryRemove()
-    }
+    fun ensureRemoved(): Boolean
 }

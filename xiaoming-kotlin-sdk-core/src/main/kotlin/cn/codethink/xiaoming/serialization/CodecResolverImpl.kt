@@ -121,7 +121,7 @@ class CodecResolverImpl : CodecResolver {
                 return false
             }
 
-            override fun tryRemove(): Boolean {
+            override fun ensureRemoved(): Boolean {
                 val result = tryRemoveFromEntry()
                 if (result && isEmpty()) {
                     removeEntry()
@@ -130,7 +130,7 @@ class CodecResolverImpl : CodecResolver {
             }
 
             override fun remove() {
-                check(tryRemove()) { "Failed to remove serialize codec registration for $value" }
+                check(ensureRemoved()) { "Failed to remove serialize codec registration for $value" }
             }
         }
 
@@ -150,7 +150,7 @@ class CodecResolverImpl : CodecResolver {
                 return false
             }
 
-            override fun tryRemove(): Boolean {
+            override fun ensureRemoved(): Boolean {
                 val result = tryRemoveFromEntry()
                 if (result && isEmpty()) {
                     removeEntry()
@@ -159,7 +159,7 @@ class CodecResolverImpl : CodecResolver {
             }
 
             override fun remove() {
-                check(tryRemove()) { "Failed to remove deserialize codec registration for $value" }
+                check(ensureRemoved()) { "Failed to remove deserialize codec registration for $value" }
             }
         }
 
@@ -191,7 +191,7 @@ class CodecResolverImpl : CodecResolver {
                 }
             }
 
-            override fun tryRemove(): Boolean {
+            override fun ensureRemoved(): Boolean {
                 val result = tryRemoveFromEntry()
                 if (result && isEmpty()) {
                     removeEntry()
@@ -200,7 +200,7 @@ class CodecResolverImpl : CodecResolver {
             }
 
             override fun remove() {
-                check(tryRemove()) { "Failed to remove codec registration for $value" }
+                check(ensureRemoved()) { "Failed to remove codec registration for $value" }
             }
         }
 
@@ -270,10 +270,10 @@ class CodecResolverImpl : CodecResolver {
             override val isRemoved: Boolean get() = hints[value.type] === this
 
             override fun remove() {
-                check(tryRemove()) { "Failed to remove type hint registration for ${value.type} -> ${value.hint}" }
+                check(ensureRemoved()) { "Failed to remove type hint registration for ${value.type} -> ${value.hint}" }
             }
 
-            override fun tryRemove(): Boolean {
+            override fun ensureRemoved(): Boolean {
                 return hints.compareAndRemove(value.type, this)
             }
         }
@@ -417,7 +417,7 @@ class CodecResolverImpl : CodecResolver {
         ) : MutableRegistration<TypeHint<F, T>> {
             override val isRemoved: Boolean get() = lock.read { hints[value.type]?.get(nameClue.nameField)?.get(nameClue.name) !== this }
 
-            override fun tryRemove(): Boolean {
+            override fun ensureRemoved(): Boolean {
                 lock.write {
                     val current = hints[value.type]?.get(nameClue.nameField)?.get(nameClue.name)
                     if (current === this) {
@@ -429,7 +429,7 @@ class CodecResolverImpl : CodecResolver {
             }
 
             override fun remove() {
-                check(tryRemove()) { "Failed to remove name-based hint registration for ${value.type} -> ${nameClue.nameField} -> ${nameClue.name}" }
+                check(ensureRemoved()) { "Failed to remove name-based hint registration for ${value.type} -> ${nameClue.nameField} -> ${nameClue.name}" }
             }
         }
 
