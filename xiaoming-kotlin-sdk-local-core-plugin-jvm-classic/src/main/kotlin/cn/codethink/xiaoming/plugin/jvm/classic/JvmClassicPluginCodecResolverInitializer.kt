@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin.jvm
+package cn.codethink.xiaoming.plugin.jvm.classic
 
-import cn.codethink.xiaoming.plugin.PluginHandler
+import cn.codethink.xiaoming.serialization.CodecResolverInitializeContext
+import cn.codethink.xiaoming.serialization.CodecResolverInitializer
 
 /**
- * 本地 JVM 插件，其插件通过动态类加载接入。
- *
+ * @see CodecResolverInitializer
  * @author Chuanwise
  */
-interface LocalJvmPluginHandler : PluginHandler {
-    val classPath: LocalJvmPluginClassPath
+class JvmClassicPluginCodecResolverInitializer : CodecResolverInitializer {
+    override fun initialize(context: CodecResolverInitializeContext) {
+    }
 }

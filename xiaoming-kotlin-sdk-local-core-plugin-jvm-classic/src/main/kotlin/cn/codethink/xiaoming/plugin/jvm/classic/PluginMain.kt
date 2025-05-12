@@ -22,5 +22,5 @@ package cn.codethink.xiaoming.plugin.jvm.classic
  * @author Chuanwise
  */
 interface PluginMain {
-    val classPath: LocalJvmClassicPluginClassPath
+    val classPath: JvmClassicPluginClassPath
 }

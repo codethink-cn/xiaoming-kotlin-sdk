@@ -21,11 +21,11 @@ package cn.codethink.xiaoming.plugin.jvm
  *
  * @author Chuanwise
  */
-interface LocalJvmPluginClassPath {
+interface JvmPluginClassPath {
     /**
-     * 插件类访问策略。可用于实现插件间类隔离。
+     * 插件类访问策略。可用于实现插件间类隔离。默认为完全隔离策略。
      */
-    var classAccessPolicy: LocalJvmPluginClassAccessPolicy
+    var classAccessPolicy: JvmPluginClassAccessPolicy
 
     /**
      * 是否从系统类加载器中解析资源，默认为 `true`。

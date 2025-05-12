@@ -16,14 +16,14 @@
 
 package cn.codethink.xiaoming.plugin.jvm.classic
 
-import cn.codethink.xiaoming.plugin.PluginMeta
+import cn.codethink.xiaoming.plugin.jvm.JvmPluginClassPath
+import java.io.File
 
 /**
- * Local JVM classic plugin meta.
+ * 本地 JVM 经典插件类路径。
  *
  * @author Chuanwise
  */
-interface LocalJvmClassicPluginMeta : PluginMeta {
-    val main: String
-    val logger: String?
+interface JvmClassicPluginClassPath : JvmPluginClassPath {
+    val distributionFile: File
 }

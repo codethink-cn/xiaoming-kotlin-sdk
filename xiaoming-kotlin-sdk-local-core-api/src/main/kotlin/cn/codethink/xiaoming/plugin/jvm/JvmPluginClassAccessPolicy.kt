@@ -14,8 +14,21 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.library
+package cn.codethink.xiaoming.plugin.jvm
 
-interface LibraryResolver {
-    fun resolve(descriptor: LibraryDescriptor): Library?
+/**
+ * 本地 JVM 插件的类访问策略。
+ *
+ * @author Chuanwise
+ */
+interface JvmPluginClassAccessPolicy {
+    companion object {
+        @JvmStatic
+        val STRICT = JvmPluginClassAccessPolicy(accessible = false)
+
+        @JvmStatic
+        val LOOSE = JvmPluginClassAccessPolicy(accessible = true)
+    }
+
+    fun isAccessible(name: String): Boolean
 }

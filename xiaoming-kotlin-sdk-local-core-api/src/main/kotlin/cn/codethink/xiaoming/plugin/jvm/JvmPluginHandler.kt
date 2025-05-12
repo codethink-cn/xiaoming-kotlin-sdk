@@ -16,11 +16,13 @@
 
 package cn.codethink.xiaoming.plugin.jvm
 
+import cn.codethink.xiaoming.plugin.PluginHandler
+
 /**
- * 本地 JVM 插件的类访问策略。
+ * 本地 JVM 插件，其插件通过动态类加载接入。
  *
  * @author Chuanwise
  */
-interface LocalJvmPluginClassAccessPolicy {
-    fun isAccessible(name: String): Boolean
+interface JvmPluginHandler : PluginHandler {
+    val classPath: JvmPluginClassPath
 }

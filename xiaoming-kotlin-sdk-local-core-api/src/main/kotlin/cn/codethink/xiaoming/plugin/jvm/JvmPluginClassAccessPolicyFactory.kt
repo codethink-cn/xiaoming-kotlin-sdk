@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin.jvm.classic
+@file:JvmName("JvmPluginClassAccessPolicyFactory")
 
-import cn.codethink.xiaoming.serialization.CodecResolverInitializeContext
-import cn.codethink.xiaoming.serialization.CodecResolverInitializer
+package cn.codethink.xiaoming.plugin.jvm
 
-/**
- * @see CodecResolverInitializer
- * @author Chuanwise
- */
-class LocalJvmClassicPluginCodecResolverInitializer : CodecResolverInitializer {
-    override fun initialize(context: CodecResolverInitializeContext) {
-    }
+import cn.codethink.xiaoming.api.LocalCoreApi
+import cn.codethink.xiaoming.util.InternalApi
+
+@OptIn(InternalApi::class)
+@JvmName("createJvmPluginClassAccessPolicy")
+fun JvmPluginClassAccessPolicy(accessible: Boolean): JvmPluginClassAccessPolicy {
+    return LocalCoreApi.getInstance().createJvmPluginClassAccessPolicy(accessible)
 }

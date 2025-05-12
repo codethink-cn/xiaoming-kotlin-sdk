@@ -20,7 +20,7 @@ package cn.codethink.xiaoming.plugin.jvm.classic
 
 import cn.codethink.xiaoming.LocalPlatform
 import cn.codethink.xiaoming.classpath.DynamicLibrariesClassLoader
-import cn.codethink.xiaoming.plugin.jvm.LocalJvmPluginClassAccessPolicy
+import cn.codethink.xiaoming.plugin.jvm.JvmPluginClassAccessPolicy
 import cn.codethink.xiaoming.util.InternalApi
 import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.ignoreClassNotFoundException
@@ -38,29 +38,29 @@ import java.util.zip.ZipFile
 
 const val CLASS_FILE_NAME_EXTENSION_WITH_DOT = ".class"
 
-class LocalJvmClassicPluginClassLoader(
+class JvmClassicPluginClassLoader(
     private var id: NamespaceId,
     override val distributionFile: File,
 
     override var resolveSystemResources: Boolean,
 
-    override var classAccessPolicy: LocalJvmPluginClassAccessPolicy,
+    override var classAccessPolicy: JvmPluginClassAccessPolicy,
     override var resolveIndependentPluginClasses: Boolean,
     override var allowResolvedByIndependentPlugins: Boolean,
 
     private val uniqueResourcesFilter: Predicate<String>,
-    private var pluginClassLoaders: Map<NamespaceId, LocalJvmClassicPluginClassLoader>,
+    private var pluginClassLoaders: Map<NamespaceId, JvmClassicPluginClassLoader>,
     private var logger: KLogger,
     private val platform: LocalPlatform
 ) : URLClassLoader(
     distributionFile.name, arrayOf(distributionFile.toURI().toURL()), null
-), LocalJvmClassicPluginClassPath {
+), JvmClassicPluginClassPath {
     override val pluginClassLoader: ClassLoader = this
 
     /**
      * 用于加载依赖插件的类加载器。
      */
-    private val dependenciesClassLoaders: Map<NamespaceId, LocalJvmClassicPluginClassLoader> = ConcurrentHashMap()
+    private val dependenciesClassLoaders: Map<NamespaceId, JvmClassicPluginClassLoader> = ConcurrentHashMap()
 
     /**
      * 插件分发文件内的包名。
@@ -243,7 +243,7 @@ class LocalJvmClassicPluginClassLoader(
         return Collections.enumeration(resolved)
     }
 
-    override fun toString(): String = "LocalJvmClassicPluginClassLoader(file=${distributionFile})"
+    override fun toString(): String = "JvmClassicPluginClassLoader(distribution=${distributionFile})"
 }
 
 private fun String.classNameToPackageName(): String {

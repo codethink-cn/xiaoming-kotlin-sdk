@@ -20,8 +20,10 @@ import cn.codethink.xiaoming.permission.InheritancePermissionMatcher
 import cn.codethink.xiaoming.permission.InheritancePermissionMatcherV1
 import cn.codethink.xiaoming.permission.WildCardPermissionPattern
 import cn.codethink.xiaoming.permission.WildCardPermissionPatternV1
+import cn.codethink.xiaoming.plugin.JvmPluginClassAccessPolicyImpl
 import cn.codethink.xiaoming.plugin.PluginConfiguration
 import cn.codethink.xiaoming.plugin.PluginConfigurationImpl
+import cn.codethink.xiaoming.plugin.jvm.JvmPluginClassAccessPolicy
 import cn.codethink.xiaoming.util.Id
 import cn.codethink.xiaoming.util.InternalApi
 import cn.codethink.xiaoming.util.NamespaceIdPattern
@@ -39,5 +41,9 @@ class LocalCoreApiImpl : LocalCoreApi {
 
     override fun createPluginConfiguration(sharable: Boolean, debug: Boolean, crashOnRemoved: Boolean, retainOnConflict: Boolean): PluginConfiguration {
         return PluginConfigurationImpl(sharable, debug, crashOnRemoved, retainOnConflict)
+    }
+
+    override fun createJvmPluginClassAccessPolicy(accessible: Boolean): JvmPluginClassAccessPolicy {
+        return JvmPluginClassAccessPolicyImpl.of(accessible)
     }
 }
