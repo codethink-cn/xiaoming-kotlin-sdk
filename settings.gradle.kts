@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,9 +30,9 @@ include("xiaoming-kotlin-sdk-core-api")
 
 include("xiaoming-kotlin-sdk-local-core-api")
 include("xiaoming-kotlin-sdk-local-core")
-include("xiaoming-kotlin-sdk-local-core-data-sql")
 
-include("xiaoming-kotlin-sdk-local-core-plugin-jvm-classic")
+include("xiaoming-kotlin-sdk-data-sql")
+include("xiaoming-kotlin-sdk-plugin-jvm-classic")
 
 include("xiaoming-kotlin-sdk-remote-core")
 include("xiaoming-kotlin-sdk-remote-core-api")

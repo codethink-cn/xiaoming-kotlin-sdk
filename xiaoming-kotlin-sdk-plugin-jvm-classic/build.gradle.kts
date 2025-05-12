@@ -14,14 +14,28 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.data.sql
+plugins {
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.blocking.bridge)
+    `maven-publish`
+}
 
-import cn.codethink.xiaoming.util.Id
-import cn.codethink.xiaoming.util.SqlSubjectTable
-import cn.codethink.xiaoming.util.SubjectDescriptor
+dependencies {
+    compileOnly(project(":xiaoming-kotlin-sdk-local-core"))
 
-interface SqlSubjectHandler {
-    fun getOrCreateSubjectDescriptor(descriptor: SubjectDescriptor): Id
-    fun getSubjectDescriptorById(id: Id): SubjectDescriptor?
-    fun getSubjectId(descriptor: SubjectDescriptor): Id?
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            artifact(tasks.kotlinSourcesJar)
+            from(components["java"])
+        }
+    }
 }
