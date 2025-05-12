@@ -14,11 +14,20 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin.jvm
+package cn.codethink.xiaoming.library
 
-data class JvmPluginClassPathConfigurationImpl(
-    override var classAccessPolicy: JvmPluginClassAccessPolicy,
-    override var resolveSystemResources: Boolean,
-    override var resolveIndependentPluginClasses: Boolean,
-    override var allowResolvedByIndependentPlugins: Boolean
-) : JvmPluginClassPathConfiguration
+data class LibraryDescriptorImpl(
+    override val group: String,
+    override val name: String,
+    override val version: String
+) : LibraryDescriptor {
+    init {
+        require(group.isNotEmpty()) { "Group cannot be empty" }
+        require(name.isNotEmpty()) { "Name cannot be empty" }
+        require(version.isNotEmpty()) { "Version cannot be empty" }
+    }
+
+    override fun toString(): String {
+        return "$group:$name:$version"
+    }
+}

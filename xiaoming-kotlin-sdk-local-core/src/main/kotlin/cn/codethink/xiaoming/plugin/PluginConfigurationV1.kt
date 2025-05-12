@@ -16,18 +16,9 @@
 
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.util.NamespaceId
-import cn.codethink.xiaoming.util.Version
-import cn.codethink.xiaoming.util.VersionPattern
-
-data class PluginMetaImpl(
-    override val id: NamespaceId,
-    override val name: String,
-    override val version: Version,
-    override val description: String?,
-    override val standard: VersionPattern?,
-    override val provisions: List<PluginProvision>,
-    override val dependencies: List<PluginDependency>
-) : PluginMeta {
-    override val signature: PluginSignature = PluginSignature(id, version)
-}
+class PluginConfigurationV1(
+    override var sharable: Boolean,
+    override var debug: Boolean,
+    override var releaseOnRemoved: Boolean,
+    override var retainOnConflict: Boolean
+) : PluginConfiguration

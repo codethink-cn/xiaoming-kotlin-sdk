@@ -16,16 +16,5 @@
 
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.RemotePlatform
-
-/**
- * 可以在多个宿主间共享的插件。
- *
- * @author Chuanwise
- */
-interface SharablePlugin : Plugin {
-    /**
-     * 插件可以为多个宿主服务，此为其对应于不同宿主的插件对象。其中不包含当前宿主本身。
-     */
-    val instances: Map<RemotePlatform, RemoteServingPlugin>
+interface RemoteRunningPlugin : Plugin {
 }

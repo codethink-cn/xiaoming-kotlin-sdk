@@ -26,8 +26,6 @@ import cn.codethink.xiaoming.message.Text
 import cn.codethink.xiaoming.message.TextImpl
 import cn.codethink.xiaoming.plugin.PluginDependency
 import cn.codethink.xiaoming.plugin.PluginDependencyImpl
-import cn.codethink.xiaoming.plugin.PluginMeta
-import cn.codethink.xiaoming.plugin.PluginMetaImpl
 import cn.codethink.xiaoming.plugin.PluginPattern
 import cn.codethink.xiaoming.plugin.PluginPatternImpl
 import cn.codethink.xiaoming.plugin.PluginProvision
@@ -46,7 +44,6 @@ import cn.codethink.xiaoming.util.DataImpl
 import cn.codethink.xiaoming.util.EmptyStoreImpl
 import cn.codethink.xiaoming.util.ExcludeVersionPattern
 import cn.codethink.xiaoming.util.ExcludeVersionPatternImpl
-import cn.codethink.xiaoming.util.ExperimentalApi
 import cn.codethink.xiaoming.util.GreaterThanOrEqualVersionPattern
 import cn.codethink.xiaoming.util.GreaterThanOrEqualVersionPatternImpl
 import cn.codethink.xiaoming.util.GreaterThanVersionPattern
@@ -127,7 +124,6 @@ import kotlin.properties.ReadOnlyProperty
 import kotlin.properties.ReadWriteProperty
 
 @InternalApi
-@OptIn(ExperimentalApi::class)
 class CoreApiImpl : CoreApi {
     // Id
     override fun createTextualId(string: String): TextualId {
@@ -792,18 +788,6 @@ class CoreApiImpl : CoreApi {
     // Text
     override fun createText(string: String): Text {
         return TextImpl(string)
-    }
-
-    override fun createPluginMeta(
-        id: NamespaceId,
-        name: String,
-        version: Version,
-        description: String?,
-        standard: VersionPattern?,
-        provisions: List<PluginProvision>,
-        dependencies: List<PluginDependency>
-    ): PluginMeta {
-        return PluginMetaImpl(id, name, version, description, standard, provisions, dependencies)
     }
 
     override fun createPluginDescriptor(id: NamespaceId): PluginDescriptor {

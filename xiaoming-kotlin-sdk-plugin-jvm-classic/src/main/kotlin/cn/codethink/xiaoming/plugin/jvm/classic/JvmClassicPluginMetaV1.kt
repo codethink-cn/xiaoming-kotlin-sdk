@@ -14,27 +14,24 @@
  * limitations under the License.
  */
 
-@file:JvmName("PluginMetaFactory")
+package cn.codethink.xiaoming.plugin.jvm.classic
 
-package cn.codethink.xiaoming.plugin
-
-import cn.codethink.xiaoming.api.CoreApi
-import cn.codethink.xiaoming.util.InternalApi
+import cn.codethink.xiaoming.plugin.PluginDependency
+import cn.codethink.xiaoming.plugin.PluginProvision
+import cn.codethink.xiaoming.plugin.PluginSignature
 import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.Version
 import cn.codethink.xiaoming.util.VersionPattern
 
-@JvmOverloads
-@OptIn(InternalApi::class)
-@JvmName("createPluginMeta")
-fun PluginMeta(
-    id: NamespaceId,
-    name: String,
-    version: Version,
-    description: String? = null,
-    standard: VersionPattern? = null,
-    provisions: List<PluginProvision> = emptyList(),
-    dependencies: List<PluginDependency> = emptyList()
-): PluginMeta {
-    return CoreApi.getInstance().createPluginMeta(id, name, version, description, standard, provisions, dependencies)
+class JvmClassicPluginMetaV1(
+    override val id: NamespaceId,
+    override val name: String,
+    override val main: String,
+    override val version: Version,
+    override val description: String? = null,
+    override val standard: VersionPattern? = null,
+    override val provisions: List<PluginProvision> = emptyList(),
+    override val dependencies: List<PluginDependency> = emptyList(),
+) : JvmClassicPluginMeta {
+    override val signature: PluginSignature = PluginSignature(id, version)
 }

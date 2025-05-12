@@ -17,13 +17,16 @@
 package cn.codethink.xiaoming.serialization
 
 import cn.codethink.xiaoming.event.Event
+import cn.codethink.xiaoming.plugin.PluginDependency
 import cn.codethink.xiaoming.plugin.PluginDisableEventImpl
 import cn.codethink.xiaoming.plugin.PluginEnableEventImpl
 import cn.codethink.xiaoming.plugin.PluginLoadEventImpl
+import cn.codethink.xiaoming.plugin.PluginProvision
 import cn.codethink.xiaoming.plugin.PluginUnloadEventImpl
 import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.CauseImpl
 import cn.codethink.xiaoming.util.Id
+import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.PluginDescriptor
 import cn.codethink.xiaoming.util.PluginDescriptorImpl
 import cn.codethink.xiaoming.util.SegmentIdPattern
@@ -68,6 +71,18 @@ class CoreCodecResolverInitializer : CodecResolverInitializer {
 
             type<Id> {
                 int { it.toNumericalId() }
+            }
+
+            type<NamespaceId> {
+                string { NamespaceId(it) }
+            }
+
+            type<PluginProvision> {
+                string { PluginProvision(it) }
+            }
+
+            type<PluginDependency> {
+                string { PluginDependency(it) }
             }
 
             type<Event> {

@@ -14,16 +14,22 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin
+package cn.codethink.xiaoming.plugin.jvm.classic
 
-/**
- * 表示一个远程服务插件：其代码在当前进程中运行，正在为其他宿主提供插件服务。
- *
- * @author Chuanwise
- */
-interface RemoteServingPlugin : Plugin {
-    /**
-     * 实际在本地运行的插件实例。
-     */
-    val plugin: LocalServingPlugin
+import java.util.function.Predicate
+
+@Suppress("MemberVisibilityCanBePrivate")
+object JvmClassicPluginConstants {
+    const val PLUGIN_RESOURCE_NAME = "plugin.yml"
+    const val LIBRARIES_RESOURCE_NAME = "libraries.yml"
+    const val ACCESS_RESOURCE_NAME = "access.yml"
+
+    internal val UNIQUE_RESOURCE_NAMES = setOf(
+        PLUGIN_RESOURCE_NAME,
+        LIBRARIES_RESOURCE_NAME,
+        ACCESS_RESOURCE_NAME,
+    )
+    internal val UNIQUE_RESOURCE_FILTER = Predicate<String> { name ->
+        UNIQUE_RESOURCE_NAMES.contains(name)
+    }
 }

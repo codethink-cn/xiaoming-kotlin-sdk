@@ -14,11 +14,16 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin
+@file:JvmName("JvmClassicPluginHandlerFactory")
 
-class PluginConfigurationImpl(
-    override val sharable: Boolean,
-    override val debug: Boolean,
-    override val releaseOnRemoved: Boolean,
-    override val retainOnConflict: Boolean
-) : PluginConfiguration
+package cn.codethink.xiaoming.plugin.jvm.classic
+
+import java.io.File
+
+fun JvmClassicPluginHandler(
+    meta: JvmClassicPluginMeta,
+    directoryFile: File,
+    classPath: JvmClassicPluginClassPath
+): JvmClassicPluginHandler {
+    return JvmClassicPluginHandlerImpl(meta, directoryFile, classPath)
+}

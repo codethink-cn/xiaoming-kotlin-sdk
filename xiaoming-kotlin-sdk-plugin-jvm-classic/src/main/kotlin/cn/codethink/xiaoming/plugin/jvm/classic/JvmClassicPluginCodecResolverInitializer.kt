@@ -16,8 +16,10 @@
 
 package cn.codethink.xiaoming.plugin.jvm.classic
 
+import cn.codethink.xiaoming.plugin.PluginMeta
 import cn.codethink.xiaoming.serialization.CodecResolverInitializeContext
 import cn.codethink.xiaoming.serialization.CodecResolverInitializer
+import cn.codethink.xiaoming.serialization.registering
 
 /**
  * @see CodecResolverInitializer
@@ -25,5 +27,28 @@ import cn.codethink.xiaoming.serialization.CodecResolverInitializer
  */
 class JvmClassicPluginCodecResolverInitializer : CodecResolverInitializer {
     override fun initialize(context: CodecResolverInitializeContext) {
+        context.registering {
+            type<LibrariesData> {
+                version {
+                    hint<LibrariesDataV1>("1")
+                }
+            }
+
+            type<AccessData> {
+                version {
+                    hint<AccessDataV1>("1")
+                }
+            }
+
+            type<PluginMeta> {
+                type {
+                    type<JvmClassicPluginMeta>("jvm_classic") {
+                        field("meta-version") {
+                            hint<JvmClassicPluginMetaV1>("1")
+                        }
+                    }
+                }
+            }
+        }
     }
 }

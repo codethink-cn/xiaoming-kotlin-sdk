@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin
+package cn.codethink.xiaoming.plugin.jvm.classic.util
 
-/**
- * 表示一个远程服务插件：其代码在当前进程中运行，正在为其他宿主提供插件服务。
- *
- * @author Chuanwise
- */
-interface RemoteServingPlugin : Plugin {
-    /**
-     * 实际在本地运行的插件实例。
-     */
-    val plugin: LocalServingPlugin
+import java.io.InputStream
+import java.util.jar.JarFile
+
+inline fun <T> JarFile.useInputStream(name: String, block: (InputStream) -> T): T? {
+    val entry = getEntry(name) ?: return null
+    val inputStream = getInputStream(entry) ?: return null
+    return inputStream.use(block)
 }

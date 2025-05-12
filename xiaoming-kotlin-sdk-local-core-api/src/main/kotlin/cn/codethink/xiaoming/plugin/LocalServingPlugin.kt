@@ -16,14 +16,16 @@
 
 package cn.codethink.xiaoming.plugin
 
+import cn.codethink.xiaoming.RemotePlatform
+
 /**
- * 表示一个远程服务插件：其代码在当前进程中运行，正在为其他宿主提供插件服务。
+ * 正在为处在当前进程中的宿主服务的插件。
  *
  * @author Chuanwise
  */
-interface RemoteServingPlugin : Plugin {
+interface LocalServingPlugin : Plugin {
     /**
-     * 实际在本地运行的插件实例。
+     * 插件可以为多个宿主服务，此为其对应于不同宿主的插件对象。其中不包含当前宿主本身。
      */
-    val plugin: LocalServingPlugin
+    val instances: Map<RemotePlatform, RemoteServingPlugin>
 }

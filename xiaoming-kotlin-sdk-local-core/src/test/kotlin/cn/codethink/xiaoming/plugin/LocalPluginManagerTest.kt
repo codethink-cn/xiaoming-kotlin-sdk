@@ -17,7 +17,6 @@
 package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.TestLocalPlatform
-import cn.codethink.xiaoming.util.ExperimentalApi
 import cn.codethink.xiaoming.util.InternalApi
 import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.TestSubjectDescriptor
@@ -28,7 +27,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
-@OptIn(InternalApi::class, ExperimentalApi::class)
+@OptIn(InternalApi::class)
 class LocalPluginManagerTest {
     private val platform = TestLocalPlatform()
 

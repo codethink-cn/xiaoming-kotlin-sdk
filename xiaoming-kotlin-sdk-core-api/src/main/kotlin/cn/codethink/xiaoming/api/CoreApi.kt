@@ -22,7 +22,6 @@ import cn.codethink.xiaoming.event.listener.ListenerDescriptor
 import cn.codethink.xiaoming.event.listener.ListenerPriority
 import cn.codethink.xiaoming.message.Text
 import cn.codethink.xiaoming.plugin.PluginDependency
-import cn.codethink.xiaoming.plugin.PluginMeta
 import cn.codethink.xiaoming.plugin.PluginPattern
 import cn.codethink.xiaoming.plugin.PluginProvision
 import cn.codethink.xiaoming.plugin.PluginSignature
@@ -31,7 +30,6 @@ import cn.codethink.xiaoming.util.AndVersionPattern
 import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.Data
 import cn.codethink.xiaoming.util.ExcludeVersionPattern
-import cn.codethink.xiaoming.util.ExperimentalApi
 import cn.codethink.xiaoming.util.GreaterThanOrEqualVersionPattern
 import cn.codethink.xiaoming.util.GreaterThanVersionPattern
 import cn.codethink.xiaoming.util.Id
@@ -76,7 +74,6 @@ import kotlin.properties.ReadWriteProperty
  * @author Chuanwise
  */
 @InternalApi
-@OptIn(ExperimentalApi::class)
 interface CoreApi {
     companion object {
         @JvmStatic
@@ -211,16 +208,6 @@ interface CoreApi {
 
     // Text
     fun createText(string: String): Text
-
-    fun createPluginMeta(
-        id: NamespaceId,
-        name: String,
-        version: Version,
-        description: String?,
-        standard: VersionPattern?,
-        provisions: List<PluginProvision>,
-        dependencies: List<PluginDependency>
-    ): PluginMeta
 
     fun createPluginDescriptor(id: NamespaceId): PluginDescriptor
 

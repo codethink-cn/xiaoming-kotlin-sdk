@@ -19,14 +19,12 @@
 package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.api.CoreApi
-import cn.codethink.xiaoming.util.ExperimentalApi
 import cn.codethink.xiaoming.util.InternalApi
 import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.VersionPattern
 import cn.codethink.xiaoming.util.toLiteralVersionPattern
 
 @JvmOverloads
-@ExperimentalApi
 @OptIn(InternalApi::class)
 @JvmName("createPluginProvision")
 fun PluginProvision(
@@ -38,11 +36,21 @@ fun PluginProvision(
     return CoreApi.getInstance().createPluginProvision(id, version, optional, superior)
 }
 
+@OptIn(InternalApi::class)
+@JvmName("createPluginProvision")
+fun PluginProvision(string: String): PluginProvision {
+    return CoreApi.getInstance().createPluginProvision(string)
+}
+
 @JvmSynthetic
-@ExperimentalApi
 fun PluginMeta.toPluginProvision(
     optional: Boolean = false,
     superior: Boolean = false
 ): PluginProvision {
     return PluginProvision(id, version.toLiteralVersionPattern(), optional, superior)
+}
+
+@JvmSynthetic
+fun String.toPluginProvision(): PluginProvision {
+    return PluginProvision(this)
 }

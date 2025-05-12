@@ -18,7 +18,6 @@ package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.Platform
 import cn.codethink.xiaoming.event.EventContext
-import cn.codethink.xiaoming.util.ExperimentalApi
 import cn.codethink.xiaoming.util.InternalApi
 import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.PluginDescriptor
@@ -29,7 +28,6 @@ import kotlin.concurrent.read
 import kotlin.concurrent.write
 
 @InternalApi
-@OptIn(ExperimentalApi::class)
 @Suppress("MemberVisibilityCanBePrivate")
 abstract class AbstractPlugin(
     final override val meta: PluginMeta,

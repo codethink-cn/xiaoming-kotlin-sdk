@@ -23,7 +23,6 @@ import cn.codethink.xiaoming.plugin.PluginExitContext
 import cn.codethink.xiaoming.plugin.PluginLoadContext
 import cn.codethink.xiaoming.plugin.PluginUnloadContext
 import cn.codethink.xiaoming.plugin.jvm.JvmPluginHandler
-import cn.codethink.xiaoming.util.InternalApi
 import cn.codethink.xiaoming.util.getOrConstruct
 import java.io.File
 
@@ -39,22 +38,26 @@ import java.io.File
  *
  * @author Chuanwise
  */
-@OptIn(InternalApi::class)
-class JvmClassicPluginHandler(
+interface JvmClassicPluginHandler : JvmPluginHandler {
+    override val classPath: JvmClassicPluginClassPath
+}
+
+internal class JvmClassicPluginHandlerImpl(
     private val meta: JvmClassicPluginMeta,
     private val directoryFile: File,
     override val classPath: JvmClassicPluginClassPath
-) : JvmPluginHandler {
+) : JvmClassicPluginHandler {
     private lateinit var main: AbstractPluginMain
 
+    @Suppress("UNCHECKED_CAST")
     override suspend fun onAllocate(context: PluginAllocateContext) {
         val mainClass = classPath.classLoader.loadClass(meta.main)
 
         require(AbstractPluginMain::class.java.isAssignableFrom(mainClass)) {
             "Plugin main class ${meta.main} is not a subclass of ${AbstractPluginMain::class}"
         }
-        main = getOrConstruct(mainClass) as AbstractPluginMain
 
+        main = getOrConstruct(mainClass as Class<AbstractPluginMain>)
         main.onAllocate(context.plugin, context.platform, classPath, directoryFile)
     }
 

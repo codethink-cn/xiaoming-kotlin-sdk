@@ -16,6 +16,7 @@
 
 package cn.codethink.xiaoming.api
 
+import cn.codethink.xiaoming.library.LibraryDescriptor
 import cn.codethink.xiaoming.permission.InheritancePermissionMatcher
 import cn.codethink.xiaoming.permission.WildCardPermissionPattern
 import cn.codethink.xiaoming.plugin.PluginConfiguration
@@ -48,4 +49,7 @@ interface LocalCoreApi {
     ): PluginConfiguration
 
     fun createJvmPluginClassAccessPolicy(accessible: Boolean): JvmPluginClassAccessPolicy
+
+    fun createLibraryDescriptor(string: String): LibraryDescriptor
+    fun createLibraryDescriptor(group: String, name: String, version: String): LibraryDescriptor
 }

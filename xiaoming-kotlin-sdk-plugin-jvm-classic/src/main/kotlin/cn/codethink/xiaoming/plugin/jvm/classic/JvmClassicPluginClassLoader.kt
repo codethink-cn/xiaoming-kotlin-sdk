@@ -34,33 +34,34 @@ import java.util.Collections
 import java.util.Enumeration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArraySet
+import java.util.function.Predicate
 import java.util.zip.ZipFile
 
 const val CLASS_FILE_NAME_EXTENSION_WITH_DOT = ".class"
 
-@InternalApi
-abstract class AbstractJvmClassicPluginClassLoader(
+class JvmClassicPluginClassLoader(
     private var id: NamespaceId,
     private val distributionFile: File,
     private var logger: KLogger,
     private val platform: LocalPlatform,
-    private val classPath: JvmClassicPluginClassPath
+    private val classPath: JvmClassicPluginClassPath,
+    private val uniqueResourceFilter: Predicate<String>
 ) : URLClassLoader(
     distributionFile.name, arrayOf(distributionFile.toURI().toURL()), null
 ) {
-    private val pluginClassLoaders: Map<NamespaceId, AbstractJvmClassicPluginClassLoader>
+    private val pluginClassLoaders: Map<NamespaceId, JvmClassicPluginClassLoader>
         get() = platform.pluginManager.plugins.values
             .mapNotNull { it.getClassLoader() }
             .associateBy { it.id }
 
-    private fun Plugin.getClassLoader(): AbstractJvmClassicPluginClassLoader? {
-        return ((this as AbstractPlugin).handler as? JvmClassicPluginHandler)?.classPath?.classLoader as? AbstractJvmClassicPluginClassLoader
+    private fun Plugin.getClassLoader(): JvmClassicPluginClassLoader? {
+        return ((this as AbstractPlugin).handler as? JvmClassicPluginHandler)?.classPath?.classLoader as? JvmClassicPluginClassLoader
     }
 
     /**
      * 用于加载依赖插件的类加载器。
      */
-    private val dependenciesClassLoaders: Map<NamespaceId, AbstractJvmClassicPluginClassLoader> = ConcurrentHashMap()
+    private val dependenciesClassLoaders: Map<NamespaceId, JvmClassicPluginClassLoader> = ConcurrentHashMap()
 
     /**
      * 插件分发文件内的包名。
@@ -104,7 +105,7 @@ abstract class AbstractJvmClassicPluginClassLoader(
         if (!packageNames.contains(packageName)) {
             return null
         }
-        if (!classPath.configuration.classAccessPolicy.isAccessible(name)) {
+        if (!classPath.classAccessPolicy.isAccessible(name)) {
             return null
         }
         return loadClassInThisClassLoader(name)
@@ -159,10 +160,10 @@ abstract class AbstractJvmClassicPluginClassLoader(
         // Load by this class loader.
         loadClassInThisClassLoader(name)?.let { return it }
 
-        val resolveIndependentPluginClasses = classPath.configuration.resolveIndependentPluginClasses
+        val resolveIndependentPluginClasses = classPath.resolveIndependentPluginClasses
         pluginClassLoaders.forEach { (id, classLoader) ->
             if (classLoader != this && !dependenciesClassLoaders.containsKey(id)) {
-                if (classLoader.classPath.configuration.allowResolvedByIndependentPlugins) {
+                if (classLoader.classPath.allowResolvedByIndependentPlugins) {
                     classLoader.resolveProtectedLibrariesAndPublicClass(name)?.let {
                         if (undefinedDependencies.add(classLoader.id)) {
                             logger.warn {
@@ -208,14 +209,16 @@ abstract class AbstractJvmClassicPluginClassLoader(
 
         privateLibrariesClassLoader.getResource(name)?.let { return it }
 
-        if (classPath.configuration.resolveSystemResources) {
+        if (classPath.resolveSystemResources) {
             platform.libraryManager.systemClassLoader.getResource(name)?.let { return it }
         }
 
         return null
     }
 
-    protected abstract fun isUniqueResource(name: String): Boolean
+    private fun isUniqueResource(name: String): Boolean {
+        return uniqueResourceFilter.test(name)
+    }
 
     private fun getResources(name: String, trace: MutableSet<ClassLoader>): Enumeration<URL> {
         if (!trace.add(this)) {
@@ -235,7 +238,7 @@ abstract class AbstractJvmClassicPluginClassLoader(
         sources += privateLibrariesClassLoader.getResources(name, trace)
 
         // Find resource from system class loader.
-        if (classPath.configuration.resolveSystemResources) {
+        if (classPath.resolveSystemResources) {
             if (!trace.add(platform.libraryManager.systemClassLoader)) {
                 sources += platform.libraryManager.systemClassLoader.getResources(name)
             }

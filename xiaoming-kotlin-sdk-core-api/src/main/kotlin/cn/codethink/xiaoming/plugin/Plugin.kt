@@ -16,7 +16,6 @@
 package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.Platform
-import cn.codethink.xiaoming.util.ExperimentalApi
 import cn.codethink.xiaoming.util.NotStableForInheritance
 import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.PluginDescriptor
@@ -130,51 +129,39 @@ interface Plugin : Subject {
      */
     val isExitingOrExited: Boolean
 
-    @ExperimentalApi
     @JvmBlockingBridge
     suspend fun allocate(operation: Operation)
 
-    @ExperimentalApi
     @JvmBlockingBridge
     suspend fun ensureAllocated(operation: Operation)
 
-    @ExperimentalApi
     @JvmBlockingBridge
     suspend fun load(operation: Operation)
 
-    @ExperimentalApi
     @JvmBlockingBridge
     suspend fun ensureLoaded(operation: Operation)
 
-    @ExperimentalApi
     @JvmBlockingBridge
     suspend fun enable(operation: Operation)
 
-    @ExperimentalApi
     @JvmBlockingBridge
     suspend fun ensureEnabled(operation: Operation)
 
-    @ExperimentalApi
     @JvmBlockingBridge
     suspend fun disable(operation: Operation)
 
-    @ExperimentalApi
     @JvmBlockingBridge
     suspend fun ensureDisabled(operation: Operation)
 
-    @ExperimentalApi
     @JvmBlockingBridge
     suspend fun unload(operation: Operation)
 
-    @ExperimentalApi
     @JvmBlockingBridge
     suspend fun ensureUnloaded(operation: Operation)
 
-    @ExperimentalApi
     @JvmBlockingBridge
     suspend fun release(operation: Operation)
 
-    @ExperimentalApi
     @JvmBlockingBridge
     suspend fun ensureReleased(operation: Operation)
 }

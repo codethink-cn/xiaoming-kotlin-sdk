@@ -28,21 +28,21 @@ interface PluginConfiguration {
     /**
      * 插件能否被共享给其他宿主。
      */
-    val sharable: Boolean
+    var sharable: Boolean
 
     /**
      * 是否启用调试模式。
      */
-    val debug: Boolean
+    var debug: Boolean
 
     /**
      * 使用 [LocalPluginManager.flushAvailablePlugins] 刷新插件列表时，
      * 若新插件列表不包含当前插件，是否释放当前插件。
      */
-    val releaseOnRemoved: Boolean
+    var releaseOnRemoved: Boolean
 
     /**
      * 是否在插件冲突时保留当前插件。
      */
-    val retainOnConflict: Boolean
+    var retainOnConflict: Boolean
 }

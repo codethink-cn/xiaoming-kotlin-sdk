@@ -20,5 +20,4 @@ interface LibraryDescriptor {
     val group: String
     val name: String
     val version: String
-    val repository: LibraryRepository?
 }

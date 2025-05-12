@@ -44,10 +44,10 @@ abstract class AbstractPluginMain : PluginMain {
         classPath: JvmClassicPluginClassPath,
         directoryFile: File
     ) {
-        this.mutablePlugin = plugin
-        this.mutablePlatform = platform
-        this.mutableClassPath = classPath
-        this.mutableDirectoryFile = directoryFile
+        mutablePlugin = plugin
+        mutablePlatform = platform
+        mutableClassPath = classPath
+        mutableDirectoryFile = directoryFile
 
         onAllocate0()
     }
@@ -57,10 +57,10 @@ abstract class AbstractPluginMain : PluginMain {
     internal fun onExit() {
         onExit0()
 
-        this.mutablePlugin = null
-        this.mutablePlatform = null
-        this.mutableClassPath = null
-        this.mutableDirectoryFile = null
+        mutablePlugin = null
+        mutablePlatform = null
+        mutableClassPath = null
+        mutableDirectoryFile = null
     }
 
     abstract fun onExit0()

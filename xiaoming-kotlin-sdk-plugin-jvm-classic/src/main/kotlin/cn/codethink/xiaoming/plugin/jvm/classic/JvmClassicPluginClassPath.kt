@@ -16,8 +16,18 @@
 
 package cn.codethink.xiaoming.plugin.jvm.classic
 
+import cn.codethink.xiaoming.LocalPlatform
+import cn.codethink.xiaoming.classpath.DynamicLibrariesClassLoader
+import cn.codethink.xiaoming.library.Library
+import cn.codethink.xiaoming.library.LibraryDescriptor
+import cn.codethink.xiaoming.plugin.jvm.JvmPluginClassAccessPolicy
 import cn.codethink.xiaoming.plugin.jvm.JvmPluginClassPath
+import cn.codethink.xiaoming.util.InternalApi
+import cn.codethink.xiaoming.util.NamespaceId
+import io.github.oshai.kotlinlogging.KLogger
 import java.io.File
+import java.net.URI
+import java.util.function.Predicate
 
 /**
  * 本地 JVM 经典插件类路径。
@@ -25,5 +35,58 @@ import java.io.File
  * @author Chuanwise
  */
 interface JvmClassicPluginClassPath : JvmPluginClassPath {
+    /**
+     * 插件依赖库对应的仓库。
+     */
+    val repositories: List<URI>
+
+    /**
+     * 插件依赖库坐标。
+     */
+    val dependencies: List<LibraryDescriptor>
+
+    /**
+     * 插件分发文件。
+     */
     val distributionFile: File
+
+    /**
+     * 连接到一个库。
+     *
+     * @param library 要连接的库。
+     * @param private 是否私有连接。
+     */
+    fun link(library: Library, private: Boolean = true)
+}
+
+
+@OptIn(InternalApi::class)
+internal class JvmClassicPluginClassPathImpl(
+    override val id: NamespaceId,
+    override var classAccessPolicy: JvmPluginClassAccessPolicy,
+    override val platform: LocalPlatform,
+    override var resolveSystemResources: Boolean,
+    override var resolveIndependentPluginClasses: Boolean,
+    override var allowResolvedByIndependentPlugins: Boolean,
+    override val repositories: List<URI>,
+    override val dependencies: List<LibraryDescriptor>,
+    override val distributionFile: File,
+    uniqueResourceFilter: Predicate<String>,
+    logger: KLogger
+) : JvmClassicPluginClassPath {
+    override val classLoader = JvmClassicPluginClassLoader(
+        id = id,
+        distributionFile = distributionFile,
+        logger = logger,
+        platform = platform,
+        classPath = this,
+        uniqueResourceFilter = uniqueResourceFilter
+    )
+
+    override fun link(library: Library, private: Boolean) {
+        val classLoader = library.classLoader as? DynamicLibrariesClassLoader
+        requireNotNull(classLoader) { "Library class loader must be ${DynamicLibrariesClassLoader::class}" }
+
+        this.classLoader.link(classLoader, private)
+    }
 }

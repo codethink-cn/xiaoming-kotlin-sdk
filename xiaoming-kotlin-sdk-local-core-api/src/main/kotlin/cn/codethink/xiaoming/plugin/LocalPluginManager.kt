@@ -17,7 +17,6 @@
 package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.LocalPlatform
-import cn.codethink.xiaoming.util.ExperimentalApi
 import cn.codethink.xiaoming.util.MutableRegistration
 import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.Operation
@@ -39,7 +38,6 @@ interface LocalPluginManager : PluginManager {
     /**
      * 宿主的所有插件，其中可能包括已识别，但未加载的插件。
      */
-    @ExperimentalApi
     val availablePlugins: Collection<Plugin>
 
     /**
@@ -59,7 +57,6 @@ interface LocalPluginManager : PluginManager {
      * @param version 插件版本
      * @return 插件
      */
-    @ExperimentalApi
     fun getAvailablePlugin(id: NamespaceId, version: Version): Plugin?
 
     /**
@@ -68,7 +65,6 @@ interface LocalPluginManager : PluginManager {
      * @param signature 插件签名
      * @return 插件
      */
-    @ExperimentalApi
     fun getAvailablePlugin(signature: PluginSignature): Plugin?
 
     /**
@@ -77,7 +73,6 @@ interface LocalPluginManager : PluginManager {
      * @param id 插件 ID
      * @return 插件版本
      */
-    @ExperimentalApi
     fun getAvailablePlugins(id: NamespaceId): Map<Version, Plugin>
 
     /**
@@ -86,7 +81,6 @@ interface LocalPluginManager : PluginManager {
      * @param pattern 插件模式
      * @return 插件版本
      */
-    @ExperimentalApi
     fun getAvailablePlugins(pattern: PluginPattern): Map<Version, Plugin>
 
     /**
@@ -98,7 +92,6 @@ interface LocalPluginManager : PluginManager {
      * @param handler 插件处理器
      * @return 插件
      */
-    @ExperimentalApi
     fun registerPlugin(meta: PluginMeta, configuration: PluginConfiguration, handler: PluginHandler, operation: Operation): Plugin
 
     /**
@@ -108,7 +101,6 @@ interface LocalPluginManager : PluginManager {
      * @param operation 解析插件的原因
      * @return 插件
      */
-    @ExperimentalApi
     @JvmBlockingBridge
     suspend fun resolvePlugins(pattern: PluginPattern, operation: Operation): Map<Version, Plugin>
 
@@ -117,33 +109,25 @@ interface LocalPluginManager : PluginManager {
      *
      * @param operation 操作原因
      */
-    @ExperimentalApi
     @JvmBlockingBridge
     suspend fun flushAvailablePlugins(operation: Operation)
 
-    @ExperimentalApi
     @JvmBlockingBridge
     suspend fun loadPlugins(operation: Operation)
 
-    @ExperimentalApi
     @JvmBlockingBridge
     suspend fun enablePlugins(operation: Operation)
 
-    @ExperimentalApi
     @JvmBlockingBridge
     suspend fun disablePlugins(operation: Operation)
 
-    @ExperimentalApi
     @JvmBlockingBridge
     suspend fun unloadPlugins(operation: Operation)
 
-    @ExperimentalApi
     @JvmBlockingBridge
     suspend fun releasePlugins(operation: Operation)
 
-    @ExperimentalApi
     fun registerPluginScanner(id: String, scanner: PluginScanner, operation: Operation): MutableRegistration<PluginScanner>
 
-    @ExperimentalApi
     fun registerPluginSource(id: String, source: PluginSource, operation: Operation): MutableRegistration<PluginSource>
 }

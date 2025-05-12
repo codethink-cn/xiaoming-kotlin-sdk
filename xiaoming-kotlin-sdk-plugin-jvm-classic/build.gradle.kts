@@ -23,6 +23,8 @@ plugins {
 dependencies {
     compileOnly(project(":xiaoming-kotlin-sdk-local-core"))
 
+    testImplementation(project(":xiaoming-kotlin-sdk-local-core"))
+
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
 }

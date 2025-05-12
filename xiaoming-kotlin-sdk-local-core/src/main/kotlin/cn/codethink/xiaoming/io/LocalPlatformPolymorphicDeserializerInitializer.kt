@@ -21,6 +21,8 @@ import cn.codethink.xiaoming.permission.InheritancePermissionMatcherV1
 import cn.codethink.xiaoming.permission.PermissionMatcher
 import cn.codethink.xiaoming.permission.WildCardPermissionPattern
 import cn.codethink.xiaoming.permission.WildCardPermissionPatternV1
+import cn.codethink.xiaoming.plugin.PluginConfiguration
+import cn.codethink.xiaoming.plugin.PluginConfigurationV1
 import cn.codethink.xiaoming.serialization.CodecResolverInitializeContext
 import cn.codethink.xiaoming.serialization.CodecResolverInitializer
 import cn.codethink.xiaoming.serialization.registering
@@ -28,6 +30,12 @@ import cn.codethink.xiaoming.serialization.registering
 class LocalPlatformPolymorphicDeserializerInitializer : CodecResolverInitializer {
     override fun initialize(context: CodecResolverInitializeContext) {
         context.registering {
+            type<PluginConfiguration> {
+                version {
+                    hint<PluginConfigurationV1>("1")
+                }
+            }
+
             type<PermissionMatcher> {
                 type {
                     type<WildCardPermissionPattern>("wild_card") {
