@@ -26,4 +26,5 @@ import cn.codethink.xiaoming.data.PlatformDataConfiguration
 interface SqlPlatformDataConfiguration : PlatformDataConfiguration {
     val source: SqlDataSource
     val tableNamePrefix: String
+    val createSchema: Boolean
 }

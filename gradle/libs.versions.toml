@@ -21,6 +21,8 @@ hikari-cp = "5.1.0"
 
 build-config = "4.0.4"  # 404 is good
 
+maven-resolver-provider = "3.9.9"
+
 [libraries]
 kotlin-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin-coroutines" }
 blocking-bridge = { module = "me.him188:kotlin-jvm-blocking-bridge-runtime", version.ref = "blocking-bridge" }
@@ -52,6 +54,8 @@ ktorm-core = { module = "org.ktorm:ktorm-core", version.ref = "ktorm" }
 ktorm-jackson = { module = "org.ktorm:ktorm-jackson", version.ref = "ktorm" }
 
 hikari-cp = { module = "com.zaxxer:HikariCP", version.ref = "hikari-cp" }
+
+maven-resolver-provider = { module = "org.apache.maven.resolver:maven-resolver-provider", version.ref = "maven-resolver-provider" }
 
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version = "5.8.2" }
 junit-bom = { module = "org.junit:junit-bom", version = "5.8.2" }

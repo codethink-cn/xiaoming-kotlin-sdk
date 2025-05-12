@@ -16,18 +16,24 @@
 
 package cn.codethink.xiaoming.data.sql.v1
 
-import cn.codethink.xiaoming.LocalPlatform
 import cn.codethink.xiaoming.data.PlatformData
 import cn.codethink.xiaoming.data.sql.SqlDataSource
 import cn.codethink.xiaoming.data.sql.SqlPlatformDataConfiguration
 import cn.codethink.xiaoming.data.sql.SqlPlatformDataImpl
+import cn.codethink.xiaoming.serialization.SerializationManager
 import org.ktorm.database.Database
 
 class SqlPlatformDataConfigurationV1(
     override val source: SqlDataSource,
-    override val tableNamePrefix: String
+    override val tableNamePrefix: String = "",
+    override val createSchema: Boolean = true
 ) : SqlPlatformDataConfiguration {
-    override fun toData(platform: LocalPlatform): PlatformData {
-        return SqlPlatformDataImpl(platform, tableNamePrefix, Database.connect(source.toDataSource()))
+    override fun toData(serializationManager: SerializationManager): PlatformData {
+        return SqlPlatformDataImpl(
+            tableNamePrefix,
+            Database.connect(source.toDataSource()),
+            serializationManager.jsonDataObjectMapper,
+            createSchema
+        )
     }
 }

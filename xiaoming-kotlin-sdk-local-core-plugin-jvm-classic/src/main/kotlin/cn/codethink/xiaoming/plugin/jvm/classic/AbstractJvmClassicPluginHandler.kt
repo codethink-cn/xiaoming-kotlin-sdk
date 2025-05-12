@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.data
+package cn.codethink.xiaoming.plugin.jvm.classic
 
-import cn.codethink.xiaoming.serialization.SerializationManager
-
-/**
- * 本地平台数据配置。
- *
- * @author Chuanwise
- */
-interface PlatformDataConfiguration {
-    fun toData(serializationManager: SerializationManager): PlatformData
+abstract class AbstractJvmClassicPluginHandler(
+    private val mainClassName: String,
+    override val classPath: JvmClassicPluginClassPath
+) : JvmClassicPluginHandler {
+    protected fun getMainClassNoCheck(): Class<*> {
+        return classPath.pluginClassLoader.loadClass(mainClassName)
+    }
 }

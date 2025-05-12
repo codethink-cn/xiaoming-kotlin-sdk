@@ -28,6 +28,7 @@ import cn.codethink.xiaoming.permission.PermissionEntry
 import cn.codethink.xiaoming.permission.PermissionMatcher
 import cn.codethink.xiaoming.plugin.LocalPluginManager
 import cn.codethink.xiaoming.plugin.LocalPluginManagerImpl
+import cn.codethink.xiaoming.serialization.CodecResolverImpl
 import cn.codethink.xiaoming.serialization.SerializationManager
 import cn.codethink.xiaoming.serialization.SerializationManagerImpl
 import cn.codethink.xiaoming.util.Id
@@ -38,7 +39,6 @@ import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import java.util.Locale
 import kotlin.coroutines.CoroutineContext
 
 object TestPlatformSubjectDescriptor : SubjectDescriptor {
@@ -90,11 +90,13 @@ object TestPlatformData : PlatformData {
 
 class TestLocalPlatformConfiguration(
     override val logger: KLogger = KotlinLogging.logger("TestPlatform"),
-    override val locale: Locale = Locale.getDefault(),
     override val descriptor: SubjectDescriptor = TestPlatformSubjectDescriptor,
     override val parentJob: Job? = null,
     override val parentCoroutineContext: CoroutineContext = Dispatchers.IO,
-    override val serializationManager: SerializationManager = SerializationManagerImpl(),
+    override val serializationManager: SerializationManager = SerializationManagerImpl(
+        codecResolver = CodecResolverImpl(),
+        findAndRegisterModules = true
+    ),
     override val data: PlatformData = TestPlatformData
 ) : LocalPlatformConfiguration
 
@@ -102,7 +104,7 @@ class TestLocalPlatformConfiguration(
 class TestLocalPlatform(
     configuration: LocalPlatformConfiguration = TestLocalPlatformConfiguration()
 ) : AbstractLocalPlatform(configuration) {
-    override val serializationManager: SerializationManager = SerializationManagerImpl()
+    override val serializationManager: SerializationManager = configuration.serializationManager
     override val libraryManager: LibraryManager get() = TODO()
     override val eventManager: LocalEventManager = LocalEventManagerImpl(this)
     override val permissionManager: LocalPermissionManager get() = TODO()

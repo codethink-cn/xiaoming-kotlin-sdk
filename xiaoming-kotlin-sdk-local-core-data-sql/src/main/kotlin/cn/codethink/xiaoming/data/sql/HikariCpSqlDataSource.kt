@@ -23,7 +23,7 @@ import java.util.Properties
 import javax.sql.DataSource
 
 class HikariCpSqlDataSource(
-    private val properties: Properties
+    private val properties: Properties,
 ) : SqlDataSource {
     override fun toDataSource(): DataSource = HikariDataSource(
         HikariConfig(properties)

@@ -20,7 +20,6 @@ import cn.codethink.xiaoming.serialization.SerializationManager
 import cn.codethink.xiaoming.util.SubjectDescriptor
 import io.github.oshai.kotlinlogging.KLogger
 import kotlinx.coroutines.Job
-import java.util.Locale
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -33,11 +32,6 @@ interface PlatformConfiguration {
      * 平台的日志。
      */
     val logger: KLogger
-
-    /**
-     * 平台的地区设置，决定语言等信息。
-     */
-    val locale: Locale
 
     /**
      * 表示平台的主体描述符。

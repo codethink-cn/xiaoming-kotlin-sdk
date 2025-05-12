@@ -16,7 +16,6 @@
 
 package cn.codethink.xiaoming.data.sql
 
-import cn.codethink.xiaoming.LocalPlatform
 import cn.codethink.xiaoming.permission.PermissionBundle
 import cn.codethink.xiaoming.permission.PermissionConstraint
 import cn.codethink.xiaoming.permission.PermissionEntry
@@ -36,10 +35,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.ktorm.database.Database
 
 class SqlPlatformDataImpl(
-    private val platform: LocalPlatform,
     override val tableNamePrefix: String,
     override val database: Database,
-    override val objectMapper: ObjectMapper = platform.serializationManager.jsonDataObjectMapper
+    override val objectMapper: ObjectMapper,
+    private val createSchema: Boolean
 ) : SqlPlatformData {
     private val subjectDescriptorHandlers = MutableMapRegistrationManagerImpl<String, SqlSubjectHandler>()
 
@@ -57,14 +56,16 @@ class SqlPlatformDataImpl(
     private val permissionEntryTable = SqlPermissionEntryTable(this)
 
     init {
-        val createSchemaSqlTemplatePath = "/xiaoming/data/sql/create_schema.sql"
-        val createSchemaSqlTemplate = javaClass
-            .getResourceAsStream(createSchemaSqlTemplatePath)
-            ?.readBytes()?.decodeToString()?.toTemplate()
-            ?: throw NoSuchElementException("Resource not found: $createSchemaSqlTemplatePath")
+        if (createSchema) {
+            val createSchemaSqlTemplatePath = "/xiaoming/data/sql/create_schema.sql"
+            val createSchemaSqlTemplate = javaClass
+                .getResourceAsStream(createSchemaSqlTemplatePath)
+                ?.readBytes()?.decodeToString()?.toTemplate()
+                ?: throw NoSuchElementException("Resource not found: $createSchemaSqlTemplatePath")
 
-        val createSchemaSql = createSchemaSqlTemplate.format("table_name_prefix" to tableNamePrefix)
-        database.useConnection { it.createStatement().execute(createSchemaSql) }
+            val createSchemaSql = createSchemaSqlTemplate.format("table_name_prefix" to tableNamePrefix)
+            database.useConnection { it.createStatement().execute(createSchemaSql) }
+        }
     }
 
     override fun getSubjectById(id: Id): SubjectDescriptor? {

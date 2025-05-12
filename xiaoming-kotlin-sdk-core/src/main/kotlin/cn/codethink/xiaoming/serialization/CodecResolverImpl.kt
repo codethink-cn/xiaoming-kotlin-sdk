@@ -47,7 +47,6 @@ import com.fasterxml.jackson.databind.jsontype.TypeDeserializer
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.databind.ser.ContextualSerializer
 import com.fasterxml.jackson.databind.ser.Serializers
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
@@ -639,25 +638,41 @@ class CodecResolverImpl : CodecResolver {
         return typeBasedCodecs.registerTypeBasedCodec(type, codec, operation, replace)
     }
 
-    private data class ClassKey<U, R : U>(val type: Class<U>, val hintedType: Class<R>)
+    private data class ClassKey<U, R : U>(val type: Class<U>, val hintedType: Class<R>?)
 
-    private inner class NameBasedTypeHintClueCollector<T>(val type: Class<T>, val hintedType: Class<out T>) {
+    private inner class NameBasedTypeHintClueCollector<T>(val type: Class<T>, val hintedType: Class<out T>?, val node: ObjectNode?) {
         var currentType: Class<out T> = type
 
         fun collect(): List<NameBasedTypeHints.MutableHintRegistration<out T, out T>> {
+            val node = node
+
             var currentTypeHints = nameBasedTypeHints.findNameBasedTypeHints(currentType)
             val entries = mutableListOf<NameBasedTypeHints.MutableHintRegistration<out T, out T>>()
 
             while (currentTypeHints != null) {
                 var entry: NameBasedTypeHints.MutableHintRegistration<out T, out T>? = null
                 for ((nameField, nameFieldEntries) in currentTypeHints) {
-                    for ((currentName, currentEntry) in nameFieldEntries) {
-                        if (!currentEntry.value.hint.isAssignableFrom(hintedType)) {
+                    if (node == null) {
+                        for ((currentName, currentEntry) in nameFieldEntries) {
+                            if (hintedType != null && !currentEntry.value.hint.isAssignableFrom(hintedType)) {
+                                continue
+                            }
+
+                            check(entry == null) {
+                                "Ambiguous name-based type hints for $type: $nameField -> $currentName vs ${currentEntry.nameClue.name}"
+                            }
+                            entry = currentEntry
+                        }
+                    } else {
+                        val name = node[nameField]?.asText() ?: continue
+                        val currentEntry = nameFieldEntries[name] ?: continue
+
+                        if (hintedType != null && !currentEntry.value.hint.isAssignableFrom(hintedType)) {
                             continue
                         }
 
                         check(entry == null) {
-                            "Ambiguous name-based type hints for $type: $nameField -> $currentName vs ${currentEntry.nameClue.name}"
+                            "Ambiguous name-based type hints for $type: $nameField -> $name vs ${currentEntry.nameClue.name}"
                         }
                         entry = currentEntry
                     }
@@ -740,7 +755,7 @@ class CodecResolverImpl : CodecResolver {
                         ?.let { return it.asJacksonSerializer }
                 }
 
-                val nameBasedTypeHintClueCollector = NameBasedTypeHintClueCollector(type, hintedType)
+                val nameBasedTypeHintClueCollector = NameBasedTypeHintClueCollector(type, hintedType, node = null)
                 val nameBasedTypeHintRegistrations = nameBasedTypeHintClueCollector.collect()
                 if (nameBasedTypeHintRegistrations.isNotEmpty()) {
                     return HintedJacksonSerializer(nameBasedTypeHintClueCollector.currentType as Class<T>, nameBasedTypeHintRegistrations, property)
@@ -984,20 +999,20 @@ class CodecResolverImpl : CodecResolver {
         // 最终实现需要依赖其他模块或 Jackson 默认的反序列化器，
         // 所以需要调用 Jackson 的 findContextualValueDeserializer。
         // 然而这会首先查询本模块的反序列化器。如果不提前禁止，就会导致递归。
-        private val disableDeserializerFindFunctions = ThreadLocal<Unit?>()
+        private val disableDeserializerFindFunctions = ThreadLocal<Class<*>?>()
 
         private fun <T> findContextualValueDeserializer(
             type: Class<T>, property: BeanProperty?, context: DeserializationContext
         ): JsonDeserializer<T> {
             val javaType = context.constructType(type)
-            return disableDeserializerFindFunctions.withValue {
+            return disableDeserializerFindFunctions.withValue(type) {
                 context.findContextualValueDeserializer(javaType, property)
             } as JsonDeserializer<T>
         }
 
         private inner class DeserializerResolver<T>(
             val type: Class<T>,
-            val hintedType: Class<out T>,
+            val hintedType: Class<out T>?,
             var parser: JsonParser,
             val context: DeserializationContext,
             val property: BeanProperty?,
@@ -1011,6 +1026,7 @@ class CodecResolverImpl : CodecResolver {
                 val root = parser.readValueAsTree<JsonNode>()
                 parser = root.traverse(parser.codec)
 
+                // 构造新 Parser 并读取第一个 START_OBJECT token。
                 val nextToken = parser.nextToken()
                 tokenBasedCodecs.findTokenBasedDeserializer(type, nextToken)?.let { return it.asJacksonDeserializer }
 
@@ -1023,7 +1039,7 @@ class CodecResolverImpl : CodecResolver {
 
                         var deserializer: AbstractCodecEntry<T>.AbstractCodecRegistration? = null
                         for ((currentNameField, currentNameEntries) in nameBasedEntries) {
-                            val currentName = root[currentNameField]?.textValue() ?: continue
+                            val currentName = root[currentNameField]?.asText() ?: continue
                             val entry = currentNameEntries[currentName] ?: continue
 
                             require(deserializer === null) {
@@ -1040,7 +1056,7 @@ class CodecResolverImpl : CodecResolver {
                     }
 
                     // nameField -> name -> hint
-                    val nameBasedTypeHintClueCollector = NameBasedTypeHintClueCollector(type, hintedType)
+                    val nameBasedTypeHintClueCollector = NameBasedTypeHintClueCollector(type, hintedType, root)
                     val nameBasedTypeHintRegistrations = nameBasedTypeHintClueCollector.collect()
                     if (nameBasedTypeHintRegistrations.isNotEmpty()) {
                         return HintedJacksonDeserializer(nameBasedTypeHintClueCollector.currentType as Class<T>, nameBasedTypeHintRegistrations, property)
@@ -1149,12 +1165,12 @@ class CodecResolverImpl : CodecResolver {
 
                 for (registration in typeHintRegistrations) {
                     val nameClue = registration.nameClue
-                    val nameNode = root[nameClue.nameField] as? TextNode ?: throw NoSuchElementException(
+                    val nameNode = root[nameClue.nameField] ?: throw NoSuchElementException(
                         "Cannot find name field ${nameClue.nameField} (due to ${registration.operation.description}) in $root"
                     )
 
-                    check(nameNode.textValue() == nameClue.name) {
-                        "Conflict name field for $type: ${nameClue.nameField} -> ${nameNode.textValue()} (from deserialized) " +
+                    check(nameNode.asText() == nameClue.name) {
+                        "Conflict name field for $type: ${nameClue.nameField} -> ${nameNode.asText()} (from deserialized) " +
                                 "vs ${nameClue.name} (from clues due to ${registration.operation.description})"
                     }
                     if (!nameClue.visible) {
@@ -1166,13 +1182,17 @@ class CodecResolverImpl : CodecResolver {
                     findContextualValueDeserializer(type, property, context)
                 }
 
-                return deserializer.deserialize(parser, context)
+                // 构造新 Parser 并读取第一个 START_OBJECT token。
+                val finalParser = root.traverse(parser.codec)
+                finalParser.nextToken()
+
+                return deserializer.deserialize(finalParser, context)
             }
         }
 
         private inner class DynamicJacksonDeserializer<T>(
             private val type: Class<in T>,
-            private val hintedType: Class<T>
+            private val hintedType: Class<T>?
         ) : StdDeserializer<T>(hintedType), ContextualDeserializer {
             private val deserializerCache = VersionCache<MutableMap<ClassKey<*, *>, JsonDeserializer<*>>>()
 
@@ -1220,14 +1240,16 @@ class CodecResolverImpl : CodecResolver {
         val dynamicDeserializers = ConcurrentHashMap<Class<*>, DynamicJacksonDeserializer<*>>()
 
         fun findDeserializer(rawClass: Class<*>): JsonDeserializer<*>? {
-            if (disableDeserializerFindFunctions.get() != null) {
+            if (disableDeserializerFindFunctions.get() == rawClass) {
                 return null
             }
 
             dynamicDeserializers[rawClass]?.let { return it }
 
             getDeserializerClassWeak(rawClass)?.let {
-                return dynamicDeserializers.computeIfAbsent(rawClass) { _ -> DynamicJacksonDeserializer(it, rawClass as Class<Nothing>) }
+                return dynamicDeserializers.computeIfAbsent(rawClass) { _ ->
+                    DynamicJacksonDeserializer(it, rawClass.takeIf { type -> type != it } as? Class<Nothing>)
+                }
             }
 
             return null

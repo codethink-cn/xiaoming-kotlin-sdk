@@ -17,12 +17,14 @@
 package cn.codethink.xiaoming.serialization
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 
 class SerializationManagerImpl(
-    override val codecResolver: CodecResolver = CodecResolverImpl()
+    override val codecResolver: CodecResolver,
+    private val findAndRegisterModules: Boolean
 ) : SerializationManager {
     override val jsonFileObjectMapper: ObjectMapper = createJsonObjectMapper().apply {
         enable(SerializationFeature.INDENT_OUTPUT)
@@ -32,17 +34,21 @@ class SerializationManagerImpl(
     override val yamlFileObjectMapper: ObjectMapper = createYamlObjectMapper()
 
     private fun createJsonObjectMapper(): ObjectMapper {
-        return ObjectMapper().apply {
-            findAndRegisterModules()
-        }
+        return ObjectMapper().initialized()
     }
 
     private fun createYamlObjectMapper(): ObjectMapper {
         return YAMLMapper.builder()
             .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
+            .propertyNamingStrategy(PropertyNamingStrategies.KEBAB_CASE)
             .build()
-            .apply {
-                findAndRegisterModules()
-            }
+            .initialized()
+    }
+
+    private fun ObjectMapper.initialized(): ObjectMapper = apply {
+        if (findAndRegisterModules) {
+            findAndRegisterModules()
+        }
+        registerModule(codecResolver.asJacksonModule())
     }
 }
