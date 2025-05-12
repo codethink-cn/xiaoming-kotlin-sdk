@@ -47,7 +47,6 @@ open class DynamicUrlClassLoader(
     fun link(file: File) = addURL(file.toURI().toURL())
 }
 
-
 private class CompoundEnumeration<T>(
     private val first: Enumeration<T>,
     private val second: Enumeration<T>
@@ -67,7 +66,7 @@ private class CompoundEnumeration<T>(
 
 private operator fun <T> Enumeration<T>.plus(other: Enumeration<T>): Enumeration<T> = CompoundEnumeration(this, other)
 
-
+@InternalApi
 class DynamicLibrariesClassLoader(
     private val systemClassLoader: ClassLoader,
     classLoaderName: String,

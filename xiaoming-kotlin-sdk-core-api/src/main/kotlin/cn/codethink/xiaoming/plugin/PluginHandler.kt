@@ -32,7 +32,6 @@ interface PluginHandler {
      *
      * @param context 插件分配上下文
      */
-    @Throws(Exception::class)
     suspend fun onAllocate(context: PluginAllocateContext)
 
     /**
@@ -43,7 +42,6 @@ interface PluginHandler {
      *
      * @param context 插件加载上下文
      */
-    @Throws(Exception::class)
     suspend fun onLoad(context: PluginLoadContext)
 
     /**
@@ -53,7 +51,6 @@ interface PluginHandler {
      *
      * @param context 插件启动上下文
      */
-    @Throws(Exception::class)
     suspend fun onEnable(context: PluginEnableContext)
 
     /**
@@ -63,7 +60,6 @@ interface PluginHandler {
      *
      * @param context 插件关闭上下文
      */
-    @Throws(Exception::class)
     suspend fun onDisable(context: PluginDisableContext)
 
     /**
@@ -74,7 +70,6 @@ interface PluginHandler {
      *
      * @param context 插件卸载上下文
      */
-    @Throws(Exception::class)
     suspend fun onUnload(context: PluginUnloadContext)
 
     /**
@@ -87,6 +82,5 @@ interface PluginHandler {
      *
      * @param context 插件释放上下文
      */
-    @Throws(Exception::class)
     suspend fun onExit(context: PluginExitContext)
 }

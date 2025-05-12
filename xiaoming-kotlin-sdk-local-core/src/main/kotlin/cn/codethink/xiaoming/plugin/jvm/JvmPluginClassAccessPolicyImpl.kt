@@ -14,13 +14,25 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin.jvm.classic
+package cn.codethink.xiaoming.plugin.jvm
 
-abstract class AbstractJvmClassicPluginHandler(
-    private val mainClassName: String,
-    override val classPath: JvmClassicPluginClassPath
-) : JvmClassicPluginHandler {
-    protected fun getMainClassNoCheck(): Class<*> {
-        return classPath.pluginClassLoader.loadClass(mainClassName)
+data class JvmPluginClassAccessPolicyImpl(
+    private val accessible: Boolean,
+) : JvmPluginClassAccessPolicy {
+    companion object {
+        @JvmStatic
+        val STRICT = JvmPluginClassAccessPolicyImpl(false)
+
+        @JvmStatic
+        val LOOSE = JvmPluginClassAccessPolicyImpl(true)
+
+        @JvmStatic
+        fun of(accessible: Boolean): JvmPluginClassAccessPolicy {
+            return if (accessible) LOOSE else STRICT
+        }
+    }
+
+    override fun isAccessible(name: String): Boolean {
+        return accessible
     }
 }

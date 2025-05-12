@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.library
+package cn.codethink.xiaoming.plugin.jvm.classic.util
 
-import cn.codethink.xiaoming.util.NotStableForInheritance
+import cn.codethink.xiaoming.plugin.Plugin
+import cn.codethink.xiaoming.util.InternalApi
+import cn.codethink.xiaoming.util.NamespaceId
 
-@NotStableForInheritance
-interface Library {
-    val descriptor: LibraryDescriptor
-    val classLoader: ClassLoader
-}
+@InternalApi
+fun createPluginLoggerName(id: NamespaceId): String = "${Plugin::class}[$id]"
+
+@InternalApi
+fun createPluginLoggerName(id: NamespaceId, module: String): String = "${Plugin::class}[$id, $module]"

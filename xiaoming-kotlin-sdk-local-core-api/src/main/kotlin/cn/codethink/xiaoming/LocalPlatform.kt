@@ -33,5 +33,6 @@ interface LocalPlatform : Platform {
     override val exceptionManager: LocalExceptionManager
     override val pluginManager: LocalPluginManager
 
-    fun start(operation: Operation)
+    suspend fun start(operation: Operation)
+    suspend fun stop(operation: Operation)
 }

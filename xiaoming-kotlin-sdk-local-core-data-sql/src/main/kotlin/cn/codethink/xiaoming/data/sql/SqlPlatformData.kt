@@ -26,6 +26,7 @@ import org.ktorm.database.Database
 interface SqlPlatformData : PlatformData {
     val tableNamePrefix: String
     val objectMapper: ObjectMapper
+    val createSchema: Boolean
 
     val database: Database
 

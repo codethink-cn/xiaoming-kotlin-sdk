@@ -16,6 +16,7 @@
 
 package cn.codethink.xiaoming.plugin
 
+import cn.codethink.xiaoming.LocalPlatform
 import cn.codethink.xiaoming.util.Operation
 
 /**
@@ -24,6 +25,7 @@ import cn.codethink.xiaoming.util.Operation
  * @author Chuanwise
  */
 interface PluginScanContext {
+    val platform: LocalPlatform
     val operation: Operation
 
     fun registerPlugin(meta: PluginMeta, configuration: PluginConfiguration, operation: Operation, handler: PluginHandler)

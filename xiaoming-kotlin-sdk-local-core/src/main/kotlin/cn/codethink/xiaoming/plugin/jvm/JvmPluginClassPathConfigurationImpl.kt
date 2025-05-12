@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.library
+package cn.codethink.xiaoming.plugin.jvm
 
-import cn.codethink.xiaoming.util.NotStableForInheritance
-
-@NotStableForInheritance
-interface Library {
-    val descriptor: LibraryDescriptor
-    val classLoader: ClassLoader
-}
+data class JvmPluginClassPathConfigurationImpl(
+    override var classAccessPolicy: JvmPluginClassAccessPolicy,
+    override var resolveSystemResources: Boolean,
+    override var resolveIndependentPluginClasses: Boolean,
+    override var allowResolvedByIndependentPlugins: Boolean
+) : JvmPluginClassPathConfiguration

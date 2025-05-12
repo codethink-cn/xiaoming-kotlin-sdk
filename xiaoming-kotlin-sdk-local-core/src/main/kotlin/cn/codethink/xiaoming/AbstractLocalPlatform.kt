@@ -50,7 +50,6 @@ abstract class AbstractLocalPlatform(
                 PlatformState.ALLOCATED -> PlatformState.STARTING
                 PlatformState.STARTING -> error("Concurrent start of platform is not allowed.")
                 PlatformState.STARTED -> error("Platform is already started.")
-                PlatformState.STARTING_ERRORED -> error("Platform is starting, but an error occurred.")
                 else -> error("Unexpected state while starting: $stateNoLock.")
             }
         }
@@ -61,7 +60,7 @@ abstract class AbstractLocalPlatform(
             lock.write {
                 stateNoLock = when (stateNoLock) {
                     PlatformState.STARTING -> PlatformState.STARTED
-                    PlatformState.STARTING_ERRORED -> PlatformState.STARTING_ERRORED
+                    PlatformState.CRASHED -> PlatformState.CRASHED
 
                     PlatformState.STARTED -> error("Platform is already started.")
                     else -> error("Unexpected state after starting: $stateNoLock.")
@@ -71,7 +70,7 @@ abstract class AbstractLocalPlatform(
             lock.write {
                 stateNoLock = when (stateNoLock) {
                     PlatformState.STARTING,
-                    PlatformState.STARTING_ERRORED -> PlatformState.STARTING_ERRORED
+                    PlatformState.CRASHED -> PlatformState.CRASHED
 
                     PlatformState.STARTED -> error("Platform is already started.")
                     else -> error("Unexpected state while trying to set staring error: $stateNoLock.")
@@ -81,7 +80,55 @@ abstract class AbstractLocalPlatform(
         }
     }
 
-    final override fun start(operation: Operation) = withStartingState { start0(operation) }
+    private inline fun withStoppingState(action: () -> Unit) {
+        lock.write {
+            stateNoLock = when (stateNoLock) {
+                PlatformState.STARTED -> PlatformState.STOPPING
+                PlatformState.STOPPING -> error("Concurrent stop of platform is not allowed.")
+                PlatformState.CRASHED -> error("Platform is already crashed.")
+                else -> error("Unexpected state while stopping: $stateNoLock.")
+            }
+        }
 
-    protected abstract fun start0(operation: Operation)
+        try {
+            action()
+
+            lock.write {
+                stateNoLock = when (stateNoLock) {
+                    PlatformState.STOPPING -> PlatformState.ALLOCATED
+                    PlatformState.CRASHED -> PlatformState.CRASHED
+
+                    PlatformState.STARTED -> error("Platform is already started.")
+                    else -> error("Unexpected state after stopping: $stateNoLock.")
+                }
+            }
+        } catch (e: Exception) {
+            lock.write {
+                stateNoLock = when (stateNoLock) {
+                    PlatformState.STOPPING,
+                    PlatformState.CRASHED -> PlatformState.CRASHED
+
+                    PlatformState.STARTED -> error("Platform is already started.")
+                    else -> error("Unexpected state while trying to set stopping error: $stateNoLock.")
+                }
+            }
+            throw e
+        }
+    }
+
+    override suspend fun start(operation: Operation) {
+        withStartingState {
+            doStart(operation)
+        }
+    }
+
+    protected abstract suspend fun doStart(operation: Operation)
+
+    override suspend fun stop(operation: Operation) {
+        withStoppingState {
+            doStop(operation)
+        }
+    }
+
+    protected abstract suspend fun doStop(operation: Operation)
 }

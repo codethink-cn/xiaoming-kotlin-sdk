@@ -111,7 +111,11 @@ class TestLocalPlatform(
     override val exceptionManager: LocalExceptionManager get() = TODO()
     override val pluginManager: LocalPluginManager = LocalPluginManagerImpl(this)
 
-    override fun start0(operation: Operation) {
+    override suspend fun doStart(operation: Operation) {
         logger.info { "Starting test platform..." }
+    }
+
+    override suspend fun doStop(operation: Operation) {
+        TODO("Not yet implemented")
     }
 }

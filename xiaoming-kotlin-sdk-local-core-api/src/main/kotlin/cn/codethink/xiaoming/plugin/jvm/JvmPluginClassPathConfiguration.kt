@@ -14,35 +14,31 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin
-
-import cn.codethink.xiaoming.util.NotStableForInheritance
+package cn.codethink.xiaoming.plugin.jvm
 
 /**
- * 插件配置项。
+ * 插件类路径配置。
  *
  * @author Chuanwise
  */
-@NotStableForInheritance
-interface PluginConfiguration {
+interface JvmPluginClassPathConfiguration {
     /**
-     * 插件能否被共享给其他宿主。
+     * 插件类访问策略。可用于实现插件间类隔离。默认为完全隔离策略。
      */
-    val sharable: Boolean
+    var classAccessPolicy: JvmPluginClassAccessPolicy
 
     /**
-     * 是否启用调试模式。
+     * 是否从系统类加载器中解析资源，默认为 `true`。
      */
-    val debug: Boolean
+    var resolveSystemResources: Boolean
 
     /**
-     * 使用 [LocalPluginManager.flushAvailablePlugins] 刷新插件列表时，
-     * 若新插件列表不包含当前插件，是否释放当前插件。
+     * 是否在类加载失败时，尝试从其他无关插件中解析类，默认为 `false`。
      */
-    val releaseOnRemoved: Boolean
+    var resolveIndependentPluginClasses: Boolean
 
     /**
-     * 是否在插件冲突时保留当前插件。
+     * 是否允许被无关插件解析，默认为 `false`。
      */
-    val retainOnConflict: Boolean
+    var allowResolvedByIndependentPlugins: Boolean
 }

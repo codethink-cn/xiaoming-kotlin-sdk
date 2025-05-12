@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 CodeThink Technologies and contributors.
+ * Copyright 2025 CodeThink Technologies and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,30 +16,43 @@
 
 package cn.codethink.xiaoming.plugin.jvm.classic
 
-import cn.codethink.xiaoming.plugin.PluginDisableContext
-import cn.codethink.xiaoming.plugin.PluginEnableContext
-import cn.codethink.xiaoming.plugin.PluginLoadContext
-import cn.codethink.xiaoming.plugin.PluginUnloadContext
+import cn.codethink.xiaoming.plugin.id
+import cn.codethink.xiaoming.plugin.jvm.classic.util.createPluginLoggerName
+import cn.codethink.xiaoming.plugin.jvm.classic.util.orThrowException
 import cn.codethink.xiaoming.util.InternalApi
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlin.coroutines.CoroutineContext
 
-/**
- * Kotlin 插件主类。
- *
- * @author Chuanwise
- */
-class KotlinPluginMain : CoroutineScope {
-    private lateinit var mutableCoroutineContext: CoroutineContext
-    override val coroutineContext: CoroutineContext get() = mutableCoroutineContext
+@OptIn(InternalApi::class)
+open class KotlinPluginMain : AbstractPluginMain(), CoroutineScope {
+    private var mutableJob: Job? = null
+    private val job: Job get() = mutableJob.orThrowException()
 
-    suspend fun onLoad(context: PluginLoadContext) = Unit
-    suspend fun onEnable(context: PluginEnableContext) = Unit
-    suspend fun onDisable(context: PluginDisableContext) = Unit
-    suspend fun onUnload(context: PluginUnloadContext) = Unit
+    private var mutableScope: CoroutineScope? = null
+    private val scope: CoroutineScope get() = mutableScope.orThrowException()
+    override val coroutineContext: CoroutineContext get() = scope.coroutineContext
 
-    @InternalApi
-    internal fun initialize(coroutineContext: CoroutineContext) {
-        mutableCoroutineContext = coroutineContext
+    private var mutableLogger = null as KLogger?
+    val logger: KLogger get() = mutableLogger.orThrowException()
+
+    override fun onAllocate0() {
+        val job = SupervisorJob()
+
+        mutableJob = job
+        mutableScope = CoroutineScope(job + platform.coroutineContext)
+
+        mutableLogger = KotlinLogging.logger(createPluginLoggerName(plugin.id))
+    }
+
+    override fun onExit0() {
+        mutableJob?.cancel()
+        mutableJob = null
+
+        mutableScope = null
+        mutableLogger = null
     }
 }

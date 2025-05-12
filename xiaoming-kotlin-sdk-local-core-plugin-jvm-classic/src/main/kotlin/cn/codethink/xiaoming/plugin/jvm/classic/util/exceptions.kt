@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.library
+package cn.codethink.xiaoming.plugin.jvm.classic.util
 
-import cn.codethink.xiaoming.util.NotStableForInheritance
-
-@NotStableForInheritance
-interface Library {
-    val descriptor: LibraryDescriptor
-    val classLoader: ClassLoader
+internal fun <T> T?.orThrowException(): T {
+    return this ?: error("Plugin not initialized")
 }

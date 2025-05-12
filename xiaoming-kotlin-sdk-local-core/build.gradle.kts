@@ -19,6 +19,7 @@ plugins {
     alias(libs.plugins.blocking.bridge)
     `maven-publish`
 }
+
 dependencies {
     api(project(":xiaoming-kotlin-sdk-local-core-api"))
 

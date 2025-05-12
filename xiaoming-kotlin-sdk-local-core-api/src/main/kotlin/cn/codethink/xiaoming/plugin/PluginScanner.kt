@@ -29,5 +29,5 @@ fun interface PluginScanner {
      *
      * @param context 插件检测上下文。
      */
-    fun scan(context: PluginScanContext)
+    suspend fun scan(context: PluginScanContext)
 }

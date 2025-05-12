@@ -27,6 +27,7 @@ import cn.codethink.xiaoming.util.MutableDirectedAcyclicGraphImpl
 import cn.codethink.xiaoming.util.MutableDualKeyMap
 import cn.codethink.xiaoming.util.MutableDualKeyMapImpl
 import cn.codethink.xiaoming.util.MutableMapRegistrationManagerImpl
+import cn.codethink.xiaoming.util.MutableRegistration
 import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.Registration
@@ -648,7 +649,7 @@ class LocalPluginManagerImpl(
     private abstract inner class AbstractLocalServingPlugin(
         meta: PluginMeta, val configuration: PluginConfiguration, handler: PluginHandler, operation: Operation
     ) : AbstractPlugin(
-        meta, handler, this, operation, PluginState.UNALLOCATED, platform
+        meta, handler, operation, PluginState.UNALLOCATED, platform
     ) {
         override var dependencies: List<Plugin?> = emptyList()
         override var provisions: List<PluginSignature?> = emptyList()
@@ -814,7 +815,7 @@ class LocalPluginManagerImpl(
             override var provisions: List<PluginSignature?>,
             override var dependencies: List<Plugin?>
         ) : AbstractPlugin(
-            meta, handler, this@LocalPluginManagerImpl, operation, PluginState.ALLOCATED, platform
+            meta, handler, operation, PluginState.ALLOCATED, platform
         ), RemoteServingPlugin {
             override val backend: SharablePlugin get() = this@SharablePluginImpl
 
@@ -922,6 +923,7 @@ class LocalPluginManagerImpl(
     }
 
     private inner class PluginScanContextImpl(override val operation: Operation) : PluginScanContext {
+        override val platform: LocalPlatform = this@LocalPluginManagerImpl.platform
         val newAvailablePlugins: MutableDualKeyMapImpl<NamespaceId, Version, AbstractLocalServingPlugin> = MutableDualKeyMapImpl()
 
         override fun registerPlugin(meta: PluginMeta, configuration: PluginConfiguration, operation: Operation, handler: PluginHandler) {
@@ -948,8 +950,8 @@ class LocalPluginManagerImpl(
 
         val removedPlugins = oldAvailablePlugins.filterKeys { !newAvailablePlugins.containsKey(it) }
         for (removedPlugin in removedPlugins) {
-            if (removedPlugin.value.configuration.crashOnRemoved) {
-                removedPlugin.value.ensureCrashed(operation)
+            if (removedPlugin.value.configuration.releaseOnRemoved) {
+                removedPlugin.value.ensureReleased(operation)
             }
         }
     }
@@ -1021,5 +1023,13 @@ class LocalPluginManagerImpl(
         for (availablePlugin in availablePlugins) {
             availablePlugin.ensureReleased(operation)
         }
+    }
+
+    override fun registerPluginScanner(id: String, scanner: PluginScanner, operation: Operation): MutableRegistration<PluginScanner> {
+        return mutablePluginScanners.register(id, scanner, operation)
+    }
+
+    override fun registerPluginSource(id: String, source: PluginSource, operation: Operation): MutableRegistration<PluginSource> {
+        return mutablePluginSources.register(id, source, operation)
     }
 }

@@ -38,7 +38,7 @@ class SqlPlatformDataImpl(
     override val tableNamePrefix: String,
     override val database: Database,
     override val objectMapper: ObjectMapper,
-    private val createSchema: Boolean
+    override val createSchema: Boolean
 ) : SqlPlatformData {
     private val subjectDescriptorHandlers = MutableMapRegistrationManagerImpl<String, SqlSubjectHandler>()
 

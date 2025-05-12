@@ -16,6 +16,8 @@
 
 package cn.codethink.xiaoming.plugin.jvm
 
+import cn.codethink.xiaoming.library.Library
+
 /**
  * 本地 JVM 插件的类路径设置。
  *
@@ -23,27 +25,20 @@ package cn.codethink.xiaoming.plugin.jvm
  */
 interface JvmPluginClassPath {
     /**
-     * 插件类访问策略。可用于实现插件间类隔离。默认为完全隔离策略。
+     * 插件的类路径配置。
      */
-    var classAccessPolicy: JvmPluginClassAccessPolicy
-
-    /**
-     * 是否从系统类加载器中解析资源，默认为 `true`。
-     */
-    var resolveSystemResources: Boolean
-
-    /**
-     * 是否在类加载失败时，尝试从其他无关插件中解析类，默认为 `false`。
-     */
-    var resolveIndependentPluginClasses: Boolean
-
-    /**
-     * 是否允许被无关插件解析，默认为 `false`。
-     */
-    var allowResolvedByIndependentPlugins: Boolean
+    var configuration: JvmPluginClassPathConfiguration
 
     /**
      * 插件类加载器。
      */
-    val pluginClassLoader: ClassLoader
+    val classLoader: ClassLoader
+
+    /**
+     * 连接到一个库。
+     *
+     * @param library 要连接的库。
+     * @param private 是否私有连接。
+     */
+    fun link(library: Library, private: Boolean = true)
 }

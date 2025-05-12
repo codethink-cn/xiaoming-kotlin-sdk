@@ -20,7 +20,8 @@ package cn.codethink.xiaoming.plugin.jvm.classic
 
 import cn.codethink.xiaoming.LocalPlatform
 import cn.codethink.xiaoming.classpath.DynamicLibrariesClassLoader
-import cn.codethink.xiaoming.plugin.jvm.JvmPluginClassAccessPolicy
+import cn.codethink.xiaoming.plugin.AbstractPlugin
+import cn.codethink.xiaoming.plugin.Plugin
 import cn.codethink.xiaoming.util.InternalApi
 import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.ignoreClassNotFoundException
@@ -33,34 +34,33 @@ import java.util.Collections
 import java.util.Enumeration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArraySet
-import java.util.function.Predicate
 import java.util.zip.ZipFile
 
 const val CLASS_FILE_NAME_EXTENSION_WITH_DOT = ".class"
 
-class JvmClassicPluginClassLoader(
+@InternalApi
+abstract class AbstractJvmClassicPluginClassLoader(
     private var id: NamespaceId,
-    override val distributionFile: File,
-
-    override var resolveSystemResources: Boolean,
-
-    override var classAccessPolicy: JvmPluginClassAccessPolicy,
-    override var resolveIndependentPluginClasses: Boolean,
-    override var allowResolvedByIndependentPlugins: Boolean,
-
-    private val uniqueResourcesFilter: Predicate<String>,
-    private var pluginClassLoaders: Map<NamespaceId, JvmClassicPluginClassLoader>,
+    private val distributionFile: File,
     private var logger: KLogger,
-    private val platform: LocalPlatform
+    private val platform: LocalPlatform,
+    private val classPath: JvmClassicPluginClassPath
 ) : URLClassLoader(
     distributionFile.name, arrayOf(distributionFile.toURI().toURL()), null
-), JvmClassicPluginClassPath {
-    override val pluginClassLoader: ClassLoader = this
+) {
+    private val pluginClassLoaders: Map<NamespaceId, AbstractJvmClassicPluginClassLoader>
+        get() = platform.pluginManager.plugins.values
+            .mapNotNull { it.getClassLoader() }
+            .associateBy { it.id }
+
+    private fun Plugin.getClassLoader(): AbstractJvmClassicPluginClassLoader? {
+        return ((this as AbstractPlugin).handler as? JvmClassicPluginHandler)?.classPath?.classLoader as? AbstractJvmClassicPluginClassLoader
+    }
 
     /**
      * 用于加载依赖插件的类加载器。
      */
-    private val dependenciesClassLoaders: Map<NamespaceId, JvmClassicPluginClassLoader> = ConcurrentHashMap()
+    private val dependenciesClassLoaders: Map<NamespaceId, AbstractJvmClassicPluginClassLoader> = ConcurrentHashMap()
 
     /**
      * 插件分发文件内的包名。
@@ -104,7 +104,7 @@ class JvmClassicPluginClassLoader(
         if (!packageNames.contains(packageName)) {
             return null
         }
-        if (!classAccessPolicy.isAccessible(name)) {
+        if (!classPath.configuration.classAccessPolicy.isAccessible(name)) {
             return null
         }
         return loadClassInThisClassLoader(name)
@@ -159,10 +159,10 @@ class JvmClassicPluginClassLoader(
         // Load by this class loader.
         loadClassInThisClassLoader(name)?.let { return it }
 
-        val resolveIndependentPluginClasses = resolveIndependentPluginClasses
+        val resolveIndependentPluginClasses = classPath.configuration.resolveIndependentPluginClasses
         pluginClassLoaders.forEach { (id, classLoader) ->
             if (classLoader != this && !dependenciesClassLoaders.containsKey(id)) {
-                if (classLoader.allowResolvedByIndependentPlugins) {
+                if (classLoader.classPath.configuration.allowResolvedByIndependentPlugins) {
                     classLoader.resolveProtectedLibrariesAndPublicClass(name)?.let {
                         if (undefinedDependencies.add(classLoader.id)) {
                             logger.warn {
@@ -186,7 +186,7 @@ class JvmClassicPluginClassLoader(
     }
 
     override fun getResources(name: String): Enumeration<URL> {
-        if (uniqueResourcesFilter.test(name)) {
+        if (isUniqueResource(name)) {
             return findResources(name)
         }
 
@@ -194,7 +194,7 @@ class JvmClassicPluginClassLoader(
     }
 
     override fun getResource(name: String): URL? {
-        if (uniqueResourcesFilter.test(name)) {
+        if (isUniqueResource(name)) {
             return findResource(name)
         }
 
@@ -208,12 +208,14 @@ class JvmClassicPluginClassLoader(
 
         privateLibrariesClassLoader.getResource(name)?.let { return it }
 
-        if (resolveSystemResources) {
+        if (classPath.configuration.resolveSystemResources) {
             platform.libraryManager.systemClassLoader.getResource(name)?.let { return it }
         }
 
         return null
     }
+
+    protected abstract fun isUniqueResource(name: String): Boolean
 
     private fun getResources(name: String, trace: MutableSet<ClassLoader>): Enumeration<URL> {
         if (!trace.add(this)) {
@@ -233,7 +235,7 @@ class JvmClassicPluginClassLoader(
         sources += privateLibrariesClassLoader.getResources(name, trace)
 
         // Find resource from system class loader.
-        if (resolveSystemResources) {
+        if (classPath.configuration.resolveSystemResources) {
             if (!trace.add(platform.libraryManager.systemClassLoader)) {
                 sources += platform.libraryManager.systemClassLoader.getResources(name)
             }

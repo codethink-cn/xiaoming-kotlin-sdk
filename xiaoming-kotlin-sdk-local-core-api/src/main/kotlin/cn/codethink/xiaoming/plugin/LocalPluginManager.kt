@@ -18,6 +18,7 @@ package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.LocalPlatform
 import cn.codethink.xiaoming.util.ExperimentalApi
+import cn.codethink.xiaoming.util.MutableRegistration
 import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.Registration
@@ -139,4 +140,10 @@ interface LocalPluginManager : PluginManager {
     @ExperimentalApi
     @JvmBlockingBridge
     suspend fun releasePlugins(operation: Operation)
+
+    @ExperimentalApi
+    fun registerPluginScanner(id: String, scanner: PluginScanner, operation: Operation): MutableRegistration<PluginScanner>
+
+    @ExperimentalApi
+    fun registerPluginSource(id: String, source: PluginSource, operation: Operation): MutableRegistration<PluginSource>
 }

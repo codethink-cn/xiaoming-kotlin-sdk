@@ -16,8 +16,3 @@
 
 -- Must replace following placeholders with actual values:
 -- ${table_name_prefix}
-
-create table if not exists ${table_name_prefix}placeholder
-(
-    id integer primary key
-);

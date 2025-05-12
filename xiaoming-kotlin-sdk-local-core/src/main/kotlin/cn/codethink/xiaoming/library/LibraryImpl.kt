@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.internal.event
+package cn.codethink.xiaoming.library
 
-import cn.codethink.xiaoming.event.AbstractCancellableEvent
-import cn.codethink.xiaoming.event.PlatformStartEvent
-import cn.codethink.xiaoming.util.Cause
-import cn.codethink.xiaoming.util.withPrefixOrNull
+import cn.codethink.xiaoming.classpath.DynamicLibrariesClassLoader
+import cn.codethink.xiaoming.util.InternalApi
 
-class PlatformStartEventImpl(
-    override val cause: Cause? = null
-) : AbstractCancellableEvent(), PlatformStartEvent {
-    override val description: String = "Platform starting${cause?.description.withPrefixOrNull(": ").orEmpty()}"
-}
+@OptIn(InternalApi::class)
+class LibraryImpl(
+    override val descriptor: LibraryDescriptor,
+    override val classLoader: DynamicLibrariesClassLoader
+) : Library

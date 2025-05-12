@@ -20,10 +20,11 @@ enum class PlatformState {
     ALLOCATED,
 
     STARTING,
-    STARTING_ERRORED,
     STARTED,
 
     STOPPING,
-    STOPPING_ERRORED,
-    STOPPED
+    STOPPED,
+
+    CRASHING,
+    CRASHED
 }

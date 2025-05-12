@@ -30,11 +30,11 @@ import kotlin.concurrent.write
 
 @InternalApi
 @OptIn(ExperimentalApi::class)
+@Suppress("MemberVisibilityCanBePrivate")
 abstract class AbstractPlugin(
     final override val meta: PluginMeta,
 
-    private val handler: PluginHandler,
-    private val manager: LocalPluginManagerImpl,
+    val handler: PluginHandler,
 
     initialOperation: Operation,
     initialState: PluginState,
