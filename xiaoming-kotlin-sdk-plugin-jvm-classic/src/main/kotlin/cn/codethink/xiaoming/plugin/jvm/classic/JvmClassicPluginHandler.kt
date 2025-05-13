@@ -20,11 +20,14 @@ import cn.codethink.xiaoming.plugin.PluginAllocateContext
 import cn.codethink.xiaoming.plugin.PluginDisableContext
 import cn.codethink.xiaoming.plugin.PluginEnableContext
 import cn.codethink.xiaoming.plugin.PluginExitContext
+import cn.codethink.xiaoming.plugin.PluginHandler
 import cn.codethink.xiaoming.plugin.PluginLoadContext
 import cn.codethink.xiaoming.plugin.PluginUnloadContext
 import cn.codethink.xiaoming.plugin.jvm.JvmPluginHandler
 import cn.codethink.xiaoming.util.getOrConstruct
 import java.io.File
+import kotlin.reflect.full.allSuperclasses
+import kotlin.reflect.full.findAnnotation
 
 /**
  * 本地 JVM 经典插件：一个 [JvmClassicPluginHandler] 的非抽象子类，成为**插件主类**。
@@ -32,52 +35,67 @@ import java.io.File
  *
  * 这种插件必须存在一个 `META-INF/xiaoming/plugin.yml` 资源文件，并在其内声明插件元数据信息。
  * 元数据包含 `main` 字段，其值为插件主类名。运行时，框架读取此文件，并从中获悉插件主类名，
- * 随后使用 [JvmClassicPluginClassPath.classLoader] 加载此类。
+ * 随后使用 [JvmClassicPluginClassPath.pluginClassLoader] 加载此类。
  *
  * 在同一个文件夹下，还可以存在 `access.yml` 文件，以声明插件类的访问权限。
+ *
+ * 尽管插件代码可能共享，但是插件在不同宿主上必须使用不同的 [JvmPluginHandler]。
  *
  * @author Chuanwise
  */
 interface JvmClassicPluginHandler : JvmPluginHandler {
+    /**
+     * 插件类路径。
+     */
     override val classPath: JvmClassicPluginClassPath
+
+    /**
+     * 插件目录。
+     */
+    val directoryFile: File
 }
 
 internal class JvmClassicPluginHandlerImpl(
     private val meta: JvmClassicPluginMeta,
-    private val directoryFile: File,
+    override val directoryFile: File,
     override val classPath: JvmClassicPluginClassPath
 ) : JvmClassicPluginHandler {
-    private lateinit var main: AbstractPluginMain
+    private var mutableHandler: PluginHandler? = null
+    private val handler: PluginHandler get() = mutableHandler ?: error("Plugin handler is not allocated")
 
-    @Suppress("UNCHECKED_CAST")
     override suspend fun onAllocate(context: PluginAllocateContext) {
-        val mainClass = classPath.classLoader.loadClass(meta.main)
+        require(mutableHandler == null) { "Plugin handler is already allocated" }
 
-        require(AbstractPluginMain::class.java.isAssignableFrom(mainClass)) {
-            "Plugin main class ${meta.main} is not a subclass of ${AbstractPluginMain::class}"
-        }
+        // TODO: 满足插件的依赖库之类的需求
+        classPath.repositories
 
-        main = getOrConstruct(mainClass as Class<AbstractPluginMain>)
-        main.onAllocate(context.plugin, context.platform, classPath, directoryFile)
+        val mainClass = classPath.pluginClassLoader.loadClass(meta.main)
+        val mainAnnotation = mainClass.kotlin.allSuperclasses.firstNotNullOfOrNull { it.findAnnotation<PluginMain>() }
+        requireNotNull(mainAnnotation) { "Plugin main class ${meta.main} and all its super classes is not annotated with @PluginMain" }
+
+        val handler = getOrConstruct(mainAnnotation.handlerFactory.java).createPluginHandler(mainClass, this)
+        handler.onAllocate(context)
+
+        mutableHandler = handler
     }
 
     override suspend fun onLoad(context: PluginLoadContext) {
-        main.onLoad(context)
+        handler.onLoad(context)
     }
 
     override suspend fun onEnable(context: PluginEnableContext) {
-        main.onEnable(context)
+        handler.onEnable(context)
     }
 
     override suspend fun onDisable(context: PluginDisableContext) {
-        main.onDisable(context)
+        handler.onDisable(context)
     }
 
     override suspend fun onUnload(context: PluginUnloadContext) {
-        main.onUnload(context)
+        handler.onUnload(context)
     }
 
     override suspend fun onExit(context: PluginExitContext) {
-        main.onExit()
+        handler.onExit(context)
     }
 }

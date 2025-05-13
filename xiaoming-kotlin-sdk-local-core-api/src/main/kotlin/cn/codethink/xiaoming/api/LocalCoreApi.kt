@@ -43,7 +43,6 @@ interface LocalCoreApi {
 
     fun createPluginConfiguration(
         sharable: Boolean,
-        debug: Boolean,
         crashOnRemoved: Boolean,
         retainOnConflict: Boolean
     ): PluginConfiguration

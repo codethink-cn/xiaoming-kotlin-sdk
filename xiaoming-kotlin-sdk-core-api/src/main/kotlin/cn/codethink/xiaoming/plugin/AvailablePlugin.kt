@@ -16,16 +16,23 @@
 
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.RemotePlatform
+import cn.codethink.xiaoming.Platform
+import cn.codethink.xiaoming.util.NotStableForInheritance
 
 /**
- * 正在为处在当前进程中的宿主服务的插件。
+ * 可以接触到的插件。
  *
  * @author Chuanwise
  */
-interface LocalServingPlugin : Plugin {
+@NotStableForInheritance
+interface AvailablePlugin : Plugin {
     /**
      * 插件可以为多个宿主服务，此为其对应于不同宿主的插件对象。其中不包含当前宿主本身。
      */
-    val instances: Map<RemotePlatform, RemoteServingPlugin>
+    val instances: Map<Platform, Plugin>
+
+    /**
+     * 插件是否在调试模式下运行。
+     */
+    var debug: Boolean
 }

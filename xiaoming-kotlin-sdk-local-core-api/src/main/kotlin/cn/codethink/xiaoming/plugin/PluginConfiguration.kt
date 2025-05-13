@@ -31,11 +31,6 @@ interface PluginConfiguration {
     var sharable: Boolean
 
     /**
-     * 是否启用调试模式。
-     */
-    var debug: Boolean
-
-    /**
      * 使用 [LocalPluginManager.flushAvailablePlugins] 刷新插件列表时，
      * 若新插件列表不包含当前插件，是否释放当前插件。
      */

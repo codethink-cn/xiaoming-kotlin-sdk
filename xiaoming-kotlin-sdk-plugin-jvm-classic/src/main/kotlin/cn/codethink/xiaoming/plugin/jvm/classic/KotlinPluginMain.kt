@@ -16,43 +16,33 @@
 
 package cn.codethink.xiaoming.plugin.jvm.classic
 
-import cn.codethink.xiaoming.plugin.id
-import cn.codethink.xiaoming.plugin.jvm.classic.util.orThrowException
-import cn.codethink.xiaoming.plugin.jvm.classic.util.pluginLogger
-import cn.codethink.xiaoming.util.InternalApi
-import io.github.oshai.kotlinlogging.KLogger
-import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlin.coroutines.CoroutineContext
+@PluginMain(KotlinPluginHandlerFactory::class)
+interface KotlinPluginMain {
+    /**
+     * 执行插件加载操作。
+     *
+     * @param context 插件加载上下文
+     */
+    suspend fun onLoad(context: KotlinPluginMainLoadContext) = Unit
 
-@OptIn(InternalApi::class)
-open class KotlinPluginMain : AbstractPluginMain(), CoroutineScope {
-    private var mutableJob: Job? = null
-    private val job: Job get() = mutableJob.orThrowException()
+    /**
+     * 执行插件启动操作。
+     *
+     * @param context 插件启动上下文
+     */
+    suspend fun onEnable(context: KotlinPluginMainEnableContext) = Unit
 
-    private var mutableScope: CoroutineScope? = null
-    private val scope: CoroutineScope get() = mutableScope.orThrowException()
-    override val coroutineContext: CoroutineContext get() = scope.coroutineContext
+    /**
+     * 执行插件关闭操作。
+     *
+     * @param context 插件关闭上下文
+     */
+    suspend fun onDisable(context: KotlinPluginMainDisableContext) = Unit
 
-    private var mutableLogger = null as KLogger?
-    val logger: KLogger get() = mutableLogger.orThrowException()
-
-    override fun onAllocate0() {
-        val job = SupervisorJob()
-
-        mutableJob = job
-        mutableScope = CoroutineScope(job + platform.coroutineContext)
-
-        mutableLogger = KotlinLogging.pluginLogger(plugin.id)
-    }
-
-    override fun onExit0() {
-        mutableJob?.cancel()
-        mutableJob = null
-
-        mutableScope = null
-        mutableLogger = null
-    }
+    /**
+     * 执行插件卸载操作。
+     *
+     * @param context 插件卸载上下文
+     */
+    suspend fun onUnload(context: KotlinPluginMainUnloadContext) = Unit
 }

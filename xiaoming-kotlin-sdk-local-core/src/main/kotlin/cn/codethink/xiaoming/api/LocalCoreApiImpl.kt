@@ -41,8 +41,8 @@ class LocalCoreApiImpl : LocalCoreApi {
         return InheritancePermissionMatcherV1(inheritedId)
     }
 
-    override fun createPluginConfiguration(sharable: Boolean, debug: Boolean, crashOnRemoved: Boolean, retainOnConflict: Boolean): PluginConfiguration {
-        return PluginConfigurationV1(sharable, debug, crashOnRemoved, retainOnConflict)
+    override fun createPluginConfiguration(sharable: Boolean, crashOnRemoved: Boolean, retainOnConflict: Boolean): PluginConfiguration {
+        return PluginConfigurationV1(sharable, crashOnRemoved, retainOnConflict)
     }
 
     override fun createJvmPluginClassAccessPolicy(accessible: Boolean): JvmPluginClassAccessPolicy {

@@ -14,20 +14,22 @@
  * limitations under the License.
  */
 
-@file:JvmName("PluginConfigurationFactory")
+package cn.codethink.xiaoming.plugin.jvm.classic
 
-package cn.codethink.xiaoming.plugin
+import cn.codethink.xiaoming.plugin.AvailablePlugin
+import cn.codethink.xiaoming.plugin.PluginContext
+import java.io.File
 
-import cn.codethink.xiaoming.api.LocalCoreApi
-import cn.codethink.xiaoming.util.InternalApi
+interface PluginMainContext : PluginContext {
+    override val plugin: AvailablePlugin
 
-@JvmOverloads
-@OptIn(InternalApi::class)
-@JvmName("createPluginConfiguration")
-fun PluginConfiguration(
-    sharable: Boolean = false,
-    crashOnRemoved: Boolean = true,
-    retainOnConflict: Boolean = false
-): PluginConfiguration {
-    return LocalCoreApi.getInstance().createPluginConfiguration(sharable, crashOnRemoved, retainOnConflict)
+    /**
+     * 当前插件的类路径。
+     */
+    val classPath: JvmClassicPluginClassPath
+
+    /**
+     * 插件目录文件。
+     */
+    val directoryFile: File
 }

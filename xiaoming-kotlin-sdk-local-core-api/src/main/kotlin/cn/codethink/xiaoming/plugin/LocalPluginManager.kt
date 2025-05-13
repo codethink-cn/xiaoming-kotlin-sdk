@@ -42,9 +42,14 @@ interface LocalPluginManager : PluginManager {
     val logger: KLogger
 
     /**
+     * 已经启动的插件。
+     */
+    override val plugins: Map<NamespaceId, AvailablePlugin>
+
+    /**
      * 宿主的所有插件，其中可能包括已识别，但未加载的插件。
      */
-    val availablePlugins: Collection<Plugin>
+    val installedPlugins: Collection<AvailablePlugin>
 
     /**
      * 插件扫描器，用于在必要时扫描一次宿主上的所有插件。
@@ -56,6 +61,14 @@ interface LocalPluginManager : PluginManager {
      */
     val pluginSources: Map<String, Registration<PluginSource>>
 
+    override fun getPlugin(id: NamespaceId): AvailablePlugin?
+
+    override fun getPluginOrFail(id: NamespaceId): AvailablePlugin
+
+    override fun getProviderPlugin(id: NamespaceId): AvailablePlugin?
+
+    override fun getProviderPluginOrFail(id: NamespaceId): Plugin
+
     /**
      * 通过 ID 和版本获取插件。
      *
@@ -63,7 +76,9 @@ interface LocalPluginManager : PluginManager {
      * @param version 插件版本
      * @return 插件
      */
-    fun getAvailablePlugin(id: NamespaceId, version: Version): Plugin?
+    fun getInstalledPlugin(id: NamespaceId, version: Version): AvailablePlugin?
+
+    fun getInstalledPluginOrFail(id: NamespaceId, version: Version): AvailablePlugin
 
     /**
      * 通过插件签名获取插件。
@@ -71,7 +86,7 @@ interface LocalPluginManager : PluginManager {
      * @param signature 插件签名
      * @return 插件
      */
-    fun getAvailablePlugin(signature: PluginSignature): Plugin?
+    fun getInstalledPlugins(signature: PluginSignature): AvailablePlugin?
 
     /**
      * 获取已经分配的一个插件的所有版本。
@@ -79,7 +94,7 @@ interface LocalPluginManager : PluginManager {
      * @param id 插件 ID
      * @return 插件版本
      */
-    fun getAvailablePlugins(id: NamespaceId): Map<Version, Plugin>
+    fun getInstalledPlugins(id: NamespaceId): Map<Version, AvailablePlugin>
 
     /**
      * 获取已经分配的一个插件的所有版本。
@@ -87,7 +102,7 @@ interface LocalPluginManager : PluginManager {
      * @param pattern 插件模式
      * @return 插件版本
      */
-    fun getAvailablePlugins(pattern: PluginPattern): Map<Version, Plugin>
+    fun getInstalledPlugins(pattern: PluginPattern): Map<Version, AvailablePlugin>
 
     /**
      * 注册一个插件。
@@ -98,7 +113,7 @@ interface LocalPluginManager : PluginManager {
      * @param handler 插件处理器
      * @return 插件
      */
-    fun registerAvailablePlugin(meta: PluginMeta, configuration: PluginConfiguration, handler: PluginHandler, operation: Operation): Plugin
+    fun registerInstalledPlugin(meta: PluginMeta, configuration: PluginConfiguration, handler: PluginHandler, operation: Operation): AvailablePlugin
 
     /**
      * 解析一个插件，其将执行一次扫描和插件源请求。
@@ -108,7 +123,7 @@ interface LocalPluginManager : PluginManager {
      * @return 插件
      */
     @JvmBlockingBridge
-    suspend fun resolvePlugins(pattern: PluginPattern, operation: Operation): Map<Version, Plugin>
+    suspend fun resolvePlugins(pattern: PluginPattern, operation: Operation): Map<Version, AvailablePlugin>
 
     /**
      * 刷新插件列表。

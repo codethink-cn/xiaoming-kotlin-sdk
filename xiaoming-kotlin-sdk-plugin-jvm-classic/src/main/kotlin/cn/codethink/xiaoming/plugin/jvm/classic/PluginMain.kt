@@ -16,60 +16,18 @@
 
 package cn.codethink.xiaoming.plugin.jvm.classic
 
-import cn.codethink.xiaoming.Platform
-import cn.codethink.xiaoming.plugin.Plugin
-import cn.codethink.xiaoming.plugin.PluginDisableContext
-import cn.codethink.xiaoming.plugin.PluginEnableContext
-import cn.codethink.xiaoming.plugin.PluginLoadContext
-import cn.codethink.xiaoming.plugin.PluginUnloadContext
-import java.io.File
+import kotlin.reflect.KClass
 
-interface PluginMain {
-    /**
-     * 主类对应的插件。
-     */
-    val plugin: Plugin
-
-    /**
-     * 插件所服务的宿主。
-     */
-    val platform: Platform
-
-    /**
-     * 当前插件的类路径。
-     */
-    val classPath: JvmClassicPluginClassPath
-
-    /**
-     * 插件目录文件。
-     */
-    val directoryFile: File
-
-    /**
-     * 执行插件加载操作。
-     *
-     * @param context 插件加载上下文
-     */
-    suspend fun onLoad(context: PluginLoadContext)
-
-    /**
-     * 执行插件启动操作。
-     *
-     * @param context 插件启动上下文
-     */
-    suspend fun onEnable(context: PluginEnableContext)
-
-    /**
-     * 执行插件关闭操作。
-     *
-     * @param context 插件关闭上下文
-     */
-    suspend fun onDisable(context: PluginDisableContext)
-
-    /**
-     * 执行插件卸载操作。
-     *
-     * @param context 插件卸载上下文
-     */
-    suspend fun onUnload(context: PluginUnloadContext)
-}
+/**
+ * 插件主类：插件的入口。
+ *
+ * 插件主类通常也被称为插件。为了方便，包含一个插件主类实现的 JAR 包也可以被称为插件。
+ * 插件的代码可以运行在宿主进程中，此时
+ *
+ * @author Chuanwise
+ */
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class PluginMain(
+    val handlerFactory: KClass<out PluginHandlerFactory>
+)

@@ -48,13 +48,9 @@ interface PluginManager {
      */
     fun getPlugin(id: NamespaceId): Plugin?
 
-    fun getPluginOrFail(id: NamespaceId): Plugin {
-        return getPlugin(id) ?: throw NoSuchElementException("No plugin found for namespace ID: $id")
-    }
+    fun getPluginOrFail(id: NamespaceId): Plugin
 
     fun getProviderPlugin(id: NamespaceId): Plugin?
 
-    fun getProviderPluginOrFail(id: NamespaceId): Plugin {
-        return getProviderPlugin(id) ?: throw NoSuchElementException("No provider plugin found for namespace ID: $id")
-    }
+    fun getProviderPluginOrFail(id: NamespaceId): Plugin
 }

@@ -18,7 +18,6 @@ package cn.codethink.xiaoming.plugin
 
 class PluginConfigurationV1(
     override var sharable: Boolean,
-    override var debug: Boolean,
     override var releaseOnRemoved: Boolean,
     override var retainOnConflict: Boolean
 ) : PluginConfiguration

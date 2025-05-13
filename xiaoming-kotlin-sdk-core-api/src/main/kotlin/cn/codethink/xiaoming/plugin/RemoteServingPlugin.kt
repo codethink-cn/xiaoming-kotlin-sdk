@@ -14,20 +14,14 @@
  * limitations under the License.
  */
 
-@file:JvmName("PluginConfigurationFactory")
-
 package cn.codethink.xiaoming.plugin
 
-import cn.codethink.xiaoming.api.LocalCoreApi
-import cn.codethink.xiaoming.util.InternalApi
+import cn.codethink.xiaoming.util.NotStableForInheritance
 
-@JvmOverloads
-@OptIn(InternalApi::class)
-@JvmName("createPluginConfiguration")
-fun PluginConfiguration(
-    sharable: Boolean = false,
-    crashOnRemoved: Boolean = true,
-    retainOnConflict: Boolean = false
-): PluginConfiguration {
-    return LocalCoreApi.getInstance().createPluginConfiguration(sharable, crashOnRemoved, retainOnConflict)
-}
+/**
+ * 代码在其他进程运行的插件。
+ *
+ * @author Chuanwise
+ */
+@NotStableForInheritance
+interface RemoteServingPlugin : Plugin

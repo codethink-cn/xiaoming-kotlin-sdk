@@ -17,5 +17,5 @@
 package cn.codethink.xiaoming.plugin.jvm.classic.util
 
 internal fun <T> T?.orThrowException(): T {
-    return this ?: error("Plugin not initialized")
+    return this ?: error("Plugin not allocated")
 }

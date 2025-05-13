@@ -24,11 +24,6 @@ import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 @InternalApi
-fun KotlinLogging.pluginLogger(id: NamespaceId): KLogger {
-    return logger("${Plugin::class}").withSuffix("[$id]")
-}
-
-@InternalApi
 fun KotlinLogging.pluginLogger(id: NamespaceId, module: String): KLogger {
     return logger("${Plugin::class}").withSuffix("[$id, $module]")
 }

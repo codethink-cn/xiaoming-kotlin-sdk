@@ -33,7 +33,7 @@ interface JvmPluginClassPath {
     /**
      * 插件平台。
      */
-    val platform: LocalPlatform
+    val platform: LocalPlatform?
 
     /**
      * 插件类访问策略。可用于实现插件间类隔离。默认为完全隔离策略。
@@ -44,6 +44,11 @@ interface JvmPluginClassPath {
      * 是否从系统类加载器中解析资源，默认为 `true`。
      */
     var resolveSystemResources: Boolean
+
+    /**
+     * 是否从公共类加载器中解析资源，默认为 `true`。
+     */
+    var resolvePublicResources: Boolean
 
     /**
      * 是否在类加载失败时，尝试从其他无关插件中解析类，默认为 `false`。
@@ -58,5 +63,5 @@ interface JvmPluginClassPath {
     /**
      * 插件类加载器。
      */
-    val classLoader: ClassLoader
+    val pluginClassLoader: ClassLoader
 }

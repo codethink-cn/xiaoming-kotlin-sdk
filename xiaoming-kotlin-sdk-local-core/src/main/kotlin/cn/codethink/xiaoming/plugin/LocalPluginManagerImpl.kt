@@ -17,6 +17,7 @@
 package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.LocalPlatform
+import cn.codethink.xiaoming.Platform
 import cn.codethink.xiaoming.RemotePlatform
 import cn.codethink.xiaoming.util.Cause
 import cn.codethink.xiaoming.util.DirectedAcyclicGraph
@@ -53,18 +54,18 @@ class LocalPluginManagerImpl(
     override val logger: KLogger = KotlinLogging.logger(PluginManager::class.jvmName)
 
     // 具有相同 ID，但用不同版本的插件可以并存，但是只有一个可以加载。
-    private var mutableAvailablePlugins = MutableDualKeyMapImpl<NamespaceId, Version, LocalServingPluginImpl>()
-    override val availablePlugins: Collection<Plugin> get() = mutableAvailablePlugins.values.toList()
+    private var mutableInstalledPlugins = MutableDualKeyMapImpl<NamespaceId, Version, AvailablePluginImpl>()
+    override val installedPlugins: Collection<AvailablePlugin> get() = mutableInstalledPlugins.values.toList()
 
     // 用于保护下面 plugins 和 providerPlugins 表的锁。
     private val lock = ReentrantReadWriteLock()
 
     // 插件一旦加载，便需先将自己置于其中。以免相同 ID，不同版本的插件被同时加载。
-    private var mutablePlugins = mutableMapOf<NamespaceId, LocalServingPluginImpl>()
-    override val plugins: Map<NamespaceId, Plugin> get() = lock.read { mutablePlugins.toMap() }
+    private var mutablePlugins = mutableMapOf<NamespaceId, AvailablePluginImpl>()
+    override val plugins: Map<NamespaceId, AvailablePlugin> get() = lock.read { mutablePlugins.toMap() }
 
     // 插件的提供者插件。
-    private var mutableProviderPlugins = mutableMapOf<NamespaceId, LocalServingPluginImpl>()
+    private var mutableProviderPlugins = mutableMapOf<NamespaceId, AvailablePluginImpl>()
     override val providerPlugins: Map<NamespaceId, Plugin> get() = lock.read { mutableProviderPlugins.toMap() }
 
     private val mutablePluginScanners = MutableMapRegistrationManagerImpl<String, PluginScanner>()
@@ -74,23 +75,23 @@ class LocalPluginManagerImpl(
     override val pluginSources: Map<String, Registration<PluginSource>> get() = mutablePluginSources.toRegistrationMap()
 
     private sealed interface AvailablePluginEntry {
-        val plugin: LocalServingPluginImpl
+        val plugin: AvailablePluginImpl
     }
 
     // 原本就存在于系统中的插件 Entry
     private class OriginalPluginEntry(
-        override val plugin: LocalServingPluginImpl
+        override val plugin: AvailablePluginImpl
     ) : AvailablePluginEntry
 
     // 将会被安装的插件 Entry
     private class InstallingPluginEntry(
-        override val plugin: LocalServingPluginImpl,
+        override val plugin: AvailablePluginImpl,
         val pluginSourceKey: String
     ) : AvailablePluginEntry
 
     // 必须处理的插件 Entry。
     private class RequiredPluginEntry(
-        override val plugin: LocalServingPluginImpl
+        override val plugin: AvailablePluginImpl
     ) : AvailablePluginEntry
 
     private class PluginDependencyGraph {
@@ -269,7 +270,7 @@ class LocalPluginManagerImpl(
     }
 
     // 在激活（加载或启动）插件时可能需要按需下载依赖插件，并先激活其依赖插件再激活自己。
-    private abstract inner class ActivatePluginDependencyResolver(val operation: Operation, val block: suspend (LocalServingPluginImpl) -> Unit) {
+    private abstract inner class ActivatePluginDependencyResolver(val operation: Operation, val block: suspend (AvailablePluginImpl) -> Unit) {
         abstract val availablePluginEntries: MutableDualKeyMap<NamespaceId, Version, AvailablePluginEntry>
 
         suspend fun resolveAndActivateDependencies() {
@@ -641,18 +642,20 @@ class LocalPluginManagerImpl(
         }
     }
 
-    private fun DualKeyMap<NamespaceId, Version, LocalServingPluginImpl>.mapToOriginalPluginEntries(): MutableDualKeyMap<NamespaceId, Version, AvailablePluginEntry> {
+    private fun DualKeyMap<NamespaceId, Version, AvailablePluginImpl>.mapToOriginalPluginEntries(): MutableDualKeyMap<NamespaceId, Version, AvailablePluginEntry> {
         return mapValues { OriginalPluginEntry(it.value) }.toMutableDualKeyMap()
     }
 
-    private inner class LocalServingPluginImpl(
+    private inner class AvailablePluginImpl(
         meta: PluginMeta, val configuration: PluginConfiguration, handler: PluginHandler, operation: Operation
-    ) : AbstractPlugin(meta, handler, operation, PluginState.UNALLOCATED, platform), LocalServingPlugin {
+    ) : AbstractPlugin(meta, handler, operation, PluginState.UNALLOCATED, platform), AvailablePlugin {
         override var dependencies: List<Plugin?> = emptyList()
         override var provisions: List<PluginSignature?> = emptyList()
 
-        private val mutableInstances: MutableMap<RemotePlatform, RemoteServingPlugin> = ConcurrentHashMap()
-        override val instances: Map<RemotePlatform, RemoteServingPlugin> get() = mutableInstances.toMap()
+        override var debug: Boolean = false
+
+        private val mutableInstances: MutableMap<RemotePlatform, Plugin> = ConcurrentHashMap()
+        override val instances: Map<Platform, Plugin> get() = mutableInstances.toMap()
 
         private inner class RemoteServingPluginImpl(
             meta: PluginMeta, operation: Operation, handler: PluginHandler, platform: RemotePlatform,
@@ -660,9 +663,7 @@ class LocalPluginManagerImpl(
             override var dependencies: List<Plugin?>
         ) : AbstractPlugin(
             meta, handler, operation, PluginState.ALLOCATED, platform
-        ), RemoteServingPlugin {
-            override val plugin: LocalServingPlugin get() = this@LocalServingPluginImpl
-
+        ), Plugin {
             override suspend fun load(operation: Operation) {
                 doLoad(operation)
             }
@@ -711,7 +712,7 @@ class LocalPluginManagerImpl(
             provisions: List<PluginSignature?>,
             dependencies: List<Plugin?>,
             operation: Operation
-        ): RemoteServingPlugin {
+        ): Plugin {
             val newPlugin = RemoteServingPluginImpl(meta, operation, handler, platform, provisions, dependencies)
             val oldPlugin = mutableInstances.computeIfAbsent(platform) { newPlugin }
             require(oldPlugin === newPlugin) { "Plugin ${meta.id} is already registered" }
@@ -719,12 +720,12 @@ class LocalPluginManagerImpl(
         }
 
         private inner class ActivateThisPluginDependencyResolver(
-            operation: Operation, block: suspend (LocalServingPluginImpl) -> Unit
+            operation: Operation, block: suspend (AvailablePluginImpl) -> Unit
         ) : ActivatePluginDependencyResolver(operation, block) {
-            override val availablePluginEntries: MutableDualKeyMap<NamespaceId, Version, AvailablePluginEntry> = mutableAvailablePlugins
+            override val availablePluginEntries: MutableDualKeyMap<NamespaceId, Version, AvailablePluginEntry> = mutableInstalledPlugins
                 .mapToOriginalPluginEntries()
                 .apply {
-                    this[id, version] = RequiredPluginEntry(this@LocalServingPluginImpl)
+                    this[id, version] = RequiredPluginEntry(this@AvailablePluginImpl)
                 }
 
             override suspend fun tryActivatePlugins(solution: DirectedAcyclicGraph<PluginDependencySolutionContext, Unit>): Boolean {
@@ -785,7 +786,7 @@ class LocalPluginManagerImpl(
         }
 
         private fun onDoReleasedOrCrashed() {
-            mutableAvailablePlugins.remove(id, version)
+            mutableInstalledPlugins.remove(id, version)
         }
 
         override suspend fun crash(operation: Operation) {
@@ -796,7 +797,7 @@ class LocalPluginManagerImpl(
         }
 
         // 尝试为本插件获取 LOAD 锁。返回持有独占当前 ID 启动权的插件。若为 this 表示获取成功。
-        private fun tryAcquireUniquePluginLock(): LocalServingPluginImpl {
+        private fun tryAcquireUniquePluginLock(): AvailablePluginImpl {
             return lock.write {
                 val oldPlugin = mutablePlugins[id]
                 val oldProvider = mutableProviderPlugins[id]
@@ -866,45 +867,57 @@ class LocalPluginManagerImpl(
         }
     }
 
-    private fun createPlugin(meta: PluginMeta, configuration: PluginConfiguration, handler: PluginHandler, operation: Operation): LocalServingPluginImpl {
-        return LocalServingPluginImpl(meta, configuration, handler, operation)
+    private fun createPlugin(meta: PluginMeta, configuration: PluginConfiguration, handler: PluginHandler, operation: Operation): AvailablePluginImpl {
+        return AvailablePluginImpl(meta, configuration, handler, operation)
     }
 
-    override fun registerAvailablePlugin(meta: PluginMeta, configuration: PluginConfiguration, handler: PluginHandler, operation: Operation): Plugin {
+    override fun registerInstalledPlugin(meta: PluginMeta, configuration: PluginConfiguration, handler: PluginHandler, operation: Operation): AvailablePlugin {
         val newPlugin = createPlugin(meta, configuration, handler, operation)
-        val oldPlugin = mutableAvailablePlugins.putIfAbsent(meta.id, meta.version, newPlugin)
+        val oldPlugin = mutableInstalledPlugins.putIfAbsent(meta.id, meta.version, newPlugin)
         require(oldPlugin == null) { "Plugin ${meta.id} is already registered" }
         return newPlugin
     }
 
-    override fun getPlugin(id: NamespaceId): Plugin? {
+    override fun getPlugin(id: NamespaceId): AvailablePlugin? {
         return lock.read { mutablePlugins[id] }
     }
 
-    override fun getAvailablePlugin(id: NamespaceId, version: Version): Plugin? {
-        return mutableAvailablePlugins[id, version]
+    override fun getPluginOrFail(id: NamespaceId): AvailablePlugin {
+        return getPlugin(id) ?: throw NoSuchElementException("Plugin $id is not loaded.")
     }
 
-    override fun getAvailablePlugin(signature: PluginSignature): Plugin? {
-        return getAvailablePlugin(signature.id, signature.version)
+    override fun getInstalledPlugin(id: NamespaceId, version: Version): AvailablePlugin? {
+        return mutableInstalledPlugins[id, version]
     }
 
-    override fun getAvailablePlugins(id: NamespaceId): Map<Version, Plugin> {
-        return mutableAvailablePlugins[id]
+    override fun getInstalledPluginOrFail(id: NamespaceId, version: Version): AvailablePlugin {
+        return getInstalledPlugin(id, version) ?: throw NoSuchElementException("Plugin $id:$version is not installed.")
     }
 
-    override fun getAvailablePlugins(pattern: PluginPattern): Map<Version, Plugin> {
-        return getAvailablePlugins(pattern.id).runIfNotNull(pattern.version) { p -> filterKeys { p.matches(it) } }
+    override fun getInstalledPlugins(signature: PluginSignature): AvailablePlugin? {
+        return getInstalledPlugin(signature.id, signature.version)
     }
 
-    override fun getProviderPlugin(id: NamespaceId): Plugin? {
+    override fun getInstalledPlugins(id: NamespaceId): Map<Version, AvailablePlugin> {
+        return mutableInstalledPlugins[id]
+    }
+
+    override fun getInstalledPlugins(pattern: PluginPattern): Map<Version, AvailablePlugin> {
+        return getInstalledPlugins(pattern.id).runIfNotNull(pattern.version) { p -> filterKeys { p.matches(it) } }
+    }
+
+    override fun getProviderPlugin(id: NamespaceId): AvailablePlugin? {
         return lock.read { mutableProviderPlugins[id] }
+    }
+
+    override fun getProviderPluginOrFail(id: NamespaceId): Plugin {
+        return getProviderPlugin(id) ?: throw NoSuchElementException("Plugin $id is not provided.")
     }
 
     private inner class PluginScanContextImpl(override val operation: Operation) : PluginScanContext {
         override val platform: LocalPlatform = this@LocalPluginManagerImpl.platform
 
-        val mutableInstalledPlugins: MutableDualKeyMapImpl<NamespaceId, Version, LocalServingPluginImpl> = MutableDualKeyMapImpl()
+        val mutableInstalledPlugins: MutableDualKeyMapImpl<NamespaceId, Version, AvailablePluginImpl> = MutableDualKeyMapImpl()
         override val installedPlugins: Collection<Plugin> get() = mutableInstalledPlugins.values.toList()
 
         override fun registerInstalledPlugin(meta: PluginMeta, configuration: PluginConfiguration, operation: Operation, handler: PluginHandler) {
@@ -922,10 +935,10 @@ class LocalPluginManagerImpl(
         }
     }
 
-    override suspend fun resolvePlugins(pattern: PluginPattern, operation: Operation): Map<Version, Plugin> {
+    override suspend fun resolvePlugins(pattern: PluginPattern, operation: Operation): Map<Version, AvailablePlugin> {
         flushAvailablePlugins(operation)
         getProviderPluginsFromSources(pattern, operation)
-        return getAvailablePlugins(pattern)
+        return getInstalledPlugins(pattern)
     }
 
     override suspend fun flushAvailablePlugins(operation: Operation) {
@@ -934,7 +947,7 @@ class LocalPluginManagerImpl(
             registration.value.scan(pluginScanContext)
         }
 
-        val oldAvailablePlugins = mutableAvailablePlugins
+        val oldAvailablePlugins = mutableInstalledPlugins
         val newAvailablePlugins = pluginScanContext.mutableInstalledPlugins
 
         val removedPlugins = oldAvailablePlugins.filterKeys { !newAvailablePlugins.containsKey(it) }
@@ -944,7 +957,7 @@ class LocalPluginManagerImpl(
             }
         }
 
-        mutableAvailablePlugins = newAvailablePlugins
+        mutableInstalledPlugins = newAvailablePlugins
     }
 
     private suspend fun getProviderPluginsFromSources(pattern: PluginPattern, cause: Cause): Map<String, List<PluginEntry>> {
@@ -986,10 +999,10 @@ class LocalPluginManagerImpl(
     }
 
     private inner class ActivateAvailablePluginsDependencyResolver(
-        operation: Operation, block: suspend (LocalServingPluginImpl) -> Unit
+        operation: Operation, block: suspend (AvailablePluginImpl) -> Unit
     ) : ActivatePluginDependencyResolver(operation, block) {
         override val availablePluginEntries: MutableDualKeyMap<NamespaceId, Version, AvailablePluginEntry> =
-            mutableAvailablePlugins.mapToOriginalPluginEntries()
+            mutableInstalledPlugins.mapToOriginalPluginEntries()
     }
 
     override suspend fun loadPlugins(operation: Operation) {
@@ -1005,13 +1018,13 @@ class LocalPluginManagerImpl(
     }
 
     override suspend fun unloadPlugins(operation: Operation) {
-        for (availablePlugin in availablePlugins) {
+        for (availablePlugin in installedPlugins) {
             availablePlugin.ensureUnloaded(operation)
         }
     }
 
     override suspend fun releasePlugins(operation: Operation) {
-        for (availablePlugin in availablePlugins) {
+        for (availablePlugin in installedPlugins) {
             availablePlugin.ensureReleased(operation)
         }
     }

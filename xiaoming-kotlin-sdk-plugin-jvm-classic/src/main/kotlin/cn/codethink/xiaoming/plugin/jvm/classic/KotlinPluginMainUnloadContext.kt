@@ -14,20 +14,6 @@
  * limitations under the License.
  */
 
-@file:JvmName("PluginConfigurationFactory")
+package cn.codethink.xiaoming.plugin.jvm.classic
 
-package cn.codethink.xiaoming.plugin
-
-import cn.codethink.xiaoming.api.LocalCoreApi
-import cn.codethink.xiaoming.util.InternalApi
-
-@JvmOverloads
-@OptIn(InternalApi::class)
-@JvmName("createPluginConfiguration")
-fun PluginConfiguration(
-    sharable: Boolean = false,
-    crashOnRemoved: Boolean = true,
-    retainOnConflict: Boolean = false
-): PluginConfiguration {
-    return LocalCoreApi.getInstance().createPluginConfiguration(sharable, crashOnRemoved, retainOnConflict)
-}
+interface KotlinPluginMainUnloadContext : KotlinPluginMainContext, PluginMainUnloadContext
