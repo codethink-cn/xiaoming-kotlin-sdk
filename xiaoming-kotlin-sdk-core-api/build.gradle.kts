@@ -23,7 +23,7 @@ plugins {
     `maven-publish`
 }
 
-private fun BuildConfigExtension.string(name: String, value: Any?) {
+fun BuildConfigExtension.string(name: String, value: Any?) {
     buildConfigField("kotlin.String", name, "\"$value\"")
 }
 
