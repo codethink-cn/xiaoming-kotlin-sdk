@@ -31,7 +31,6 @@ buildConfig {
     packageName("cn.codethink.xiaoming")
 
     string("GROUP", group)
-    string("NAME", "xiaoming-kotlin-sdk-core-api")
     string("VERSION", version)
 
     string("STANDARD_VERSION", "0.1.0")

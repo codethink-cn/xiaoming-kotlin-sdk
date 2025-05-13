@@ -21,9 +21,7 @@ import cn.codethink.xiaoming.BuildConfig
 @Suppress("MemberVisibilityCanBePrivate")
 object SdkConstants {
     const val GROUP = BuildConfig.GROUP
-    const val NAME = BuildConfig.NAME
     const val VERSION_STRING = BuildConfig.VERSION
-    const val SIGNATURE = "$GROUP:$NAME:$VERSION_STRING"
 
     @JvmStatic
     val VERSION = VERSION_STRING.toVersion()
