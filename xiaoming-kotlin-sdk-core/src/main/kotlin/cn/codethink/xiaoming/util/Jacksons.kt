@@ -24,9 +24,9 @@ class Jacksons {
     companion object {
         @InternalApi
         fun createModuleVersion(name: String): Version {
-            val it = SdkConstants.SDK_VERSION
+            val it = SdkConstants.VERSION
             val snapshotInfo = it.preRelease.orEmpty() + it.build.withPrefixOrNull("+").orEmpty()
-            return Version(it.major, it.minor, it.patch, snapshotInfo, SdkConstants.SDK_GROUP, name)
+            return Version(it.major, it.minor, it.patch, snapshotInfo, SdkConstants.GROUP, name)
         }
     }
 }

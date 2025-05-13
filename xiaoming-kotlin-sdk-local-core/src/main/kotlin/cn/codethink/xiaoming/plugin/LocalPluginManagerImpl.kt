@@ -50,7 +50,7 @@ import kotlin.reflect.jvm.jvmName
 class LocalPluginManagerImpl(
     override val platform: LocalPlatform
 ) : LocalPluginManager {
-    private val logger: KLogger = KotlinLogging.logger(PluginManager::class.jvmName)
+    override val logger: KLogger = KotlinLogging.logger(PluginManager::class.jvmName)
 
     // 具有相同 ID，但用不同版本的插件可以并存，但是只有一个可以加载。
     private var mutableAvailablePlugins = MutableDualKeyMapImpl<NamespaceId, Version, LocalServingPluginImpl>()
@@ -971,7 +971,7 @@ class LocalPluginManagerImpl(
                 val standardPattern = entry.meta.standard
                 if (standardPattern != null && !standardPattern.matches(SdkConstants.STANDARD_VERSION)) {
                     logger.trace {
-                        "Plugin ${entry.meta.id} is not compatible with current SDK (SDK version: ${SdkConstants.SDK_VERSION_STRING}). " +
+                        "Plugin ${entry.meta.id} is not compatible with current SDK (SDK version: ${SdkConstants.VERSION_STRING}). " +
                                 "The highest standard version supported by the SDK is ${SdkConstants.STANDARD_VERSION}, " +
                                 "but the plugin required standard version pattern is $standardPattern."
                     }

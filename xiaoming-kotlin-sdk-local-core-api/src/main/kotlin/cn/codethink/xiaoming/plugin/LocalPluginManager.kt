@@ -22,6 +22,7 @@ import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.Operation
 import cn.codethink.xiaoming.util.Registration
 import cn.codethink.xiaoming.util.Version
+import io.github.oshai.kotlinlogging.KLogger
 import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 
 /**
@@ -34,6 +35,11 @@ interface LocalPluginManager : PluginManager {
      * 宿主。
      */
     override val platform: LocalPlatform
+
+    /**
+     * 插件管理器日志。
+     */
+    val logger: KLogger
 
     /**
      * 宿主的所有插件，其中可能包括已识别，但未加载的插件。

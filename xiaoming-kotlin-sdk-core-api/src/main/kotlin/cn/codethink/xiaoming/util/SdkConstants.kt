@@ -16,17 +16,20 @@
 
 package cn.codethink.xiaoming.util
 
-import cn.codethink.xiaoming_kotlin_sdk_core_api.BuildConfig
+import cn.codethink.xiaoming.BuildConfig
 
 @Suppress("MemberVisibilityCanBePrivate")
-class SdkConstants {
-    companion object {
-        const val SDK_GROUP = BuildConfig.SDK_GROUP
+object SdkConstants {
+    const val GROUP = BuildConfig.GROUP
+    const val NAME = BuildConfig.NAME
+    const val VERSION_STRING = BuildConfig.VERSION
+    const val SIGNATURE = "$GROUP:$NAME:$VERSION_STRING"
 
-        const val SDK_VERSION_STRING = BuildConfig.SDK_VERSION
-        val SDK_VERSION = SDK_VERSION_STRING.toVersion()
+    @JvmStatic
+    val VERSION = VERSION_STRING.toVersion()
 
-        const val STANDARD_VERSION_STRING = BuildConfig.STANDARD_VERSION
-        val STANDARD_VERSION = STANDARD_VERSION_STRING.toVersion()
-    }
+    const val STANDARD_VERSION_STRING = BuildConfig.STANDARD_VERSION
+
+    @JvmStatic
+    val STANDARD_VERSION = STANDARD_VERSION_STRING.toVersion()
 }
