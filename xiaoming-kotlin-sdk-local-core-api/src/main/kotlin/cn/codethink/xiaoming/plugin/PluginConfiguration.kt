@@ -31,7 +31,7 @@ interface PluginConfiguration {
     var sharable: Boolean
 
     /**
-     * 使用 [LocalPluginManager.flushAvailablePlugins] 刷新插件列表时，
+     * 使用 [LocalPluginManager.flushInstalledPlugins] 刷新插件列表时，
      * 若新插件列表不包含当前插件，是否释放当前插件。
      */
     var releaseOnRemoved: Boolean

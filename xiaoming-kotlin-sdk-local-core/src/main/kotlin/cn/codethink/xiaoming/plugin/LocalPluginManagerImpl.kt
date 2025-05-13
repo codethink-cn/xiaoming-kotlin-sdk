@@ -956,12 +956,12 @@ class LocalPluginManagerImpl(
     }
 
     override suspend fun resolvePlugins(pattern: PluginPattern, operation: Operation): Map<Version, AvailablePlugin> {
-        flushAvailablePlugins(operation)
+        flushInstalledPlugins(operation)
         getProviderPluginsFromSources(pattern, operation)
         return getInstalledPlugins(pattern)
     }
 
-    override suspend fun flushAvailablePlugins(operation: Operation) {
+    override suspend fun flushInstalledPlugins(operation: Operation) {
         val pluginScanContext = PluginScanContextImpl(operation)
         for (registration in mutablePluginScanners.registrations) {
             registration.value.scan(pluginScanContext)

@@ -131,7 +131,7 @@ interface LocalPluginManager : PluginManager {
      * @param operation 操作原因
      */
     @JvmBlockingBridge
-    suspend fun flushAvailablePlugins(operation: Operation)
+    suspend fun flushInstalledPlugins(operation: Operation)
 
     @JvmBlockingBridge
     suspend fun loadPlugins(operation: Operation): Boolean
