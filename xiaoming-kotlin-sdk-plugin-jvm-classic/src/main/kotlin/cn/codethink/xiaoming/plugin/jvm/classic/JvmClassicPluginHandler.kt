@@ -24,15 +24,10 @@ import cn.codethink.xiaoming.plugin.PluginExitContext
 import cn.codethink.xiaoming.plugin.PluginHandler
 import cn.codethink.xiaoming.plugin.PluginLoadContext
 import cn.codethink.xiaoming.plugin.PluginUnloadContext
-import cn.codethink.xiaoming.plugin.id
 import cn.codethink.xiaoming.plugin.jvm.JvmPluginHandler
-import cn.codethink.xiaoming.plugin.jvm.classic.util.orThrowException
-import cn.codethink.xiaoming.plugin.jvm.classic.util.pluginLogger
 import cn.codethink.xiaoming.plugin.signature
-import cn.codethink.xiaoming.util.InternalApi
 import cn.codethink.xiaoming.util.dueTo
 import cn.codethink.xiaoming.util.getOrConstruct
-import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.io.File
 import kotlin.reflect.full.allSuperclasses
@@ -70,25 +65,15 @@ internal class JvmClassicPluginHandlerImpl(
     override val classPath: JvmClassicPluginClassPath
 ) : JvmClassicPluginHandler {
     companion object {
-        const val MODULE_NAME = "handler"
+        private val handlerLogger = KotlinLogging.logger("${JvmClassicPluginHandler::class}")
     }
 
     private var mutableHandler: PluginHandler? = null
     private val handler: PluginHandler get() = mutableHandler ?: error("Plugin handler is not allocated")
-
-    private var mutableHandlerLogger: KLogger? = null
-    private val handlerLogger get() = mutableHandlerLogger.orThrowException()
-
     private fun String.dueTo(context: PluginContext): String = dueTo(context.eventContext.event.cause)
 
-    @OptIn(InternalApi::class)
     override suspend fun onAllocate(context: PluginAllocateContext) {
         require(mutableHandler == null) { "Plugin handler is already allocated" }
-
-        val handlerLogger = KotlinLogging.pluginLogger(context.plugin.id, MODULE_NAME)
-        mutableHandlerLogger = handlerLogger
-
-        handlerLogger.info { "Allocating plugin ${context.plugin.signature}".dueTo(context) }
 
         // TODO: 满足插件的依赖库之类的需求
         handlerLogger.trace { "Resolving plugin classpath..." }
@@ -101,8 +86,6 @@ internal class JvmClassicPluginHandlerImpl(
         val handler = getOrConstruct(mainAnnotation.handlerFactory.java).createPluginHandler(mainClass, this)
         handler.onAllocate(context)
         mutableHandler = handler
-
-        handlerLogger.info { "Plugin ${context.plugin.signature} allocated" }
     }
 
 
@@ -131,8 +114,6 @@ internal class JvmClassicPluginHandlerImpl(
     }
 
     override suspend fun onExit(context: PluginExitContext) {
-        handlerLogger.info { "Exiting plugin ${context.plugin.signature}".dueTo(context) }
         handler.onExit(context)
-        handlerLogger.info { "Plugin ${context.plugin.signature} exited" }
     }
 }
