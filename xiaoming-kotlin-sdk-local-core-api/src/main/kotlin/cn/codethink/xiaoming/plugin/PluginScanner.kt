@@ -25,7 +25,7 @@ fun interface PluginScanner {
     /**
      * 执行一次插件检测。
      *
-     * 实现类通过 [PluginScanContext.registerPlugin] 添加一个检测到的结果，添加前应当做安全检查。
+     * 实现类通过 [PluginScanContext.registerInstalledPlugin] 添加一个检测到的结果，添加前应当做安全检查。
      *
      * @param context 插件检测上下文。
      */

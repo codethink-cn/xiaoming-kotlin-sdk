@@ -92,7 +92,7 @@ interface LocalPluginManager : PluginManager {
      * @param handler 插件处理器
      * @return 插件
      */
-    fun registerPlugin(meta: PluginMeta, configuration: PluginConfiguration, handler: PluginHandler, operation: Operation): Plugin
+    fun registerAvailablePlugin(meta: PluginMeta, configuration: PluginConfiguration, handler: PluginHandler, operation: Operation): Plugin
 
     /**
      * 解析一个插件，其将执行一次扫描和插件源请求。

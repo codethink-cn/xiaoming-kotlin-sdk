@@ -17,8 +17,8 @@
 package cn.codethink.xiaoming.plugin.jvm.classic
 
 import cn.codethink.xiaoming.plugin.id
-import cn.codethink.xiaoming.plugin.jvm.classic.util.createPluginLoggerName
 import cn.codethink.xiaoming.plugin.jvm.classic.util.orThrowException
+import cn.codethink.xiaoming.plugin.jvm.classic.util.pluginLogger
 import cn.codethink.xiaoming.util.InternalApi
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -45,7 +45,7 @@ open class KotlinPluginMain : AbstractPluginMain(), CoroutineScope {
         mutableJob = job
         mutableScope = CoroutineScope(job + platform.coroutineContext)
 
-        mutableLogger = KotlinLogging.logger(createPluginLoggerName(plugin.id))
+        mutableLogger = KotlinLogging.pluginLogger(plugin.id)
     }
 
     override fun onExit0() {

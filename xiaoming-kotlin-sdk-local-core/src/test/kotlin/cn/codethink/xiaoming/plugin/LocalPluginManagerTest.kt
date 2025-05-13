@@ -73,9 +73,9 @@ class LocalPluginManagerTest {
 
     @Test
     fun testSimpleSolution(): Unit = runBlocking {
-        val mcPlugin = pluginManager.registerPlugin(TestPluginConstants.mc100, configuration, TestPluginHandler, operation)
-        val mcChatPlugin = pluginManager.registerPlugin(TestPluginConstants.mcChat100, configuration, TestPluginHandler, operation)
-        val mcProPlugin = pluginManager.registerPlugin(TestPluginConstants.mcPro100, configuration, TestPluginHandler, operation)
+        val mcPlugin = pluginManager.registerAvailablePlugin(TestPluginConstants.mc100, configuration, TestPluginHandler, operation)
+        val mcChatPlugin = pluginManager.registerAvailablePlugin(TestPluginConstants.mcChat100, configuration, TestPluginHandler, operation)
+        val mcProPlugin = pluginManager.registerAvailablePlugin(TestPluginConstants.mcPro100, configuration, TestPluginHandler, operation)
 
         assertFalse(mcPlugin.isLoaded)
         assertFalse(mcChatPlugin.isLoaded)
@@ -92,12 +92,12 @@ class LocalPluginManagerTest {
 
     @Test
     fun testMultiVersionLackDependencySolution(): Unit = runBlocking {
-        val mc100 = pluginManager.registerPlugin(TestPluginConstants.mc100, configuration, TestPluginHandler, operation)
-        val mc200 = pluginManager.registerPlugin(TestPluginConstants.mc200, configuration, TestPluginHandler, operation)
-        val mcChat100 = pluginManager.registerPlugin(TestPluginConstants.mcChat100, configuration, TestPluginHandler, operation)
+        val mc100 = pluginManager.registerAvailablePlugin(TestPluginConstants.mc100, configuration, TestPluginHandler, operation)
+        val mc200 = pluginManager.registerAvailablePlugin(TestPluginConstants.mc200, configuration, TestPluginHandler, operation)
+        val mcChat100 = pluginManager.registerAvailablePlugin(TestPluginConstants.mcChat100, configuration, TestPluginHandler, operation)
 
         // mc-chat:2.0.0 需要 im 插件，但是没有安装，所以哪怕它版本再高，也只能用 mc-chat:1.0.0
-        val mcChat200 = pluginManager.registerPlugin(TestPluginConstants.mcChat200, configuration, TestPluginHandler, operation)
+        val mcChat200 = pluginManager.registerAvailablePlugin(TestPluginConstants.mcChat200, configuration, TestPluginHandler, operation)
 
         assertFalse(mc100.isLoaded)
         assertFalse(mc200.isLoaded)
@@ -114,15 +114,15 @@ class LocalPluginManagerTest {
 
     @Test
     fun testMultiVersionHighProvisionFirstSolution(): Unit = runBlocking {
-        val mc100 = pluginManager.registerPlugin(TestPluginConstants.mc100, configuration, TestPluginHandler, operation)
-        val mc200 = pluginManager.registerPlugin(TestPluginConstants.mc200, configuration, TestPluginHandler, operation)
+        val mc100 = pluginManager.registerAvailablePlugin(TestPluginConstants.mc100, configuration, TestPluginHandler, operation)
+        val mc200 = pluginManager.registerAvailablePlugin(TestPluginConstants.mc200, configuration, TestPluginHandler, operation)
 
         // 尽管 mc-pro 比 mc 高级，但是它只能提供 mc:1.0.0 的功能，所以系统会选择 mc:2.0.0
-        val mcPro100 = pluginManager.registerPlugin(TestPluginConstants.mcPro100, configuration, TestPluginHandler, operation)
-        val mcChat100 = pluginManager.registerPlugin(TestPluginConstants.mcChat100, configuration, TestPluginHandler, operation)
-        val mcChat200 = pluginManager.registerPlugin(TestPluginConstants.mcChat200, configuration, TestPluginHandler, operation)
-        val im100 = pluginManager.registerPlugin(TestPluginConstants.im100, configuration, TestPluginHandler, operation)
-        val imPro100 = pluginManager.registerPlugin(TestPluginConstants.imPro100, configuration, TestPluginHandler, operation)
+        val mcPro100 = pluginManager.registerAvailablePlugin(TestPluginConstants.mcPro100, configuration, TestPluginHandler, operation)
+        val mcChat100 = pluginManager.registerAvailablePlugin(TestPluginConstants.mcChat100, configuration, TestPluginHandler, operation)
+        val mcChat200 = pluginManager.registerAvailablePlugin(TestPluginConstants.mcChat200, configuration, TestPluginHandler, operation)
+        val im100 = pluginManager.registerAvailablePlugin(TestPluginConstants.im100, configuration, TestPluginHandler, operation)
+        val imPro100 = pluginManager.registerAvailablePlugin(TestPluginConstants.imPro100, configuration, TestPluginHandler, operation)
 
         pluginManager.loadPlugins(operation)
 
@@ -139,15 +139,15 @@ class LocalPluginManagerTest {
 
     @Test
     fun testIndirectDependencySolution(): Unit = runBlocking {
-        val mc100 = pluginManager.registerPlugin(TestPluginConstants.mc100, configuration, TestPluginHandler, operation)
-        val mc200 = pluginManager.registerPlugin(TestPluginConstants.mc200, configuration, TestPluginHandler, operation)
-        val mcChat100 = pluginManager.registerPlugin(TestPluginConstants.mcChat100, configuration, TestPluginHandler, operation)
-        val mcChat200 = pluginManager.registerPlugin(TestPluginConstants.mcChat200, configuration, TestPluginHandler, operation)
-        val im100 = pluginManager.registerPlugin(TestPluginConstants.im100, configuration, TestPluginHandler, operation)
-        val imPro100 = pluginManager.registerPlugin(TestPluginConstants.imPro100, configuration, TestPluginHandler, operation)
+        val mc100 = pluginManager.registerAvailablePlugin(TestPluginConstants.mc100, configuration, TestPluginHandler, operation)
+        val mc200 = pluginManager.registerAvailablePlugin(TestPluginConstants.mc200, configuration, TestPluginHandler, operation)
+        val mcChat100 = pluginManager.registerAvailablePlugin(TestPluginConstants.mcChat100, configuration, TestPluginHandler, operation)
+        val mcChat200 = pluginManager.registerAvailablePlugin(TestPluginConstants.mcChat200, configuration, TestPluginHandler, operation)
+        val im100 = pluginManager.registerAvailablePlugin(TestPluginConstants.im100, configuration, TestPluginHandler, operation)
+        val imPro100 = pluginManager.registerAvailablePlugin(TestPluginConstants.imPro100, configuration, TestPluginHandler, operation)
 
         // cmi:1.0.0 需要 mc-chat:2.0.0，而它又需要 im:1.0.0（显然选择 im-pro:1.0.0） + mc:2.0.0
-        val cmi100 = pluginManager.registerPlugin(TestPluginConstants.cmi100, configurationRetainOnConflict, TestPluginHandler, operation)
+        val cmi100 = pluginManager.registerAvailablePlugin(TestPluginConstants.cmi100, configurationRetainOnConflict, TestPluginHandler, operation)
 
         pluginManager.loadPlugins(operation)
 
@@ -162,7 +162,7 @@ class LocalPluginManagerTest {
 
         assertTrue(cmi100.isLoaded)
 
-        val cmi200 = pluginManager.registerPlugin(TestPluginConstants.cmi200, configuration, TestPluginHandler, operation)
+        val cmi200 = pluginManager.registerAvailablePlugin(TestPluginConstants.cmi200, configuration, TestPluginHandler, operation)
 
         // There is another plugin com.example:cmi with version 1.0.0 is already loaded.
         // Note that multiple plugins with the same ID are not allowed to be loaded at the same time. Please unload the old one first.
@@ -176,7 +176,7 @@ class LocalPluginManagerTest {
 
     @Test
     fun testRelease(): Unit = runBlocking {
-        val mc100 = pluginManager.registerPlugin(TestPluginConstants.mc100, configuration, TestPluginHandler, operation)
+        val mc100 = pluginManager.registerAvailablePlugin(TestPluginConstants.mc100, configuration, TestPluginHandler, operation)
 
         assertFalse(mc100.isAllocated)
         mc100.release(operation)
@@ -187,7 +187,7 @@ class LocalPluginManagerTest {
 
     @Test
     fun testCrashed(): Unit = runBlocking {
-        val mc100 = pluginManager.registerPlugin(TestPluginConstants.mc100, configuration, TestPluginHandler, operation)
+        val mc100 = pluginManager.registerAvailablePlugin(TestPluginConstants.mc100, configuration, TestPluginHandler, operation)
         mc100 as AbstractPlugin
 
         assertFalse(mc100.isAllocated)

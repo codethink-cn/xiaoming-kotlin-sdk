@@ -21,7 +21,7 @@ package cn.codethink.xiaoming.plugin.jvm.classic
 import cn.codethink.xiaoming.LocalPlatform
 import cn.codethink.xiaoming.library.toLibraryDescriptor
 import cn.codethink.xiaoming.plugin.jvm.JvmPluginClassAccessPolicy
-import cn.codethink.xiaoming.plugin.jvm.classic.util.createPluginLoggerName
+import cn.codethink.xiaoming.plugin.jvm.classic.util.pluginLogger
 import cn.codethink.xiaoming.plugin.jvm.classic.util.useInputStream
 import cn.codethink.xiaoming.util.InternalApi
 import cn.codethink.xiaoming.util.NamespaceId
@@ -73,7 +73,7 @@ fun JvmClassicPluginClassPath(
     distributionFile: File,
     platform: LocalPlatform
 ): JvmClassicPluginClassPath {
-    val logger = KotlinLogging.logger(createPluginLoggerName(id, MODULE_NAME))
+    val logger = KotlinLogging.pluginLogger(id, MODULE_NAME)
 
     val objectMapper = platform.serializationManager.yamlFileObjectMapper
     val librariesData = file.useInputStream(JvmClassicPluginConstants.LIBRARIES_RESOURCE_NAME) {

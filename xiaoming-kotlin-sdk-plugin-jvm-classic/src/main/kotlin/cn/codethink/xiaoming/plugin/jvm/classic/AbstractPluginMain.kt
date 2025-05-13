@@ -52,7 +52,7 @@ abstract class AbstractPluginMain : PluginMain {
         onAllocate0()
     }
 
-    abstract fun onAllocate0()
+    internal abstract fun onAllocate0()
 
     internal fun onExit() {
         onExit0()
@@ -63,7 +63,7 @@ abstract class AbstractPluginMain : PluginMain {
         mutableDirectoryFile = null
     }
 
-    abstract fun onExit0()
+    internal abstract fun onExit0()
 
     @Throws(Exception::class)
     override suspend fun onLoad(context: PluginLoadContext) = Unit

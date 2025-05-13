@@ -14,21 +14,10 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin.jvm.classic.util
+package cn.codethink.xiaoming.library
 
-import cn.codethink.xiaoming.plugin.Plugin
-import cn.codethink.xiaoming.util.InternalApi
-import cn.codethink.xiaoming.util.NamespaceId
-import cn.codethink.xiaoming.util.withSuffix
-import io.github.oshai.kotlinlogging.KLogger
-import io.github.oshai.kotlinlogging.KotlinLogging
-
-@InternalApi
-fun KotlinLogging.pluginLogger(id: NamespaceId): KLogger {
-    return logger("${Plugin::class}").withSuffix("[$id]")
-}
-
-@InternalApi
-fun KotlinLogging.pluginLogger(id: NamespaceId, module: String): KLogger {
-    return logger("${Plugin::class}").withSuffix("[$id, $module]")
-}
+class LibraryManagerImpl(
+    override val systemClassLoader: ClassLoader,
+    override val publicClassLoader: ClassLoader,
+    override val publicLibraries: List<Library> = emptyList()
+) : LibraryManager

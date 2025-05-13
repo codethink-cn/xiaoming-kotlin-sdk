@@ -320,7 +320,7 @@ class LocalPluginManagerImpl(
                                                 now
                                             } else {
                                                 logger.trace {
-                                                    "Plugin ${now.plugin.meta.id}:${now.plugin.version} is already registered, " +
+                                                    "Plugin ${now.plugin.signature} is already registered, " +
                                                             "but it is not loaded and not crashed. It will be replaced by the new plugin from source $key."
                                                 }
                                                 newPluginEntry
@@ -329,7 +329,7 @@ class LocalPluginManagerImpl(
 
                                         is RequiredPluginEntry -> {
                                             logger.trace {
-                                                "Plugin ${now.plugin.meta.id}:${now.plugin.version} is required to be handled, " +
+                                                "Plugin ${now.plugin.signature} is required to be handled, " +
                                                         "so another one to be installed will be ignored."
                                             }
                                             now
@@ -870,7 +870,7 @@ class LocalPluginManagerImpl(
         return LocalServingPluginImpl(meta, configuration, handler, operation)
     }
 
-    override fun registerPlugin(meta: PluginMeta, configuration: PluginConfiguration, handler: PluginHandler, operation: Operation): Plugin {
+    override fun registerAvailablePlugin(meta: PluginMeta, configuration: PluginConfiguration, handler: PluginHandler, operation: Operation): Plugin {
         val newPlugin = createPlugin(meta, configuration, handler, operation)
         val oldPlugin = mutableAvailablePlugins.putIfAbsent(meta.id, meta.version, newPlugin)
         require(oldPlugin == null) { "Plugin ${meta.id} is already registered" }
@@ -903,12 +903,22 @@ class LocalPluginManagerImpl(
 
     private inner class PluginScanContextImpl(override val operation: Operation) : PluginScanContext {
         override val platform: LocalPlatform = this@LocalPluginManagerImpl.platform
-        val newAvailablePlugins: MutableDualKeyMapImpl<NamespaceId, Version, LocalServingPluginImpl> = MutableDualKeyMapImpl()
 
-        override fun registerPlugin(meta: PluginMeta, configuration: PluginConfiguration, operation: Operation, handler: PluginHandler) {
+        val mutableInstalledPlugins: MutableDualKeyMapImpl<NamespaceId, Version, LocalServingPluginImpl> = MutableDualKeyMapImpl()
+        override val installedPlugins: Collection<Plugin> get() = mutableInstalledPlugins.values.toList()
+
+        override fun registerInstalledPlugin(meta: PluginMeta, configuration: PluginConfiguration, operation: Operation, handler: PluginHandler) {
             val newPlugin = createPlugin(meta, configuration, handler, operation)
-            val oldPlugin = newAvailablePlugins.putIfAbsent(meta.id, meta.version, newPlugin)
-            require(oldPlugin == null) { "Plugin ${meta.id} is already registered" }
+            val oldPlugin = mutableInstalledPlugins.putIfAbsent(meta.id, meta.version, newPlugin)
+            require(oldPlugin == null || !oldPlugin.configuration.retainOnConflict) { "Plugin ${meta.signature} is already registered" }
+        }
+
+        override fun getInstalledPlugin(id: NamespaceId): Map<Version, Plugin> {
+            return mutableInstalledPlugins[id]
+        }
+
+        override fun getInstalledPlugin(id: NamespaceId, version: Version): Plugin? {
+            return mutableInstalledPlugins[id, version]
         }
     }
 
@@ -925,7 +935,7 @@ class LocalPluginManagerImpl(
         }
 
         val oldAvailablePlugins = mutableAvailablePlugins
-        val newAvailablePlugins = pluginScanContext.newAvailablePlugins
+        val newAvailablePlugins = pluginScanContext.mutableInstalledPlugins
 
         val removedPlugins = oldAvailablePlugins.filterKeys { !newAvailablePlugins.containsKey(it) }
         for (removedPlugin in removedPlugins) {
@@ -933,6 +943,8 @@ class LocalPluginManagerImpl(
                 removedPlugin.value.ensureReleased(operation)
             }
         }
+
+        mutableAvailablePlugins = newAvailablePlugins
     }
 
     private suspend fun getProviderPluginsFromSources(pattern: PluginPattern, cause: Cause): Map<String, List<PluginEntry>> {

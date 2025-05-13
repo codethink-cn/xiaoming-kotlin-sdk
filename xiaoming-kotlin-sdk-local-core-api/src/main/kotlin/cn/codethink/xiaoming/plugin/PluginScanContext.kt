@@ -17,7 +17,9 @@
 package cn.codethink.xiaoming.plugin
 
 import cn.codethink.xiaoming.LocalPlatform
+import cn.codethink.xiaoming.util.NamespaceId
 import cn.codethink.xiaoming.util.Operation
+import cn.codethink.xiaoming.util.Version
 
 /**
  * 插件检测上下文。
@@ -28,5 +30,10 @@ interface PluginScanContext {
     val platform: LocalPlatform
     val operation: Operation
 
-    fun registerPlugin(meta: PluginMeta, configuration: PluginConfiguration, operation: Operation, handler: PluginHandler)
+    val installedPlugins: Collection<Plugin>
+
+    fun getInstalledPlugin(id: NamespaceId): Map<Version, Plugin>
+    fun getInstalledPlugin(id: NamespaceId, version: Version): Plugin?
+
+    fun registerInstalledPlugin(meta: PluginMeta, configuration: PluginConfiguration, operation: Operation, handler: PluginHandler)
 }
