@@ -19,5 +19,5 @@ package cn.codethink.xiaoming.plugin
 import cn.codethink.xiaoming.event.EventContext
 
 interface PluginUnloadContext : PluginContext {
-    override val event: EventContext<PluginUnloadEvent>
+    override val eventContext: EventContext<PluginUnloadEvent>
 }

@@ -22,7 +22,7 @@ import cn.codethink.xiaoming.util.Operation
 import me.him188.kotlin.jvm.blocking.bridge.JvmBlockingBridge
 
 interface PluginContext : PlatformContext {
-    val event: EventContext<PluginEvent>
+    val eventContext: EventContext<PluginEvent>
     val plugin: Plugin
 
     /**

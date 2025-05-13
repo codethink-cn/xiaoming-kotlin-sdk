@@ -14,10 +14,20 @@
  * limitations under the License.
  */
 
-package cn.codethink.xiaoming.plugin
+@file:JvmName("Causes")
 
-import cn.codethink.xiaoming.event.EventContext
+package cn.codethink.xiaoming.util
 
-interface PluginLoadContext : PluginContext {
-    override val eventContext: EventContext<PluginLoadEvent>
+fun String.dueTo(cause: Cause?): String {
+    if (cause == null) {
+        return this
+    }
+    return "$this due to: ${cause.description}"
+}
+
+fun String.dueTo(cause: Throwable?): String {
+    if (cause == null) {
+        return this
+    }
+    return "$this due to: ${cause.message}"
 }

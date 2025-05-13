@@ -273,7 +273,7 @@ class LocalPluginManagerImpl(
     private abstract inner class ActivatePluginDependencyResolver(val operation: Operation, val block: suspend (AvailablePluginImpl) -> Unit) {
         abstract val availablePluginEntries: MutableDualKeyMap<NamespaceId, Version, AvailablePluginEntry>
 
-        suspend fun resolveAndActivateDependencies() {
+        suspend fun resolveAndActivateDependencies(): Boolean {
             // 对于每个插件，我们不停地获取它们的所有版本的可提供插件，并递归地获取它们的依赖插件，直到 availablePlugins 不再增加为止。
             var newAvailablePluginEntries: Collection<AvailablePluginEntry> = availablePluginEntries.values
             do {
@@ -416,8 +416,7 @@ class LocalPluginManagerImpl(
             // 构造笛卡尔积数量个依赖解析方案。
             val solutionCount = availablePluginNodeCandidates.productSize()
             if (solutionCount == 0) {
-                logger.trace { "No solution found for plugin dependency resolution." }
-                return
+                return false
             }
 
             // 尝试每一种方案。
@@ -595,15 +594,26 @@ class LocalPluginManagerImpl(
                 }
 
                 if (tryActivatePlugins(finalGraph)) {
-                    return
+                    return true
                 }
             }
 
-            error("No solution found for plugin dependency resolution.")
+            return false
         }
 
         open suspend fun tryActivatePlugins(solution: DirectedAcyclicGraph<PluginDependencySolutionContext, Unit>): Boolean {
             var result = true
+
+            fun PluginDependencySolutionContext.describe(): String = buildString {
+                append(entry.plugin.signature)
+
+                val provisions = entry.plugin.provisions.filterNotNull()
+                if (provisions.isNotEmpty()) {
+                    append(" (provisions: ${provisions.joinToString { it.toString() }})")
+                }
+            }
+            logger.info { "Plugin activation solution: ${solution.nodes.joinToString { it.value.describe() }}" }
+
             solution.forEachConcurrently {
                 if (!result) {
                     return@forEachConcurrently
@@ -626,16 +636,13 @@ class LocalPluginManagerImpl(
                     plugin.provisions = it.value.provisions
                 }
 
-                // 直接让把异常往调用者那边抛。
-                block(it.value.entry.plugin)
-
-//                try {
-//                    block(it.value.entry.plugin)
-//                } catch (t: Throwable) {
-//                    logger.warn(t) { "Exception thrown while activating ${plugin.signature}. " }
-//                    result = false
-//                    return@forEachConcurrently
-//                }
+                try {
+                    block(it.value.entry.plugin)
+                } catch (t: Throwable) {
+                    logger.warn(t) { "Exception thrown while activating ${plugin.signature}. " }
+                    result = false
+                    return@forEachConcurrently
+                }
             }
 
             return result
@@ -738,16 +745,24 @@ class LocalPluginManagerImpl(
             }
         }
 
-        override suspend fun load(operation: Operation) {
-            ActivateThisPluginDependencyResolver(operation) { it.ensureDoLoad(operation) }.resolveAndActivateDependencies()
-        }
-
         override suspend fun onDoLoad(operation: Operation) {
             acquireUniquePluginLock(operation)
         }
 
+        override suspend fun load(operation: Operation) {
+            val resolved = ActivateThisPluginDependencyResolver(operation) {
+                it.ensureDoLoad(operation)
+            }.resolveAndActivateDependencies()
+
+            check(resolved) { "No plugin dependency solution found to load plugin $signature." }
+        }
+
         override suspend fun enable(operation: Operation) {
-            ActivateThisPluginDependencyResolver(operation) { it.ensureDoEnable(operation) }.resolveAndActivateDependencies()
+            val resolved = ActivateThisPluginDependencyResolver(operation) {
+                it.ensureDoEnable(operation)
+            }.resolveAndActivateDependencies()
+
+            check(resolved) { "No plugin dependency solution found to load plugin $signature." }
         }
 
         override suspend fun disable(operation: Operation) {
@@ -1005,16 +1020,22 @@ class LocalPluginManagerImpl(
             mutableInstalledPlugins.mapToOriginalPluginEntries()
     }
 
-    override suspend fun loadPlugins(operation: Operation) {
-        ActivateAvailablePluginsDependencyResolver(operation) { it.ensureDoLoad(operation) }.resolveAndActivateDependencies()
+    override suspend fun loadPlugins(operation: Operation): Boolean {
+        return ActivateAvailablePluginsDependencyResolver(operation) {
+            it.ensureDoLoad(operation)
+        }.resolveAndActivateDependencies()
     }
 
-    override suspend fun enablePlugins(operation: Operation) {
-        ActivateAvailablePluginsDependencyResolver(operation) { it.ensureDoEnable(operation) }.resolveAndActivateDependencies()
+    override suspend fun enablePlugins(operation: Operation): Boolean {
+        return ActivateAvailablePluginsDependencyResolver(operation) {
+            it.ensureDoEnable(operation)
+        }.resolveAndActivateDependencies()
     }
 
     override suspend fun disablePlugins(operation: Operation) {
-        ActivateAvailablePluginsDependencyResolver(operation) { it.ensureDoDisable(operation) }.resolveAndActivateDependencies()
+        for (availablePlugin in installedPlugins) {
+            availablePlugin.ensureDisabled(operation)
+        }
     }
 
     override suspend fun unloadPlugins(operation: Operation) {

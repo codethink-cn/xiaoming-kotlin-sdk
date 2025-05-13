@@ -83,7 +83,7 @@ object KotlinPluginHandlerFactory : PluginHandlerFactory {
         private inner class KotlinPluginMainLoadContextImpl(
             context: PluginLoadContext
         ) : AbstractKotlinPluginMainContext(context), KotlinPluginMainLoadContext {
-            override val event: EventContext<PluginLoadEvent> = context.event
+            override val eventContext: EventContext<PluginLoadEvent> = context.eventContext
         }
 
         override suspend fun onLoad(context: PluginLoadContext) {
@@ -94,7 +94,7 @@ object KotlinPluginHandlerFactory : PluginHandlerFactory {
             context: PluginEnableContext
         ) : AbstractKotlinPluginMainContext(context), KotlinPluginMainEnableContext {
             override val coroutineContext: CoroutineContext get() = coroutineScope.coroutineContext
-            override val event: EventContext<PluginEnableEvent> = context.event
+            override val eventContext: EventContext<PluginEnableEvent> = context.eventContext
         }
 
         override suspend fun onEnable(context: PluginEnableContext) {
@@ -108,7 +108,7 @@ object KotlinPluginHandlerFactory : PluginHandlerFactory {
             context: PluginDisableContext
         ) : AbstractKotlinPluginMainContext(context), KotlinPluginMainDisableContext {
             override val coroutineContext: CoroutineContext get() = coroutineScope.coroutineContext
-            override val event: EventContext<PluginDisableEvent> = context.event
+            override val eventContext: EventContext<PluginDisableEvent> = context.eventContext
         }
 
         override suspend fun onDisable(context: PluginDisableContext) {
@@ -122,7 +122,7 @@ object KotlinPluginHandlerFactory : PluginHandlerFactory {
         private inner class KotlinPluginMainUnloadContextImpl(
             context: PluginUnloadContext
         ) : AbstractKotlinPluginMainContext(context), KotlinPluginMainUnloadContext {
-            override val event: EventContext<PluginUnloadEvent> = context.event
+            override val eventContext: EventContext<PluginUnloadEvent> = context.eventContext
         }
 
         override suspend fun onUnload(context: PluginUnloadContext) {

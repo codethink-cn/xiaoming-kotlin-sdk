@@ -114,17 +114,17 @@ abstract class AbstractPlugin(
         }
     }
 
-    private inner class PluginAllocateContextImpl(override val event: EventContext<PluginAllocateEvent>) : PluginAllocateContext, AbstractPluginContext()
+    private inner class PluginAllocateContextImpl(override val eventContext: EventContext<PluginAllocateEvent>) : PluginAllocateContext, AbstractPluginContext()
 
-    private inner class PluginLoadContextImpl(override val event: EventContext<PluginLoadEvent>) : PluginLoadContext, AbstractPluginContext()
+    private inner class PluginLoadContextImpl(override val eventContext: EventContext<PluginLoadEvent>) : PluginLoadContext, AbstractPluginContext()
 
-    private inner class PluginEnableContextImpl(override val event: EventContext<PluginEnableEvent>) : PluginEnableContext, AbstractPluginContext()
+    private inner class PluginEnableContextImpl(override val eventContext: EventContext<PluginEnableEvent>) : PluginEnableContext, AbstractPluginContext()
 
-    private inner class PluginDisableContextImpl(override val event: EventContext<PluginDisableEvent>) : PluginDisableContext, AbstractPluginContext()
+    private inner class PluginDisableContextImpl(override val eventContext: EventContext<PluginDisableEvent>) : PluginDisableContext, AbstractPluginContext()
 
-    private inner class PluginUnloadContextImpl(override val event: EventContext<PluginUnloadEvent>) : PluginUnloadContext, AbstractPluginContext()
+    private inner class PluginUnloadContextImpl(override val eventContext: EventContext<PluginUnloadEvent>) : PluginUnloadContext, AbstractPluginContext()
 
-    private inner class PluginExitContextImpl(override val event: EventContext<PluginExitEvent>) : PluginExitContext, AbstractPluginContext()
+    private inner class PluginExitContextImpl(override val eventContext: EventContext<PluginExitEvent>) : PluginExitContext, AbstractPluginContext()
 
     override suspend fun allocate(operation: Operation) {
         PluginStateTransition.Allocated.transit(this, operation) {

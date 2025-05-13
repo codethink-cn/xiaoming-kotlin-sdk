@@ -134,10 +134,10 @@ interface LocalPluginManager : PluginManager {
     suspend fun flushAvailablePlugins(operation: Operation)
 
     @JvmBlockingBridge
-    suspend fun loadPlugins(operation: Operation)
+    suspend fun loadPlugins(operation: Operation): Boolean
 
     @JvmBlockingBridge
-    suspend fun enablePlugins(operation: Operation)
+    suspend fun enablePlugins(operation: Operation): Boolean
 
     @JvmBlockingBridge
     suspend fun disablePlugins(operation: Operation)
