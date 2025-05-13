@@ -36,12 +36,15 @@ class PluginLogger(
     private val debugDisabledLogger = backend.withSuffix("[$id]")
 
     private inner class DebugLogger : KLogger {
-        private val logger = backend.withSuffix("[$id, debugging]")
+        private val logger = backend.withSuffix("[$id, debug]")
         override val name: String get() = backend.name
 
         override fun at(level: Level, marker: Marker?, block: KLoggingEventBuilder.() -> Unit) {
-            val finalLevel = if (level == Level.DEBUG) Level.INFO else level
-            logger.at(finalLevel, marker, block)
+            if (level == Level.DEBUG) {
+                logger.at(Level.INFO, marker, block)
+            } else {
+                debugDisabledLogger.at(level, marker, block)
+            }
         }
 
         override fun isLoggingEnabledFor(level: Level, marker: Marker?): Boolean {
