@@ -639,6 +639,11 @@ class LocalPluginManagerImpl(
                 try {
                     block(it.value.entry.plugin)
                 } catch (t: Throwable) {
+                    // 如果这个插件是必须启动的插件，却启动失败，则直接把异常抛给调用者。
+                    if (it.value.entry is RequiredPluginEntry) {
+                        throw t
+                    }
+
                     logger.warn(t) { "Exception thrown while activating ${plugin.signature}. " }
                     result = false
                     return@forEachConcurrently
